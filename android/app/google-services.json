@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "529717258707",
+    "project_id": "stackwares-landing",
+    "storage_bucket": "stackwares-landing.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:529717258707:android:f13e240a27544ee6f1a726",
+        "android_client_info": {
+          "package_name": "com.revenuecat.client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXfrKb7Tu5AZWl6igjwuearrXdbhc3afs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
