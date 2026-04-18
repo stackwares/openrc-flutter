@@ -72,6 +72,16 @@ class HomeNotifier extends StateNotifier<HomeState> {
     return state.chartRangeStart.add(Duration(days: index));
   }
 
+  /// Prefer API [RcChartDataPoint.cohort] (Unix s or ms) when present; else [dateForChartPoint].
+  DateTime dateForChartDataPoint(RcChartDataPoint point, int indexFallback) {
+    final c = point.cohort;
+    if (c != null && c > 0) {
+      final ms = c < 10000000000 ? c * 1000 : c;
+      return DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true).toLocal();
+    }
+    return dateForChartPoint(indexFallback);
+  }
+
   /// Label for cards / app bar (localizable date formatting).
   String formatChartRangeLabel() {
     final start = state.chartRangeStart;
@@ -157,6 +167,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         resolution: 0,
         startDate: ymd.format(start),
         endDate: ymd.format(end),
+        revenueType: metric.chartRevenueTypeParam,
       );
       return MapEntry(metric, response);
     } catch (e, st) {
@@ -232,8 +243,10 @@ class HomeNotifier extends StateNotifier<HomeState> {
     if (index != null) {
       list = values.where((p) => p.measure == index).toList();
     } else {
-      list = values;
+      list = List<RcChartDataPoint>.from(values);
     }
+
+    list.sort((a, b) => (a.cohort ?? 0).compareTo(b.cohort ?? 0));
 
     if (!metric.isCurrency) return list;
 

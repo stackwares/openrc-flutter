@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/region_display_name.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
@@ -154,7 +155,11 @@ class _TransactionsRevenueInsightsCardState
                               label: 'Apple',
                               pct: data.applePct,
                               revenue: data.appleRevenue,
-                              color: scheme.onSurfaceVariant,
+                              color: Color.lerp(
+                                StoreBrandIconColors.appleBlue,
+                                scheme.surface,
+                                0.42,
+                              )!,
                               leadingIcon: Icons.apple,
                             ),
                             _distributionBadge(
@@ -162,7 +167,11 @@ class _TransactionsRevenueInsightsCardState
                               label: 'Google',
                               pct: data.googlePct,
                               revenue: data.googleRevenue,
-                              color: scheme.onSurfaceVariant,
+                              color: Color.lerp(
+                                StoreBrandIconColors.androidGreen,
+                                scheme.surface,
+                                0.48,
+                              )!,
                               leadingIcon: Icons.android,
                             ),
                           ],
@@ -179,7 +188,10 @@ class _TransactionsRevenueInsightsCardState
                               label: 'New',
                               pct: data.newPct,
                               revenue: data.newRevenue,
-                              color: scheme.onSurfaceVariant,
+                              color: transactionTypeAccentColor(
+                                RcTransactionType.newSubscription,
+                                context,
+                              ),
                               leadingIcon: Icons.add_circle_outline,
                             ),
                             _distributionBadge(
@@ -187,7 +199,10 @@ class _TransactionsRevenueInsightsCardState
                               label: 'Renewals',
                               pct: data.renewalPct,
                               revenue: data.renewalRevenue,
-                              color: scheme.onSurfaceVariant,
+                              color: transactionTypeAccentColor(
+                                RcTransactionType.renewal,
+                                context,
+                              ),
                               leadingIcon: Icons.autorenew,
                             ),
                           ],
@@ -335,12 +350,16 @@ class _TransactionsRevenueInsightsCardState
     final scheme = Theme.of(context).colorScheme;
     final pctStr = '${pct.toStringAsFixed(1)}%';
     final baseMetrics = TransactionPillStyle.textStyle(color);
+    final mutedAccent =
+        Color.lerp(color, scheme.onSurfaceVariant, 0.55) ?? scheme.onSurfaceVariant;
+    final iconTint =
+        Color.lerp(color, scheme.onSurfaceVariant, 0.4) ?? scheme.onSurfaceVariant;
     final labelStyle = baseMetrics.copyWith(
-      color: scheme.onSurfaceVariant,
+      color: mutedAccent,
       fontWeight: FontWeight.w600,
     );
     final emphasisStyle = baseMetrics.copyWith(
-      color: scheme.onSurface,
+      color: Color.lerp(color, scheme.onSurface, 0.72) ?? scheme.onSurface,
       fontWeight: FontWeight.w800,
     );
     final row = Row(
@@ -376,7 +395,7 @@ class _TransactionsRevenueInsightsCardState
                 Icon(
                   leadingIcon,
                   size: 16,
-                  color: scheme.onSurfaceVariant,
+                  color: iconTint,
                 ),
                 const SizedBox(width: 6),
                 row,

@@ -10,6 +10,7 @@ import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
+import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
@@ -117,6 +118,9 @@ bool _isIsoCalendarDayKey(String key) => _isoCalendarDayKeyRe.hasMatch(key);
 const int _kediFirstPageLimit = 20;
 const int _kediPaginationLimit = 100;
 
+/// Upper bound for the first-page `/me/transactions` query (`end_date`) and for
+/// the latest calendar day the user can open — matches
+/// [Kedi](https://github.com/sereisoglu/Kedi) (`Date().byAdding(.day, value: 7)`).
 String _kediEndDateString() {
   final n = DateTime.now();
   final end = DateTime(n.year, n.month, n.day).add(const Duration(days: 7));
@@ -215,7 +219,11 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   void setSelectedDayKey(String dayKey) {
     if (!_isIsoCalendarDayKey(dayKey) || dayKey == state.selectedDayKey) return;
-    state = state.copyWith(selectedDayKey: dayKey, error: null);
+    state = state.copyWith(
+      selectedDayKey: dayKey,
+      error: null,
+      isLoadingMore: false,
+    );
     unawaited(backfillIncompleteCalendarDays());
   }
 
@@ -230,7 +238,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   /// Full reload (pull-to-refresh): same as Kedi’s first fetch — small limit,
   /// `end_date` only, then pagination uses `start_from` alone.
   Future<void> fetchSelectedDay() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, isLoadingMore: false, error: null);
     _backfillGeneration++;
     final gen = _backfillGeneration;
     try {
@@ -250,6 +258,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         grouped: grouped,
         dailyTotals: dailyTotals,
         isLoading: false,
+        isLoadingMore: false,
         hasMore: hasMorePages,
         firstPurchaseMs: response.firstPurchaseMs,
         lastPurchaseMs: hasMorePages ? nextCursor : null,
@@ -261,10 +270,15 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       _handleAuthError(e);
       state = state.copyWith(
         isLoading: false,
+        isLoadingMore: false,
         error: _extractErrorMessage(e),
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to load transactions');
+      state = state.copyWith(
+        isLoading: false,
+        isLoadingMore: false,
+        error: 'Failed to load transactions',
+      );
     }
   }
 
@@ -666,8 +680,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
-    final todayKey = _localTodayDayKey();
-    final canGoNext = selectedKey.compareTo(todayKey) < 0;
+    final latestNavigableKey = _kediEndDateString();
+    final canGoNext = selectedKey.compareTo(latestNavigableKey) < 0;
     final groupedForHeader =
         _filteredGroupedByApps(state.grouped, _appIncludeFilter);
     final headerDailyTotals =
@@ -675,6 +689,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final headerDaily = headerDailyTotals[selectedKey] ?? 0;
     final headerPrevTotal =
         prevKey != null ? headerDailyTotals[prevKey] : null;
+    final previousDayForSummary =
+        prevKey != null ? (groupedForList[prevKey] ?? <RcTransaction>[]) : null;
 
     final children = <Widget>[
       Card(
@@ -745,6 +761,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               const SizedBox(height: 12),
               _DayTypeCountSummary(
                 transactions: allForDay,
+                previousDayTransactions: previousDayForSummary,
                 selectedFilter: sectionFiltered ? _sectionFilter : null,
                 onSelectFilter: (filter) {
                   setState(() {
@@ -768,10 +785,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       TransactionsRevenueInsightsCard(transactions: allForDay),
     ];
 
+    final subscriberEarliestPurchaseDay =
+        earliestPurchaseLocalDayBySubscriberId(
+      state.grouped.values.expand((e) => e),
+    );
+
     for (final tx in transactions) {
       children.add(
         TransactionItem(
           transaction: tx,
+          subscriberEarliestPurchaseLocalDayById: subscriberEarliestPurchaseDay,
           inSectionCard: false,
           onTap: () {
             Navigator.of(context).push<void>(
@@ -910,10 +933,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     spacing: 10,
                     runSpacing: 8,
                     children: List.generate(
-                      4,
+                      6,
                       (_) => Bone(
-                        width: 72,
-                        height: 28,
+                        width: 118,
+                        height: 30,
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -1283,12 +1306,16 @@ class _DayTxnCounts {
   final int conversions;
   final int renewals;
   final int purchases;
+  final int refunds;
+  final int cancelled;
 
   const _DayTxnCounts({
     required this.trials,
     required this.conversions,
     required this.renewals,
     required this.purchases,
+    required this.refunds,
+    required this.cancelled,
   });
 }
 
@@ -1297,7 +1324,14 @@ _DayTxnCounts _aggregateDayCounts(List<RcTransaction> transactions) {
   var conversions = 0;
   var renewals = 0;
   var purchases = 0;
+  var refunds = 0;
+  var cancelled = 0;
   for (final tx in transactions) {
+    if (tx.type == RcTransactionType.refund) {
+      refunds++;
+    } else if (tx.isCancelledSummaryBadge) {
+      cancelled++;
+    }
     switch (tx.type) {
       case RcTransactionType.trial:
         trials++;
@@ -1322,15 +1356,19 @@ _DayTxnCounts _aggregateDayCounts(List<RcTransaction> transactions) {
     conversions: conversions,
     renewals: renewals,
     purchases: purchases,
+    refunds: refunds,
+    cancelled: cancelled,
   );
 }
 
-/// Matches the TRIAL / CONV / REN / SUB day header pills (SUB = new sub + one-time).
+/// Day header pills for filtering the transaction list.
 enum TransactionDaySectionFilter {
   trial,
   conversion,
   renewal,
   subscription,
+  refunded,
+  cancelled,
 }
 
 bool _transactionMatchesSectionFilter(
@@ -1348,6 +1386,10 @@ bool _transactionMatchesSectionFilter(
     case TransactionDaySectionFilter.subscription:
       return t == RcTransactionType.newSubscription ||
           t == RcTransactionType.oneTimePurchase;
+    case TransactionDaySectionFilter.refunded:
+      return t == RcTransactionType.refund;
+    case TransactionDaySectionFilter.cancelled:
+      return tx.isCancelledSummaryBadge;
   }
 }
 
@@ -1361,17 +1403,40 @@ RcTransactionType _sectionFilterAccentType(TransactionDaySectionFilter f) {
       return RcTransactionType.renewal;
     case TransactionDaySectionFilter.subscription:
       return RcTransactionType.newSubscription;
+    case TransactionDaySectionFilter.refunded:
+      return RcTransactionType.refund;
+    case TransactionDaySectionFilter.cancelled:
+      return RcTransactionType.renewal;
   }
+}
+
+Color _daySummaryPillAccent(
+  BuildContext context,
+  TransactionDaySectionFilter filter,
+) {
+  return switch (filter) {
+    TransactionDaySectionFilter.refunded =>
+        transactionTypeAccentColor(RcTransactionType.refund, context),
+    TransactionDaySectionFilter.cancelled => Colors.deepOrange,
+    _ => transactionTypeAccentColor(_sectionFilterAccentType(filter), context),
+  };
+}
+
+bool _sectionCountHigherIsBetter(TransactionDaySectionFilter filter) {
+  return filter != TransactionDaySectionFilter.refunded &&
+      filter != TransactionDaySectionFilter.cancelled;
 }
 
 class _DayTypeCountSummary extends StatelessWidget {
   final List<RcTransaction> transactions;
+  final List<RcTransaction>? previousDayTransactions;
   final TransactionDaySectionFilter? selectedFilter;
   final void Function(TransactionDaySectionFilter filter) onSelectFilter;
   final VoidCallback? onClearFilter;
 
   const _DayTypeCountSummary({
     required this.transactions,
+    required this.previousDayTransactions,
     required this.selectedFilter,
     required this.onSelectFilter,
     required this.onClearFilter,
@@ -1379,99 +1444,176 @@ class _DayTypeCountSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final n = _aggregateDayCounts(transactions);
-    return Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 12,
-        runSpacing: 6,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          _dayCountSegment(
-            context,
-            label: 'TRIAL',
-            count: n.trials,
-            filter: TransactionDaySectionFilter.trial,
-            selected: selectedFilter == TransactionDaySectionFilter.trial,
-            onTap: onSelectFilter,
+    final p = previousDayTransactions != null
+        ? _aggregateDayCounts(previousDayTransactions!)
+        : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GridView.count(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.22,
+          children: [
+            _DaySummaryStatCell(
+              label: 'Trials',
+              count: n.trials,
+              previousCount: p?.trials,
+              filter: TransactionDaySectionFilter.trial,
+              selected: selectedFilter == TransactionDaySectionFilter.trial,
+              onTap: onSelectFilter,
+            ),
+            _DaySummaryStatCell(
+              label: 'Conversions',
+              count: n.conversions,
+              previousCount: p?.conversions,
+              filter: TransactionDaySectionFilter.conversion,
+              selected: selectedFilter == TransactionDaySectionFilter.conversion,
+              onTap: onSelectFilter,
+            ),
+            _DaySummaryStatCell(
+              label: 'Renewals',
+              count: n.renewals,
+              previousCount: p?.renewals,
+              filter: TransactionDaySectionFilter.renewal,
+              selected: selectedFilter == TransactionDaySectionFilter.renewal,
+              onTap: onSelectFilter,
+            ),
+            _DaySummaryStatCell(
+              label: 'Purchases',
+              count: n.purchases,
+              previousCount: p?.purchases,
+              filter: TransactionDaySectionFilter.subscription,
+              selected:
+                  selectedFilter == TransactionDaySectionFilter.subscription,
+              onTap: onSelectFilter,
+            ),
+            _DaySummaryStatCell(
+              label: 'Refunds',
+              count: n.refunds,
+              previousCount: p?.refunds,
+              filter: TransactionDaySectionFilter.refunded,
+              selected: selectedFilter == TransactionDaySectionFilter.refunded,
+              onTap: onSelectFilter,
+            ),
+            _DaySummaryStatCell(
+              label: 'Cancellations',
+              count: n.cancelled,
+              previousCount: p?.cancelled,
+              filter: TransactionDaySectionFilter.cancelled,
+              selected: selectedFilter == TransactionDaySectionFilter.cancelled,
+              onTap: onSelectFilter,
+            ),
+          ],
+        ),
+        if (onClearFilter != null) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Divider(
+              height: 1,
+              color: scheme.outlineVariant.withValues(alpha: 0.45),
+            ),
           ),
-          _dayCountSegment(
-            context,
-            label: 'CONV',
-            count: n.conversions,
-            filter: TransactionDaySectionFilter.conversion,
-            selected: selectedFilter == TransactionDaySectionFilter.conversion,
-            onTap: onSelectFilter,
+          Center(
+            child: TextButton(
+              onPressed: onClearFilter,
+              child: const Text('Clear filter'),
+            ),
           ),
-          _dayCountSegment(
-            context,
-            label: 'REN',
-            count: n.renewals,
-            filter: TransactionDaySectionFilter.renewal,
-            selected: selectedFilter == TransactionDaySectionFilter.renewal,
-            onTap: onSelectFilter,
-          ),
-          _dayCountSegment(
-            context,
-            label: 'SUB',
-            count: n.purchases,
-            filter: TransactionDaySectionFilter.subscription,
-            selected: selectedFilter == TransactionDaySectionFilter.subscription,
-            onTap: onSelectFilter,
-          ),
-          if (onClearFilter != null)
-            daySummaryClearFilterChip(context, onClearFilter!),
         ],
+      ],
     );
   }
 }
 
-Widget daySummaryClearFilterChip(BuildContext context, VoidCallback onClear) {
-  final primary = Theme.of(context).colorScheme.primary;
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onClear,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: TransactionPillStyle.padding,
-        decoration: TransactionPillStyle.decoration(primary),
-        child: Text(
-          'CLEAR',
-          style: TransactionPillStyle.textStyle(primary),
-        ),
-      ),
-    ),
-  );
-}
+class _DaySummaryStatCell extends StatelessWidget {
+  const _DaySummaryStatCell({
+    required this.label,
+    required this.count,
+    required this.filter,
+    required this.selected,
+    required this.onTap,
+  });
 
-Widget _dayCountSegment(
-  BuildContext context, {
-  required String label,
-  required int count,
-  required TransactionDaySectionFilter filter,
-  required bool selected,
-  required void Function(TransactionDaySectionFilter filter) onTap,
-}) {
-  final type = _sectionFilterAccentType(filter);
-  final color = transactionTypeAccentColor(type, context);
-  final enabled = count > 0;
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: enabled
-          ? () {
-              onTap(filter);
-            }
-          : null,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: TransactionPillStyle.padding,
-        decoration: TransactionPillStyle.decoration(color, selected: selected),
-        child: Text(
-          '$label $count',
-          style: TransactionPillStyle.textStyle(color, enabled: enabled),
+  final String label;
+  final int count;
+  final TransactionDaySectionFilter filter;
+  final bool selected;
+  final void Function(TransactionDaySectionFilter filter) onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final accent = _daySummaryPillAccent(context, filter);
+    final enabled = count > 0;
+    final baseCard = scheme.surfaceContainerHighest.withValues(alpha: 0.38);
+    final fill = Color.alphaBlend(
+      accent.withValues(alpha: selected ? 0.2 : 0.1),
+      baseCard,
+    );
+    final borderColor = selected
+        ? accent.withValues(alpha: 0.72)
+        : Color.alphaBlend(
+            accent.withValues(alpha: 0.28),
+            scheme.outlineVariant.withValues(alpha: 0.45),
+          );
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? () => onTap(filter) : null,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: borderColor,
+              width: selected ? 1.5 : 1,
+            ),
+            color: fill,
+          ),
+          child: Opacity(
+            opacity: enabled ? 1 : 0.38,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$count',
+                  textAlign: TextAlign.center,
+                  style: tt.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.6,
+                    height: 1,
+                    color: selected ? accent : scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -3,7 +3,7 @@ import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 
 /// Pill shape, padding, border, and typography shared with day-summary badges
-/// (TRIAL, CONV, REN, SUB) on the transactions screen.
+/// (TRIALS, CONVERSIONS, RENEWALS, PURCHASES, …) on the transactions screen.
 abstract final class TransactionPillStyle {
   static const EdgeInsets padding =
       EdgeInsets.symmetric(horizontal: 10, vertical: 5);
@@ -53,42 +53,44 @@ abstract final class TransactionPillStyle {
 String transactionTypeBadgeLabel(RcTransactionType type) {
   switch (type) {
     case RcTransactionType.newSubscription:
-      return 'SUB';
     case RcTransactionType.oneTimePurchase:
-      return 'ONE-TIME';
+      return 'PURCHASES';
     case RcTransactionType.renewal:
-      return 'RENEWAL';
+      return 'RENEWALS';
     case RcTransactionType.trial:
-      return 'TRIAL';
+      return 'TRIALS';
     case RcTransactionType.conversion:
-      return 'CONVERSION';
+      return 'CONVERSIONS';
     case RcTransactionType.refund:
-      return 'REFUND';
+      return 'REFUNDS';
     case RcTransactionType.unknown:
-      return 'OTHER';
+      return 'OTHERS';
   }
 }
 
-/// Same text and accent grouping as [TransactionsScreen] day-summary header pills.
-String transactionTypeHeaderPillLabel(RcTransactionType type) {
-  switch (type) {
+/// List-row pills on the transactions screen: past-tense / state labels
+/// (REFUNDED, CANCELLED, CONVERTED, …).
+String transactionTypeListTilePillLabel(RcTransaction transaction) {
+  if (transaction.type == RcTransactionType.refund) return 'REFUNDED';
+  if (transaction.isCancelledSummaryBadge) return 'CANCELLED';
+  switch (transaction.type) {
     case RcTransactionType.newSubscription:
     case RcTransactionType.oneTimePurchase:
-      return 'SUB';
+      return 'PURCHASED';
     case RcTransactionType.renewal:
-      return 'REN';
+      return 'RENEWED';
     case RcTransactionType.trial:
       return 'TRIAL';
     case RcTransactionType.conversion:
-      return 'CONV';
+      return 'CONVERTED';
     case RcTransactionType.refund:
-      return 'REFUND';
+      return 'REFUNDED';
     case RcTransactionType.unknown:
       return 'OTHER';
   }
 }
 
-/// List rows on the transactions screen: same SUB grouping (and blue accent) as day header pills.
+/// List rows on the transactions screen: same purchases grouping (and blue accent) as day header pills.
 Color transactionTypeAccentColorForTransactionsList(
   RcTransaction transaction,
   BuildContext context,
@@ -132,11 +134,10 @@ Color transactionTypeAccentColor(
   }
 }
 
-/// Compact pill label for [RcTransaction.type] (e.g. TRIAL, RENEWAL).
+/// Compact pill label for [RcTransaction.type] (e.g. plural labels on detail).
 ///
 /// When [useHeaderPillStyle] is true (list rows on the transactions screen),
-/// uses the same abbreviations and SUB accent as the day header (TRIAL / CONV / REN / SUB),
-/// at 80% scale (20% smaller than header / detail pills).
+/// uses [transactionTypeListTilePillLabel] at 80% scale (20% smaller than detail pills).
 class TransactionTypeBadge extends StatelessWidget {
   static const double _listTileScale = 0.8;
 
@@ -154,7 +155,7 @@ class TransactionTypeBadge extends StatelessWidget {
     final type = transaction.type;
     final color = _pillColor(context, type);
     final label = useHeaderPillStyle
-        ? transactionTypeHeaderPillLabel(type)
+        ? transactionTypeListTilePillLabel(transaction)
         : transactionTypeBadgeLabel(type);
     final scale = useHeaderPillStyle ? _listTileScale : 1.0;
     final padding = EdgeInsets.symmetric(
@@ -184,6 +185,16 @@ class TransactionTypeBadge extends StatelessWidget {
   Color _pillColor(BuildContext context, RcTransactionType type) {
     if (!useHeaderPillStyle) {
       return transactionTypeAccentColor(type, context, transaction: transaction);
+    }
+    if (transaction.type == RcTransactionType.refund) {
+      return transactionTypeAccentColor(
+        RcTransactionType.refund,
+        context,
+        transaction: transaction,
+      );
+    }
+    if (transaction.isCancelledSummaryBadge) {
+      return Colors.deepOrange;
     }
     return transactionTypeAccentColorForTransactionsList(transaction, context);
   }

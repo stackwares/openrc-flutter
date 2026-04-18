@@ -58,9 +58,9 @@ class _OverviewMetricDetailScreenState
     final safeIdx =
         points.isEmpty ? 0 : _selectedIndex.clamp(0, points.length - 1);
     final selectedPoint = points.isEmpty ? null : points[safeIdx];
-    final selectedDay = points.isEmpty
+    final selectedDay = points.isEmpty || selectedPoint == null
         ? null
-        : notifier.dateForChartPoint(safeIdx);
+        : notifier.dateForChartDataPoint(selectedPoint, safeIdx);
     final dateStr = selectedDay == null
         ? ''
         : DateFormat.yMMMEd().format(selectedDay);

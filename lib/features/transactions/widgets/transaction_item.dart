@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/region_display_name.dart';
+import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/core/utils/relative_time_format.dart';
 import 'package:revenuecat/core/utils/product_identifier_display.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
@@ -19,15 +20,27 @@ class TransactionItem extends ConsumerWidget {
   /// When true, skips the outer [Card] (for rows inside a grouped day [Card]).
   final bool inSectionCard;
 
+  /// Earliest loaded [RcTransaction.purchaseDate] per subscriber (fallback when API omits created-at).
+  final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
+
   const TransactionItem({
     super.key,
     required this.transaction,
     this.onTap,
     this.inSectionCard = false,
+    this.subscriberEarliestPurchaseLocalDayById = const {},
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sid = transaction.subscriberId?.trim();
+    final tenureSubtitle = formatSubscriberTenureSubtitle(
+      subscriberCreatedAtIso: transaction.subscriberCreatedAt,
+      fallbackFirstPurchaseLocalDay: sid != null && sid.isNotEmpty
+          ? subscriberEarliestPurchaseLocalDayById[sid]
+          : null,
+    );
+
     final type = transaction.type;
     final color =
         transactionTypeAccentColorForTransactionsList(transaction, context);
@@ -37,15 +50,13 @@ class TransactionItem extends ConsumerWidget {
     final iconUrl =
         appId != null ? ref.watch(appIconOverridesProvider)[appId] : null;
 
-    final revenueRefunded = type == RcTransactionType.refund;
     final baseRevenueStyle = context.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.bold,
     );
-    final revenueStyle = revenueRefunded
+    final revenueStyle = transaction.tileShowRefundRevenueStrikethrough
         ? baseRevenueStyle?.copyWith(
-            color: context.colorScheme.error,
             decoration: TextDecoration.lineThrough,
-            decorationColor: context.colorScheme.error,
+            decorationColor: context.colorScheme.onSurfaceVariant,
           )
         : baseRevenueStyle;
 
@@ -91,12 +102,12 @@ class TransactionItem extends ConsumerWidget {
                         transaction: transaction,
                         useHeaderPillStyle: true,
                       ),
-                      if (transaction.revenue != null) ...[
+                      if (transaction.tileDisplayRevenue != null) ...[
                         const SizedBox(width: 8),
                         Padding(
                           padding: const EdgeInsets.only(top: 1),
                           child: DualCurrencyExactText(
-                            amount: transaction.revenue!,
+                            amount: transaction.tileDisplayRevenue!,
                             commissionStore: transaction.store,
                             style: revenueStyle,
                             textAlign: TextAlign.end,
@@ -105,23 +116,19 @@ class TransactionItem extends ConsumerWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          transaction.productIdentifier ?? '',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  if (tenureSubtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      tenureSubtitle,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                        height: 1.25,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 6),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [

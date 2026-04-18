@@ -45,6 +45,7 @@ class RcTransaction {
   final String? store;
   final String? storeTransactionIdentifier;
   final String? subscriberCountryCode;
+  final String? subscriberCreatedAt;
   final String? subscriberId;
   final String? subscriberLastSeenPlatform;
   final String? unsubscribeDetectedAt;
@@ -66,6 +67,7 @@ class RcTransaction {
     this.store,
     this.storeTransactionIdentifier,
     this.subscriberCountryCode,
+    this.subscriberCreatedAt,
     this.subscriberId,
     this.subscriberLastSeenPlatform,
     this.unsubscribeDetectedAt,
@@ -92,6 +94,9 @@ class RcTransaction {
     storeTransactionIdentifier:
         json['store_transaction_identifier'] as String?,
     subscriberCountryCode: json['subscriber_country_code'] as String?,
+    subscriberCreatedAt:
+        json['subscriber_created_at'] as String? ??
+            json['subscriber_first_seen_at'] as String?,
     subscriberId: json['subscriber_id'] as String?,
     subscriberLastSeenPlatform:
         json['subscriber_last_seen_platform'] as String?,
@@ -118,6 +123,8 @@ class RcTransaction {
           'store_transaction_identifier': storeTransactionIdentifier,
         if (subscriberCountryCode != null)
           'subscriber_country_code': subscriberCountryCode,
+        if (subscriberCreatedAt != null)
+          'subscriber_created_at': subscriberCreatedAt,
         if (subscriberId != null) 'subscriber_id': subscriberId,
         if (subscriberLastSeenPlatform != null)
           'subscriber_last_seen_platform': subscriberLastSeenPlatform,
@@ -137,6 +144,16 @@ class RcTransaction {
     return false;
   }
 
+  /// Non-refund rows that match the transactions day-summary **Cancellations** pill.
+  bool get isCancelledSummaryBadge {
+    if (type == RcTransactionType.refund) return false;
+    if (isCanceledTrial) return true;
+    final c = cancellationDate?.trim();
+    if (c != null && c.isNotEmpty) return true;
+    final u = unsubscribeDetectedAt?.trim();
+    return u != null && u.isNotEmpty;
+  }
+
   RcTransactionType get type {
     if (wasRefunded == true) return RcTransactionType.refund;
     if (isTrialPeriod == true && isTrialConversion != true) {
@@ -153,6 +170,29 @@ class RcTransaction {
       return RcTransactionType.newSubscription;
     }
     return RcTransactionType.unknown;
+  }
+}
+
+extension RcTransactionTileRevenueDisplay on RcTransaction {
+  static const double _eps = 1e-9;
+
+  /// Amount shown in list/detail. Refund rows with negative [revenue] use the magnitude (original charge).
+  double? get tileDisplayRevenue {
+    final r = revenue;
+    if (r == null) return null;
+    if (type == RcTransactionType.refund) {
+      if (r.abs() < _eps) return r;
+      return r < 0 ? -r : r;
+    }
+    return r;
+  }
+
+  /// When non-zero, refund tiles strike through [tileDisplayRevenue] to imply reversal. True zero stays plain.
+  bool get tileShowRefundRevenueStrikethrough {
+    if (type != RcTransactionType.refund) return false;
+    final r = revenue;
+    if (r == null) return false;
+    return r.abs() >= _eps;
   }
 }
 

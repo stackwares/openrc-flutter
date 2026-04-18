@@ -376,14 +376,12 @@ class TransactionDetailScreen extends ConsumerWidget {
     String? customIconUrl,
   }) {
     final type = tx.type;
-    final revenueRefunded = type == RcTransactionType.refund;
     final baseHeaderRevenueStyle =
         context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
-    final headerRevenueStyle = revenueRefunded
+    final headerRevenueStyle = tx.tileShowRefundRevenueStrikethrough
         ? baseHeaderRevenueStyle?.copyWith(
-            color: context.colorScheme.error,
             decoration: TextDecoration.lineThrough,
-            decorationColor: context.colorScheme.error,
+            decorationColor: context.colorScheme.onSurfaceVariant,
           )
         : baseHeaderRevenueStyle;
     final color = transactionTypeAccentColor(type, context, transaction: tx);
@@ -461,9 +459,9 @@ class TransactionDetailScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                if (tx.revenue != null)
+                if (tx.tileDisplayRevenue != null)
                   DualCurrencyExactText(
-                    amount: tx.revenue!,
+                    amount: tx.tileDisplayRevenue!,
                     commissionStore: tx.store,
                     style: headerRevenueStyle,
                     textAlign: TextAlign.end,
@@ -687,7 +685,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                           decoration:
                               TransactionPillStyle.decoration(trialAccent),
                           child: Text(
-                            'TRIAL',
+                            'TRIALS',
                             style: TransactionPillStyle.textStyle(trialAccent),
                           ),
                         ),

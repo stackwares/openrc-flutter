@@ -108,16 +108,34 @@ enum OverviewMetricType {
     }
   }
 
+  /// Series index within `charts_v2` payload `values` (matches [Kedi `OverviewItemType.chartIndex`](https://github.com/sereisoglu/Kedi)).
   int? get chartIndex {
     switch (this) {
-      case OverviewMetricType.churnRate:
-        return 2;
-      case OverviewMetricType.subsLost:
-        return 1;
+      case OverviewMetricType.mrr:
+      case OverviewMetricType.trials:
+      case OverviewMetricType.revenue:
+      case OverviewMetricType.newUsers:
+      case OverviewMetricType.arr:
+      case OverviewMetricType.proceeds:
       case OverviewMetricType.subscriptions:
-        return 0;
       case OverviewMetricType.users:
         return 0;
+      case OverviewMetricType.transactions:
+      case OverviewMetricType.subsLost:
+        return 1;
+      case OverviewMetricType.churnRate:
+        return 2;
+    }
+  }
+
+  /// `revenue_type` query param for `charts_v2/revenue` (see Kedi `RCChartRevenueType`).
+  String? get chartRevenueTypeParam {
+    switch (this) {
+      case OverviewMetricType.revenue:
+      case OverviewMetricType.transactions:
+        return 'revenue';
+      case OverviewMetricType.proceeds:
+        return 'proceeds';
       default:
         return null;
     }
