@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
@@ -30,8 +29,8 @@ class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
 class _RealtimeSectionTransactionsScreenState
     extends ConsumerState<RealtimeSectionTransactionsScreen> {
   Set<String>? _appIncludeFilter;
-  String? _countryFilter;
-  StoreCommissionPlatform? _platformFilter;
+  Set<String>? _countryFilter;
+  Set<TransactionPlatformFilter>? _platformFilter;
 
   List<RcTransaction> _appFilteredWindow() {
     var list = widget.windowTransactions;
@@ -43,7 +42,7 @@ class _RealtimeSectionTransactionsScreenState
     return list
         .where(
           (tx) =>
-              transactionMatchesCountryFilter(tx, _countryFilter) &&
+              transactionMatchesCountryFilters(tx, _countryFilter) &&
               transactionMatchesPlatformFilter(tx, _platformFilter),
         )
         .toList();
@@ -80,10 +79,12 @@ class _RealtimeSectionTransactionsScreenState
     final canFilterApps = filterOptions.isNotEmpty;
 
     String emptyMessage() {
+      final countryOn =
+          _countryFilter != null && _countryFilter!.isNotEmpty;
+      final platformOn =
+          _platformFilter != null && _platformFilter!.isNotEmpty;
       final filtersOn =
-          _appIncludeFilter != null ||
-          _countryFilter != null ||
-          _platformFilter != null;
+          _appIncludeFilter != null || countryOn || platformOn;
       if (appFiltered.isEmpty && filtersOn) {
         return 'No transactions match your filters in this window.';
       }
@@ -113,8 +114,8 @@ class _RealtimeSectionTransactionsScreenState
         ),
         actions: [
           if (_appIncludeFilter != null ||
-              _countryFilter != null ||
-              _platformFilter != null)
+              (_countryFilter != null && _countryFilter!.isNotEmpty) ||
+              (_platformFilter != null && _platformFilter!.isNotEmpty))
             IconButton(
               icon: const Icon(Icons.filter_alt_off_outlined),
               tooltip: 'Clear filters',
@@ -130,8 +131,8 @@ class _RealtimeSectionTransactionsScreenState
             icon: Icon(
               Icons.filter_list,
               color: _appIncludeFilter != null ||
-                      _countryFilter != null ||
-                      _platformFilter != null
+                      (_countryFilter != null && _countryFilter!.isNotEmpty) ||
+                      (_platformFilter != null && _platformFilter!.isNotEmpty)
                   ? scheme.primary
                   : null,
             ),
@@ -147,14 +148,14 @@ class _RealtimeSectionTransactionsScreenState
                       context: context,
                       filterSource: {'_': widget.windowTransactions},
                       currentIncludeFilter: _appIncludeFilter,
-                      currentCountryCode: _countryFilter,
-                      currentPlatform: _platformFilter,
+                      currentCountryCodes: _countryFilter,
+                      currentPlatforms: _platformFilter,
                       accountProjects: projects,
-                      onApply: (apps, countryCode, platform) {
+                      onApply: (apps, countryCodes, platforms) {
                         setState(() {
                           _appIncludeFilter = apps;
-                          _countryFilter = countryCode;
-                          _platformFilter = platform;
+                          _countryFilter = countryCodes;
+                          _platformFilter = platforms;
                         });
                       },
                     );

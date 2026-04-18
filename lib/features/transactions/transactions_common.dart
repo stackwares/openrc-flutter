@@ -1,5 +1,4 @@
 import 'package:intl/intl.dart';
-import 'package:revenuecat/core/utils/region_display_name.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
@@ -183,32 +182,85 @@ Map<String, List<RcTransaction>> filteredGroupedByApps(
   return out;
 }
 
-bool transactionMatchesCountryFilter(RcTransaction tx, String? countryCode) {
-  if (countryCode == null) return true;
+/// [countryCodes] null or empty → no country restriction. Otherwise a row
+/// matches if its country is in the set or (when `'__'` is included) country is unknown.
+bool transactionMatchesCountryFilters(
+  RcTransaction tx,
+  Set<String>? countryCodes,
+) {
+  if (countryCodes == null || countryCodes.isEmpty) return true;
   final cc = tx.subscriberCountryCode?.trim().toUpperCase();
-  if (countryCode == '__') return cc == null || cc.isEmpty;
-  return cc == countryCode.toUpperCase();
+  final unknown = cc == null || cc.isEmpty;
+  if (unknown) return countryCodes.contains('__');
+  return countryCodes.contains(cc);
 }
 
+/// Store source filter for transaction lists. `null` means no store restriction.
+enum TransactionPlatformFilter {
+  apple,
+  google,
+  web,
+  test,
+}
+
+bool _transactionStoreLooksLikeWebBilling(RcTransaction tx) {
+  final raw = tx.store?.trim();
+  if (raw == null || raw.isEmpty) return false;
+  if (classifyStore(raw) != StoreCommissionPlatform.other) return false;
+  final s = raw.toLowerCase().replaceAll(' ', '_');
+  if (s.contains('stripe')) return true;
+  if (s.contains('promotional')) return true;
+  if (s.contains('amazon')) return true;
+  if (s.contains('paddle')) return true;
+  if (s.contains('rc_billing') || s.contains('rcbilling')) return true;
+  if (s.contains('web')) return true;
+  return false;
+}
+
+bool _transactionMatchesOnePlatformFilter(
+  RcTransaction tx,
+  TransactionPlatformFilter platform,
+) {
+  switch (platform) {
+    case TransactionPlatformFilter.apple:
+      return classifyStore(tx.storeForCommission) ==
+          StoreCommissionPlatform.apple;
+    case TransactionPlatformFilter.google:
+      return classifyStore(tx.storeForCommission) ==
+          StoreCommissionPlatform.google;
+    case TransactionPlatformFilter.web:
+      return _transactionStoreLooksLikeWebBilling(tx);
+    case TransactionPlatformFilter.test:
+      return tx.isSandbox == true;
+  }
+}
+
+/// [platforms] null or empty → no restriction. Otherwise the row matches if it
+/// satisfies any selected platform (OR).
 bool transactionMatchesPlatformFilter(
   RcTransaction tx,
-  StoreCommissionPlatform? platform,
+  Set<TransactionPlatformFilter>? platforms,
 ) {
-  if (platform == null) return true;
-  return classifyStore(tx.storeForCommission) == platform;
+  if (platforms == null || platforms.isEmpty) return true;
+  for (final p in platforms) {
+    if (_transactionMatchesOnePlatformFilter(tx, p)) return true;
+  }
+  return false;
 }
 
 Map<String, List<RcTransaction>> filteredGroupedByTransactionMeta(
   Map<String, List<RcTransaction>> grouped, {
-  String? countryCode,
-  StoreCommissionPlatform? platform,
+  Set<String>? countryCodes,
+  Set<TransactionPlatformFilter>? platforms,
 }) {
-  if (countryCode == null && platform == null) return grouped;
+  final countryActive = countryCodes != null && countryCodes.isNotEmpty;
+  final platformActive = platforms != null && platforms.isNotEmpty;
+  if (!countryActive && !platformActive) return grouped;
   final out = <String, List<RcTransaction>>{};
   for (final e in grouped.entries) {
     final filtered = e.value.where((tx) {
-      if (!transactionMatchesCountryFilter(tx, countryCode)) return false;
-      if (!transactionMatchesPlatformFilter(tx, platform)) return false;
+      if (!transactionMatchesCountryFilters(tx, countryCodes)) return false;
+      if (!transactionMatchesPlatformFilter(tx, platforms)) return false;
       return true;
     }).toList();
     if (filtered.isNotEmpty) {
@@ -216,29 +268,6 @@ Map<String, List<RcTransaction>> filteredGroupedByTransactionMeta(
     }
   }
   return out;
-}
-
-/// Distinct ISO alpha-2 codes (uppercase) and whether any row is missing country.
-({List<String> codes, bool hasUnknown}) collectCountryFilterCodes(
-  Iterable<RcTransaction> transactions,
-) {
-  final codes = <String>{};
-  var unknown = false;
-  for (final tx in transactions) {
-    final c = tx.subscriberCountryCode?.trim();
-    if (c == null || c.isEmpty) {
-      unknown = true;
-    } else {
-      codes.add(c.toUpperCase());
-    }
-  }
-  final list = codes.toList()
-    ..sort(
-      (a, b) => regionDisplayNameEnglish(
-        a,
-      ).toLowerCase().compareTo(regionDisplayNameEnglish(b).toLowerCase()),
-    );
-  return (codes: list, hasUnknown: unknown);
 }
 
 Map<String, double> dailyTotalsForGrouped(
@@ -329,8 +358,27 @@ List<AppFilterOption> collectAppFilterOptionsWithProjects(
     byKey.putIfAbsent(opt.key, () => opt);
   }
 
-  final out = byKey.values.toList();
-  out.sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+  final onScreenOrdered = collectAppFilterOptions(filterSource)
+      .map((o) => o.key)
+      .toList();
+  final seen = <String>{};
+  final out = <AppFilterOption>[];
+  for (final k in onScreenOrdered) {
+    final o = byKey[k];
+    if (o != null) {
+      out.add(o);
+      seen.add(k);
+    }
+  }
+  final restKeys = byKey.keys.where((k) => !seen.contains(k)).toList()
+    ..sort(
+      (a, b) => byKey[a]!.label.toLowerCase().compareTo(
+            byKey[b]!.label.toLowerCase(),
+          ),
+    );
+  for (final k in restKeys) {
+    out.add(byKey[k]!);
+  }
   return out;
 }
 
@@ -347,6 +395,18 @@ enum TransactionDaySectionFilter {
   subscription,
   refunded,
   cancelled,
+}
+
+/// [filters] empty → no section restriction (matches all).
+bool transactionMatchesAnySectionFilters(
+  RcTransaction tx,
+  Set<TransactionDaySectionFilter> filters,
+) {
+  if (filters.isEmpty) return true;
+  for (final f in filters) {
+    if (transactionMatchesSectionFilter(tx, f)) return true;
+  }
+  return false;
 }
 
 bool transactionMatchesSectionFilter(

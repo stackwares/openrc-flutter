@@ -19,4 +19,17 @@ abstract class AppConstants {
   static const int rcErrorExpiredAuthToken = 7667;
 
   static const String headerXRequestedWith = 'XMLHttpRequest';
+
+  /// Full HTTPS URL of the deployed `revenueCatWebhook` Cloud Function (no `?` query), e.g.
+  /// `https://us-central1-PROJECT.cloudfunctions.net/revenueCatWebhook`
+  static const String rcWebhookRelayUrl = String.fromEnvironment(
+    'RC_WEBHOOK_RELAY_URL',
+    defaultValue: '',
+  );
+
+  /// Region for [registerFcmToken] and relay deployment (default `us-central1`).
+  static const String firebaseFunctionsRegion = String.fromEnvironment(
+    'FIREBASE_FUNCTIONS_REGION',
+    defaultValue: 'us-central1',
+  );
 }

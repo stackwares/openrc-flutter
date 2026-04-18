@@ -1,8 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
+import 'package:revenuecat/core/utils/region_display_name.dart';
+import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/features/transactions/transactions_revenue_insights_compute.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
@@ -13,32 +12,38 @@ import 'package:revenuecat/services/app_icon_overrides_store.dart';
 typedef TransactionsFilterSheetOnApply =
     void Function(
       Set<String>? includeApps,
-      String? countryCode,
-      StoreCommissionPlatform? platform,
+      Set<String>? countryCodes,
+      Set<TransactionPlatformFilter>? platforms,
     );
 
-enum TransactionFilterPlatformSegment { all, apple, google, other }
+enum _FilterSheetPanel { apps, country }
 
-TransactionFilterPlatformSegment transactionFilterPlatformSegmentFromFilter(
-  StoreCommissionPlatform? p,
-) {
-  return switch (p) {
-    null => TransactionFilterPlatformSegment.all,
-    StoreCommissionPlatform.apple => TransactionFilterPlatformSegment.apple,
-    StoreCommissionPlatform.google => TransactionFilterPlatformSegment.google,
-    StoreCommissionPlatform.other => TransactionFilterPlatformSegment.other,
+Set<String> _normalizedCountrySelection(Set<String>? raw) {
+  if (raw == null || raw.isEmpty) return {};
+  final allowed = {
+    for (final e in sortedSupportedIso3166Alpha2Countries()) e.code,
+    '__',
   };
+  final out = <String>{};
+  for (final c in raw) {
+    final u = c.trim().toUpperCase();
+    if (allowed.contains(u)) out.add(u);
+  }
+  return out;
 }
 
-StoreCommissionPlatform? storeCommissionPlatformFromFilterSegment(
-  TransactionFilterPlatformSegment s,
-) {
-  return switch (s) {
-    TransactionFilterPlatformSegment.all => null,
-    TransactionFilterPlatformSegment.apple => StoreCommissionPlatform.apple,
-    TransactionFilterPlatformSegment.google => StoreCommissionPlatform.google,
-    TransactionFilterPlatformSegment.other => StoreCommissionPlatform.other,
-  };
+InputDecoration _filterSheetSearchDecoration(ColorScheme scheme, String hint) {
+  return InputDecoration(
+    hintText: hint,
+    prefixIcon: const Icon(Icons.search_rounded, size: 22),
+    filled: true,
+    fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.42),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+  );
 }
 
 /// Bottom sheet to filter transactions by app, store platform, and country.
@@ -46,8 +51,8 @@ Future<void> showTransactionsAppFilterSheet({
   required BuildContext context,
   required Map<String, List<RcTransaction>> filterSource,
   required Set<String>? currentIncludeFilter,
-  String? currentCountryCode,
-  StoreCommissionPlatform? currentPlatform,
+  Set<String>? currentCountryCodes,
+  Set<TransactionPlatformFilter>? currentPlatforms,
   List<RcProject> accountProjects = const [],
   required TransactionsFilterSheetOnApply onApply,
 }) {
@@ -57,9 +62,6 @@ Future<void> showTransactionsAppFilterSheet({
   );
   if (options.isEmpty) return Future.value();
 
-  final flatTxs = filterSource.values.expand((e) => e);
-  final countryInfo = collectCountryFilterCodes(flatTxs);
-
   final allKeys = options.map((o) => o.key).toSet();
   final initialSelected = currentIncludeFilter == null
       ? Set<String>.from(allKeys)
@@ -67,15 +69,6 @@ Future<void> showTransactionsAppFilterSheet({
           final i = currentIncludeFilter.intersection(allKeys);
           return i.isEmpty ? Set<String>.from(allKeys) : i;
         }();
-
-  final validCountryCodes = countryInfo.codes.toSet();
-  final initialCountry = () {
-    final c = currentCountryCode;
-    if (c == null) return null;
-    if (c == '__') return countryInfo.hasUnknown ? '__' : null;
-    final u = c.toUpperCase();
-    return validCountryCodes.contains(u) ? u : null;
-  }();
 
   final maxHeight = MediaQuery.sizeOf(context).height * 0.75;
 
@@ -95,16 +88,17 @@ Future<void> showTransactionsAppFilterSheet({
               options: options,
               allKeys: allKeys,
               initialSelected: initialSelected,
-              countryCodes: countryInfo.codes,
-              hasUnknownCountry: countryInfo.hasUnknown,
-              initialCountryCode: initialCountry,
-              initialPlatformSegment: transactionFilterPlatformSegmentFromFilter(
-                currentPlatform,
+              initialCountrySelection: _normalizedCountrySelection(
+                currentCountryCodes,
               ),
-              onApply: (selected, country, platform) {
+              initialPlatformSelection:
+                  currentPlatforms == null || currentPlatforms.isEmpty
+                  ? <TransactionPlatformFilter>{}
+                  : Set<TransactionPlatformFilter>.from(currentPlatforms),
+              onApply: (selected, countries, platforms) {
                 Navigator.pop(sheetContext);
                 final apps = selected.length == allKeys.length ? null : selected;
-                onApply(apps, country, platform);
+                onApply(apps, countries, platforms);
               },
             ),
           ),
@@ -114,18 +108,16 @@ Future<void> showTransactionsAppFilterSheet({
   );
 }
 
-class TransactionsAppFilterModal extends StatefulWidget {
+class TransactionsAppFilterModal extends ConsumerStatefulWidget {
   final List<AppFilterOption> options;
   final Set<String> allKeys;
   final Set<String> initialSelected;
-  final List<String> countryCodes;
-  final bool hasUnknownCountry;
-  final String? initialCountryCode;
-  final TransactionFilterPlatformSegment initialPlatformSegment;
+  final Set<String> initialCountrySelection;
+  final Set<TransactionPlatformFilter> initialPlatformSelection;
   final void Function(
     Set<String> selected,
-    String? countryCode,
-    StoreCommissionPlatform? platform,
+    Set<String>? countryCodes,
+    Set<TransactionPlatformFilter>? platforms,
   )
   onApply;
 
@@ -134,55 +126,121 @@ class TransactionsAppFilterModal extends StatefulWidget {
     required this.options,
     required this.allKeys,
     required this.initialSelected,
-    required this.countryCodes,
-    required this.hasUnknownCountry,
-    required this.initialCountryCode,
-    required this.initialPlatformSegment,
+    required this.initialCountrySelection,
+    required this.initialPlatformSelection,
     required this.onApply,
   });
 
   @override
-  State<TransactionsAppFilterModal> createState() =>
+  ConsumerState<TransactionsAppFilterModal> createState() =>
       _TransactionsAppFilterModalState();
 }
 
-class _TransactionsAppFilterModalState extends State<TransactionsAppFilterModal> {
+class _TransactionsAppFilterModalState
+    extends ConsumerState<TransactionsAppFilterModal> {
   late Set<String> _selected;
-  late String? _countryCode;
-  late TransactionFilterPlatformSegment _platformSeg;
+  late Set<TransactionPlatformFilter> _platformSelection;
+  late Set<String> _countrySelection;
+  _FilterSheetPanel _panel = _FilterSheetPanel.apps;
+  String _appSearchQuery = '';
+  String _countrySearchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _selected = Set<String>.from(widget.initialSelected);
-    _countryCode = widget.initialCountryCode;
-    _platformSeg = widget.initialPlatformSegment;
+    _platformSelection =
+        Set<TransactionPlatformFilter>.from(widget.initialPlatformSelection);
+    _countrySelection = Set<String>.from(widget.initialCountrySelection);
   }
 
-  bool get _showCountrySection =>
-      widget.countryCodes.isNotEmpty || widget.hasUnknownCountry;
+  List<AppFilterOption> get _appsMatchingSearch {
+    final q = _appSearchQuery.trim().toLowerCase();
+    if (q.isEmpty) return widget.options;
+    return widget.options.where((o) {
+      return o.label.toLowerCase().contains(q) ||
+          o.key.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  List<({String code, String displayName})> get _countriesMatchingSearch {
+    final q = _countrySearchQuery.trim().toLowerCase();
+    final all = sortedSupportedIso3166Alpha2Countries();
+    if (q.isEmpty) return all;
+    return all.where((e) {
+      return e.displayName.toLowerCase().contains(q) ||
+          e.code.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  bool get _unknownChipMatchesSearch {
+    final q = _countrySearchQuery.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return 'unknown'.contains(q) ||
+        'other'.contains(q) ||
+        '__'.contains(q) ||
+        'missing'.contains(q);
+  }
+
+  bool get _allAppsSelected =>
+      _selected.length == widget.allKeys.length && widget.allKeys.isNotEmpty;
+
+  String get _platformSummaryLine {
+    if (_platformSelection.isEmpty) {
+      return 'All platforms (no store filter)';
+    }
+    if (_platformSelection.length == 1) {
+      return switch (_platformSelection.first) {
+        TransactionPlatformFilter.apple => 'Apple App Store',
+        TransactionPlatformFilter.google => 'Google Play',
+        TransactionPlatformFilter.web => 'Web & third-party billing',
+        TransactionPlatformFilter.test => 'Sandbox & test purchases',
+      };
+    }
+    return '${_platformSelection.length} platforms selected';
+  }
+
+  List<
+    ({
+      TransactionPlatformFilter filter,
+      String label,
+      IconData icon,
+      Color? iconColor,
+    })
+  >
+  _platformChipDefs(ColorScheme scheme) {
+    return [
+      (
+        filter: TransactionPlatformFilter.apple,
+        label: 'Apple',
+        icon: Icons.phone_iphone_rounded,
+        iconColor: storeBrandIconTint('App Store') ?? scheme.primary,
+      ),
+      (
+        filter: TransactionPlatformFilter.google,
+        label: 'Google Play',
+        icon: Icons.android_rounded,
+        iconColor: storeBrandIconTint('Play Store') ?? scheme.primary,
+      ),
+      (
+        filter: TransactionPlatformFilter.web,
+        label: 'Web',
+        icon: Icons.language_rounded,
+        iconColor: scheme.primary,
+      ),
+      (
+        filter: TransactionPlatformFilter.test,
+        label: 'Test',
+        icon: Icons.science_outlined,
+        iconColor: scheme.primary,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final countrySegments = <ButtonSegment<String?>>[
-      const ButtonSegment<String?>(value: null, label: Text('All')),
-      ...widget.countryCodes.map(
-        (code) => ButtonSegment<String?>(
-          value: code,
-          label: Text(
-            '${countryInsightLeadingEmoji(code)} $code',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-      if (widget.hasUnknownCountry)
-        ButtonSegment<String?>(
-          value: '__',
-          label: Text('${countryInsightLeadingEmoji('__')} Other'),
-        ),
-    ];
+    final scheme = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,172 +254,98 @@ class _TransactionsAppFilterModalState extends State<TransactionsAppFilterModal>
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Platform',
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _platformSummaryLine,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _platformSelection.isEmpty
+                        ? null
+                        : () => setState(() => _platformSelection = {}),
+                    child: const Text('Reset'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final p in _platformChipDefs(scheme))
+                    FilterChip(
+                      showCheckmark: false,
+                      selected: _platformSelection.contains(p.filter),
+                      avatar: CircleAvatar(
+                        radius: 14,
+                        backgroundColor: scheme.surfaceContainerHighest
+                            .withValues(alpha: 0.65),
+                        child: Icon(
+                          p.icon,
+                          size: 18,
+                          color: p.iconColor ?? scheme.primary,
+                        ),
+                      ),
+                      label: Text(
+                        p.label,
+                        style: theme.textTheme.labelLarge,
+                      ),
+                      onSelected: (sel) {
+                        setState(() {
+                          if (sel) {
+                            _platformSelection.add(p.filter);
+                          } else {
+                            _platformSelection.remove(p.filter);
+                          }
+                        });
+                      },
+                    ),
+                ],
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SegmentedButton<TransactionFilterPlatformSegment>(
+          child: SegmentedButton<_FilterSheetPanel>(
             style: SegmentedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 10),
             ),
             showSelectedIcon: false,
             segments: const [
-              ButtonSegment(
-                value: TransactionFilterPlatformSegment.all,
-                label: Text('All'),
+              ButtonSegment<_FilterSheetPanel>(
+                value: _FilterSheetPanel.apps,
+                label: Text('Apps'),
+                icon: Icon(Icons.apps_outlined, size: 18),
               ),
-              ButtonSegment(
-                value: TransactionFilterPlatformSegment.apple,
-                label: Text('Apple'),
-              ),
-              ButtonSegment(
-                value: TransactionFilterPlatformSegment.google,
-                label: Text('Google'),
-              ),
-              ButtonSegment(
-                value: TransactionFilterPlatformSegment.other,
-                label: Text('Other'),
+              ButtonSegment<_FilterSheetPanel>(
+                value: _FilterSheetPanel.country,
+                label: Text('Country'),
+                icon: Icon(Icons.public_outlined, size: 18),
               ),
             ],
-            selected: {_platformSeg},
+            selected: {_panel},
             onSelectionChanged: (next) {
               if (next.isEmpty) return;
-              setState(() => _platformSeg = next.single);
+              setState(() => _panel = next.single);
             },
           ),
         ),
-        if (_showCountrySection) ...[
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'Country',
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          LayoutBuilder(
-            builder: (context, _) {
-              final vw = MediaQuery.sizeOf(context).width;
-              const minSeg = 72.0;
-              final minBar = math.max(
-                vw - 40,
-                countrySegments.length * minSeg,
-              );
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: minBar),
-                  child: SegmentedButton<String?>(
-                    style: SegmentedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
-                    ),
-                    showSelectedIcon: false,
-                    segments: countrySegments,
-                    selected: {_countryCode},
-                    onSelectionChanged: (next) {
-                      if (next.isEmpty) return;
-                      setState(() => _countryCode = next.single);
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-        const SizedBox(height: 18),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 8, 0),
-          child: Row(
-            children: [
-              Text(
-                'Apps',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  setState(() => _selected = Set<String>.from(widget.allKeys));
-                },
-                child: const Text('ALL'),
-              ),
-              TextButton(
-                onPressed: () => setState(() => _selected = {}),
-                child: const Text('NONE'),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: widget.options.length,
-            itemBuilder: (context, index) {
-              final opt = widget.options[index];
-              return CheckboxListTile(
-                value: _selected.contains(opt.key),
-                onChanged: (checked) {
-                  setState(() {
-                    if (checked == true) {
-                      _selected.add(opt.key);
-                    } else {
-                      _selected.remove(opt.key);
-                    }
-                  });
-                },
-                title: Row(
-                  children: [
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final scheme = Theme.of(context).colorScheme;
-                        final url = opt.appId != null
-                            ? ref.watch(appIconOverridesProvider)[opt.appId]
-                            : null;
-                        return TransactionLeadingAvatar(
-                          imageUrl: url,
-                          size: 40,
-                          borderRadius: 10,
-                          tintColor: scheme.primary,
-                          fallback: Icon(
-                            Icons.apps_outlined,
-                            color: scheme.primary,
-                            size: 22,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        opt.label,
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                    ),
-                  ],
-                ),
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            },
-          ),
-        ),
+        const SizedBox(height: 8),
+        Expanded(child: _buildPanelBody(theme, scheme)),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: Row(
@@ -374,8 +358,14 @@ class _TransactionsAppFilterModalState extends State<TransactionsAppFilterModal>
               FilledButton(
                 onPressed: () => widget.onApply(
                   Set<String>.from(_selected),
-                  _countryCode,
-                  storeCommissionPlatformFromFilterSegment(_platformSeg),
+                  _countrySelection.isEmpty
+                      ? null
+                      : Set<String>.from(_countrySelection),
+                  _platformSelection.isEmpty
+                      ? null
+                      : Set<TransactionPlatformFilter>.from(
+                          _platformSelection,
+                        ),
                 ),
                 child: const Text('Apply'),
               ),
@@ -383,6 +373,217 @@ class _TransactionsAppFilterModalState extends State<TransactionsAppFilterModal>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPanelBody(ThemeData theme, ColorScheme scheme) {
+    switch (_panel) {
+      case _FilterSheetPanel.apps:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 8, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _selected.isEmpty
+                          ? 'No apps selected'
+                          : _allAppsSelected
+                          ? 'All apps included'
+                          : '${_selected.length} of ${widget.allKeys.length} apps',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        _allAppsSelected || widget.allKeys.isEmpty
+                        ? null
+                        : () => setState(
+                            () => _selected = Set<String>.from(widget.allKeys),
+                          ),
+                    child: const Text('All'),
+                  ),
+                  TextButton(
+                    onPressed: _selected.isEmpty
+                        ? null
+                        : () => setState(() => _selected = {}),
+                    child: const Text('None'),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: TextField(
+                onChanged: (v) => setState(() => _appSearchQuery = v),
+                decoration: _filterSheetSearchDecoration(
+                  scheme,
+                  'Search apps',
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final opt in _appsMatchingSearch)
+                      FilterChip(
+                        showCheckmark: false,
+                        selected: _selected.contains(opt.key),
+                        avatar: _AppChipAvatar(
+                          appId: opt.appId,
+                          scheme: scheme,
+                        ),
+                        label: Text(
+                          opt.label,
+                          style: theme.textTheme.labelLarge,
+                        ),
+                        onSelected: (sel) {
+                          setState(() {
+                            if (sel) {
+                              _selected.add(opt.key);
+                            } else {
+                              _selected.remove(opt.key);
+                            }
+                          });
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      case _FilterSheetPanel.country:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 12, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _countrySelection.isEmpty
+                          ? 'All regions (no country filter)'
+                          : '${_countrySelection.length} region${_countrySelection.length == 1 ? '' : 's'} selected',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _countrySelection.isEmpty
+                        ? null
+                        : () => setState(() => _countrySelection = {}),
+                    child: const Text('Clear'),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: TextField(
+                onChanged: (v) => setState(() => _countrySearchQuery = v),
+                decoration: _filterSheetSearchDecoration(
+                  scheme,
+                  'Search countries',
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_unknownChipMatchesSearch)
+                      FilterChip(
+                        showCheckmark: false,
+                        selected: _countrySelection.contains('__'),
+                        label: Text(
+                          '${countryInsightLeadingEmoji('__')} Unknown',
+                          style: theme.textTheme.labelLarge,
+                        ),
+                        onSelected: (sel) {
+                          setState(() {
+                            if (sel) {
+                              _countrySelection.add('__');
+                            } else {
+                              _countrySelection.remove('__');
+                            }
+                          });
+                        },
+                      ),
+                    ..._countriesMatchingSearch.map((e) {
+                      final code = e.code;
+                      final selected = _countrySelection.contains(code);
+                      return FilterChip(
+                        showCheckmark: false,
+                        selected: selected,
+                        label: Text(
+                          '${countryInsightLeadingEmoji(code)} ${e.displayName}',
+                          style: theme.textTheme.labelLarge,
+                        ),
+                        onSelected: (sel) {
+                          setState(() {
+                            if (sel) {
+                              _countrySelection.add(code);
+                            } else {
+                              _countrySelection.remove(code);
+                            }
+                          });
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+    }
+  }
+}
+
+class _AppChipAvatar extends ConsumerWidget {
+  const _AppChipAvatar({required this.appId, required this.scheme});
+
+  final String? appId;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final url = appId != null
+        ? ref.watch(appIconOverridesProvider)[appId]
+        : null;
+    return CircleAvatar(
+      radius: 14,
+      backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.65),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: TransactionLeadingAvatar(
+          imageUrl: url,
+          size: 26,
+          borderRadius: 8,
+          tintColor: scheme.primary,
+          fallback: Icon(
+            Icons.apps_outlined,
+            color: scheme.primary,
+            size: 16,
+          ),
+        ),
+      ),
     );
   }
 }

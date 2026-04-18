@@ -300,3 +300,18 @@ const Map<String, String> _kIso3166Alpha2English = {
   'ZM': 'Zambia',
   'ZW': 'Zimbabwe',
 };
+
+/// All ISO 3166-1 alpha-2 codes with English labels in this map, sorted by
+/// [regionDisplayNameEnglish] (for filter chip lists).
+List<({String code, String displayName})> sortedSupportedIso3166Alpha2Countries() {
+  final keys = _kIso3166Alpha2English.keys.toList();
+  keys.sort((a, b) {
+    final na = regionDisplayNameEnglish(a).toLowerCase();
+    final nb = regionDisplayNameEnglish(b).toLowerCase();
+    final cmp = na.compareTo(nb);
+    return cmp != 0 ? cmp : a.compareTo(b);
+  });
+  return [
+    for (final k in keys) (code: k, displayName: regionDisplayNameEnglish(k)),
+  ];
+}

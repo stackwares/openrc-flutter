@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:revenuecat/services/push_registration_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/utilities_service.dart';
 
@@ -24,6 +26,14 @@ class AppStartup {
 
     final hasSession = await container.read(rcAuthServiceProvider).restoreSession();
     _log.info('Session restored: $hasSession');
+
+    if (!kIsWeb) {
+      try {
+        await PushRegistrationService.instance.initialize();
+      } catch (e, st) {
+        _log.warning('Push registration init failed: $e\n$st');
+      }
+    }
 
     _log.info('App startup initialization completed');
   }

@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Push tokens are written only by Cloud Functions (Admin SDK).
+    match /pushUsers/{userId}/tokens/{tokenId} {
+      allow read, write: if false;
+    }
+    match /webhookDedupe/{eventId} {
+      allow read, write: if false;
+    }
+  }
+}

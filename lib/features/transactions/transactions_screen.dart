@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
@@ -118,14 +117,13 @@ bool _isPurchaseInstantInFuture(RcTransaction tx) {
 
 List<RcTransaction> _collectFutureTransactions({
   required Map<String, List<RcTransaction>> groupedForList,
-  required TransactionDaySectionFilter? sectionFilter,
+  required Set<TransactionDaySectionFilter> sectionFilters,
 }) {
   final out = <RcTransaction>[];
   final seen = <String>{};
   for (final tx in groupedForList.values.expand((e) => e)) {
     if (!_isPurchaseInstantInFuture(tx)) continue;
-    if (sectionFilter != null &&
-        !transactionMatchesSectionFilter(tx, sectionFilter)) {
+    if (!transactionMatchesAnySectionFilters(tx, sectionFilters)) {
       continue;
     }
     final k = rcTransactionDedupKey(tx);
@@ -258,7 +256,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         limit: _kediFirstPageLimit,
         endDate: _kediEndDateString(),
       );
-      final response = await api.transactions(request);
+      final response = await api.transactions(
+        request,
+        requestContext: 'transactions:initial',
+      );
       final raw = response.transactions ?? [];
       final grouped = <String, List<RcTransaction>>{};
       _mergeRawIntoGrouped(grouped, raw);
@@ -303,7 +304,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   /// Fetches the next page (older transactions). Returns false if the request
   /// did not complete successfully (caller may stop retry loops).
-  Future<bool> _performFetchMorePage() async {
+  Future<bool> _performFetchMorePage({required String requestContext}) async {
     if (state.isLoadingMore || !state.hasMore) return false;
     if (state.lastPurchaseMs == null) {
       state = state.copyWith(hasMore: false);
@@ -318,7 +319,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         limit: _kediPaginationLimit,
         startFrom: prevCursor,
       );
-      final response = await api.transactions(request);
+      final response = await api.transactions(
+        request,
+        requestContext: requestContext,
+      );
       final raw = response.transactions ?? [];
       final existingGrouped = Map<String, List<RcTransaction>>.from(
         state.grouped,
@@ -351,8 +355,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   }
 
   Future<void> fetchMore() async {
-    await _performFetchMorePage();
-    unawaited(backfillIncompleteCalendarDays());
+    await _performFetchMorePage(requestContext: 'transactions:scroll');
   }
 
   /// Keeps calling [_performFetchMorePage] while [state.hasMore] and under
@@ -382,7 +385,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         if (gen != _backfillGeneration || state.isLoading || !state.hasMore) {
           break;
         }
-        final ok = await _performFetchMorePage();
+        final backfillKind = onlyThroughCurrentMonth
+            ? 'transactions:backfill_revenue_window'
+            : 'transactions:backfill_after_day_change';
+        final ok = await _performFetchMorePage(
+          requestContext: '$backfillKind page=${pages + 1}',
+        );
         if (!ok) break;
         pages++;
         if (gen == _backfillGeneration) {
@@ -443,12 +451,13 @@ final transactionsAppIncludeFilterProvider = StateProvider<Set<String>?>(
   (ref) => null,
 );
 
-/// Shared country filter (`null` = all, `'__'` = unknown / missing country).
-final transactionsCountryFilterProvider = StateProvider<String?>((ref) => null);
+/// Shared country filter: `null` or empty = all regions. Otherwise subscriber
+/// country must be in the set, or match `'__'` for unknown / missing country.
+final transactionsCountryFilterProvider = StateProvider<Set<String>?>((ref) => null);
 
-/// Shared store platform filter (`null` = all).
+/// Shared store platform filter (`null` or empty = all).
 final transactionsPlatformFilterProvider =
-    StateProvider<StoreCommissionPlatform?>((ref) => null);
+    StateProvider<Set<TransactionPlatformFilter>?>((ref) => null);
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -463,7 +472,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   /// Distance from the end of the list that triggers the next page.
   static const _loadMoreLeadPx = 420.0;
 
-  TransactionDaySectionFilter? _sectionFilter;
+  Set<TransactionDaySectionFilter> _sectionFilters = {};
 
   /// Expandable "Future transactions" (today only); collapsed by default.
   bool _futureTransactionsExpanded = false;
@@ -488,7 +497,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final pos = _scrollController.position;
     final maxExt = pos.maxScrollExtent;
-    final nearEnd = maxExt <= 0 ? true : pos.pixels >= maxExt - _loadMoreLeadPx;
+    // If nothing actually scrolls (`maxScrollExtent <= 0`), treating that as
+    // "at end" fires `fetchMore` on every notification — endless HTTP while
+    // `hasMore` stays true (e.g. section filters hide every loaded row).
+    final nearEnd =
+        maxExt > 0 && pos.pixels >= maxExt - _loadMoreLeadPx;
     if (nearEnd) {
       ref.read(transactionsProvider.notifier).fetchMore();
     }
@@ -511,11 +524,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final canOpenTransactionFilter = !state.isLoading &&
         collectAppFilterOptionsWithProjects(dayFilterSource, accountProjects)
             .isNotEmpty;
+    final countryFilterActive =
+        countryFilter != null && countryFilter.isNotEmpty;
+    final platformFilterActive =
+        platformFilter != null && platformFilter.isNotEmpty;
     final filtersActive =
         appIncludeFilter != null ||
-        countryFilter != null ||
-        platformFilter != null ||
-        _sectionFilter != null;
+        countryFilterActive ||
+        platformFilterActive ||
+        _sectionFilters.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -565,7 +582,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     ref.read(transactionsAppIncludeFilterProvider.notifier).state = null;
     ref.read(transactionsCountryFilterProvider.notifier).state = null;
     ref.read(transactionsPlatformFilterProvider.notifier).state = null;
-    setState(() => _sectionFilter = null);
+    setState(() => _sectionFilters = {});
   }
 
   Widget _buildDayTab(BuildContext context, TransactionsState state) {
@@ -573,6 +590,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
     final countryFilter = ref.watch(transactionsCountryFilterProvider);
     final platformFilter = ref.watch(transactionsPlatformFilterProvider);
+    final countryFilterActive =
+        countryFilter != null && countryFilter.isNotEmpty;
+    final platformFilterActive =
+        platformFilter != null && platformFilter.isNotEmpty;
     if (state.isLoading && state.grouped.isEmpty) {
       return const TransactionsLoadingSkeleton();
     }
@@ -604,15 +625,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final rawDayTxs = state.grouped[selectedKey] ?? [];
     final groupedForList = filteredGroupedByTransactionMeta(
       filteredGroupedByApps(state.grouped, appIncludeFilter),
-      countryCode: countryFilter,
-      platform: platformFilter,
+      countryCodes: countryFilter,
+      platforms: platformFilter,
     );
     final allForDay = groupedForList[selectedKey] ?? [];
 
     final listFiltersActive =
         appIncludeFilter != null ||
-        countryFilter != null ||
-        platformFilter != null;
+        countryFilterActive ||
+        platformFilterActive;
     if (listFiltersActive && rawDayTxs.isNotEmpty && allForDay.isEmpty) {
       return Center(
         child: Padding(
@@ -644,38 +665,32 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       );
     }
 
-    final sectionFiltered = _sectionFilter != null;
+    final allForDayForMetrics = allForDay
+        .where(
+          (tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters),
+        )
+        .toList();
+
     final todayKey = localTodayDayKey();
     final viewingToday = selectedKey == todayKey;
-    var transactions = sectionFiltered
-        ? allForDay
-              .where(
-                (tx) => transactionMatchesSectionFilter(tx, _sectionFilter!),
-              )
-              .toList()
-        : allForDay;
-    if (viewingToday) {
-      transactions = transactions
-          .where((tx) => !_isPurchaseInstantInFuture(tx))
-          .toList();
-    }
+    var transactions = allForDayForMetrics
+        .where((tx) => !viewingToday || !_isPurchaseInstantInFuture(tx))
+        .toList();
 
     final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
     final canGoNext = selectedKey.compareTo(todayKey) < 0;
-    final groupedForHeader = filteredGroupedByTransactionMeta(
-      filteredGroupedByApps(state.grouped, appIncludeFilter),
-      countryCode: countryFilter,
-      platform: platformFilter,
-    );
-    final headerDailyTotals = dailyTotalsForGrouped(
-      groupedForHeader,
-      commission,
-    );
-    final headerDaily = headerDailyTotals[selectedKey] ?? 0;
-    final headerPrevTotal = prevKey != null ? headerDailyTotals[prevKey] : null;
+    final headerDaily = netRevenueSum(allForDayForMetrics, commission);
     final previousDayForSummary = prevKey != null
         ? (groupedForList[prevKey] ?? <RcTransaction>[])
+        : null;
+    final previousDayForMetrics = previousDayForSummary
+        ?.where(
+          (tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters),
+        )
+        .toList();
+    final headerPrevTotal = previousDayForMetrics != null
+        ? netRevenueSum(previousDayForMetrics, commission)
         : null;
 
     final subscriberEarliestPurchaseDay =
@@ -686,7 +701,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final futureTxs = viewingToday
         ? _collectFutureTransactions(
             groupedForList: groupedForList,
-            sectionFilter: sectionFiltered ? _sectionFilter : null,
+            sectionFilters: _sectionFilters,
           )
         : <RcTransaction>[];
 
@@ -739,7 +754,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             letterSpacing: -0.65,
                             height: 1.1,
                           ),
-                        ).appValueReveal(key: ValueKey('rev_$selectedKey')),
+                        ).appValueReveal(
+                          key: ValueKey(
+                            'rev_${selectedKey}_${_sectionFilters.map((e) => e.name).join(',')}',
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         if (headerPrevTotal != null)
                           Center(
@@ -776,14 +795,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               _DayTypeCountSummary(
                 transactions: allForDay,
                 previousDayTransactions: previousDayForSummary,
-                selectedFilter: sectionFiltered ? _sectionFilter : null,
-                onSelectFilter: (filter) {
+                selectedFilters: _sectionFilters,
+                onFilterCellTap: (filter) {
                   setState(() {
-                    if (_sectionFilter == filter) {
-                      _sectionFilter = null;
+                    final next = Set<TransactionDaySectionFilter>.from(
+                      _sectionFilters,
+                    );
+                    if (next.contains(filter)) {
+                      next.remove(filter);
                     } else {
-                      _sectionFilter = filter;
+                      next.add(filter);
                     }
+                    _sectionFilters = next;
                   });
                 },
                 onClearFilter: null,
@@ -793,7 +816,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ),
       ).appCardEntrance(),
       RealtimeRevenueInsightsList(
-        transactions: allForDay,
+        transactions: allForDayForMetrics,
         asModalEntry: true,
       ).appCardEntrance(delay: const Duration(milliseconds: 80)),
       if (futureTxs.isNotEmpty)
@@ -901,7 +924,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   void _goToDay(String dayKey) {
     setState(() {
-      _sectionFilter = null;
       _futureTransactionsExpanded = false;
     });
     ref.read(transactionsProvider.notifier).setSelectedDayKey(dayKey);
@@ -933,16 +955,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       context: context,
       filterSource: filterSource,
       currentIncludeFilter: current,
-      currentCountryCode: country,
-      currentPlatform: platform,
+      currentCountryCodes: country,
+      currentPlatforms: platform,
       accountProjects: projects,
-      onApply: (apps, countryCode, platformFilter) {
+      onApply: (apps, countryCodes, platformFilters) {
         ref.read(transactionsAppIncludeFilterProvider.notifier).state = apps;
         ref.read(transactionsCountryFilterProvider.notifier).state =
-            countryCode;
+            countryCodes;
         ref.read(transactionsPlatformFilterProvider.notifier).state =
-            platformFilter;
-        setState(() => _sectionFilter = null);
+            platformFilters;
+        setState(() => _sectionFilters = {});
       },
     );
   }
@@ -977,8 +999,8 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
 
     final grouped = filteredGroupedByTransactionMeta(
       filteredGroupedByApps(state.grouped, appIncludeFilter),
-      countryCode: countryFilter,
-      platform: platformFilter,
+      countryCodes: countryFilter,
+      platforms: platformFilter,
     );
     final allLoadedTxs = flattenGroupedTransactionsDeduped(grouped);
     // Sum revenue from paginated `/me/transactions` merges only — not overview chart totals.
@@ -986,10 +1008,14 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
     final grossTotal = grossRevenueSum(txs);
     final netTotal = netRevenueSum(txs, commission);
 
+    final countryFilterActive =
+        countryFilter != null && countryFilter.isNotEmpty;
+    final platformFilterActive =
+        platformFilter != null && platformFilter.isNotEmpty;
     final filtersActive =
         appIncludeFilter != null ||
-        countryFilter != null ||
-        platformFilter != null;
+        countryFilterActive ||
+        platformFilterActive;
 
     final accountProjects =
         ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
@@ -1068,10 +1094,10 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                       context: context,
                       filterSource: filterSource,
                       currentIncludeFilter: appIncludeFilter,
-                      currentCountryCode: countryFilter,
-                      currentPlatform: platformFilter,
+                      currentCountryCodes: countryFilter,
+                      currentPlatforms: platformFilter,
                       accountProjects: projects,
-                      onApply: (apps, countryCode, platform) {
+                      onApply: (apps, countryCodes, platformFilters) {
                         ref
                                 .read(
                                   transactionsAppIncludeFilterProvider.notifier,
@@ -1081,13 +1107,13 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                         ref
                                 .read(transactionsCountryFilterProvider.notifier)
                                 .state =
-                            countryCode;
+                            countryCodes;
                         ref
                                 .read(
                                   transactionsPlatformFilterProvider.notifier,
                                 )
                                 .state =
-                            platform;
+                            platformFilters;
                       },
                     );
                   },
@@ -1264,8 +1290,8 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                         _DayTypeCountSummary(
                           transactions: txs,
                           previousDayTransactions: null,
-                          selectedFilter: null,
-                          onSelectFilter: (f) {
+                          selectedFilters: <TransactionDaySectionFilter>{},
+                          onFilterCellTap: (f) {
                             Navigator.of(context).push<void>(
                               MaterialPageRoute<void>(
                                 builder: (ctx) =>
@@ -1278,7 +1304,6 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                           },
                           onClearFilter: null,
                           enableFilterTaps: true,
-                          allowTapWhenEmpty: true,
                         ),
                       ],
                     ),
@@ -1574,22 +1599,18 @@ bool _sectionCountHigherIsBetter(TransactionDaySectionFilter filter) {
 class _DayTypeCountSummary extends StatelessWidget {
   final List<RcTransaction> transactions;
   final List<RcTransaction>? previousDayTransactions;
-  final TransactionDaySectionFilter? selectedFilter;
-  final void Function(TransactionDaySectionFilter filter) onSelectFilter;
+  final Set<TransactionDaySectionFilter> selectedFilters;
+  final void Function(TransactionDaySectionFilter filter) onFilterCellTap;
   final VoidCallback? onClearFilter;
   final bool enableFilterTaps;
-
-  /// When true, cells call [onSelectFilter] even if the count is zero (e.g. Revenue drill-down).
-  final bool allowTapWhenEmpty;
 
   const _DayTypeCountSummary({
     required this.transactions,
     required this.previousDayTransactions,
-    required this.selectedFilter,
-    required this.onSelectFilter,
+    required this.selectedFilters,
+    required this.onFilterCellTap,
     required this.onClearFilter,
     this.enableFilterTaps = true,
-    this.allowTapWhenEmpty = false,
   });
 
   @override
@@ -1616,62 +1637,60 @@ class _DayTypeCountSummary extends StatelessWidget {
               count: n.trials,
               previousCount: p?.trials,
               filter: TransactionDaySectionFilter.trial,
-              selected: selectedFilter == TransactionDaySectionFilter.trial,
+              selected: selectedFilters.contains(TransactionDaySectionFilter.trial),
               allowTap: enableFilterTaps,
-              allowTapWhenEmpty: allowTapWhenEmpty,
-              onTap: onSelectFilter,
+              onTap: onFilterCellTap,
             ),
             _DaySummaryStatCell(
               label: 'Conversions',
               count: n.conversions,
               previousCount: p?.conversions,
               filter: TransactionDaySectionFilter.conversion,
-              selected:
-                  selectedFilter == TransactionDaySectionFilter.conversion,
+              selected: selectedFilters.contains(
+                TransactionDaySectionFilter.conversion,
+              ),
               allowTap: enableFilterTaps,
-              allowTapWhenEmpty: allowTapWhenEmpty,
-              onTap: onSelectFilter,
+              onTap: onFilterCellTap,
             ),
             _DaySummaryStatCell(
               label: 'Renewals',
               count: n.renewals,
               previousCount: p?.renewals,
               filter: TransactionDaySectionFilter.renewal,
-              selected: selectedFilter == TransactionDaySectionFilter.renewal,
+              selected: selectedFilters.contains(TransactionDaySectionFilter.renewal),
               allowTap: enableFilterTaps,
-              allowTapWhenEmpty: allowTapWhenEmpty,
-              onTap: onSelectFilter,
+              onTap: onFilterCellTap,
             ),
             _DaySummaryStatCell(
               label: 'Purchases',
               count: n.purchases,
               previousCount: p?.purchases,
               filter: TransactionDaySectionFilter.subscription,
-              selected:
-                  selectedFilter == TransactionDaySectionFilter.subscription,
+              selected: selectedFilters.contains(
+                TransactionDaySectionFilter.subscription,
+              ),
               allowTap: enableFilterTaps,
-              allowTapWhenEmpty: allowTapWhenEmpty,
-              onTap: onSelectFilter,
+              onTap: onFilterCellTap,
             ),
             _DaySummaryStatCell(
               label: 'Refunds',
               count: n.refunds,
               previousCount: p?.refunds,
               filter: TransactionDaySectionFilter.refunded,
-              selected: selectedFilter == TransactionDaySectionFilter.refunded,
+              selected: selectedFilters.contains(TransactionDaySectionFilter.refunded),
               allowTap: enableFilterTaps,
-              allowTapWhenEmpty: allowTapWhenEmpty,
-              onTap: onSelectFilter,
+              onTap: onFilterCellTap,
             ),
             _DaySummaryStatCell(
               label: 'Cancellations',
               count: n.cancelled,
               previousCount: p?.cancelled,
               filter: TransactionDaySectionFilter.cancelled,
-              selected: selectedFilter == TransactionDaySectionFilter.cancelled,
+              selected: selectedFilters.contains(
+                TransactionDaySectionFilter.cancelled,
+              ),
               allowTap: enableFilterTaps,
-              allowTapWhenEmpty: allowTapWhenEmpty,
-              onTap: onSelectFilter,
+              onTap: onFilterCellTap,
             ),
           ],
         ),
@@ -1703,7 +1722,6 @@ class _DaySummaryStatCell extends StatelessWidget {
     required this.filter,
     required this.selected,
     required this.allowTap,
-    required this.allowTapWhenEmpty,
     required this.onTap,
   });
 
@@ -1713,7 +1731,6 @@ class _DaySummaryStatCell extends StatelessWidget {
   final TransactionDaySectionFilter filter;
   final bool selected;
   final bool allowTap;
-  final bool allowTapWhenEmpty;
   final void Function(TransactionDaySectionFilter filter) onTap;
 
   @override
@@ -1721,7 +1738,6 @@ class _DaySummaryStatCell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final accent = _daySummaryPillAccent(context, filter);
-    final enabled = count > 0;
     final baseCard = scheme.surfaceContainerHighest.withValues(alpha: 0.38);
     final fill = Color.alphaBlend(
       accent.withValues(alpha: selected ? 0.2 : 0.1),
@@ -1735,12 +1751,11 @@ class _DaySummaryStatCell extends StatelessWidget {
           );
     final prev = previousCount;
     final higherIsBetter = _sectionCountHigherIsBetter(filter);
-    final tappable = allowTap && (enabled || allowTapWhenEmpty);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: tappable ? () => onTap(filter) : null,
+        onTap: allowTap ? () => onTap(filter) : null,
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -1751,50 +1766,47 @@ class _DaySummaryStatCell extends StatelessWidget {
             border: Border.all(color: borderColor, width: selected ? 1.5 : 1),
             color: fill,
           ),
-          child: Opacity(
-            opacity: (enabled || allowTapWhenEmpty) ? 1 : 0.38,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                    height: 1.15,
-                  ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: tt.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  height: 1.15,
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$count',
-                      textAlign: TextAlign.center,
-                      style: tt.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.6,
-                        height: 1,
-                        color: selected ? accent : scheme.onSurface,
-                      ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$count',
+                    textAlign: TextAlign.center,
+                    style: tt.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.6,
+                      height: 1,
+                      color: selected ? accent : scheme.onSurface,
                     ),
-                    if (prev != null) ...[
-                      const SizedBox(width: 6),
-                      _DayCountTrendRow(
-                        current: count,
-                        previous: prev,
-                        higherIsBetter: higherIsBetter,
-                      ),
-                    ],
+                  ),
+                  if (prev != null) ...[
+                    const SizedBox(width: 6),
+                    _DayCountTrendRow(
+                      current: count,
+                      previous: prev,
+                      higherIsBetter: higherIsBetter,
+                    ),
                   ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
