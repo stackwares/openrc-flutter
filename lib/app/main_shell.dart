@@ -3,10 +3,11 @@ import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:revenuecat/features/home/home_screen.dart';
+import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 
 /// Selected tab index for [MainShell]
-/// (`0` = transactions, `1` = charts, `2` = realtime).
+/// (`0` = transactions, `1` = realtime, `2` = charts, `3` = settings).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 class MainShell extends ConsumerStatefulWidget {
@@ -19,8 +20,9 @@ class MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<MainShell> {
   static const _screens = [
     TransactionsScreen(),
-    HomeScreen(),
     RealtimeTransactionsScreen(),
+    HomeScreen(),
+    SettingsScreen(),
   ];
 
   final GlobalKey _tabBarMeasureKey = GlobalKey();
@@ -118,9 +120,9 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 1,
-                label: 'Charts',
-                icon: Icons.dashboard_outlined,
-                selectedIcon: Icons.dashboard_rounded,
+                label: 'Realtime',
+                icon: Icons.bolt_outlined,
+                selectedIcon: Icons.bolt_rounded,
                 onTap: () {
                   ref.read(mainShellTabIndexProvider.notifier).state = 1;
                 },
@@ -128,11 +130,21 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 2,
-                label: 'Realtime',
-                icon: Icons.bolt_outlined,
-                selectedIcon: Icons.bolt_rounded,
+                label: 'Charts',
+                icon: Icons.dashboard_outlined,
+                selectedIcon: Icons.dashboard_rounded,
                 onTap: () {
                   ref.read(mainShellTabIndexProvider.notifier).state = 2;
+                },
+              ),
+              const SizedBox(width: 4),
+              _MainShellTabButton(
+                selected: currentIndex == 3,
+                label: 'Settings',
+                icon: Icons.settings_outlined,
+                selectedIcon: Icons.settings_rounded,
+                onTap: () {
+                  ref.read(mainShellTabIndexProvider.notifier).state = 3;
                 },
               ),
             ],

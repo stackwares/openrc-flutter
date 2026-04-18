@@ -17,7 +17,6 @@ import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/realtime_section_transactions_screen.dart';
@@ -505,17 +504,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 : () => _showAppFilterSheet(context, state),
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
             onPressed: state.isLoading
@@ -989,17 +977,6 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                       },
                     );
                   },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
           ),
           IconButton(
             icon: const Icon(Icons.refresh),

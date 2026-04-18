@@ -4,7 +4,7 @@ import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 
 /// Background preload pages after the first fetch (Realtime progress).
-const int kRealtimeBackfillMaxPages = 30;
+const int kRealtimeBackfillMaxPages = 100;
 
 /// First successful fetch + up to [kRealtimeBackfillMaxPages] backfill pages.
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
@@ -166,17 +166,9 @@ List<AppFilterOption> collectAppFilterOptions(
     }
   }
   final out = labelByKey.entries
-      .map(
-        (e) => AppFilterOption(
-          e.key,
-          e.value,
-          appIdByKey[e.key],
-        ),
-      )
+      .map((e) => AppFilterOption(e.key, e.value, appIdByKey[e.key]))
       .toList();
-  out.sort(
-    (a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()),
-  );
+  out.sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
   return out;
 }
 

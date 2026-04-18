@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
@@ -201,9 +202,13 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Settings'),
       ),
       body: ListView(
+        padding: EdgeInsets.only(
+          bottom: mainShellFloatingTabBarScrollPadding(context),
+        ),
         children: [
           ListTile(
             leading: const Icon(Icons.currency_exchange_outlined),
