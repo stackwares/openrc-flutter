@@ -10,16 +10,64 @@ import 'package:revenuecat/services/app_icon_overrides_store.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
 
+Future<void> _showRevenueInsightsSheet({
+  required BuildContext context,
+  required List<RcTransaction> transactions,
+  required bool compactRevenueAmounts,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      final theme = Theme.of(sheetContext);
+      final height = MediaQuery.sizeOf(sheetContext).height * 0.88;
+      return SizedBox(
+        height: height,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Text(
+                'Revenue insights',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                child: RealtimeRevenueInsightsList(
+                  transactions: transactions,
+                  compactRevenueAmounts: compactRevenueAmounts,
+                  showInsightsHeader: false,
+                  cardMargin: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 /// Revenue breakdown for a transaction list: progress rows for share of total
 /// (Transactions day view and Revenue tab).
 class RealtimeRevenueInsightsList extends ConsumerWidget {
   final List<RcTransaction> transactions;
 
-  /// When true, wraps insights in an [ExpansionTile] (collapsed by default on Transactions).
-  final bool expandable;
+  /// When true (Transactions day view), shows a tappable row that opens a bottom sheet.
+  final bool asModalEntry;
 
-  /// Used when [expandable] is true. Realtime tab typically leaves this `true`.
-  final bool initiallyExpanded;
+  /// Outer [Card] margin; use [EdgeInsets.zero] when embedding in a sheet.
+  final EdgeInsetsGeometry cardMargin;
+
+  /// When false, omits the all-caps "REVENUE INSIGHTS" line (e.g. sheet has its own title).
+  final bool showInsightsHeader;
 
   /// When false (e.g. Revenue tab), revenue amounts use full grouping ($5,001.00)
   /// instead of compact ($5.1K).
@@ -28,8 +76,9 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
   const RealtimeRevenueInsightsList({
     super.key,
     required this.transactions,
-    this.expandable = false,
-    this.initiallyExpanded = true,
+    this.asModalEntry = false,
+    this.cardMargin = const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    this.showInsightsHeader = true,
     this.compactRevenueAmounts = true,
   });
 
@@ -39,7 +88,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
 
     if (transactions.isEmpty) {
       return Card(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        margin: cardMargin,
         clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -237,43 +286,54 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
       ],
     );
 
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      clipBehavior: Clip.antiAlias,
-      child: expandable
-          ? Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-                splashColor: scheme.primary.withValues(alpha: 0.08),
-              ),
-              child: ExpansionTile(
-                initiallyExpanded: initiallyExpanded,
-                tilePadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                expandedAlignment: Alignment.topLeft,
-                expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
-                shape: const RoundedRectangleBorder(),
-                collapsedShape: const RoundedRectangleBorder(),
-                title: Text(
-                  'REVENUE INSIGHTS',
-                  style: headerStyle,
-                ),
-                children: [insightsBody],
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    if (asModalEntry) {
+      return Card(
+        margin: cardMargin,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _showRevenueInsightsSheet(
+            context: context,
+            transactions: transactions,
+            compactRevenueAmounts: useCompactRevenue,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+                Expanded(
                   child: Text(
                     'REVENUE INSIGHTS',
                     style: headerStyle,
                   ),
                 ),
-                insightsBody,
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
               ],
             ),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      margin: cardMargin,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showInsightsHeader)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+              child: Text(
+                'REVENUE INSIGHTS',
+                style: headerStyle,
+              ),
+            ),
+          insightsBody,
+        ],
+      ),
     );
   }
 

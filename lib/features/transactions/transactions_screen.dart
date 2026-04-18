@@ -682,9 +682,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.titleSmall?.copyWith(
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: -0.1,
+                            letterSpacing: 0.1,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -760,8 +761,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       ),
       RealtimeRevenueInsightsList(
         transactions: allForDay,
-        expandable: true,
-        initiallyExpanded: false,
+        asModalEntry: true,
       ),
       if (futureTxs.isNotEmpty)
         _FutureTransactionsSection(
