@@ -227,7 +227,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       error: null,
       isLoadingMore: false,
     );
-    unawaited(backfillIncompleteCalendarDays());
+    // Day navigation only changes which bucket of [grouped] is shown. Older
+    // pages are fetched via scroll (`fetchMore`), not a full backfill here —
+    // that used to fire up to [kRealtimeBackfillMaxPages] requests per tap.
   }
 
   /// Recomputes [TransactionsState.dailyTotals] after commission settings change.

@@ -20,6 +20,49 @@ const kRcApiRequestContextExtraKey = 'rc_api_request_context';
 
 final _log = Logger('RcApiService');
 
+/// Most chart series + paginated tx loads: FINE only ([configureAppLogging] caps RcApiService at INFO).
+bool _rcApiQuietPath(String path, String? requestContext) {
+  if (path.contains('/charts_v2/') && !path.endsWith('/overview')) {
+    return true;
+  }
+  final ctx = requestContext ?? '';
+  if (path.endsWith('/me/transactions')) {
+    return ctx != 'transactions:initial';
+  }
+  return false;
+}
+
+String? _rcApiContextSuffix(String? ctx) {
+  if (ctx == null || ctx.isEmpty) return null;
+  return switch (ctx) {
+    'transactions:initial' => 'tx initial',
+    'transactions:scroll' => 'tx scroll',
+    _ => ctx,
+  };
+}
+
+void _rcApiLogSuccess(Response<dynamic> response) {
+  final ro = response.requestOptions;
+  final path = ro.path;
+  final ctx = ro.extra[kRcApiRequestContextExtraKey] as String?;
+  final code = response.statusCode ?? 0;
+  final label = _rcApiContextSuffix(ctx);
+  final tail = label != null ? ' — $label' : '';
+  final line = '[API] $code ${ro.method} $path$tail';
+  if (_rcApiQuietPath(path, ctx)) {
+    _log.fine(line);
+  } else {
+    _log.info(line);
+  }
+}
+
+void _rcApiLogError(DioException e) {
+  final ro = e.requestOptions;
+  final code = e.response?.statusCode;
+  final kind = code?.toString() ?? e.type.name;
+  _log.warning('[API] $kind ${ro.method} ${ro.path}');
+}
+
 enum RcEndpoint {
   login,
   logout,
@@ -49,53 +92,16 @@ class RcApiService {
 
     if (kDebugMode) {
       _dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (options, handler) {
-          final ctx = options.extra[kRcApiRequestContextExtraKey] as String?;
-          final q = _compactQueryForLog(options.queryParameters);
-          final line = StringBuffer('━━━ RC API ━━━ ${options.method} ${options.path}');
-          if (ctx != null && ctx.isNotEmpty) {
-            line.write(' │ ');
-            line.write(ctx);
-          }
-          if (q != null) {
-            line.write(' │ ');
-            line.write(q);
-          }
-          _log.info(line.toString());
-          handler.next(options);
-        },
         onResponse: (response, handler) {
-          _log.fine(
-            '[Dio] ${response.statusCode} ${response.requestOptions.uri}',
-          );
+          _rcApiLogSuccess(response);
           handler.next(response);
         },
         onError: (e, handler) {
-          final code = e.response?.statusCode;
-          _log.fine(
-            '[Dio] ${code ?? e.type} ${e.requestOptions.uri}',
-          );
+          _rcApiLogError(e);
           handler.next(e);
         },
       ));
     }
-  }
-
-  /// Pagination / filter-related query keys only (keeps logs short).
-  static String? _compactQueryForLog(Map<String, dynamic>? query) {
-    if (query == null || query.isEmpty) return null;
-    const keys = ['limit', 'start_from', 'end_date', 'sandbox_mode'];
-    final parts = <String>[];
-    for (final k in keys) {
-      if (query.containsKey(k)) {
-        parts.add('$k=${query[k]}');
-      }
-    }
-    if (parts.isNotEmpty) return parts.join(' ');
-    return query.entries
-        .take(4)
-        .map((e) => '${e.key}=${e.value}')
-        .join(' ');
   }
 
   void setAuthToken(String token) {
