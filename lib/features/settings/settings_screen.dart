@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/core/utils/store_payday_schedule.dart';
-import 'package:revenuecat/features/settings/payday_screen.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/display_currency_store.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
@@ -264,19 +261,6 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-            child: _PaydaysSettingsCard(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => const PaydayScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             child: Text('STORE COMMISSION', style: sectionLabelStyle),
           ),
@@ -344,186 +328,6 @@ class SettingsScreen extends ConsumerWidget {
               style: TextStyle(color: scheme.error),
             ),
             onTap: () => _confirmSignOut(context, ref),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaydaysSettingsCard extends StatelessWidget {
-  const _PaydaysSettingsCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final now = DateTime.now();
-    final apple = AppStorePayday.upcoming;
-    final google = GooglePlayPayday.upcoming;
-
-    return Material(
-      color: scheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 18, 14, 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_month_rounded,
-                    color: scheme.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Payout calendar',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'App Store fiscal deposits and estimated Play payout timing',
-                style: tt.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _PaydayStorePreview(
-                      icon: Icons.apple,
-                      iconColor: StoreBrandIconColors.appleBlue,
-                      label: 'App Store',
-                      dateLine: apple != null
-                          ? formatPaydayAbbrev(apple.paymentDate)
-                          : '—',
-                      daysToGo: apple != null
-                          ? paydayDaysToGoLabel(apple.paymentDate, now)
-                          : null,
-                      hint: apple != null ? 'Next deposit' : 'Open for schedule',
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _PaydayStorePreview(
-                      icon: Icons.android,
-                      iconColor: StoreBrandIconColors.androidGreen,
-                      label: 'Google Play',
-                      dateLine: google != null
-                          ? formatPaydayAbbrev(google.paymentDate)
-                          : '—',
-                      daysToGo: google != null
-                          ? paydayDaysToGoLabel(google.paymentDate, now)
-                          : null,
-                      hint: google != null ? 'Est. initiation' : 'Open for schedule',
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PaydayStorePreview extends StatelessWidget {
-  const _PaydayStorePreview({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.dateLine,
-    this.daysToGo,
-    required this.hint,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String dateLine;
-  final String? daysToGo;
-  final String hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-      decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: iconColor),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: tt.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            dateLine,
-            style: tt.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.2,
-            ),
-          ),
-          if (daysToGo != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              daysToGo!,
-              style: tt.labelLarge?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-          const SizedBox(height: 2),
-          Text(
-            hint,
-            style: tt.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
           ),
         ],
       ),

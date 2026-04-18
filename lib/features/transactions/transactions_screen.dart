@@ -1047,16 +1047,14 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                         if (!state.realtimeLoadComplete) ...[
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              minHeight: 4,
-                            ),
+                            child: LinearProgressIndicator(minHeight: 4),
                           ),
                           const SizedBox(height: 14),
                         ],
                         if (commission.adjustmentEnabled) ...[
                           Text(
                             _afterStoreCommissionTitle(commission),
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.start,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
@@ -1064,49 +1062,70 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          DualCurrencyExactText(
-                            amount: netTotal,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontSize:
-                                  (theme.textTheme.headlineSmall?.fontSize ??
-                                      24) *
-                                  1.2,
-                              fontWeight: FontWeight.w800,
-                              color: theme.colorScheme.onSurface,
-                              letterSpacing: -0.65,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Original revenue',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.15,
-                              fontSize:
-                                  (theme.textTheme.labelSmall?.fontSize ?? 11) *
-                                  0.92,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          DualCurrencyExactText(
-                            amount: grossTotal,
-                            applyCommissionAdjustment: false,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.2,
-                              height: 1.2,
-                            ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: DualCurrencyExactText(
+                                  amount: netTotal,
+                                  textAlign: TextAlign.start,
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontSize:
+                                            (theme
+                                                    .textTheme
+                                                    .headlineSmall
+                                                    ?.fontSize ??
+                                                24) *
+                                            1.2,
+                                        fontWeight: FontWeight.w800,
+                                        color: theme.colorScheme.onSurface,
+                                        letterSpacing: -0.65,
+                                        height: 1.1,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Original revenue',
+                                    textAlign: TextAlign.end,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: 0.15,
+                                      fontSize:
+                                          (theme
+                                                  .textTheme
+                                                  .labelSmall
+                                                  ?.fontSize ??
+                                              11) *
+                                          0.92,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  DualCurrencyExactText(
+                                    amount: grossTotal,
+                                    applyCommissionAdjustment: false,
+                                    textAlign: TextAlign.end,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -0.2,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ] else
                           DualCurrencyExactText(
                             amount: netTotal,
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.start,
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontSize:
                                   (theme.textTheme.headlineSmall?.fontSize ??
@@ -1122,7 +1141,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                           const SizedBox(height: 6),
                           Text(
                             'Fetching older transactions…',
-                            textAlign: TextAlign.center,
+                            textAlign: TextAlign.start,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
