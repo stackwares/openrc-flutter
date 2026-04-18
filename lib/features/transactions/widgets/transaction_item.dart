@@ -23,12 +23,16 @@ class TransactionItem extends ConsumerWidget {
   /// Earliest loaded [RcTransaction.purchaseDate] per subscriber (fallback when API omits created-at).
   final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
 
+  /// Earliest loaded purchase **instant** per subscriber (same-day tenure `ago` anchor).
+  final Map<String, DateTime> subscriberEarliestPurchaseLocalInstantById;
+
   const TransactionItem({
     super.key,
     required this.transaction,
     this.onTap,
     this.inSectionCard = false,
     this.subscriberEarliestPurchaseLocalDayById = const {},
+    this.subscriberEarliestPurchaseLocalInstantById = const {},
   });
 
   @override
@@ -38,6 +42,9 @@ class TransactionItem extends ConsumerWidget {
       subscriberCreatedAtIso: transaction.subscriberCreatedAt,
       fallbackFirstPurchaseLocalDay: sid != null && sid.isNotEmpty
           ? subscriberEarliestPurchaseLocalDayById[sid]
+          : null,
+      fallbackFirstPurchaseLocalInstant: sid != null && sid.isNotEmpty
+          ? subscriberEarliestPurchaseLocalInstantById[sid]
           : null,
     );
 

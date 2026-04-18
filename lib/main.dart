@@ -10,6 +10,7 @@ import 'package:revenuecat/app/app.dart';
 import 'package:revenuecat/app/app_startup.dart';
 import 'package:revenuecat/core/logging/app_logging.dart';
 import 'package:revenuecat/firebase_options.dart';
+import 'package:revenuecat/services/firestore_service.dart';
 import 'package:revenuecat/services/push_registration_service.dart';
 
 final _mainLog = Logger('main');
@@ -39,11 +40,11 @@ void main() async {
   // Firebase Auth / Messaging touch Pigeon channels; doing that before the
   // first frame can yield PlatformException(channel-error, ...) on Android.
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    unawaited(_initializePushAfterFirstFrame());
+    unawaited(_initializePushAfterFirstFrame(container));
   });
 }
 
-Future<void> _initializePushAfterFirstFrame() async {
+Future<void> _initializePushAfterFirstFrame(ProviderContainer container) async {
   if (kIsWeb) return;
   if (defaultTargetPlatform != TargetPlatform.android &&
       defaultTargetPlatform != TargetPlatform.iOS) {
@@ -51,6 +52,9 @@ Future<void> _initializePushAfterFirstFrame() async {
   }
   try {
     await PushRegistrationService.instance.initialize();
+    // Let Pigeon / Firestore channels settle after auth + messaging init.
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await container.read(firestoreServiceProvider).syncDeviceProfile();
   } catch (e, st) {
     _mainLog.warning('Push registration init failed: $e\n$st');
   }

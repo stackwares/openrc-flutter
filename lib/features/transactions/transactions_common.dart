@@ -10,7 +10,7 @@ const int kRealtimeBackfillMaxPages = 100;
 /// Internal “done” value for realtime preload step (not a predictable page total in the UI).
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
 
-/// Subtitle under the Revenue tab app bar (month-to-date, local timezone).
+/// Month-to-date label above the Revenue tab MTD total (local calendar month).
 const String kRealtimeWindowSubtitle = 'This month · local';
 
 final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');

@@ -66,6 +66,8 @@ class _RealtimeSectionTransactionsScreenState
 
     final tenureMap =
         earliestPurchaseLocalDayBySubscriberId(widget.windowTransactions);
+    final tenureInstantMap =
+        earliestPurchaseLocalInstantBySubscriberId(widget.windowTransactions);
 
     final heading =
         '${filtered.length} ${transactionDaySectionGridLabel(widget.filter)}';
@@ -187,6 +189,7 @@ class _RealtimeSectionTransactionsScreenState
                 return TransactionItem(
                   transaction: tx,
                   subscriberEarliestPurchaseLocalDayById: tenureMap,
+                  subscriberEarliestPurchaseLocalInstantById: tenureInstantMap,
                   inSectionCard: false,
                   onTap: () {
                     Navigator.of(context).push<void>(

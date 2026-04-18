@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:revenuecat/services/push_registration_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/utilities_service.dart';
 
@@ -12,6 +14,12 @@ class AppStartup {
 
   Future<void> initialize() async {
     _log.info('App startup initialization started');
+
+    if (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      await PushRegistrationService.instance.ensureFirebaseAuthForFirestore();
+    }
 
     final themeMode = await container
         .read(utilitiesServiceProvider)

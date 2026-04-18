@@ -695,10 +695,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ? netRevenueSum(previousDayForMetrics, commission)
         : null;
 
+    final allTxForTenure = state.grouped.values.expand((e) => e);
     final subscriberEarliestPurchaseDay =
-        earliestPurchaseLocalDayBySubscriberId(
-          state.grouped.values.expand((e) => e),
-        );
+        earliestPurchaseLocalDayBySubscriberId(allTxForTenure);
+    final subscriberEarliestPurchaseInstant =
+        earliestPurchaseLocalInstantBySubscriberId(allTxForTenure);
 
     final futureTxs = viewingToday
         ? _collectFutureTransactions(
@@ -829,6 +830,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             setState(() => _futureTransactionsExpanded = v);
           },
           subscriberEarliestPurchaseLocalDayById: subscriberEarliestPurchaseDay,
+          subscriberEarliestPurchaseLocalInstantById:
+              subscriberEarliestPurchaseInstant,
           onOpenTransaction: (tx) {
             Navigator.of(context).push<void>(
               MaterialPageRoute<void>(
@@ -845,6 +848,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         TransactionItem(
           transaction: tx,
           subscriberEarliestPurchaseLocalDayById: subscriberEarliestPurchaseDay,
+          subscriberEarliestPurchaseLocalInstantById:
+              subscriberEarliestPurchaseInstant,
           inSectionCard: false,
           onTap: () {
             Navigator.of(context).push<void>(
@@ -1035,34 +1040,16 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: false,
-        toolbarHeight: 72,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Revenue',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.1,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              kRealtimeWindowSubtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.1,
-                height: 1.15,
-              ),
-            ),
-          ],
+        toolbarHeight: 56,
+        title: Text(
+          'Revenue',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.start,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.1,
+          ),
         ),
         actions: [
           if (filtersActive)
@@ -1184,6 +1171,19 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 14),
                         ],
+                        Text(
+                          kRealtimeWindowSubtitle,
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.1,
+                            height: 1.15,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         if (commission.adjustmentEnabled) ...[
                           Text(
                             _afterStoreCommissionTitle(commission),
@@ -1364,6 +1364,7 @@ class _FutureTransactionsSection extends StatelessWidget {
   final bool expanded;
   final ValueChanged<bool> onExpandedChanged;
   final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
+  final Map<String, DateTime> subscriberEarliestPurchaseLocalInstantById;
   final void Function(RcTransaction tx) onOpenTransaction;
 
   const _FutureTransactionsSection({
@@ -1371,6 +1372,7 @@ class _FutureTransactionsSection extends StatelessWidget {
     required this.expanded,
     required this.onExpandedChanged,
     required this.subscriberEarliestPurchaseLocalDayById,
+    required this.subscriberEarliestPurchaseLocalInstantById,
     required this.onOpenTransaction,
   });
 
@@ -1443,6 +1445,8 @@ class _FutureTransactionsSection extends StatelessWidget {
                 transaction: tx,
                 subscriberEarliestPurchaseLocalDayById:
                     subscriberEarliestPurchaseLocalDayById,
+                subscriberEarliestPurchaseLocalInstantById:
+                    subscriberEarliestPurchaseLocalInstantById,
                 inSectionCard: true,
                 onTap: () => onOpenTransaction(tx),
               ),

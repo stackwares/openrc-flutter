@@ -16,6 +16,24 @@ class PushRegistrationService {
         region: AppConstants.firebaseFunctionsRegion,
       );
 
+  /// Anonymous sign-in + ID token before any Firestore writes during [AppStartup]
+  /// (e.g. RevenueCat restore). Post-frame [initialize] skips sign-in if already done.
+  Future<void> ensureFirebaseAuthForFirestore() async {
+    if (kIsWeb) return;
+    if (defaultTargetPlatform != TargetPlatform.android &&
+        defaultTargetPlatform != TargetPlatform.iOS) {
+      return;
+    }
+    try {
+      if (FirebaseAuth.instance.currentUser == null) {
+        await FirebaseAuth.instance.signInAnonymously();
+      }
+      await FirebaseAuth.instance.currentUser?.getIdToken();
+    } catch (e, st) {
+      _log.warning('ensureFirebaseAuthForFirestore: $e\n$st');
+    }
+  }
+
   /// Ensures an anonymous Firebase user exists and registers the FCM token.
   Future<void> initialize() async {
     if (kIsWeb) return;
@@ -24,6 +42,7 @@ class PushRegistrationService {
       if (FirebaseAuth.instance.currentUser == null) {
         await FirebaseAuth.instance.signInAnonymously();
       }
+      await FirebaseAuth.instance.currentUser?.getIdToken();
     } catch (e, st) {
       _log.warning('Anonymous sign-in failed: $e\n$st');
       return;

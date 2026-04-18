@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -7,6 +9,7 @@ import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/models/rc_login_request.dart';
 import 'package:revenuecat/models/rc_login_response.dart';
 import 'package:revenuecat/models/rc_me_response.dart';
+import 'package:revenuecat/services/firestore_service.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 
 final _log = Logger('RcAuthService');
@@ -51,6 +54,7 @@ class RcAuthService {
         try {
           final me = await _api.me();
           _ref.read(rcMeProvider.notifier).state = me;
+          unawaited(_syncRevenueCatToFirestore(me));
         } catch (_) {}
 
         return response;
@@ -73,6 +77,7 @@ class RcAuthService {
     } catch (e) {
       _log.warning('Logout API call failed: $e');
     }
+    await _ref.read(firestoreServiceProvider).clearRevenueCatProfile();
     await _clearToken();
     _api.clearAuthToken();
     _ref.read(isSignedInProvider.notifier).state = false;
@@ -110,6 +115,7 @@ class RcAuthService {
       try {
         final me = await _api.me();
         _ref.read(rcMeProvider.notifier).state = me;
+        unawaited(_syncRevenueCatToFirestore(me));
       } on DioException catch (e) {
         final rcError = _api.parseError(e);
         if (rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
@@ -147,5 +153,17 @@ class RcAuthService {
   Future<void> _clearToken() async {
     await _secureStorage.delete(key: AppConstants.prefAuthToken);
     await _secureStorage.delete(key: AppConstants.prefAuthTokenExpiresAt);
+  }
+
+  Future<void> _syncRevenueCatToFirestore(RcMeResponse me) async {
+    try {
+      await _ref.read(firestoreServiceProvider).syncRevenueCatProfile(
+            email: me.email,
+            distinctId: me.distinctId,
+            name: me.name,
+          );
+    } catch (e, st) {
+      _log.fine('Firestore RC sync skipped: $e\n$st');
+    }
   }
 }
