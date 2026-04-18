@@ -350,7 +350,7 @@ class TransactionDetailScreen extends ConsumerWidget {
         if (detail?.history?.isNotEmpty == true ||
             activity?.events?.isNotEmpty == true) ...[
           _SectionHeader(title: 'History'),
-          _buildHistory(context, detail?.history, activity?.events),
+          _buildHistory(context, tx, detail?.history, activity?.events),
         ],
         const SizedBox(height: 32),
       ],
@@ -366,14 +366,30 @@ class TransactionDetailScreen extends ConsumerWidget {
     String? customIconUrl,
   }) {
     final type = tx.type;
+    final revenueRefunded = type == RcTransactionType.refund;
+    final baseHeaderRevenueStyle =
+        context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
+    final headerRevenueStyle = revenueRefunded
+        ? baseHeaderRevenueStyle?.copyWith(
+            color: context.colorScheme.error,
+            decoration: TextDecoration.lineThrough,
+            decorationColor: context.colorScheme.error,
+          )
+        : baseHeaderRevenueStyle;
     final color = transactionTypeAccentColor(type, context, transaction: tx);
+    final hasCustomIcon =
+        customIconUrl != null && customIconUrl.trim().isNotEmpty;
 
     Widget avatar = TransactionLeadingAvatar(
       imageUrl: customIconUrl,
       size: 48,
       borderRadius: 12,
       tintColor: color,
-      fallback: Icon(_typeIcon(type), color: color, size: 24),
+      fallback: Icon(
+        hasCustomIcon ? _typeIcon(type) : Icons.edit_outlined,
+        color: color,
+        size: 24,
+      ),
     );
     if (appId != null) {
       avatar = Tooltip(
@@ -436,9 +452,8 @@ class TransactionDetailScreen extends ConsumerWidget {
                 if (tx.revenue != null)
                   DualCurrencyExactText(
                     amount: tx.revenue!,
-                    style: context.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    commissionStore: tx.store,
+                    style: headerRevenueStyle,
                     textAlign: TextAlign.end,
                   ),
               ],
@@ -522,9 +537,17 @@ class TransactionDetailScreen extends ConsumerWidget {
           ),
           const _Divider(),
           _InfoRow(
+            icon: Icons.receipt_long_outlined,
+            label: 'Store transaction ID',
+            value: tx.storeTransactionIdentifier,
+            copyable: true,
+          ),
+          const _Divider(),
+          _InfoRow(
             icon: Icons.payments_outlined,
             label: 'Total Spent',
             usdAmount: detail.dollarsSpent,
+            applyBlendedCommission: true,
           ),
           const _Divider(),
           _InfoRow(
@@ -653,7 +676,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                       ),
                     if (s.expiresDate != null)
                       Text(
-                        'Expires ${_formatDate(s.expiresDate!)}',
+                        'Expires ${_formatDateTime(s.expiresDate!)}',
                         style: context.textTheme.labelSmall?.copyWith(
                           color: context.colorScheme.onSurfaceVariant,
                         ),
@@ -693,6 +716,7 @@ class TransactionDetailScreen extends ConsumerWidget {
         icon: Icons.attach_money,
         label: 'Total spent',
         usdAmount: detail.dollarsSpent!,
+        applyBlendedCommission: true,
       ));
     }
 
@@ -746,6 +770,7 @@ class TransactionDetailScreen extends ConsumerWidget {
               label: insights[i].label,
               value: insights[i].value,
               usdAmount: insights[i].usdAmount,
+              applyBlendedCommission: insights[i].applyBlendedCommission,
               color: insights[i].color,
             ),
           ],
@@ -778,6 +803,7 @@ class TransactionDetailScreen extends ConsumerWidget {
 
   Widget _buildHistory(
     BuildContext context,
+    RcTransaction tx,
     List<RcSubscriberHistory>? history,
     List<RcTransactionDetailEvent>? events,
   ) {
@@ -824,13 +850,20 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Column(
-        children: [
-          for (int i = 0; i < items.length; i++) ...[
-            if (i > 0) const _Divider(),
-            _HistoryRow(item: items[i]),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 12, 12),
+        child: Column(
+          children: [
+            for (int i = 0; i < items.length; i++)
+              _HistoryTimelineEntry(
+                item: items[i],
+                commissionStore: tx.store,
+                isFirst: i == 0,
+                isLast: i == items.length - 1,
+              ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -867,10 +900,12 @@ class TransactionDetailScreen extends ConsumerWidget {
     }
   }
 
-  String _formatDate(String dateStr) {
+  String _formatDateTime(String dateStr) {
     try {
       final dt = DateTime.tryParse(dateStr);
-      if (dt != null) return DateFormat('MMM d, yyyy').format(dt);
+      if (dt != null) {
+        return DateFormat.yMMMd().add_jm().format(dt);
+      }
     } catch (_) {}
     return dateStr;
   }
@@ -914,6 +949,7 @@ class _InfoRow extends ConsumerWidget {
   final String label;
   final String? value;
   final double? usdAmount;
+  final bool applyBlendedCommission;
   final bool copyable;
   final Color? color;
 
@@ -922,6 +958,7 @@ class _InfoRow extends ConsumerWidget {
     required this.label,
     this.value,
     this.usdAmount,
+    this.applyBlendedCommission = false,
     this.copyable = false,
     this.color,
   });
@@ -935,6 +972,7 @@ class _InfoRow extends ConsumerWidget {
     final Widget valueWidget = usdAmount != null
         ? DualCurrencyExactText(
             amount: usdAmount!,
+            applyBlendedCommission: applyBlendedCommission,
             style: valueStyle,
             textAlign: TextAlign.end,
           )
@@ -1001,6 +1039,7 @@ class _InsightItem {
   final String label;
   final String? value;
   final double? usdAmount;
+  final bool applyBlendedCommission;
   final Color? color;
 
   const _InsightItem({
@@ -1008,6 +1047,7 @@ class _InsightItem {
     required this.label,
     this.value,
     this.usdAmount,
+    this.applyBlendedCommission = false,
     this.color,
   });
 }
@@ -1028,61 +1068,136 @@ class _HistoryItem {
   });
 }
 
-class _HistoryRow extends ConsumerWidget {
+class _HistoryTimelineEntry extends ConsumerWidget {
   final _HistoryItem item;
+  final String? commissionStore;
+  final bool isFirst;
+  final bool isLast;
 
-  const _HistoryRow({required this.item});
+  const _HistoryTimelineEntry({
+    required this.item,
+    required this.commissionStore,
+    required this.isFirst,
+    required this.isLast,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final lineColor = scheme.outlineVariant.withValues(alpha: 0.75);
+    const railW = 28.0;
+    const dotSize = 12.0;
+    const stubH = 10.0;
+
+    final dot = Container(
+      width: dotSize,
+      height: dotSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: scheme.surface,
+        border: Border.all(
+          color: scheme.primary,
+          width: 2,
+        ),
+      ),
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _formatEventType(item.title),
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (item.subtitle.isNotEmpty)
-                  Text(
-                    item.subtitle,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: railW,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (!isFirst)
+                    Container(
+                      width: 2,
+                      height: stubH,
+                      color: lineColor,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  SizedBox(
+                    height: 18,
+                    width: railW,
+                    child: Center(child: dot),
                   ),
-              ],
+                  if (!isLast)
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 13),
+                        width: 2,
+                        color: lineColor,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (item.priceUsd != null)
-                DualCurrencyExactText(
-                  amount: item.priceUsd!,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.end,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 1, bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _formatEventType(item.title),
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (item.subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              item.subtitle,
+                              style: context.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (item.priceUsd != null)
+                          DualCurrencyExactText(
+                            amount: item.priceUsd!,
+                            commissionStore: commissionStore,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.end,
+                          ),
+                        if (item.date != null) ...[
+                          if (item.priceUsd != null) const SizedBox(height: 2),
+                          Text(
+                            DateFormat('MMM d, yyyy · h:mm a')
+                                .format(item.date!.toLocal()),
+                            style: context.textTheme.labelSmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                              fontFeatures: const [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
-              if (item.date != null)
-                Text(
-                  DateFormat('MMM d, yyyy').format(item.date!),
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-            ],
-          ),
-        ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -10,7 +10,8 @@ class OverviewDetailLineChart extends StatelessWidget {
   final List<RcChartDataPoint> dataPoints;
   final Color lineColor;
   final OverviewMetricType metric;
-  final DateTime rangeStartUtc;
+  /// First day of the chart range (local calendar midnight).
+  final DateTime rangeStart;
   final int selectedIndex;
   final ValueChanged<int> onIndexChanged;
 
@@ -19,7 +20,7 @@ class OverviewDetailLineChart extends StatelessWidget {
     required this.dataPoints,
     required this.lineColor,
     required this.metric,
-    required this.rangeStartUtc,
+    required this.rangeStart,
     required this.selectedIndex,
     required this.onIndexChanged,
   });
@@ -137,7 +138,7 @@ class OverviewDetailLineChart extends StatelessWidget {
                   if (i % labelInterval != 0 && i != dataPoints.length - 1) {
                     return const SizedBox.shrink();
                   }
-                  final d = rangeStartUtc.add(Duration(days: i)).toLocal();
+                  final d = rangeStart.add(Duration(days: i));
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(

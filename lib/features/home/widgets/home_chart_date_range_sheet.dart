@@ -33,17 +33,18 @@ class _PresetRanges {
 class HomeChartDateRangeSheet extends StatelessWidget {
   const HomeChartDateRangeSheet({
     super.key,
-    required this.chartRangeStartUtc,
-    required this.chartRangeEndUtc,
+    required this.chartRangeStart,
+    required this.chartRangeEnd,
   });
 
-  final DateTime chartRangeStartUtc;
-  final DateTime chartRangeEndUtc;
+  /// Inclusive range using **local** calendar dates (midnight local).
+  final DateTime chartRangeStart;
+  final DateTime chartRangeEnd;
 
   static Future<DateTimeRange?> show(
     BuildContext context, {
-    required DateTime chartRangeStartUtc,
-    required DateTime chartRangeEndUtc,
+    required DateTime chartRangeStart,
+    required DateTime chartRangeEnd,
   }) {
     return showModalBottomSheet<DateTimeRange>(
       context: context,
@@ -51,24 +52,20 @@ class HomeChartDateRangeSheet extends StatelessWidget {
       useSafeArea: true,
       showDragHandle: true,
       builder: (context) => HomeChartDateRangeSheet(
-        chartRangeStartUtc: chartRangeStartUtc,
-        chartRangeEndUtc: chartRangeEndUtc,
+        chartRangeStart: chartRangeStart,
+        chartRangeEnd: chartRangeEnd,
       ),
     );
   }
 
   bool _matchesPreset(DateTimeRange preset) {
-    final ps = DateTime.utc(
-      preset.start.year,
-      preset.start.month,
-      preset.start.day,
-    );
-    final pe = DateTime.utc(
-      preset.end.year,
-      preset.end.month,
-      preset.end.day,
-    );
-    return ps == chartRangeStartUtc && pe == chartRangeEndUtc;
+    DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+
+    final ps = dateOnly(preset.start);
+    final pe = dateOnly(preset.end);
+    final cs = dateOnly(chartRangeStart);
+    final ce = dateOnly(chartRangeEnd);
+    return ps == cs && pe == ce;
   }
 
   String _formatRange(DateTimeRange r) {
@@ -144,8 +141,8 @@ class HomeChartDateRangeSheet extends StatelessWidget {
               subtitle: Text(
                 _formatRange(
                   DateTimeRange(
-                    start: chartRangeStartUtc.toLocal(),
-                    end: chartRangeEndUtc.toLocal(),
+                    start: chartRangeStart,
+                    end: chartRangeEnd,
                   ),
                 ),
               ),
@@ -153,8 +150,8 @@ class HomeChartDateRangeSheet extends StatelessWidget {
                 final picked = await showDateRangePicker(
                   context: context,
                   initialDateRange: DateTimeRange(
-                    start: chartRangeStartUtc.toLocal(),
-                    end: chartRangeEndUtc.toLocal(),
+                    start: chartRangeStart,
+                    end: chartRangeEnd,
                   ),
                   firstDate: DateTime(2019, 1, 1),
                   lastDate: DateTime.now(),

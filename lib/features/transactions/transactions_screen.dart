@@ -9,9 +9,12 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
+import 'package:revenuecat/core/utils/store_commission.dart';
+import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
+import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_revenue_insights_card.dart';
@@ -71,9 +74,20 @@ class TransactionsState {
 }
 
 /// Net revenue for a day: sum of [RcTransaction.revenue] (null → 0), including
-/// refunds (typically negative), so the header matches list math.
-double _netRevenueSum(Iterable<RcTransaction> transactions) {
-  return transactions.fold(0.0, (sum, tx) => sum + (tx.revenue ?? 0));
+/// refunds (typically negative), with optional store commission when enabled.
+double _netRevenueSum(
+  Iterable<RcTransaction> transactions,
+  CommissionSettings commission,
+) {
+  return transactions.fold(0.0, (sum, tx) {
+    final gross = tx.revenue ?? 0;
+    return sum +
+        adjustUsdForDisplay(
+          gross: gross,
+          settings: commission,
+          store: tx.store,
+        );
+  });
 }
 
 String? _transactionDedupKey(RcTransaction tx) {
@@ -203,6 +217,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     if (!_isIsoCalendarDayKey(dayKey) || dayKey == state.selectedDayKey) return;
     state = state.copyWith(selectedDayKey: dayKey, error: null);
     unawaited(backfillIncompleteCalendarDays());
+  }
+
+  /// Recomputes [TransactionsState.dailyTotals] after commission settings change.
+  void syncTotalsWithCommission() {
+    if (state.grouped.isEmpty) return;
+    state = state.copyWith(dailyTotals: _calculateDailyTotals(state.grouped));
   }
 
   Future<void> fetchInitial() => fetchSelectedDay();
@@ -344,9 +364,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   Map<String, double> _calculateDailyTotals(
     Map<String, List<RcTransaction>> grouped,
   ) {
+    final commission = _ref.read(commissionSettingsProvider);
     final totals = <String, double>{};
     for (final entry in grouped.entries) {
-      totals[entry.key] = _netRevenueSum(entry.value);
+      totals[entry.key] = _netRevenueSum(entry.value, commission);
     }
     return totals;
   }
@@ -354,7 +375,11 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
 final transactionsProvider =
     StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  return TransactionsNotifier(ref);
+  final notifier = TransactionsNotifier(ref);
+  ref.listen<CommissionSettings>(commissionSettingsProvider, (prev, next) {
+    notifier.syncTotalsWithCommission();
+  });
+  return notifier;
 });
 
 String _appKeyForTransaction(RcTransaction tx) {
@@ -440,10 +465,11 @@ Map<String, List<RcTransaction>> _filteredGroupedByApps(
 
 Map<String, double> _dailyTotalsForGrouped(
   Map<String, List<RcTransaction>> grouped,
+  CommissionSettings commission,
 ) {
   final totals = <String, double>{};
   for (final entry in grouped.entries) {
-    totals[entry.key] = _netRevenueSum(entry.value);
+    totals[entry.key] = _netRevenueSum(entry.value, commission);
   }
   return totals;
 }
@@ -507,12 +533,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        centerTitle: true,
+        centerTitle: false,
         title: Text(
           dateLabel,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
+          textAlign: TextAlign.start,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.1,
@@ -533,6 +559,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 : () => _showAppFilterSheet(context, state),
           ),
           IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
             onPressed: state.isLoading
@@ -546,6 +583,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   Widget _buildBody(BuildContext context, TransactionsState state) {
+    final commission = ref.watch(commissionSettingsProvider);
     if (state.isLoading && state.grouped.isEmpty) {
       return _buildTransactionsScreenSkeleton(context);
     }
@@ -632,7 +670,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final canGoNext = selectedKey.compareTo(todayKey) < 0;
     final groupedForHeader =
         _filteredGroupedByApps(state.grouped, _appIncludeFilter);
-    final headerDailyTotals = _dailyTotalsForGrouped(groupedForHeader);
+    final headerDailyTotals =
+        _dailyTotalsForGrouped(groupedForHeader, commission);
     final headerDaily = headerDailyTotals[selectedKey] ?? 0;
     final headerPrevTotal =
         prevKey != null ? headerDailyTotals[prevKey] : null;

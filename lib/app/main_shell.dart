@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:revenuecat/features/home/home_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 
-/// Selected tab index for [MainShell] (`0` = home, `1` = transactions).
+/// Selected tab index for [MainShell] (`0` = transactions, `1` = overview).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 class MainShell extends ConsumerStatefulWidget {
@@ -17,16 +17,16 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   static const _screens = [
-    HomeScreen(),
     TransactionsScreen(),
+    HomeScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(mainShellTabIndexProvider);
     final scheme = Theme.of(context).colorScheme;
-    // Floating pill wide enough for icon + short label per tab.
-    const barWidth = 268.0;
+    // Wide enough for "Transactions" + "Overview" labels, padding, and font rounding.
+    const barWidth = 280.0;
 
     return Scaffold(
       extendBody: true,
@@ -40,9 +40,9 @@ class _MainShellState extends ConsumerState<MainShell> {
         borderRadius: BorderRadius.circular(28),
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
-        barColor: Colors.transparent,
+        barColor: scheme.surfaceContainerHigh,
         barDecoration: BoxDecoration(
-          color: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
+          color: scheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -70,9 +70,9 @@ class _MainShellState extends ConsumerState<MainShell> {
             children: [
               _MainShellTabButton(
                 selected: currentIndex == 0,
-                label: 'Home',
-                icon: Icons.home_outlined,
-                selectedIcon: Icons.home_rounded,
+                label: 'Transactions',
+                icon: Icons.receipt_long_outlined,
+                selectedIcon: Icons.receipt_long_rounded,
                 onTap: () {
                   ref.read(mainShellTabIndexProvider.notifier).state = 0;
                 },
@@ -80,9 +80,9 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 1,
-                label: 'Transactions',
-                icon: Icons.receipt_long_outlined,
-                selectedIcon: Icons.receipt_long_rounded,
+                label: 'Overview',
+                icon: Icons.dashboard_outlined,
+                selectedIcon: Icons.dashboard_rounded,
                 onTap: () {
                   ref.read(mainShellTabIndexProvider.notifier).state = 1;
                 },

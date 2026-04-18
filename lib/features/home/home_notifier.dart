@@ -3,20 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
+import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 import 'package:revenuecat/models/rc_chart_response.dart';
 import 'package:revenuecat/models/rc_overview_response.dart';
+import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/talker_service.dart';
 
-DateTime _utcToday() {
-  final n = DateTime.now().toUtc();
-  return DateTime.utc(n.year, n.month, n.day);
+DateTime _localToday() {
+  final n = DateTime.now();
+  return DateTime(n.year, n.month, n.day);
 }
 
 class HomeState {
-  /// Inclusive chart API range (UTC calendar dates).
+  /// Inclusive chart API range (**device local** calendar dates, midnight local).
   final DateTime chartRangeStart;
   final DateTime chartRangeEnd;
 
@@ -35,7 +37,7 @@ class HomeState {
   });
 
   factory HomeState.initial() {
-    final end = _utcToday();
+    final end = _localToday();
     final start = end.subtract(const Duration(days: 28));
     return HomeState(chartRangeStart: start, chartRangeEnd: end);
   }
@@ -65,15 +67,15 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   static const int maxChartRangeDays = 366;
 
-  /// UTC calendar date for the [index]th daily bucket in chart data (day resolution, ordered points).
-  DateTime dateUtcForChartPoint(int index) {
+  /// Local calendar date for the [index]th daily bucket in chart data (day resolution, ordered points).
+  DateTime dateForChartPoint(int index) {
     return state.chartRangeStart.add(Duration(days: index));
   }
 
   /// Label for cards / app bar (localizable date formatting).
   String formatChartRangeLabel() {
-    final start = state.chartRangeStart.toLocal();
-    final end = state.chartRangeEnd.toLocal();
+    final start = state.chartRangeStart;
+    final end = state.chartRangeEnd;
     final ymd = DateFormat.yMMMd();
     if (start.year == end.year) {
       final md = DateFormat.MMMd();
@@ -83,8 +85,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
   }
 
   void setChartDateRange(DateTime start, DateTime end) {
-    var s = DateTime.utc(start.year, start.month, start.day);
-    var e = DateTime.utc(end.year, end.month, end.day);
+    var s = DateTime(start.year, start.month, start.day);
+    var e = DateTime(end.year, end.month, end.day);
     if (s.isAfter(e)) {
       final t = s;
       s = e;
@@ -149,11 +151,12 @@ class HomeNotifier extends StateNotifier<HomeState> {
     try {
       final start = state.chartRangeStart;
       final end = state.chartRangeEnd;
+      final ymd = DateFormat('yyyy-MM-dd');
       final response = await api.charts(
         name: metric.chartName,
         resolution: 0,
-        startDate: start.toIso8601String().substring(0, 10),
-        endDate: end.toIso8601String().substring(0, 10),
+        startDate: ymd.format(start),
+        endDate: ymd.format(end),
       );
       return MapEntry(metric, response);
     } catch (e, st) {
@@ -166,29 +169,37 @@ class HomeNotifier extends StateNotifier<HomeState> {
     }
   }
 
+  double? _adjustOverviewMoney(double? v) {
+    if (v == null) return null;
+    final s = _ref.read(commissionSettingsProvider);
+    return adjustUsdForDisplay(gross: v, settings: s, useBlended: true);
+  }
+
   dynamic getValue(OverviewMetricType metric) {
     final overview = state.overview;
     if (overview == null) return null;
 
     switch (metric) {
       case OverviewMetricType.mrr:
-        return overview.mrr;
+        return _adjustOverviewMoney(overview.mrr);
       case OverviewMetricType.subscriptions:
         return overview.subscriptions;
       case OverviewMetricType.trials:
         return overview.trials;
       case OverviewMetricType.revenue:
-        return overview.revenue;
+        return _adjustOverviewMoney(overview.revenue);
       case OverviewMetricType.users:
         return overview.users;
       case OverviewMetricType.newUsers:
         return overview.newUsers;
       case OverviewMetricType.arr:
         final mrr = overview.mrr;
-        return mrr != null ? mrr * 12 : null;
+        if (mrr == null) return null;
+        final netMrr = _adjustOverviewMoney(mrr);
+        return netMrr != null ? netMrr * 12 : null;
       case OverviewMetricType.proceeds:
         final chart = state.charts[OverviewMetricType.proceeds];
-        return chart?.getSummaryValue('total', 'Proceeds');
+        return _adjustOverviewMoney(chart?.getSummaryValue('total', 'Proceeds'));
       case OverviewMetricType.churnRate:
         final chart = state.charts[OverviewMetricType.churnRate];
         final values = chart?.values;
@@ -217,10 +228,28 @@ class HomeNotifier extends StateNotifier<HomeState> {
     if (values == null || values.isEmpty) return null;
 
     final index = metric.chartIndex;
+    List<RcChartDataPoint> list;
     if (index != null) {
-      return values.where((p) => p.measure == index).toList();
+      list = values.where((p) => p.measure == index).toList();
+    } else {
+      list = values;
     }
-    return values;
+
+    if (!metric.isCurrency) return list;
+
+    final c = _ref.read(commissionSettingsProvider);
+    if (!c.adjustmentEnabled) return list;
+
+    final mult = netMultiplierBlended(c);
+    return list
+        .map(
+          (p) => RcChartDataPoint(
+            cohort: p.cohort,
+            measure: p.measure,
+            value: p.value == null ? null : p.value! * mult,
+          ),
+        )
+        .toList();
   }
 
   void _handleAuthError(DioException e) {

@@ -36,6 +36,18 @@ class TransactionItem extends ConsumerWidget {
     final iconUrl =
         appId != null ? ref.watch(appIconOverridesProvider)[appId] : null;
 
+    final revenueRefunded = type == RcTransactionType.refund;
+    final baseRevenueStyle = context.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final revenueStyle = revenueRefunded
+        ? baseRevenueStyle?.copyWith(
+            color: context.colorScheme.error,
+            decoration: TextDecoration.lineThrough,
+            decorationColor: context.colorScheme.error,
+          )
+        : baseRevenueStyle;
+
     final body = InkWell(
       onTap: () {
         UtilitiesService.hapticLight();
@@ -81,9 +93,8 @@ class TransactionItem extends ConsumerWidget {
                           padding: const EdgeInsets.only(top: 1),
                           child: DualCurrencyExactText(
                             amount: transaction.revenue!,
-                            style: context.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            commissionStore: transaction.store,
+                            style: revenueStyle,
                             textAlign: TextAlign.end,
                           ),
                         ),

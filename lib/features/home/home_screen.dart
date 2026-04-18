@@ -6,7 +6,7 @@ import 'package:revenuecat/features/home/home_notifier.dart';
 import 'package:revenuecat/features/home/overview_metric_detail_screen.dart';
 import 'package:revenuecat/features/home/widgets/home_chart_date_range_sheet.dart';
 import 'package:revenuecat/features/home/widgets/overview_item_card.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
+import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -29,8 +29,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final current = ref.read(homeProvider);
     final picked = await HomeChartDateRangeSheet.show(
       context,
-      chartRangeStartUtc: current.chartRangeStart,
-      chartRangeEndUtc: current.chartRangeEnd,
+      chartRangeStart: current.chartRangeStart,
+      chartRangeEnd: current.chartRangeEnd,
     );
     if (picked == null || !mounted) return;
     ref.read(homeProvider.notifier).setChartDateRange(picked.start, picked.end);
@@ -38,6 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(commissionSettingsProvider);
     final state = ref.watch(homeProvider);
     final notifier = ref.read(homeProvider.notifier);
     final metrics = OverviewMetricType.values;
@@ -49,6 +50,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           rangeLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: context.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.1,
+          ),
         ),
         bottom: state.isLoading
             ? PreferredSize(
@@ -66,15 +71,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed: state.isLoading ? null : _pickChartRange,
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed:
+                state.isLoading ? null : () => notifier.fetchData(),
           ),
         ],
       ),

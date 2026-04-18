@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/utils/region_display_name.dart';
+import 'package:revenuecat/core/utils/store_commission.dart';
+import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
@@ -31,7 +33,6 @@ class _TransactionsRevenueInsightsCardState
   @override
   Widget build(BuildContext context) {
     final transactions = widget.transactions;
-    final data = _computeInsights(transactions);
     final scheme = context.colorScheme;
 
     if (transactions.isEmpty) {
@@ -52,6 +53,8 @@ class _TransactionsRevenueInsightsCardState
 
     return Consumer(
       builder: (context, ref, _) {
+        final commission = ref.watch(commissionSettingsProvider);
+        final data = _computeInsights(transactions, commission);
         final appIconOverrides = ref.watch(appIconOverridesProvider);
         return Card(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -443,7 +446,10 @@ _StorePlatformBucket _storePlatformBucket(String? store) {
   return _StorePlatformBucket.other;
 }
 
-_InsightsComputed _computeInsights(List<RcTransaction> txs) {
+_InsightsComputed _computeInsights(
+  List<RcTransaction> txs,
+  CommissionSettings commission,
+) {
   double total = 0;
   final byApp = <String, double>{};
   final appLabel = <String, String>{};
@@ -455,7 +461,12 @@ _InsightsComputed _computeInsights(List<RcTransaction> txs) {
   double newRev = 0;
 
   for (final tx in txs) {
-    final r = tx.revenue ?? 0;
+    final gross = tx.revenue ?? 0;
+    final r = adjustUsdForDisplay(
+      gross: gross,
+      settings: commission,
+      store: tx.store,
+    );
     total += r;
 
     final rawKey = _txAppKey(tx);

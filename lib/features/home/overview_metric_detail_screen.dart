@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/features/home/home_notifier.dart';
+import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/features/home/widgets/overview_detail_line_chart.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
@@ -32,6 +33,7 @@ class _OverviewMetricDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(commissionSettingsProvider);
     ref.listen<HomeState>(homeProvider, (prev, next) {
       final notifier = ref.read(homeProvider.notifier);
       final p = notifier.getChartData(widget.metric) ?? [];
@@ -56,12 +58,12 @@ class _OverviewMetricDetailScreenState
     final safeIdx =
         points.isEmpty ? 0 : _selectedIndex.clamp(0, points.length - 1);
     final selectedPoint = points.isEmpty ? null : points[safeIdx];
-    final dateUtc = points.isEmpty
+    final selectedDay = points.isEmpty
         ? null
-        : notifier.dateUtcForChartPoint(safeIdx);
-    final dateStr = dateUtc == null
+        : notifier.dateForChartPoint(safeIdx);
+    final dateStr = selectedDay == null
         ? ''
-        : DateFormat.yMMMEd().format(dateUtc.toLocal());
+        : DateFormat.yMMMEd().format(selectedDay);
 
     return Scaffold(
       appBar: AppBar(
@@ -136,7 +138,7 @@ class _OverviewMetricDetailScreenState
               dataPoints: points,
               lineColor: color,
               metric: widget.metric,
-              rangeStartUtc: state.chartRangeStart,
+              rangeStart: state.chartRangeStart,
               selectedIndex: safeIdx,
               onIndexChanged: (i) {
                 setState(() => _selectedIndex = i);
