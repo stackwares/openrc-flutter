@@ -20,6 +20,7 @@ import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/realtime_section_transactions_screen.dart';
+import 'package:revenuecat/features/transactions/widgets/realtime_next_payday_proceeds_card.dart';
 import 'package:revenuecat/features/transactions/widgets/realtime_revenue_insights_list.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
@@ -260,6 +261,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       final dailyTotals = _calculateDailyTotals(grouped);
       final nextCursor = _nextCursorFromResponse(raw, response.lastPurchaseMs);
       final hasMorePages = raw.isNotEmpty && nextCursor != null;
+      final monthStart = localStartOfCurrentMonth();
+      final monthBoundaryMet = realtimeMonthBackfillBoundaryReached(
+        grouped,
+        monthStart,
+      );
+      final realtimeDone = !hasMorePages || monthBoundaryMet;
       state = state.copyWith(
         grouped: grouped,
         dailyTotals: dailyTotals,
@@ -268,11 +275,11 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         hasMore: hasMorePages,
         firstPurchaseMs: response.firstPurchaseMs,
         lastPurchaseMs: hasMorePages ? nextCursor : null,
-        realtimeLoadStep: hasMorePages ? 1 : kRealtimeLoadTarget,
-        realtimeLoadComplete: !hasMorePages,
+        realtimeLoadStep: realtimeDone ? kRealtimeLoadTarget : 1,
+        realtimeLoadComplete: realtimeDone,
       );
-      if (hasMorePages && gen == _backfillGeneration) {
-        unawaited(backfillIncompleteCalendarDays(gen));
+      if (hasMorePages && !monthBoundaryMet && gen == _backfillGeneration) {
+        unawaited(backfillIncompleteCalendarDays(gen, true));
       }
     } on DioException catch (e) {
       _handleAuthError(e);
@@ -348,18 +355,27 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     unawaited(backfillIncompleteCalendarDays());
   }
 
-  /// Keeps calling [_performFetchMorePage] while any visible calendar day may
-  /// still have undelivered rows (newest-first pagination).
-  Future<void> backfillIncompleteCalendarDays([int? capturedGen]) async {
+  /// Keeps calling [_performFetchMorePage] while [state.hasMore] and under
+  /// [kRealtimeBackfillMaxPages]. When [onlyThroughCurrentMonth] is true (initial
+  /// Realtime preload), stops once the oldest loaded day is before this month.
+  Future<void> backfillIncompleteCalendarDays([
+    int? capturedGen,
+    bool onlyThroughCurrentMonth = false,
+  ]) async {
     final gen = capturedGen ?? _backfillGeneration;
     if (_backfillRunning) return;
     _backfillRunning = true;
     try {
+      final monthStart = localStartOfCurrentMonth();
       var pages = 0;
       while (pages < kRealtimeBackfillMaxPages &&
           gen == _backfillGeneration &&
           !state.isLoading &&
           state.hasMore) {
+        if (onlyThroughCurrentMonth &&
+            realtimeMonthBackfillBoundaryReached(state.grouped, monthStart)) {
+          break;
+        }
         while (state.isLoadingMore && gen == _backfillGeneration) {
           await Future<void>.delayed(const Duration(milliseconds: 24));
         }
@@ -371,6 +387,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         pages++;
         if (gen == _backfillGeneration) {
           state = state.copyWith(realtimeLoadStep: state.realtimeLoadStep + 1);
+        }
+        if (onlyThroughCurrentMonth &&
+            realtimeMonthBackfillBoundaryReached(state.grouped, monthStart)) {
+          break;
         }
       }
     } finally {
@@ -882,13 +902,11 @@ String _afterStoreCommissionTitle(CommissionSettings commission) {
 
   final a = commission.appleCommissionPercent;
   final g = commission.googleCommissionPercent;
-  final pct = (a - g).abs() < 0.05
-      ? '${fmt(a)}%'
-      : '${fmt(a)}% / ${fmt(g)}%';
+  final pct = (a - g).abs() < 0.05 ? '${fmt(a)}%' : '${fmt(a)}% / ${fmt(g)}%';
   return 'After $pct store commission';
 }
 
-/// Rolling 30-day totals (main-tab Realtime). Shares [transactionsProvider] with [TransactionsScreen].
+/// Month-to-date Realtime totals (local calendar month). Shares [transactionsProvider] with [TransactionsScreen].
 class RealtimeTransactionsScreen extends ConsumerWidget {
   const RealtimeTransactionsScreen({super.key});
 
@@ -900,11 +918,9 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     final grouped = filteredGroupedByApps(state.grouped, appIncludeFilter);
+    final allLoadedTxs = flattenGroupedTransactionsDeduped(grouped);
     // Sum revenue from paginated `/me/transactions` merges only — not overview chart totals.
-    final txs = collectTransactionsInLastLocalDays(
-      grouped,
-      kRealtimeWindowDays,
-    );
+    final txs = collectTransactionsInCurrentLocalMonth(grouped);
     final grossTotal = grossRevenueSum(txs);
     final netTotal = netRevenueSum(txs, commission);
     final progress = state.realtimeLoadComplete
@@ -932,7 +948,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              'Last 30 days · local',
+              kRealtimeWindowSubtitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -956,9 +972,8 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
             onPressed: state.isLoading || txs.isEmpty
                 ? null
                 : () {
-                    final windowTxs = collectTransactionsInLastLocalDays(
+                    final windowTxs = collectTransactionsInCurrentLocalMonth(
                       state.grouped,
-                      kRealtimeWindowDays,
                     );
                     final filterSource = windowTxs.isEmpty
                         ? <String, List<RcTransaction>>{}
@@ -1134,9 +1149,9 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                               MaterialPageRoute<void>(
                                 builder: (ctx) =>
                                     RealtimeSectionTransactionsScreen(
-                                  windowTransactions: txs,
-                                  filter: f,
-                                ),
+                                      windowTransactions: txs,
+                                      filter: f,
+                                    ),
                               ),
                             );
                           },
@@ -1148,11 +1163,15 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                RealtimeNextPaydayProceedsCard(
+                  allLoadedTransactions: allLoadedTxs,
+                  loadedTransactionCount: allLoadedTxs.length,
+                ),
                 RealtimeRevenueInsightsList(transactions: txs),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                   child: Text(
-                    'Totals include every transaction loaded so far in the last 30 local days. '
+                    'Totals include every transaction in the current local calendar month that has been loaded. '
                     'Pull to refresh to reload.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(

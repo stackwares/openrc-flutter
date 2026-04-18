@@ -80,7 +80,7 @@ class _RealtimeSectionTransactionsScreenState
               ),
             ),
             Text(
-              'Last $kRealtimeWindowDays days · local',
+              kRealtimeWindowSubtitle,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,

@@ -9,8 +9,8 @@ const int kRealtimeBackfillMaxPages = 100;
 /// First successful fetch + up to [kRealtimeBackfillMaxPages] backfill pages.
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
 
-/// Rolling window for Realtime totals (local calendar days, inclusive).
-const int kRealtimeWindowDays = 30;
+/// Subtitle under the Realtime app bar (month-to-date, local timezone).
+const String kRealtimeWindowSubtitle = 'This month · local';
 
 final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
@@ -84,6 +84,91 @@ List<RcTransaction> collectTransactionsInLastLocalDays(
       final day = DateTime(local.year, local.month, local.day);
       if (day.isBefore(start) || day.isAfter(today)) continue;
       if (dedup != null) seen.add(dedup);
+      out.add(tx);
+    }
+  }
+  return out;
+}
+
+/// Local midnight at the first day of the current calendar month.
+DateTime localStartOfCurrentMonth() {
+  final n = DateTime.now();
+  return DateTime(n.year, n.month, 1);
+}
+
+/// Oldest purchase **local calendar day** in [grouped], or null if no parseable dates.
+DateTime? oldestPurchaseLocalCalendarDay(
+  Map<String, List<RcTransaction>> grouped,
+) {
+  DateTime? oldest;
+  for (final list in grouped.values) {
+    for (final tx in list) {
+      final pd = tx.purchaseDate?.trim();
+      if (pd == null || pd.isEmpty) continue;
+      final parsed = DateTime.tryParse(pd);
+      if (parsed == null) continue;
+      final local = parsed.toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      if (oldest == null || day.isBefore(oldest)) oldest = day;
+    }
+  }
+  return oldest;
+}
+
+/// True once pagination has loaded at least one transaction on a local day **before**
+/// [monthStartLocal] (exclusive), so month-to-date rows should be complete.
+bool realtimeMonthBackfillBoundaryReached(
+  Map<String, List<RcTransaction>> grouped,
+  DateTime monthStartLocal,
+) {
+  final oldest = oldestPurchaseLocalCalendarDay(grouped);
+  if (oldest == null) return true;
+  return oldest.isBefore(monthStartLocal);
+}
+
+/// `/me/transactions` rows in the **current local calendar month** through today (inclusive).
+List<RcTransaction> collectTransactionsInCurrentLocalMonth(
+  Map<String, List<RcTransaction>> grouped,
+) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final monthStart = DateTime(now.year, now.month, 1);
+  final out = <RcTransaction>[];
+  final seen = <String>{};
+
+  for (final list in grouped.values) {
+    for (final tx in list) {
+      final dedup = rcTransactionDedupKey(tx);
+      if (dedup != null) {
+        if (seen.contains(dedup)) continue;
+      }
+      final pd = tx.purchaseDate?.trim();
+      if (pd == null || pd.isEmpty) continue;
+      final parsed = DateTime.tryParse(pd);
+      if (parsed == null) continue;
+      final local = parsed.toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      if (day.isBefore(monthStart) || day.isAfter(today)) continue;
+      if (dedup != null) seen.add(dedup);
+      out.add(tx);
+    }
+  }
+  return out;
+}
+
+/// Every row in [grouped], deduped with [rcTransactionDedupKey] (same key as list merges).
+List<RcTransaction> flattenGroupedTransactionsDeduped(
+  Map<String, List<RcTransaction>> grouped,
+) {
+  final seen = <String>{};
+  final out = <RcTransaction>[];
+  for (final list in grouped.values) {
+    for (final tx in list) {
+      final k = rcTransactionDedupKey(tx);
+      if (k != null) {
+        if (seen.contains(k)) continue;
+        seen.add(k);
+      }
       out.add(tx);
     }
   }
