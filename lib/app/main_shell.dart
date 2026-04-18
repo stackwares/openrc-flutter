@@ -10,6 +10,49 @@ import 'package:revenuecat/features/transactions/transactions_screen.dart';
 /// (`0` = transactions, `1` = revenue, `2` = charts, `3` = settings).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
+const _mainShellTabLabels = [
+  'Transactions',
+  'Revenue',
+  'Charts',
+  'Settings',
+];
+
+/// Width of the floating tab bar (content + padding), not full-bleed.
+double mainShellTabBarWidth(BuildContext context) {
+  final theme = Theme.of(context);
+  final baseStyle = theme.textTheme.labelSmall;
+  if (baseStyle == null) return 320;
+  final style = baseStyle.copyWith(
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.1,
+    height: 1.05,
+  );
+  final textScaler = MediaQuery.textScalerOf(context);
+  const outerHorizontalPadding = 8.0 * 2;
+  const tabHorizontalPadding = 10.0 * 2;
+  const iconSize = 22.0;
+  const betweenTabs = 4.0;
+  final textDir = Directionality.of(context);
+
+  var sum = outerHorizontalPadding;
+  for (var i = 0; i < _mainShellTabLabels.length; i++) {
+    if (i > 0) sum += betweenTabs;
+    final tp = TextPainter(
+      text: TextSpan(text: _mainShellTabLabels[i], style: style),
+      textDirection: textDir,
+      maxLines: 1,
+      textScaler: textScaler,
+    )..layout();
+    final textW = tp.width;
+    final colW = tabHorizontalPadding + (textW > iconSize ? textW : iconSize);
+    sum += colW;
+  }
+
+  final maxW = MediaQuery.sizeOf(context).width - 2 * 12;
+  // Small cushion for glyph/layout differences vs [TextPainter].
+  return (sum + 6).clamp(120.0, maxW);
+}
+
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -25,12 +68,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     SettingsScreen(),
   ];
 
-  final GlobalKey _tabBarMeasureKey = GlobalKey();
-  bool _measureFrameScheduled = false;
-
-  /// `null` until first layout pass; then tight width around tab row + padding.
-  double? _barWidth;
-
   @override
   void initState() {
     super.initState();
@@ -40,32 +77,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     });
   }
 
-  void _scheduleMeasureBarWidth() {
-    if (_measureFrameScheduled) return;
-    _measureFrameScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _measureFrameScheduled = false;
-      if (!mounted) return;
-      final box =
-          _tabBarMeasureKey.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) return;
-      final measured = box.size.width;
-      if (measured <= 0) return;
-      final maxW = MediaQuery.sizeOf(context).width - 2 * 12;
-      final next = measured.clamp(120.0, maxW);
-      if (_barWidth == null || (_barWidth! - next).abs() > 0.5) {
-        setState(() => _barWidth = next);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(mainShellTabIndexProvider);
     final scheme = Theme.of(context).colorScheme;
-    final maxBarW = MediaQuery.sizeOf(context).width - 2 * 12;
-    final barW = (_barWidth ?? maxBarW).clamp(120.0, maxBarW);
-    _scheduleMeasureBarWidth();
+    final barW = mainShellTabBarWidth(context);
 
     return Scaffold(
       extendBody: true,
@@ -119,15 +135,19 @@ class _MainShellState extends ConsumerState<MainShell> {
           );
         },
         child: Padding(
-          key: _tabBarMeasureKey,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          // [Center] would expand to the Stack's full height; [heightFactor: 1.0]
+          // keeps vertical size to the tab row only while centering it horizontally.
+          child: Align(
+            alignment: Alignment.center,
+            heightFactor: 1.0,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               _MainShellTabButton(
                 selected: currentIndex == 0,
-                label: 'Transactions',
+                label: _mainShellTabLabels[0],
                 icon: Icons.receipt_long_outlined,
                 selectedIcon: Icons.receipt_long_rounded,
                 onTap: () {
@@ -137,7 +157,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 1,
-                label: 'Revenue',
+                label: _mainShellTabLabels[1],
                 icon: Icons.payments_outlined,
                 selectedIcon: Icons.payments_rounded,
                 onTap: () {
@@ -147,7 +167,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 2,
-                label: 'Charts',
+                label: _mainShellTabLabels[2],
                 icon: Icons.dashboard_outlined,
                 selectedIcon: Icons.dashboard_rounded,
                 onTap: () {
@@ -157,7 +177,7 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 3,
-                label: 'Settings',
+                label: _mainShellTabLabels[3],
                 icon: Icons.settings_outlined,
                 selectedIcon: Icons.settings_rounded,
                 onTap: () {
@@ -165,6 +185,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 },
               ),
             ],
+            ),
           ),
         ),
       ),

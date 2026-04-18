@@ -305,11 +305,28 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                   child: Text(
                     'REVENUE INSIGHTS',
                     style: headerStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: scheme.onSurfaceVariant,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _CollapsedStoreShareRow(
+                        scheme: scheme,
+                        applePct: data.applePct,
+                        googlePct: data.googlePct,
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -347,6 +364,60 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
           color: context.colorScheme.onSurfaceVariant,
         ),
       ),
+    );
+  }
+}
+
+/// Apple / Google revenue share on the collapsed insights card (subtle tint, right-aligned with chevron).
+class _CollapsedStoreShareRow extends StatelessWidget {
+  final ColorScheme scheme;
+  final double applePct;
+  final double googlePct;
+
+  const _CollapsedStoreShareRow({
+    required this.scheme,
+    required this.applePct,
+    required this.googlePct,
+  });
+
+  /// Portion of pure brand color (rest blends toward [ColorScheme.onSurface]).
+  static const double _brandStrength = 0.58;
+
+  Color _softApple() => Color.lerp(
+        StoreBrandIconColors.appleBlue,
+        scheme.onSurface,
+        1.0 - _brandStrength,
+      )!;
+
+  Color _softGoogle() => Color.lerp(
+        StoreBrandIconColors.androidGreen,
+        scheme.onSurface,
+        1.0 - _brandStrength,
+      )!;
+
+  TextStyle _pctStyle(Color c) => TextStyle(
+        color: c,
+        fontWeight: FontWeight.w700,
+        fontSize: 13,
+        height: 1.1,
+        letterSpacing: -0.15,
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final apple = _softApple();
+    final google = _softGoogle();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.apple, size: 21, color: apple),
+        const SizedBox(width: 3),
+        Text('${applePct.toStringAsFixed(1)}%', style: _pctStyle(apple)),
+        const SizedBox(width: 10),
+        Icon(Icons.android, size: 19, color: google),
+        const SizedBox(width: 3),
+        Text('${googlePct.toStringAsFixed(1)}%', style: _pctStyle(google)),
+      ],
     );
   }
 }
