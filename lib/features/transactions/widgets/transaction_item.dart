@@ -29,7 +29,8 @@ class TransactionItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final type = transaction.type;
-    final color = transactionTypeAccentColor(type, context, transaction: transaction);
+    final color =
+        transactionTypeAccentColorForTransactionsList(transaction, context);
     final icon = _typeIcon(type);
     final storeIcon = _storeIcon(transaction.store);
     final appId = transaction.app?.id;
@@ -86,7 +87,10 @@ class TransactionItem extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      TransactionTypeBadge(transaction: transaction),
+                      TransactionTypeBadge(
+                        transaction: transaction,
+                        useHeaderPillStyle: true,
+                      ),
                       if (transaction.revenue != null) ...[
                         const SizedBox(width: 8),
                         Padding(
@@ -188,8 +192,13 @@ class TransactionItem extends ConsumerWidget {
       );
     }
 
+    final scheme = context.colorScheme;
+    final tileTint = Color.lerp(scheme.surface, color, 0.07) ?? scheme.surface;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: tileTint,
+      surfaceTintColor: Colors.transparent,
       child: body,
     );
   }

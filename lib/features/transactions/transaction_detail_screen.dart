@@ -210,6 +210,14 @@ class TransactionDetailScreen extends ConsumerWidget {
 
   const TransactionDetailScreen({super.key, required this.transaction});
 
+  /// Same subtle tint as [TransactionItem] list cards (7% toward type accent).
+  Color _txCardSurface(BuildContext context, RcTransaction tx) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent =
+        transactionTypeAccentColor(tx.type, context, transaction: tx);
+    return Color.lerp(scheme.surface, accent, 0.07) ?? scheme.surface;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(transactionDetailProvider(transaction));
@@ -248,6 +256,8 @@ class TransactionDetailScreen extends ConsumerWidget {
         children: [
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            color: _txCardSurface(context, transaction),
+            surfaceTintColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -338,13 +348,13 @@ class TransactionDetailScreen extends ConsumerWidget {
           _buildInfoSection(context, detail, tx),
           if (detail.subscriptionStatuses?.isNotEmpty == true) ...[
             _SectionHeader(title: 'Entitlements'),
-            _buildEntitlements(context, detail.subscriptionStatuses!),
+            _buildEntitlements(context, detail.subscriptionStatuses!, tx),
           ],
           _SectionHeader(title: 'Insights'),
-          _buildInsights(context, detail, activity),
+          _buildInsights(context, detail, activity, tx),
           if (detail.subscriberAttributes?.isNotEmpty == true) ...[
             _SectionHeader(title: 'Attributes'),
-            _buildAttributes(context, detail.subscriberAttributes!),
+            _buildAttributes(context, detail.subscriberAttributes!, tx),
           ],
         ],
         if (detail?.history?.isNotEmpty == true ||
@@ -413,6 +423,8 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: _txCardSurface(context, tx),
+      surfaceTintColor: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -527,6 +539,8 @@ class TransactionDetailScreen extends ConsumerWidget {
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: _txCardSurface(context, tx),
+      surfaceTintColor: Colors.transparent,
       child: Column(
         children: [
           _InfoRow(
@@ -567,7 +581,8 @@ class TransactionDetailScreen extends ConsumerWidget {
               icon: Icons.flag_outlined,
               label: 'Country / Locale',
               value:
-                  '${detail.lastSeenCountry ?? ""} ${detail.lastSeenLocale ?? ""}'.trim(),
+                  '${regionDisplayNameEnglish(detail.lastSeenCountry)} ${detail.lastSeenLocale ?? ""}'
+                      .trim(),
             ),
           ],
           if (detail.app?.name != null) ...[
@@ -603,9 +618,12 @@ class TransactionDetailScreen extends ConsumerWidget {
   Widget _buildEntitlements(
     BuildContext context,
     List<RcSubscriptionStatus> statuses,
+    RcTransaction tx,
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: _txCardSurface(context, tx),
+      surfaceTintColor: Colors.transparent,
       child: Column(
         children: statuses.map((s) {
           final isActive = s.isAutoRenewing == true;
@@ -696,6 +714,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     BuildContext context,
     RcTransactionDetailResponse detail,
     RcTransactionDetailActivityResponse? activity,
+    RcTransaction tx,
   ) {
     final insights = <_InsightItem>[];
 
@@ -761,6 +780,8 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: _txCardSurface(context, tx),
+      surfaceTintColor: Colors.transparent,
       child: Column(
         children: [
           for (int i = 0; i < insights.length; i++) ...[
@@ -782,9 +803,12 @@ class TransactionDetailScreen extends ConsumerWidget {
   Widget _buildAttributes(
     BuildContext context,
     List<RcSubscriberAttribute> attributes,
+    RcTransaction tx,
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: _txCardSurface(context, tx),
+      surfaceTintColor: Colors.transparent,
       child: Column(
         children: [
           for (int i = 0; i < attributes.length; i++) ...[
@@ -850,6 +874,8 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: _txCardSurface(context, tx),
+      surfaceTintColor: Colors.transparent,
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(4, 12, 12, 12),

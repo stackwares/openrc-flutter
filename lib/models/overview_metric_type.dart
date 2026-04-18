@@ -77,7 +77,7 @@ enum OverviewMetricType {
       case OverviewMetricValueType.last:
         return 'This month';
       case OverviewMetricValueType.total:
-        return 'Last 28 days';
+        return 'Last 30 days';
     }
   }
 

@@ -1,28 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
 import 'package:revenuecat/features/settings/payday_screen.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/display_currency_store.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
+import 'package:revenuecat/services/utilities_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
-
-  static String _paydaysSettingsSubtitle() {
-    final apple = AppStorePayday.upcoming;
-    final google = GooglePlayPayday.upcoming;
-    final parts = <String>[];
-    if (apple != null) {
-      parts.add('App Store ${formatPaydayAbbrev(apple.paymentDate)}');
-    }
-    if (google != null) {
-      parts.add('Play ${formatPaydayAbbrev(google.paymentDate)}');
-    }
-    if (parts.isEmpty) return 'Fiscal & monthly payout calendar';
-    return parts.join(' · ');
-  }
 
   static void _showCurrencyBottomSheet(BuildContext context) {
     final maxH = MediaQuery.sizeOf(context).height * 0.56;
@@ -133,6 +121,11 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  static Future<void> _setThemeMode(WidgetRef ref, ThemeMode mode) async {
+    ref.read(themeModeProvider.notifier).state = mode;
+    await ref.read(utilitiesServiceProvider).saveThemeMode(mode);
+  }
+
   static Future<void> _editCommissionPercent(
     BuildContext context,
     WidgetRef ref, {
@@ -198,6 +191,7 @@ class SettingsScreen extends ConsumerWidget {
     final selectedOption = lookupDisplayCurrencyOption(selected);
     final commission = ref.watch(commissionSettingsProvider);
     final me = ref.watch(rcMeProvider);
+    final themeMode = ref.watch(themeModeProvider);
     final scheme = Theme.of(context).colorScheme;
     final sectionLabelStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
           color: scheme.primary,
@@ -235,21 +229,46 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => _showCurrencyBottomSheet(context),
           ),
           const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.payments_outlined),
-            title: const Text('App Store & Play paydays'),
-            subtitle: Text(
-              _paydaysSettingsSubtitle(),
-              style: TextStyle(color: scheme.onSurfaceVariant),
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const PaydayScreen(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Text('APPEARANCE', style: sectionLabelStyle),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('System'),
+                  selected: themeMode == ThemeMode.system,
+                  onSelected: (_) => _setThemeMode(ref, ThemeMode.system),
                 ),
-              );
-            },
+                ChoiceChip(
+                  label: const Text('Bright'),
+                  selected: themeMode == ThemeMode.light,
+                  onSelected: (_) => _setThemeMode(ref, ThemeMode.light),
+                ),
+                ChoiceChip(
+                  label: const Text('Dark'),
+                  selected: themeMode == ThemeMode.dark,
+                  onSelected: (_) => _setThemeMode(ref, ThemeMode.dark),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+            child: _PaydaysSettingsCard(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const PaydayScreen(),
+                  ),
+                );
+              },
+            ),
           ),
           const Divider(height: 1),
           Padding(
@@ -320,6 +339,167 @@ class SettingsScreen extends ConsumerWidget {
               style: TextStyle(color: scheme.error),
             ),
             onTap: () => _confirmSignOut(context, ref),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaydaysSettingsCard extends StatelessWidget {
+  const _PaydaysSettingsCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final apple = AppStorePayday.upcoming;
+    final google = GooglePlayPayday.upcoming;
+
+    return Material(
+      color: scheme.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 14, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    color: scheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Payout calendar',
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'App Store fiscal deposits and estimated Play payout timing',
+                style: tt.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _PaydayStorePreview(
+                      icon: Icons.apple,
+                      iconColor: StoreBrandIconColors.appleBlue,
+                      label: 'App Store',
+                      dateLine: apple != null
+                          ? formatPaydayAbbrev(apple.paymentDate)
+                          : '—',
+                      hint: apple != null ? 'Next deposit' : 'Open for schedule',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _PaydayStorePreview(
+                      icon: Icons.android,
+                      iconColor: StoreBrandIconColors.androidGreen,
+                      label: 'Google Play',
+                      dateLine: google != null
+                          ? formatPaydayAbbrev(google.paymentDate)
+                          : '—',
+                      hint: google != null ? 'Est. initiation' : 'Open for schedule',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PaydayStorePreview extends StatelessWidget {
+  const _PaydayStorePreview({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.dateLine,
+    required this.hint,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String dateLine;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: iconColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: tt.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            dateLine,
+            style: tt.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            hint,
+            style: tt.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),

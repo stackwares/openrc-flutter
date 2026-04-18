@@ -678,10 +678,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final children = <Widget>[
       Card(
-        margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

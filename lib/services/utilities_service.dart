@@ -60,12 +60,7 @@ class UtilitiesService {
     if (index < 0 || index >= ThemeMode.values.length) {
       return defaultMode;
     }
-    final mode = ThemeMode.values[index];
-    if (defaultTargetPlatform == TargetPlatform.macOS &&
-        mode == ThemeMode.dark) {
-      return ThemeMode.system;
-    }
-    return mode;
+    return ThemeMode.values[index];
   }
 
   Future<void> saveThemeMode(ThemeMode mode) async {

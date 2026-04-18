@@ -38,7 +38,7 @@ class HomeState {
 
   factory HomeState.initial() {
     final end = _localToday();
-    final start = end.subtract(const Duration(days: 28));
+    final start = end.subtract(const Duration(days: 29));
     return HomeState(chartRangeStart: start, chartRangeEnd: end);
   }
 

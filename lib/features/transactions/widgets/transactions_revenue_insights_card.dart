@@ -249,17 +249,32 @@ class _TransactionsRevenueInsightsCardState
     _InsightBadgeSpec spec, {
     Map<String, String>? appIconOverrides,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     final pctStr = '${spec.pct.toStringAsFixed(1)}%';
-    final baseStyle = TransactionPillStyle.textStyle(spec.color);
-    final labelPct = Text(
-      '${spec.label} $pctStr',
+    final baseMetrics = TransactionPillStyle.textStyle(spec.color);
+    final labelStyle = baseMetrics.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    final emphasisStyle = baseMetrics.copyWith(
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w800,
+    );
+    final labelPct = Text.rich(
+      TextSpan(
+        style: labelStyle,
+        children: [
+          TextSpan(text: spec.label),
+          const TextSpan(text: ' '),
+          TextSpan(text: pctStr, style: emphasisStyle),
+        ],
+      ),
       maxLines: spec.maxLines,
       overflow: TextOverflow.ellipsis,
-      style: baseStyle,
     );
     final amount = DualCurrencyCompactText(
       amount: spec.revenue,
-      style: baseStyle.copyWith(fontWeight: FontWeight.w800),
+      style: emphasisStyle,
     );
 
     final Widget labelRow = Row(
@@ -286,11 +301,11 @@ class _TransactionsRevenueInsightsCardState
             imageUrl: url,
             size: 18,
             borderRadius: 5,
-            tintColor: spec.color,
+            tintColor: scheme.onSurfaceVariant,
             fallback: Icon(
               Icons.apps_outlined,
               size: 11,
-              color: spec.color,
+              color: scheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 5),
@@ -317,18 +332,36 @@ class _TransactionsRevenueInsightsCardState
     required Color color,
     IconData? leadingIcon,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     final pctStr = '${pct.toStringAsFixed(1)}%';
-    final baseStyle = TransactionPillStyle.textStyle(color);
+    final baseMetrics = TransactionPillStyle.textStyle(color);
+    final labelStyle = baseMetrics.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    final emphasisStyle = baseMetrics.copyWith(
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w800,
+    );
     final row = Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: [
-        Text('$label $pctStr', style: baseStyle),
+        Text.rich(
+          TextSpan(
+            style: labelStyle,
+            children: [
+              TextSpan(text: label),
+              const TextSpan(text: ' '),
+              TextSpan(text: pctStr, style: emphasisStyle),
+            ],
+          ),
+        ),
         const SizedBox(width: 6),
         DualCurrencyCompactText(
           amount: revenue,
-          style: baseStyle.copyWith(fontWeight: FontWeight.w800),
+          style: emphasisStyle,
         ),
       ],
     );
@@ -343,7 +376,7 @@ class _TransactionsRevenueInsightsCardState
                 Icon(
                   leadingIcon,
                   size: 16,
-                  color: color,
+                  color: scheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 6),
                 row,
@@ -389,7 +422,7 @@ class _RankedApp {
 }
 
 class _RankedCountry {
-  /// Flag emoji + full English country name (or "Unknown" when missing).
+  /// Flag emoji + English country label, max two words (or "Unknown" when missing).
   final String label;
   final double pct;
   final double revenue;

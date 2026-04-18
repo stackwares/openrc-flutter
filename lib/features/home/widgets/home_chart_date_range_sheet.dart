@@ -7,6 +7,45 @@ class _PresetRanges {
     return DateTime(n.year, n.month, n.day);
   }
 
+  /// [MaterialLocalizations.firstDayOfWeekIndex]: 0 = Sunday … 6 = Saturday.
+  static int _dartWeekdayFromMaterialFirstDay(int materialFirstDayIndex) {
+    if (materialFirstDayIndex == 0) return DateTime.sunday;
+    return materialFirstDayIndex;
+  }
+
+  /// First calendar day of the week that contains [day] (locale week start).
+  static DateTime _startOfWeekContaining(
+    DateTime day,
+    int materialFirstDayIndex,
+  ) {
+    final d = DateTime(day.year, day.month, day.day);
+    final firstWd = _dartWeekdayFromMaterialFirstDay(materialFirstDayIndex);
+    var delta = d.weekday - firstWd;
+    if (delta < 0) delta += 7;
+    return d.subtract(Duration(days: delta));
+  }
+
+  /// Start of locale week through today (inclusive).
+  static DateTimeRange thisWeek(int materialFirstDayIndex) {
+    final end = _todayLocal();
+    final start = _startOfWeekContaining(end, materialFirstDayIndex);
+    return DateTimeRange(start: start, end: end);
+  }
+
+  /// First day of month through today (inclusive).
+  static DateTimeRange thisMonth() {
+    final end = _todayLocal();
+    final start = DateTime(end.year, end.month, 1);
+    return DateTimeRange(start: start, end: end);
+  }
+
+  /// January 1 through today (inclusive).
+  static DateTimeRange thisYear() {
+    final end = _todayLocal();
+    final start = DateTime(end.year, 1, 1);
+    return DateTimeRange(start: start, end: end);
+  }
+
   /// Trailing 7 days ending today (inclusive).
   static DateTimeRange last7Days() {
     final end = _todayLocal();
@@ -21,12 +60,6 @@ class _PresetRanges {
     return DateTimeRange(start: start, end: end);
   }
 
-  /// Same span as the overview default (28 days back from today).
-  static DateTimeRange last28Days() {
-    final end = _todayLocal();
-    final start = end.subtract(const Duration(days: 28));
-    return DateTimeRange(start: start, end: end);
-  }
 }
 
 /// Modal bottom sheet: quick presets plus custom range.
@@ -81,6 +114,8 @@ class HomeChartDateRangeSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final weekStarts =
+        MaterialLocalizations.of(context).firstDayOfWeekIndex;
     final presets = <({
       String title,
       String hint,
@@ -95,15 +130,27 @@ class HomeChartDateRangeSheet extends StatelessWidget {
       ),
       (
         title: 'Last 30 days',
-        hint: 'Through today',
+        hint: 'Through today · default',
         range: _PresetRanges.last30Days(),
         icon: Icons.calendar_month_outlined,
       ),
       (
-        title: 'Last 28 days',
-        hint: 'Matches default overview window',
-        range: _PresetRanges.last28Days(),
-        icon: Icons.date_range_outlined,
+        title: 'This week',
+        hint: 'Start of week through today',
+        range: _PresetRanges.thisWeek(weekStarts),
+        icon: Icons.today_outlined,
+      ),
+      (
+        title: 'This month',
+        hint: 'Month to date',
+        range: _PresetRanges.thisMonth(),
+        icon: Icons.calendar_view_month_outlined,
+      ),
+      (
+        title: 'This year',
+        hint: 'Year to date',
+        range: _PresetRanges.thisYear(),
+        icon: Icons.event_note_outlined,
       ),
     ];
 

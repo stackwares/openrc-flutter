@@ -34,9 +34,6 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
     final signedIn = ref.watch(isSignedInProvider);
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
-    final effectiveThemeMode = defaultTargetPlatform == TargetPlatform.macOS
-        ? ThemeMode.light
-        : themeMode;
     final effectiveColorScheme = defaultTargetPlatform == TargetPlatform.macOS
         ? FlexScheme.greyLaw
         : colorScheme;
@@ -46,7 +43,7 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(effectiveColorScheme),
       darkTheme: AppTheme.dark(effectiveColorScheme),
-      themeMode: effectiveThemeMode,
+      themeMode: themeMode,
       color: AppTheme.light(effectiveColorScheme).scaffoldBackgroundColor,
       home: signedIn ? const MainShell() : const SignInScreen(),
     );

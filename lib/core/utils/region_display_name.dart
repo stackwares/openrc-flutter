@@ -1,54 +1,52 @@
 // English display names for ISO 3166-1 alpha-2 codes.
 // Data source: ISO-3166-Countries-with-Regional-Codes (lukes).
+//
+// All UI-facing labels cap at two words; formal ISO names use the segment before
+// the first comma when present (e.g. "Bolivia, Plurinational State of" → "Bolivia").
 
-String regionDisplayNameEnglish(String? alpha2Code) {
-  if (alpha2Code == null || alpha2Code.isEmpty) return '';
-  final key = alpha2Code.trim().toUpperCase();
-  if (key.length != 2) return key;
-  return _kIso3166Alpha2English[key] ?? key;
+/// Prefer the primary segment before a comma for formal ISO names.
+String _formalCountryDisplayBase(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return t;
+  final comma = t.indexOf(',');
+  if (comma >= 3) {
+    final head = t.substring(0, comma).trim();
+    if (head.isNotEmpty) return head;
+  }
+  return t;
 }
-
-/// Shorter than [regionDisplayNameEnglish] for tight UI (e.g. pills): keeps normal
-/// names, uses the part before a comma for long formal names, otherwise alpha-2;
-/// then trims to at most the first two words when the label has more than two.
-const int _kCompactRegionNameMaxLength = 28;
 
 String _regionNameAtMostTwoWords(String name) {
   final t = name.trim();
   if (t.isEmpty) return t;
   final parts = t.split(RegExp(r'\s+'));
-  if (parts.length <= 2) return t;
-  return '${parts[0]} ${parts[1]}';
+  if (parts.isEmpty) return t;
+  String clean(String w) => w.replaceAll(RegExp(r',\s*$'), '');
+  if (parts.length <= 2) {
+    return parts.map(clean).join(' ');
+  }
+  return '${clean(parts[0])} ${clean(parts[1])}';
 }
 
-String regionDisplayNameForCompactBadge(String? alpha2Code) {
+/// ISO alpha-2 codes, or free-form country strings from APIs, resolved to a short
+/// English label (at most two words) for display.
+String regionDisplayNameEnglish(String? alpha2Code) {
   if (alpha2Code == null || alpha2Code.isEmpty) return '';
-  final key = alpha2Code.trim().toUpperCase();
-  if (key.length != 2) {
-    return _regionNameAtMostTwoWords(regionDisplayNameEnglish(alpha2Code));
+  final trimmed = alpha2Code.trim();
+  final isAlpha2 =
+      trimmed.length == 2 && RegExp(r'^[A-Za-z]{2}$').hasMatch(trimmed);
+  if (isAlpha2) {
+    final key = trimmed.toUpperCase();
+    final raw = _kIso3166Alpha2English[key] ?? key;
+    return _regionNameAtMostTwoWords(_formalCountryDisplayBase(raw));
   }
+  return _regionNameAtMostTwoWords(_formalCountryDisplayBase(trimmed));
+}
 
-  final full = regionDisplayNameEnglish(alpha2Code);
-
-  String base;
-  if (full.length <= _kCompactRegionNameMaxLength) {
-    base = full;
-  } else {
-    final comma = full.indexOf(',');
-    if (comma >= 3) {
-      final head = full.substring(0, comma).trim();
-      base = (head.isNotEmpty && head.length <= _kCompactRegionNameMaxLength)
-          ? head
-          : key;
-    } else {
-      base = key;
-    }
-  }
-
-  if (base == key) {
-    return _regionNameAtMostTwoWords(full);
-  }
-  return _regionNameAtMostTwoWords(base);
+/// Alias for call sites that previously used a shorter badge variant; behavior
+/// matches [regionDisplayNameEnglish].
+String regionDisplayNameForCompactBadge(String? alpha2Code) {
+  return regionDisplayNameEnglish(alpha2Code);
 }
 
 const Map<String, String> _kIso3166Alpha2English = {
