@@ -24,26 +24,37 @@ class SettingsScreen extends ConsumerWidget {
             final selected = ref.watch(displayCurrencyProvider);
             final notifier = ref.read(displayCurrencyProvider.notifier);
             final bottom = MediaQuery.paddingOf(sheetContext).bottom;
+            final scheme = Theme.of(context).colorScheme;
 
             return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + bottom),
+              padding: EdgeInsets.fromLTRB(20, 4, 20, 20 + bottom),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Display currency',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Used for transaction amounts and summaries.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: kDisplayCurrencyOptions.map((o) {
                       final isSel = o.code == selected;
-                      return ChoiceChip(
+                      return FilterChip(
+                        showCheckmark: false,
                         label: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Row(
@@ -51,18 +62,16 @@ class SettingsScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 o.flagEmoji,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  height: 1,
-                                ),
+                                style: const TextStyle(fontSize: 20, height: 1),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Text(
-                                o.code,
+                                '${currencySymbolFor(o.code)} ${o.code}',
                                 style: TextStyle(
-                                  fontWeight:
-                                      isSel ? FontWeight.w700 : FontWeight.w600,
-                                  letterSpacing: 0.2,
+                                  fontWeight: isSel
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
+                                  letterSpacing: 0.15,
                                 ),
                               ),
                             ],
@@ -87,16 +96,17 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  static Future<void> _confirmSignOut(BuildContext context, WidgetRef ref) async {
+  static Future<void> _confirmSignOut(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         final scheme = Theme.of(dialogContext).colorScheme;
         return AlertDialog(
           title: const Text('Log out?'),
-          content: const Text(
-            'You will need to sign in again to use the app.',
-          ),
+          content: const Text('You will need to sign in again to use the app.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -191,11 +201,7 @@ class SettingsScreen extends ConsumerWidget {
     final me = ref.watch(rcMeProvider);
     final themeMode = ref.watch(themeModeProvider);
     final scheme = Theme.of(context).colorScheme;
-    final sectionLabelStyle = Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: scheme.primary,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        );
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -203,134 +209,299 @@ class SettingsScreen extends ConsumerWidget {
         title: const Text('Settings'),
       ),
       body: ListView(
-        padding: EdgeInsets.only(
-          bottom: mainShellFloatingTabBarScrollPadding(context),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          8,
+          16,
+          16 + mainShellFloatingTabBarScrollPadding(context),
         ),
         children: [
-          ListTile(
-            leading: const Icon(Icons.currency_exchange_outlined),
-            title: const Text('Display currency'),
-            subtitle: Row(
+          Text(
+            'Preferences',
+            style: tt.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.25,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Currency, appearance, and how revenue is shown.',
+            style: tt.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SettingsCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  selectedOption?.flagEmoji ?? '🏳️',
-                  style: const TextStyle(fontSize: 22, height: 1.1),
+                _SettingsCardHeader(
+                  icon: Icons.currency_exchange_rounded,
+                  title: 'Display currency',
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '$selected · $sym',
-                    style: TextStyle(color: scheme.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 12),
+                Material(
+                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    onTap: () => _showCurrencyBottomSheet(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            selectedOption?.flagEmoji ?? '🏳️',
+                            style: const TextStyle(fontSize: 28, height: 1),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              '$sym $selected',
+                              style: tt.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.expand_more_rounded,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showCurrencyBottomSheet(context),
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Text('APPEARANCE', style: sectionLabelStyle),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
+          const SizedBox(height: 12),
+          _SettingsCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ChoiceChip(
-                  label: const Text('System'),
-                  selected: themeMode == ThemeMode.system,
-                  onSelected: (_) => _setThemeMode(ref, ThemeMode.system),
+                _SettingsCardHeader(
+                  icon: Icons.palette_outlined,
+                  title: 'Appearance',
                 ),
-                ChoiceChip(
-                  label: const Text('Bright'),
-                  selected: themeMode == ThemeMode.light,
-                  onSelected: (_) => _setThemeMode(ref, ThemeMode.light),
-                ),
-                ChoiceChip(
-                  label: const Text('Dark'),
-                  selected: themeMode == ThemeMode.dark,
-                  onSelected: (_) => _setThemeMode(ref, ThemeMode.dark),
+                const SizedBox(height: 12),
+                SegmentedButton<ThemeMode>(
+                  style: SegmentedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: ThemeMode.system,
+                      label: Text('System'),
+                      icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.light,
+                      label: Text('Light'),
+                      icon: Icon(Icons.light_mode_outlined, size: 18),
+                    ),
+                    ButtonSegment(
+                      value: ThemeMode.dark,
+                      label: Text('Dark'),
+                      icon: Icon(Icons.dark_mode_outlined, size: 18),
+                    ),
+                  ],
+                  selected: {themeMode},
+                  onSelectionChanged: (next) {
+                    if (next.isEmpty) return;
+                    _setThemeMode(ref, next.single);
+                  },
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Text('STORE COMMISSION', style: sectionLabelStyle),
+          const SizedBox(height: 12),
+          _SettingsCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _SettingsCardHeader(
+                  icon: Icons.percent_rounded,
+                  title: 'Store commission',
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Optional net revenue after platform fees.',
+                  style: tt.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Commission Rate'),
+                  value: commission.adjustmentEnabled,
+                  onChanged: (v) => ref
+                      .read(commissionSettingsProvider.notifier)
+                      .setAdjustmentEnabled(v),
+                ),
+                if (commission.adjustmentEnabled) ...[
+                  const Divider(height: 24),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.apple),
+                    title: const Text('App Store fee'),
+                    subtitle: Text(
+                      '${commission.appleCommissionPercent.toStringAsFixed(1)}%',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    trailing: Icon(Icons.edit_outlined, color: scheme.primary),
+                    onTap: () =>
+                        _editCommissionPercent(context, ref, isApple: true),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.android),
+                    title: const Text('Google Play fee'),
+                    subtitle: Text(
+                      '${commission.googleCommissionPercent.toStringAsFixed(1)}%',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    trailing: Icon(Icons.edit_outlined, color: scheme.primary),
+                    onTap: () =>
+                        _editCommissionPercent(context, ref, isApple: false),
+                  ),
+                ],
+              ],
+            ),
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.percent_outlined),
-            title: const Text('Adjust revenue for store fees'),
-            subtitle: Text(
-              commission.adjustmentEnabled
-                  ? 'Net = gross × (1 − fee) for App Store & Play Store'
-                  : 'Show gross amounts from RevenueCat',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          const SizedBox(height: 24),
+          Text(
+            'Account',
+            style: tt.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.25,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: scheme.primaryContainer.withValues(
+                      alpha: 0.65,
+                    ),
+                    foregroundColor: scheme.onPrimaryContainer,
+                    child: const Icon(Icons.person_outline, size: 22),
+                  ),
+                  title: const Text('Email'),
+                  subtitle: Text(
+                    me?.email ?? '—',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Divider(height: 28),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    Icons.fingerprint_rounded,
                     color: scheme.onSurfaceVariant,
                   ),
+                  title: const Text('Distinct ID'),
+                  subtitle: SelectableText(
+                    me?.distinctId ?? '—',
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: scheme.error,
+                      side: BorderSide(
+                        color: scheme.error.withValues(alpha: 0.45),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => _confirmSignOut(context, ref),
+                    icon: Icon(Icons.logout_rounded, color: scheme.error),
+                    label: const Text('Log out'),
+                  ),
+                ),
+              ],
             ),
-            value: commission.adjustmentEnabled,
-            onChanged: (v) => ref
-                .read(commissionSettingsProvider.notifier)
-                .setAdjustmentEnabled(v),
-          ),
-          if (commission.adjustmentEnabled) ...[
-            ListTile(
-              leading: const Icon(Icons.apple),
-              title: const Text('App Store'),
-              subtitle: Text(
-                '${commission.appleCommissionPercent.toStringAsFixed(1)}%',
-              ),
-              trailing: const Icon(Icons.edit_outlined),
-              onTap: () => _editCommissionPercent(context, ref, isApple: true),
-            ),
-            ListTile(
-              leading: const Icon(Icons.android),
-              title: const Text('Google Play'),
-              subtitle: Text(
-                '${commission.googleCommissionPercent.toStringAsFixed(1)}%',
-              ),
-              trailing: const Icon(Icons.edit_outlined),
-              onTap: () => _editCommissionPercent(context, ref, isApple: false),
-            ),
-          ],
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Text('ACCOUNT', style: sectionLabelStyle),
-          ),
-          ListTile(
-            leading: const Icon(Icons.email_outlined),
-            title: const Text('Email'),
-            subtitle: Text(
-              me?.email ?? '—',
-              style: TextStyle(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.badge_outlined),
-            title: const Text('ID'),
-            subtitle: Text(
-              me?.distinctId ?? '—',
-              style: TextStyle(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.logout, color: scheme.error),
-            title: Text(
-              'Log out',
-              style: TextStyle(color: scheme.error),
-            ),
-            onTap: () => _confirmSignOut(context, ref),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 0,
+      color: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SettingsCardHeader extends StatelessWidget {
+  const _SettingsCardHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Icon(icon, size: 22, color: scheme.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: tt.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.15,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
