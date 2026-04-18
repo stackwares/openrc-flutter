@@ -114,6 +114,15 @@ final transactionDetailProvider = StateNotifierProvider.family<
       TransactionDetailNotifier(ref, TransactionDetailState(transaction: transaction)),
 );
 
+String _transactionDetailAppBarTitle(RcTransaction transaction) {
+  final name = transaction.app?.name?.trim();
+  if (name != null && name.isNotEmpty) return name;
+  return productIdentifierDisplayTitle(
+    transaction.productIdentifier,
+    ifEmpty: 'Transaction',
+  );
+}
+
 Future<void> _showAppIconUrlDialog(
   BuildContext context,
   WidgetRef ref, {
@@ -208,10 +217,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          productIdentifierDisplayTitle(
-            transaction.productIdentifier,
-            ifEmpty: 'Transaction',
-          ),
+          _transactionDetailAppBarTitle(transaction),
           style: context.textTheme.titleMedium,
           overflow: TextOverflow.ellipsis,
         ),

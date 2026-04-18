@@ -165,12 +165,6 @@ class TransactionItem extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.chevron_right,
-              color: context.colorScheme.onSurfaceVariant,
-              size: 20,
-            ),
           ],
         ),
       ),

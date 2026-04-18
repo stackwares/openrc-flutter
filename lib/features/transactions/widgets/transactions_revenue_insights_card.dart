@@ -6,6 +6,7 @@ import 'package:revenuecat/features/transactions/widgets/transaction_leading_ava
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/app_icon_overrides_store.dart';
+import 'package:revenuecat/widgets/dual_currency_text.dart';
 
 /// Revenue breakdown for a list of transactions (e.g. one calendar day).
 class TransactionsRevenueInsightsCard extends StatefulWidget {
@@ -109,9 +110,10 @@ class _TransactionsRevenueInsightsCardState
                                 (e) => _InsightBadgeSpec(
                                   label: e.label,
                                   pct: e.pct,
+                                  revenue: e.revenue,
                                   color: scheme.primary,
                                   appIdForIcon: e.appId,
-                                  maxLabelWidth: 248,
+                                  maxLabelWidth: 280,
                                 ),
                               )
                               .toList(),
@@ -128,9 +130,10 @@ class _TransactionsRevenueInsightsCardState
                                 (e) => _InsightBadgeSpec(
                                   label: e.label,
                                   pct: e.pct,
+                                  revenue: e.revenue,
                                   color: scheme.tertiary,
                                   maxLines: 2,
-                                  maxLabelWidth: 300,
+                                  maxLabelWidth: 320,
                                 ),
                               )
                               .toList(),
@@ -147,6 +150,7 @@ class _TransactionsRevenueInsightsCardState
                               context,
                               label: 'Apple',
                               pct: data.applePct,
+                              revenue: data.appleRevenue,
                               color: scheme.onSurfaceVariant,
                               leadingIcon: Icons.apple,
                             ),
@@ -154,6 +158,7 @@ class _TransactionsRevenueInsightsCardState
                               context,
                               label: 'Google',
                               pct: data.googlePct,
+                              revenue: data.googleRevenue,
                               color: scheme.onSurfaceVariant,
                               leadingIcon: Icons.android,
                             ),
@@ -170,6 +175,7 @@ class _TransactionsRevenueInsightsCardState
                               context,
                               label: 'New',
                               pct: data.newPct,
+                              revenue: data.newRevenue,
                               color: scheme.onSurfaceVariant,
                               leadingIcon: Icons.add_circle_outline,
                             ),
@@ -177,6 +183,7 @@ class _TransactionsRevenueInsightsCardState
                               context,
                               label: 'Renewals',
                               pct: data.renewalPct,
+                              revenue: data.renewalRevenue,
                               color: scheme.onSurfaceVariant,
                               leadingIcon: Icons.autorenew,
                             ),
@@ -240,11 +247,27 @@ class _TransactionsRevenueInsightsCardState
     Map<String, String>? appIconOverrides,
   }) {
     final pctStr = '${spec.pct.toStringAsFixed(1)}%';
-    final text = Text(
+    final baseStyle = TransactionPillStyle.textStyle(spec.color);
+    final labelPct = Text(
       '${spec.label} $pctStr',
       maxLines: spec.maxLines,
       overflow: TextOverflow.ellipsis,
-      style: TransactionPillStyle.textStyle(spec.color),
+      style: baseStyle,
+    );
+    final amount = DualCurrencyCompactText(
+      amount: spec.revenue,
+      style: baseStyle.copyWith(fontWeight: FontWeight.w800),
+    );
+
+    final Widget labelRow = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Flexible(child: labelPct),
+        const SizedBox(width: 6),
+        amount,
+      ],
     );
 
     final Widget inner;
@@ -268,11 +291,11 @@ class _TransactionsRevenueInsightsCardState
             ),
           ),
           const SizedBox(width: 5),
-          Flexible(child: text),
+          Flexible(child: labelRow),
         ],
       );
     } else {
-      inner = text;
+      inner = labelRow;
     }
 
     return Container(
@@ -287,19 +310,30 @@ class _TransactionsRevenueInsightsCardState
     BuildContext context, {
     required String label,
     required double pct,
+    required double revenue,
     required Color color,
     IconData? leadingIcon,
   }) {
     final pctStr = '${pct.toStringAsFixed(1)}%';
-    final text = Text(
-      '$label $pctStr',
-      style: TransactionPillStyle.textStyle(color),
+    final baseStyle = TransactionPillStyle.textStyle(color);
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text('$label $pctStr', style: baseStyle),
+        const SizedBox(width: 6),
+        DualCurrencyCompactText(
+          amount: revenue,
+          style: baseStyle.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
     );
     return Container(
       padding: TransactionPillStyle.padding,
       decoration: TransactionPillStyle.decoration(color),
       child: leadingIcon == null
-          ? text
+          ? row
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -309,7 +343,7 @@ class _TransactionsRevenueInsightsCardState
                   color: color,
                 ),
                 const SizedBox(width: 6),
-                text,
+                row,
               ],
             ),
     );
@@ -319,6 +353,7 @@ class _TransactionsRevenueInsightsCardState
 class _InsightBadgeSpec {
   final String label;
   final double pct;
+  final double revenue;
   final Color color;
   final int maxLines;
   final double maxLabelWidth;
@@ -328,6 +363,7 @@ class _InsightBadgeSpec {
   const _InsightBadgeSpec({
     required this.label,
     required this.pct,
+    required this.revenue,
     required this.color,
     this.maxLines = 1,
     this.maxLabelWidth = 220,
@@ -338,11 +374,13 @@ class _InsightBadgeSpec {
 class _RankedApp {
   final String label;
   final double pct;
+  final double revenue;
   final String? appId;
 
   const _RankedApp({
     required this.label,
     required this.pct,
+    required this.revenue,
     required this.appId,
   });
 }
@@ -351,10 +389,12 @@ class _RankedCountry {
   /// Flag emoji + full English country name (or "Unknown" when missing).
   final String label;
   final double pct;
+  final double revenue;
 
   const _RankedCountry({
     required this.label,
     required this.pct,
+    required this.revenue,
   });
 }
 
@@ -363,16 +403,24 @@ class _InsightsComputed {
   final List<_RankedCountry> topCountries;
   final double applePct;
   final double googlePct;
+  final double appleRevenue;
+  final double googleRevenue;
   final double newPct;
   final double renewalPct;
+  final double newRevenue;
+  final double renewalRevenue;
 
   const _InsightsComputed({
     required this.topApps,
     required this.topCountries,
     required this.applePct,
     required this.googlePct,
+    required this.appleRevenue,
+    required this.googleRevenue,
     required this.newPct,
     required this.renewalPct,
+    required this.newRevenue,
+    required this.renewalRevenue,
   });
 }
 
@@ -462,6 +510,7 @@ _InsightsComputed _computeInsights(List<RcTransaction> txs) {
       _RankedApp(
         label: appLabel[e.key] ?? e.key,
         pct: pctOf(e.value),
+        revenue: e.value,
         appId: appIdByKey[e.key],
       ),
     );
@@ -482,6 +531,7 @@ _InsightsComputed _computeInsights(List<RcTransaction> txs) {
       _RankedCountry(
         label: '$flag $displayName',
         pct: pctOf(e.value),
+        revenue: e.value,
       ),
     );
   }
@@ -491,8 +541,12 @@ _InsightsComputed _computeInsights(List<RcTransaction> txs) {
     topCountries: topCountries,
     applePct: pctOf(appleRev),
     googlePct: pctOf(googleRev),
+    appleRevenue: appleRev,
+    googleRevenue: googleRev,
     newPct: pctOf(newRev),
     renewalPct: pctOf(renewalRev),
+    newRevenue: newRev,
+    renewalRevenue: renewalRev,
   );
 }
 

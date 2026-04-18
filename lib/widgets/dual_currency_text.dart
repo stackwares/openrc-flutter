@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
+import 'package:revenuecat/services/display_currency_store.dart';
 import 'package:revenuecat/services/exchange_rate_provider.dart';
-import 'package:revenuecat/services/secondary_currency_store.dart';
 
+/// Formats a **USD** amount using the user’s app-wide [displayCurrencyProvider].
+/// When currency is USD or rates are unavailable, shows USD.
 class DualCurrencyCompactText extends ConsumerWidget {
   final double amount;
   final TextStyle? style;
@@ -16,33 +18,52 @@ class DualCurrencyCompactText extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final secondary = ref.watch(secondaryCurrencyProvider);
-    final usd = formatCompactUsd(amount);
-    if (secondary == null || secondary.isEmpty) {
-      return Text(usd, style: style, maxLines: 2, overflow: TextOverflow.ellipsis);
+    final currency = ref.watch(displayCurrencyProvider);
+    if (currency == 'USD') {
+      return Text(
+        formatCompactUsd(amount),
+        style: style,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      );
     }
-    final rateAsync = ref.watch(exchangeRateProvider(secondary));
-    return rateAsync.when(
-      data: (rate) {
-        if (rate == null) {
-          return Text(usd, style: style, maxLines: 2, overflow: TextOverflow.ellipsis);
+
+    final ratesAsync = ref.watch(usdExchangeRatesProvider);
+    return ratesAsync.when(
+      data: (map) {
+        final r = map[currency.toLowerCase()];
+        if (r == null || r == 0) {
+          return Text(
+            formatCompactUsd(amount),
+            style: style,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          );
         }
-        final other = formatCompactForeign(amount * rate, secondary);
         return Text(
-          '$usd · $other',
+          formatCompactForeign(amount * r, currency),
           style: style,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
       },
-      loading: () =>
-          Text(usd, style: style, maxLines: 2, overflow: TextOverflow.ellipsis),
-      error: (_, _) =>
-          Text(usd, style: style, maxLines: 2, overflow: TextOverflow.ellipsis),
+      loading: () => Text(
+        formatCompactUsd(amount),
+        style: style,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      error: (_, _) => Text(
+        formatCompactUsd(amount),
+        style: style,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
 
+/// Formats a **USD** amount using the user’s app-wide display currency.
 class DualCurrencyExactText extends ConsumerWidget {
   final double amount;
   final TextStyle? style;
@@ -57,26 +78,31 @@ class DualCurrencyExactText extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final secondary = ref.watch(secondaryCurrencyProvider);
-    final usd = formatExactUsd(amount);
-    if (secondary == null || secondary.isEmpty) {
-      return Text(usd, style: style, textAlign: textAlign);
+    final currency = ref.watch(displayCurrencyProvider);
+    if (currency == 'USD') {
+      return Text(
+        formatExactUsd(amount),
+        style: style,
+        textAlign: textAlign,
+      );
     }
-    final rateAsync = ref.watch(exchangeRateProvider(secondary));
-    return rateAsync.when(
-      data: (rate) {
-        if (rate == null) {
-          return Text(usd, style: style, textAlign: textAlign);
+
+    final ratesAsync = ref.watch(usdExchangeRatesProvider);
+    return ratesAsync.when(
+      data: (map) {
+        final r = map[currency.toLowerCase()];
+        if (r == null || r == 0) {
+          return Text(formatExactUsd(amount), style: style, textAlign: textAlign);
         }
-        final other = formatExactForeign(amount * rate, secondary);
         return Text(
-          '$usd · $other',
+          formatExactForeign(amount * r, currency),
           style: style,
           textAlign: textAlign,
         );
       },
-      loading: () => Text(usd, style: style, textAlign: textAlign),
-      error: (_, _) => Text(usd, style: style, textAlign: textAlign),
+      loading: () => Text(formatExactUsd(amount), style: style, textAlign: textAlign),
+      error: (_, _) =>
+          Text(formatExactUsd(amount), style: style, textAlign: textAlign),
     );
   }
 }
