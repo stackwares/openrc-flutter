@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
@@ -10,7 +11,8 @@ import 'package:revenuecat/models/rc_overview_response.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/services/talker_service.dart';
+
+final _homeLog = Logger('HomeNotifier');
 
 DateTime _localToday() {
   final n = DateTime.now();
@@ -135,18 +137,18 @@ class HomeNotifier extends StateNotifier<HomeState> {
     } on DioException catch (e, st) {
       _handleAuthError(e);
       final msg = _extractErrorMessage(e);
-      _ref.read(talkerProvider).handle(
-            e,
-            st,
-            'Home load failed (overview/charts): $msg | '
-            '${e.type} HTTP ${e.response?.statusCode} ${e.requestOptions.uri}',
-          );
+      _homeLog.severe(
+        'Home load failed (overview/charts): $msg | '
+        '${e.type} HTTP ${e.response?.statusCode} ${e.requestOptions.uri}',
+        e,
+        st,
+      );
       state = state.copyWith(
         isLoading: false,
         error: msg,
       );
     } catch (e, st) {
-      _ref.read(talkerProvider).handle(e, st, 'Home load failed (unexpected)');
+      _homeLog.severe('Home load failed (unexpected)', e, st);
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load overview',
@@ -171,11 +173,11 @@ class HomeNotifier extends StateNotifier<HomeState> {
       );
       return MapEntry(metric, response);
     } catch (e, st) {
-      _ref.read(talkerProvider).handle(
-            e,
-            st,
-            'Home chart failed (${metric.name} / ${metric.chartName})',
-          );
+      _homeLog.severe(
+        'Home chart failed (${metric.name} / ${metric.chartName})',
+        e,
+        st,
+      );
       return MapEntry(metric, const RcChartResponse());
     }
   }

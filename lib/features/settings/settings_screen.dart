@@ -355,6 +355,7 @@ class _PaydaysSettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final now = DateTime.now();
     final apple = AppStorePayday.upcoming;
     final google = GooglePlayPayday.upcoming;
 
@@ -412,6 +413,9 @@ class _PaydaysSettingsCard extends StatelessWidget {
                       dateLine: apple != null
                           ? formatPaydayAbbrev(apple.paymentDate)
                           : '—',
+                      daysToGo: apple != null
+                          ? paydayDaysToGoLabel(apple.paymentDate, now)
+                          : null,
                       hint: apple != null ? 'Next deposit' : 'Open for schedule',
                     ),
                   ),
@@ -424,6 +428,9 @@ class _PaydaysSettingsCard extends StatelessWidget {
                       dateLine: google != null
                           ? formatPaydayAbbrev(google.paymentDate)
                           : '—',
+                      daysToGo: google != null
+                          ? paydayDaysToGoLabel(google.paymentDate, now)
+                          : null,
                       hint: google != null ? 'Est. initiation' : 'Open for schedule',
                     ),
                   ),
@@ -443,6 +450,7 @@ class _PaydayStorePreview extends StatelessWidget {
     required this.iconColor,
     required this.label,
     required this.dateLine,
+    this.daysToGo,
     required this.hint,
   });
 
@@ -450,6 +458,7 @@ class _PaydayStorePreview extends StatelessWidget {
   final Color iconColor;
   final String label;
   final String dateLine;
+  final String? daysToGo;
   final String hint;
 
   @override
@@ -494,6 +503,16 @@ class _PaydayStorePreview extends StatelessWidget {
               letterSpacing: -0.2,
             ),
           ),
+          if (daysToGo != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              daysToGo!,
+              style: tt.labelLarge?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
           const SizedBox(height: 2),
           Text(
             hint,

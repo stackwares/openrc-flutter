@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Store payout schedules: Apple fiscal calendar (from [Kedi](https://github.com/sereisoglu/Kedi))
 /// and approximate Google Play monthly initiation dates.
-class PaydayScreen extends StatelessWidget {
+class PaydayScreen extends StatefulWidget {
   const PaydayScreen({super.key});
 
   static Future<void> openUrl(BuildContext context, String url) async {
@@ -18,6 +18,14 @@ class PaydayScreen extends StatelessWidget {
       );
     }
   }
+
+  @override
+  State<PaydayScreen> createState() => _PaydayScreenState();
+}
+
+class _PaydayScreenState extends State<PaydayScreen> {
+  /// 0 = App Store, 1 = Google Play.
+  int _storeSegment = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +45,7 @@ class PaydayScreen extends StatelessWidget {
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.info_outline),
-            onSelected: (v) => openUrl(context, v),
+            onSelected: (v) => PaydayScreen.openUrl(context, v),
             itemBuilder: (context) => const [
               PopupMenuItem(
                 value:
@@ -57,69 +65,95 @@ class PaydayScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
           _IntroCard(scheme: scheme),
-          const SizedBox(height: 8),
-          _StoreSectionHeader(
-            icon: Icons.apple,
-            iconColor: StoreBrandIconColors.appleBlue,
-            title: 'App Store',
-            subtitle: 'Fiscal month closing dates and when deposits land',
+          const SizedBox(height: 14),
+          SegmentedButton<int>(
+            showSelectedIcon: false,
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            segments: const <ButtonSegment<int>>[
+              ButtonSegment<int>(
+                value: 0,
+                label: Text('App Store'),
+                icon: Icon(Icons.apple, size: 18),
+              ),
+              ButtonSegment<int>(
+                value: 1,
+                label: Text('Play Store'),
+                icon: Icon(Icons.android, size: 18),
+              ),
+            ],
+            selected: {_storeSegment},
+            onSelectionChanged: (Set<int> next) {
+              setState(() => _storeSegment = next.first);
+            },
           ),
-          if (appleUp != null) _AppleUpcomingSection(payday: appleUp, now: now),
-          for (var i = 0; i < appleYears.length; i++) ...[
-            _YearPaydayCard(
-              title: 'Fiscal year ${appleYears[i]}',
-              child: Column(
-                children: _withDividers(
-                  context,
-                  AppStorePayday.groupedYearDescending(appleYears[i]).map(
-                    (p) => _PaydayRow(
-                      emoji: p.proximityState(now).emoji,
-                      title: formatPaydayAbbrev(p.paymentDate),
-                      subtitle:
-                          '${formatPaydayMonthYear(p.fiscalMonthStart)} (${formatPaydayAbbrev(p.startDate)} – ${formatPaydayAbbrev(p.endDate)})',
+          const SizedBox(height: 16),
+          if (_storeSegment == 0) ...[
+            _StoreSectionHeader(
+              icon: Icons.apple,
+              iconColor: StoreBrandIconColors.appleBlue,
+              title: 'App Store',
+              subtitle: 'Fiscal month closing dates and when deposits land',
+            ),
+            if (appleUp != null) _AppleUpcomingSection(payday: appleUp, now: now),
+            for (var i = 0; i < appleYears.length; i++) ...[
+              _YearPaydayCard(
+                title: 'Fiscal year ${appleYears[i]}',
+                child: Column(
+                  children: _withDividers(
+                    context,
+                    AppStorePayday.groupedYearDescending(appleYears[i]).map(
+                      (p) => _PaydayRow(
+                        emoji: p.proximityState(now).emoji,
+                        title: formatPaydayAbbrev(p.paymentDate),
+                        subtitle:
+                            '${formatPaydayMonthYear(p.fiscalMonthStart)} (${formatPaydayAbbrev(p.startDate)} – ${formatPaydayAbbrev(p.endDate)})',
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-          if (appleUp == null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                'No further App Store dates are bundled yet—check Apple’s fiscal calendar for new months.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+            ],
+            if (appleUp == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 8),
+                child: Text(
+                  'No further App Store dates are bundled yet—check Apple’s fiscal calendar for new months.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                ),
               ),
+          ] else ...[
+            _StoreSectionHeader(
+              icon: Icons.android,
+              iconColor: StoreBrandIconColors.androidGreen,
+              title: 'Google Play',
+              subtitle: 'Estimated initiation (15th rule, weekends adjusted)',
             ),
-          const SizedBox(height: 12),
-          _StoreSectionHeader(
-            icon: Icons.android,
-            iconColor: StoreBrandIconColors.androidGreen,
-            title: 'Google Play',
-            subtitle: 'Estimated initiation (15th rule, weekends adjusted)',
-          ),
-          _PlayDisclaimerCard(scheme: scheme),
-          if (googleUp != null) _GoogleUpcomingSection(payday: googleUp, now: now),
-          for (final year in googleYears) ...[
-            _YearPaydayCard(
-              title: 'Earnings in $year',
-              child: Column(
-                children: _withDividers(
-                  context,
-                  (googleByYear[year] ?? []).map(
-                    (p) => _PaydayRow(
-                      emoji: p.proximityState(now).emoji,
-                      title: formatPaydayAbbrev(p.paymentDate),
-                      subtitle:
-                          '${DateFormat.yMMMM().format(DateTime(p.earningsYear, p.earningsMonth, 1))} '
-                          '(${formatPaydayAbbrev(p.earningsStart)} – ${formatPaydayAbbrev(p.earningsEnd)})',
+            _PlayDisclaimerCard(scheme: scheme),
+            if (googleUp != null) _GoogleUpcomingSection(payday: googleUp, now: now),
+            for (final year in googleYears) ...[
+              _YearPaydayCard(
+                title: 'Earnings in $year',
+                child: Column(
+                  children: _withDividers(
+                    context,
+                    (googleByYear[year] ?? []).map(
+                      (p) => _PaydayRow(
+                        emoji: p.proximityState(now).emoji,
+                        title: formatPaydayAbbrev(p.paymentDate),
+                        subtitle:
+                            '${DateFormat.yMMMM().format(DateTime(p.earningsYear, p.earningsMonth, 1))} '
+                            '(${formatPaydayAbbrev(p.earningsStart)} – ${formatPaydayAbbrev(p.earningsEnd)})',
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ],
       ),

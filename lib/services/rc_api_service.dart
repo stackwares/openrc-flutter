@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/models/rc_chart_response.dart';
 import 'package:revenuecat/models/rc_error_response.dart';
@@ -11,8 +13,8 @@ import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/models/rc_transaction_detail.dart';
 import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
-import 'package:revenuecat/services/talker_service.dart';
-import 'package:talker/talker.dart';
+
+final _log = Logger('RcApiService');
 
 enum RcEndpoint {
   login,
@@ -24,16 +26,14 @@ enum RcEndpoint {
 }
 
 final rcApiServiceProvider = Provider<RcApiService>((ref) {
-  final talker = ref.read(talkerProvider);
-  return RcApiService(talker);
+  return RcApiService();
 });
 
 class RcApiService {
-  final Talker _talker;
   late final Dio _dio;
   String? _authToken;
 
-  RcApiService(this._talker) {
+  RcApiService() {
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.rcApiBaseUrl,
       connectTimeout: const Duration(seconds: 30),
@@ -43,12 +43,23 @@ class RcApiService {
       },
     ));
 
-    _dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestBody: true,
-      responseBody: true,
-      logPrint: (obj) => _talker.info('[Dio] $obj'),
-    ));
+    if (kDebugMode) {
+      _dio.interceptors.add(InterceptorsWrapper(
+        onResponse: (response, handler) {
+          _log.fine(
+            '[Dio] ${response.statusCode} ${response.requestOptions.uri}',
+          );
+          handler.next(response);
+        },
+        onError: (e, handler) {
+          final code = e.response?.statusCode;
+          _log.fine(
+            '[Dio] ${code ?? e.type} ${e.requestOptions.uri}',
+          );
+          handler.next(e);
+        },
+      ));
+    }
   }
 
   void setAuthToken(String token) {

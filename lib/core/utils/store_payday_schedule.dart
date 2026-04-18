@@ -282,3 +282,19 @@ String paydayRelativeLine(DateTime paymentDate, DateTime now) {
   if (days > 1) return 'in $days days';
   return formatPaydayAbbrev(paymentDate);
 }
+
+/// Local-calendar days from [now] to [paymentDate] (midnight to midnight).
+int paydayCalendarDaysUntil(DateTime paymentDate, DateTime now) {
+  final t = DateTime(now.year, now.month, now.day);
+  final p = DateTime(paymentDate.year, paymentDate.month, paymentDate.day);
+  return p.difference(t).inDays;
+}
+
+/// Short label for countdown UIs (e.g. settings payout preview).
+String paydayDaysToGoLabel(DateTime paymentDate, DateTime now) {
+  final d = paydayCalendarDaysUntil(paymentDate, now);
+  if (d < 0) return 'Past date';
+  if (d == 0) return 'Today';
+  if (d == 1) return '1 day to go';
+  return '$d days to go';
+}

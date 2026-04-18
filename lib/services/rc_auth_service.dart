@@ -2,18 +2,18 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:logging/logging.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/models/rc_login_request.dart';
 import 'package:revenuecat/models/rc_login_response.dart';
 import 'package:revenuecat/models/rc_me_response.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
-import 'package:revenuecat/services/talker_service.dart';
-import 'package:talker/talker.dart';
+
+final _log = Logger('RcAuthService');
 
 final rcAuthServiceProvider = Provider<RcAuthService>((ref) {
   final api = ref.read(rcApiServiceProvider);
-  final talker = ref.read(talkerProvider);
-  return RcAuthService(api, talker, ref);
+  return RcAuthService(api, ref);
 });
 
 final isSignedInProvider = StateProvider<bool>((ref) => false);
@@ -21,11 +21,10 @@ final rcMeProvider = StateProvider<RcMeResponse?>((ref) => null);
 
 class RcAuthService {
   final RcApiService _api;
-  final Talker _talker;
   final Ref _ref;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  RcAuthService(this._api, this._talker, this._ref);
+  RcAuthService(this._api, this._ref);
 
   Future<RcLoginResponse?> signIn({
     required String email,
@@ -47,7 +46,7 @@ class RcAuthService {
         );
         _api.setAuthToken(response.authenticationToken!);
         _ref.read(isSignedInProvider.notifier).state = true;
-        _talker.info('Signed in as ${response.email}');
+        _log.info('Signed in as ${response.email}');
 
         try {
           final me = await _api.me();
@@ -60,7 +59,7 @@ class RcAuthService {
     } on DioException catch (e) {
       final rcError = _api.parseError(e);
       if (rcError != null) {
-        _talker.warning(
+        _log.warning(
           'Sign in error [${rcError.code}]: ${rcError.message}',
         );
       }
@@ -72,13 +71,13 @@ class RcAuthService {
     try {
       await _api.logout();
     } catch (e) {
-      _talker.warning('Logout API call failed: $e');
+      _log.warning('Logout API call failed: $e');
     }
     await _clearToken();
     _api.clearAuthToken();
     _ref.read(isSignedInProvider.notifier).state = false;
     _ref.read(rcMeProvider.notifier).state = null;
-    _talker.info('Signed out');
+    _log.info('Signed out');
   }
 
   Future<bool> restoreSession() async {
@@ -89,7 +88,7 @@ class RcAuthService {
       );
 
       if (token == null || token.isEmpty) {
-        _talker.info('No stored auth token found');
+        _log.info('No stored auth token found');
         return false;
       }
 
@@ -98,7 +97,7 @@ class RcAuthService {
         if (expiresAt != null) {
           final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
           if (now >= expiresAt) {
-            _talker.info('Auth token expired');
+            _log.info('Auth token expired');
             await _clearToken();
             return false;
           }
@@ -115,16 +114,16 @@ class RcAuthService {
         final rcError = _api.parseError(e);
         if (rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
             rcError?.code == AppConstants.rcErrorExpiredAuthToken) {
-          _talker.warning('Stored token invalid/expired, signing out');
+          _log.warning('Stored token invalid/expired, signing out');
           await signOut();
           return false;
         }
       }
 
-      _talker.info('Session restored');
+      _log.info('Session restored');
       return true;
     } catch (e, st) {
-      _talker.handle(e, st, 'Failed to restore session');
+      _log.severe('Failed to restore session', e, st);
       return false;
     }
   }
