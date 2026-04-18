@@ -376,7 +376,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     _backfillRunning = true;
     try {
       var pages = 0;
-      const maxPages = 10;
+      const maxPages = 30;
       while (pages < maxPages &&
           gen == _backfillGeneration &&
           !state.isLoading &&
