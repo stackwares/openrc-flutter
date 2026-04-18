@@ -40,7 +40,7 @@ class TransactionsState {
   final int? lastPurchaseMs;
   final String? error;
 
-  /// Preload steps for the Realtime tab (1 = first page loaded, then +1 per backfill page).
+  /// Preload steps for the Revenue tab (1 = first page loaded, then +1 per backfill page).
   final int realtimeLoadStep;
   final bool realtimeLoadComplete;
 
@@ -354,7 +354,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   /// Keeps calling [_performFetchMorePage] while [state.hasMore] and under
   /// [kRealtimeBackfillMaxPages]. When [onlyThroughCurrentMonth] is true (initial
-  /// Realtime preload), stops once [realtimeTabPreloadBoundaryReached] is true
+  /// Revenue preload), stops once [realtimeTabPreloadBoundaryReached] is true
   /// (current local month + Apple next-payout accrual window).
   Future<void> backfillIncompleteCalendarDays([
     int? capturedGen,
@@ -435,7 +435,7 @@ final transactionsProvider =
       return notifier;
     });
 
-/// Shared app filter for the Transactions (day) and Realtime tabs.
+/// Shared app filter for the Transactions (day) and Revenue tabs.
 final transactionsAppIncludeFilterProvider = StateProvider<Set<String>?>(
   (ref) => null,
 );
@@ -677,6 +677,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        Text(
+                          'Revenue',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
                         DualCurrencyExactText(
                           amount: headerDaily,
                           textAlign: TextAlign.center,
@@ -903,7 +914,7 @@ String _afterStoreCommissionTitle(CommissionSettings commission) {
   return 'After $pct store commission';
 }
 
-/// Month-to-date Realtime totals (local calendar month). Shares [transactionsProvider] with [TransactionsScreen].
+/// Month-to-date Revenue tab totals (local calendar month). Shares [transactionsProvider] with [TransactionsScreen].
 class RealtimeTransactionsScreen extends ConsumerWidget {
   const RealtimeTransactionsScreen({super.key});
 
@@ -931,7 +942,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Realtime',
+              'Revenue',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
@@ -1466,7 +1477,7 @@ class _DayTypeCountSummary extends StatelessWidget {
   final VoidCallback? onClearFilter;
   final bool enableFilterTaps;
 
-  /// When true, cells call [onSelectFilter] even if the count is zero (e.g. Realtime drill-down).
+  /// When true, cells call [onSelectFilter] even if the count is zero (e.g. Revenue drill-down).
   final bool allowTapWhenEmpty;
 
   const _DayTypeCountSummary({

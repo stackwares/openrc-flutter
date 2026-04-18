@@ -23,7 +23,7 @@ class RevenueInsightCountryLine {
   /// Aggregation key: ISO country code or `'__'` for unknown.
   final String countryKey;
 
-  /// English name only (no flag); Realtime row title uses this.
+  /// English name only (no flag); Revenue insights row title uses this.
   final String name;
   final double pct;
   final double revenue;

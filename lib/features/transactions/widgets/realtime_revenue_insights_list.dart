@@ -11,7 +11,7 @@ import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
 
 /// Revenue breakdown for a transaction list: progress rows for share of total
-/// (Transactions day view and Realtime tab).
+/// (Transactions day view and Revenue tab).
 class RealtimeRevenueInsightsList extends ConsumerWidget {
   final List<RcTransaction> transactions;
 
@@ -21,7 +21,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
   /// Used when [expandable] is true. Realtime tab typically leaves this `true`.
   final bool initiallyExpanded;
 
-  /// When false (e.g. Realtime tab), revenue amounts use full grouping ($5,001.00)
+  /// When false (e.g. Revenue tab), revenue amounts use full grouping ($5,001.00)
   /// instead of compact ($5.1K).
   final bool compactRevenueAmounts;
 

@@ -7,7 +7,7 @@ import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 
 /// Selected tab index for [MainShell]
-/// (`0` = transactions, `1` = realtime, `2` = charts, `3` = settings).
+/// (`0` = transactions, `1` = revenue, `2` = charts, `3` = settings).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 class MainShell extends ConsumerStatefulWidget {
@@ -120,9 +120,9 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 1,
-                label: 'Realtime',
-                icon: Icons.bolt_outlined,
-                selectedIcon: Icons.bolt_rounded,
+                label: 'Revenue',
+                icon: Icons.payments_outlined,
+                selectedIcon: Icons.payments_rounded,
                 onTap: () {
                   ref.read(mainShellTabIndexProvider.notifier).state = 1;
                 },

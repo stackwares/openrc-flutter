@@ -7,7 +7,7 @@ import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 
-/// Lists transactions in the Realtime window for one [TransactionDaySectionFilter] category.
+/// Lists transactions in the Revenue tab window for one [TransactionDaySectionFilter] category.
 class RealtimeSectionTransactionsScreen extends StatefulWidget {
   final List<RcTransaction> windowTransactions;
   final TransactionDaySectionFilter filter;

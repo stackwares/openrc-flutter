@@ -3,13 +3,13 @@ import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 
-/// Background preload pages after the first fetch (Realtime progress).
+/// Background preload pages after the first fetch (Revenue tab progress).
 const int kRealtimeBackfillMaxPages = 100;
 
 /// Internal “done” value for realtime preload step (not a predictable page total in the UI).
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
 
-/// Subtitle under the Realtime app bar (month-to-date, local timezone).
+/// Subtitle under the Revenue tab app bar (month-to-date, local timezone).
 const String kRealtimeWindowSubtitle = 'This month · local';
 
 final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');
@@ -251,7 +251,7 @@ String localTodayDayKey() {
   return DateFormat('yyyy-MM-dd').format(DateTime(n.year, n.month, n.day));
 }
 
-/// Day header grid categories (Transactions day view + Realtime).
+/// Day header grid categories (Transactions day view + Revenue tab).
 enum TransactionDaySectionFilter {
   trial,
   conversion,

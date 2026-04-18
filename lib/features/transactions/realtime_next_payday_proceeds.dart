@@ -21,7 +21,7 @@ class NextPaydayProceedsEstimate {
 }
 
 /// True when newest-first pagination has gone past:
-/// - the start of the current local calendar month (Realtime MTD), and
+/// - the start of the current local calendar month (Revenue tab MTD), and
 /// - the start of [AppStorePayday.upcoming]'s accrual window (Apple next-payout sum).
 ///
 /// [grouped] is the merged `/me/transactions` map; [oldestPurchaseLocalCalendarDay]
