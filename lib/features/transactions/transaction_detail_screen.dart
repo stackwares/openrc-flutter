@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/product_identifier_display.dart';
@@ -41,22 +42,20 @@ class TransactionDetailState {
     RcTransactionDetailActivityResponse? activity,
     bool? isLoading,
     String? error,
-  }) =>
-      TransactionDetailState(
-        transaction: transaction,
-        detail: detail ?? this.detail,
-        activity: activity ?? this.activity,
-        isLoading: isLoading ?? this.isLoading,
-        error: error,
-      );
+  }) => TransactionDetailState(
+    transaction: transaction,
+    detail: detail ?? this.detail,
+    activity: activity ?? this.activity,
+    isLoading: isLoading ?? this.isLoading,
+    error: error,
+  );
 }
 
-class TransactionDetailNotifier
-    extends StateNotifier<TransactionDetailState> {
+class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
   final Ref _ref;
 
   TransactionDetailNotifier(this._ref, TransactionDetailState initial)
-      : super(initial) {
+    : super(initial) {
     _fetch();
   }
 
@@ -77,10 +76,7 @@ class TransactionDetailNotifier
       }
 
       final results = await Future.wait([
-        api.transactionDetail(
-          projectId: projectId,
-          subscriberId: subscriberId,
-        ),
+        api.transactionDetail(projectId: projectId, subscriberId: subscriberId),
         api.transactionDetailActivity(
           projectId: projectId,
           subscriberId: subscriberId,
@@ -108,11 +104,17 @@ class TransactionDetailNotifier
   }
 }
 
-final transactionDetailProvider = StateNotifierProvider.family<
-    TransactionDetailNotifier, TransactionDetailState, RcTransaction>(
-  (ref, transaction) =>
-      TransactionDetailNotifier(ref, TransactionDetailState(transaction: transaction)),
-);
+final transactionDetailProvider =
+    StateNotifierProvider.family<
+      TransactionDetailNotifier,
+      TransactionDetailState,
+      RcTransaction
+    >(
+      (ref, transaction) => TransactionDetailNotifier(
+        ref,
+        TransactionDetailState(transaction: transaction),
+      ),
+    );
 
 String _transactionDetailAppBarTitle(RcTransaction transaction) {
   final name = transaction.app?.name?.trim();
@@ -146,8 +148,8 @@ Future<void> _showAppIconUrlDialog(
                     ? 'Optional image URL for $appName. Used in the transactions list for this app.'
                     : 'Optional HTTPS image URL. Used in the transactions list for this app.',
                 style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -171,7 +173,9 @@ Future<void> _showAppIconUrlDialog(
           TextButton(
             onPressed: () async {
               controller.clear();
-              await ref.read(appIconOverridesProvider.notifier).setOverride(appId, null);
+              await ref
+                  .read(appIconOverridesProvider.notifier)
+                  .setOverride(appId, null);
               if (!context.mounted) return;
               Navigator.pop(dialogContext);
               context.showSnackBar('Using default icon');
@@ -185,10 +189,9 @@ Future<void> _showAppIconUrlDialog(
                 context.showSnackBar('Enter a valid http or https URL');
                 return;
               }
-              await ref.read(appIconOverridesProvider.notifier).setOverride(
-                    appId,
-                    text.isEmpty ? null : text,
-                  );
+              await ref
+                  .read(appIconOverridesProvider.notifier)
+                  .setOverride(appId, text.isEmpty ? null : text);
               if (!context.mounted) return;
               Navigator.pop(dialogContext);
               context.showSnackBar(
@@ -213,8 +216,11 @@ class TransactionDetailScreen extends ConsumerWidget {
   /// Same subtle tint as [TransactionItem] list cards (7% toward type accent).
   Color _txCardSurface(BuildContext context, RcTransaction tx) {
     final scheme = Theme.of(context).colorScheme;
-    final accent =
-        transactionTypeAccentColor(tx.type, context, transaction: tx);
+    final accent = transactionTypeAccentColor(
+      tx.type,
+      context,
+      transaction: tx,
+    );
     return Color.lerp(scheme.surface, accent, 0.07) ?? scheme.surface;
   }
 
@@ -236,16 +242,16 @@ class TransactionDetailScreen extends ConsumerWidget {
             onPressed: state.isLoading
                 ? null
                 : () => ref
-                    .read(transactionDetailProvider(transaction).notifier)
-                    .refresh(),
+                      .read(transactionDetailProvider(transaction).notifier)
+                      .refresh(),
           ),
         ],
       ),
       body: state.isLoading
           ? _buildDetailSkeleton(context)
           : state.error != null
-              ? _buildError(context, ref, state.error!)
-              : _buildContent(context, ref, state),
+          ? _buildError(context, ref, state.error!)
+          : _buildContent(context, ref, state),
     );
   }
 
@@ -329,8 +335,16 @@ class TransactionDetailScreen extends ConsumerWidget {
     final activity = state.activity;
     final tx = state.transaction;
     final appId = tx.app?.id;
-    final customIconUrl =
-        appId != null ? ref.watch(appIconOverridesProvider)[appId] : null;
+    final customIconUrl = appId != null
+        ? ref.watch(appIconOverridesProvider)[appId]
+        : null;
+
+    var sectionStep = 0;
+    Duration nextSectionDelay() {
+      final ms = sectionStep * 55;
+      sectionStep++;
+      return Duration(milliseconds: ms);
+    }
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -342,25 +356,47 @@ class TransactionDetailScreen extends ConsumerWidget {
           appId: appId,
           appName: tx.app?.name,
           customIconUrl: customIconUrl,
-        ),
+        ).appCardEntrance(delay: nextSectionDelay()),
         if (detail != null) ...[
           _SectionHeader(title: 'Info'),
-          _buildInfoSection(context, detail, tx),
+          _buildInfoSection(
+            context,
+            detail,
+            tx,
+          ).appCardEntrance(delay: nextSectionDelay()),
           if (detail.subscriptionStatuses?.isNotEmpty == true) ...[
             _SectionHeader(title: 'Entitlements'),
-            _buildEntitlements(context, detail.subscriptionStatuses!, tx),
+            _buildEntitlements(
+              context,
+              detail.subscriptionStatuses!,
+              tx,
+            ).appCardEntrance(delay: nextSectionDelay()),
           ],
           _SectionHeader(title: 'Insights'),
-          _buildInsights(context, detail, activity, tx),
+          _buildInsights(
+            context,
+            detail,
+            activity,
+            tx,
+          ).appCardEntrance(delay: nextSectionDelay()),
           if (detail.subscriberAttributes?.isNotEmpty == true) ...[
             _SectionHeader(title: 'Attributes'),
-            _buildAttributes(context, detail.subscriberAttributes!, tx),
+            _buildAttributes(
+              context,
+              detail.subscriberAttributes!,
+              tx,
+            ).appCardEntrance(delay: nextSectionDelay()),
           ],
         ],
         if (detail?.history?.isNotEmpty == true ||
             activity?.events?.isNotEmpty == true) ...[
           _SectionHeader(title: 'History'),
-          _buildHistory(context, tx, detail?.history, activity?.events),
+          _buildHistory(
+            context,
+            tx,
+            detail?.history,
+            activity?.events,
+          ).appCardEntrance(delay: nextSectionDelay()),
         ],
         const SizedBox(height: 32),
       ],
@@ -376,8 +412,9 @@ class TransactionDetailScreen extends ConsumerWidget {
     String? customIconUrl,
   }) {
     final type = tx.type;
-    final baseHeaderRevenueStyle =
-        context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
+    final baseHeaderRevenueStyle = context.textTheme.headlineSmall?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
     final headerRevenueStyle = tx.tileShowRefundRevenueStrikethrough
         ? baseHeaderRevenueStyle?.copyWith(
             decoration: TextDecoration.lineThrough,
@@ -486,8 +523,12 @@ class TransactionDetailScreen extends ConsumerWidget {
                     maxLines: 2,
                   ),
                 if (tx.isSandbox == true)
-                  _buildChip(context, null, 'Sandbox',
-                      color: context.colorScheme.tertiary),
+                  _buildChip(
+                    context,
+                    null,
+                    'Sandbox',
+                    color: context.colorScheme.tertiary,
+                  ),
               ],
             ),
           ],
@@ -496,8 +537,14 @@ class TransactionDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildChip(BuildContext context, IconData? icon, String label,
-      {Color? color, int maxLines = 1, Color? iconTint}) {
+  Widget _buildChip(
+    BuildContext context,
+    IconData? icon,
+    String label, {
+    Color? color,
+    int maxLines = 1,
+    Color? iconTint,
+  }) {
     final accent = color ?? Theme.of(context).colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -508,11 +555,7 @@ class TransactionDetailScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: iconTint ?? accent,
-              ),
+              Icon(icon, size: 14, color: iconTint ?? accent),
               const SizedBox(width: 6),
             ],
             ConstrainedBox(
@@ -588,7 +631,8 @@ class TransactionDetailScreen extends ConsumerWidget {
             _InfoRow(
               icon: Icons.apps_outlined,
               label: 'App',
-              value: '${detail.app!.name}${detail.lastSeenAppVersion != null ? " v${detail.lastSeenAppVersion}" : ""}',
+              value:
+                  '${detail.app!.name}${detail.lastSeenAppVersion != null ? " v${detail.lastSeenAppVersion}" : ""}',
             ),
           ],
           if (detail.lastSeenPlatform != null) ...[
@@ -626,8 +670,10 @@ class TransactionDetailScreen extends ConsumerWidget {
         children: statuses.map((s) {
           final isActive = s.isAutoRenewing == true;
           final color = isActive ? Colors.green : Colors.orange;
-          final trialAccent =
-              transactionTypeAccentColor(RcTransactionType.trial, context);
+          final trialAccent = transactionTypeAccentColor(
+            RcTransactionType.trial,
+            context,
+          );
           return Column(
             children: [
               Padding(
@@ -653,7 +699,9 @@ class TransactionDetailScreen extends ConsumerWidget {
                     ),
                     Text(
                       isActive ? 'Active' : 'Inactive',
-                      style: context.textTheme.labelSmall?.copyWith(color: color),
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: color,
+                      ),
                     ),
                   ],
                 ),
@@ -682,8 +730,9 @@ class TransactionDetailScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(right: 8),
                         child: Container(
                           padding: TransactionPillStyle.padding,
-                          decoration:
-                              TransactionPillStyle.decoration(trialAccent),
+                          decoration: TransactionPillStyle.decoration(
+                            trialAccent,
+                          ),
                           child: Text(
                             'TRIALS',
                             style: TransactionPillStyle.textStyle(trialAccent),
@@ -720,48 +769,60 @@ class TransactionDetailScreen extends ConsumerWidget {
       final created = DateTime.tryParse(detail.createdAt!);
       if (created != null) {
         final days = DateTime.now().difference(created).inDays;
-        insights.add(_InsightItem(
-          icon: Icons.schedule_outlined,
-          label: 'First purchase',
-          value: '$days days ago',
-        ));
+        insights.add(
+          _InsightItem(
+            icon: Icons.schedule_outlined,
+            label: 'First purchase',
+            value: '$days days ago',
+          ),
+        );
       }
     }
 
     if (detail.dollarsSpent != null && detail.dollarsSpent! > 0) {
-      insights.add(_InsightItem(
-        icon: Icons.attach_money,
-        label: 'Total spent',
-        usdAmount: detail.dollarsSpent!,
-        applyBlendedCommission: true,
-      ));
+      insights.add(
+        _InsightItem(
+          icon: Icons.attach_money,
+          label: 'Total spent',
+          usdAmount: detail.dollarsSpent!,
+          applyBlendedCommission: true,
+        ),
+      );
     }
 
-    final refundCount = activity?.events
+    final refundCount =
+        activity?.events
             ?.where((e) => e.type == 'REFUND' || e.type == 'CANCELLATION')
             .length ??
         0;
     if (refundCount > 0) {
-      insights.add(_InsightItem(
-        icon: Icons.undo,
-        label: 'Refunds',
-        value: '$refundCount',
-        color: Colors.red,
-      ));
+      insights.add(
+        _InsightItem(
+          icon: Icons.undo,
+          label: 'Refunds',
+          value: '$refundCount',
+          color: Colors.red,
+        ),
+      );
     }
 
-    final transferCount = activity?.events
-            ?.where((e) =>
-                e.transferredFrom?.isNotEmpty == true ||
-                e.transferredTo?.isNotEmpty == true)
+    final transferCount =
+        activity?.events
+            ?.where(
+              (e) =>
+                  e.transferredFrom?.isNotEmpty == true ||
+                  e.transferredTo?.isNotEmpty == true,
+            )
             .length ??
         0;
     if (transferCount > 0) {
-      insights.add(_InsightItem(
-        icon: Icons.swap_horiz,
-        label: 'Transfers',
-        value: '$transferCount',
-      ));
+      insights.add(
+        _InsightItem(
+          icon: Icons.swap_horiz,
+          label: 'Transfers',
+          value: '$transferCount',
+        ),
+      );
     }
 
     if (insights.isEmpty) {
@@ -833,27 +894,29 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     for (final h in history ?? <RcSubscriberHistory>[]) {
       final dt = DateTime.tryParse(h.at ?? '');
-      items.add(_HistoryItem(
-        timestamp: dt?.millisecondsSinceEpoch ?? 0,
-        title: h.event ?? 'Event',
-        subtitle: h.product ?? '',
-        priceUsd: h.priceInUsd,
-        date: dt,
-      ));
+      items.add(
+        _HistoryItem(
+          timestamp: dt?.millisecondsSinceEpoch ?? 0,
+          title: h.event ?? 'Event',
+          subtitle: h.product ?? '',
+          priceUsd: h.priceInUsd,
+          date: dt,
+        ),
+      );
     }
 
     for (final e in events ?? <RcTransactionDetailEvent>[]) {
       final ms = e.eventTimestampMs ?? e.purchasedAtMs ?? 0;
-      final dt = ms > 0
-          ? DateTime.fromMillisecondsSinceEpoch(ms)
-          : null;
-      items.add(_HistoryItem(
-        timestamp: ms,
-        title: e.type ?? 'Event',
-        subtitle: e.productId ?? e.newProductId ?? '',
-        priceUsd: e.price,
-        date: dt,
-      ));
+      final dt = ms > 0 ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
+      items.add(
+        _HistoryItem(
+          timestamp: ms,
+          title: e.type ?? 'Event',
+          subtitle: e.productId ?? e.newProductId ?? '',
+          priceUsd: e.price,
+          date: dt,
+        ),
+      );
     }
 
     items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -1018,7 +1081,11 @@ class _InfoRow extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: color ?? context.colorScheme.onSurfaceVariant),
+            Icon(
+              icon,
+              size: 18,
+              color: color ?? context.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -1119,10 +1186,7 @@ class _HistoryTimelineEntry extends ConsumerWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: scheme.surface,
-        border: Border.all(
-          color: scheme.primary,
-          width: 2,
-        ),
+        border: Border.all(color: scheme.primary, width: 2),
       ),
     );
 
@@ -1138,11 +1202,7 @@ class _HistoryTimelineEntry extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (!isFirst)
-                    Container(
-                      width: 2,
-                      height: stubH,
-                      color: lineColor,
-                    ),
+                    Container(width: 2, height: stubH, color: lineColor),
                   SizedBox(
                     height: 18,
                     width: railW,
@@ -1206,11 +1266,14 @@ class _HistoryTimelineEntry extends ConsumerWidget {
                         if (item.date != null) ...[
                           if (item.priceUsd != null) const SizedBox(height: 2),
                           Text(
-                            DateFormat('MMM d, yyyy · h:mm a')
-                                .format(item.date!.toLocal()),
+                            DateFormat(
+                              'MMM d, yyyy · h:mm a',
+                            ).format(item.date!.toLocal()),
                             style: context.textTheme.labelSmall?.copyWith(
                               color: scheme.onSurfaceVariant,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ],
@@ -1228,9 +1291,11 @@ class _HistoryTimelineEntry extends ConsumerWidget {
 
   static String _formatEventType(String type) {
     final words = type.split('_');
-    return words.map((w) {
-      if (w.isEmpty) return w;
-      return w[0].toUpperCase() + w.substring(1).toLowerCase();
-    }).join(' ');
+    return words
+        .map((w) {
+          if (w.isEmpty) return w;
+          return w[0].toUpperCase() + w.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 }

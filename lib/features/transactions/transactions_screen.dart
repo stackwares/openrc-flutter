@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
@@ -702,7 +703,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             letterSpacing: -0.65,
                             height: 1.1,
                           ),
-                        ),
+                        ).appValueReveal(key: ValueKey('rev_$selectedKey')),
                         const SizedBox(height: 4),
                         if (headerPrevTotal != null)
                           Center(
@@ -758,11 +759,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             ],
           ),
         ),
-      ),
+      ).appCardEntrance(),
       RealtimeRevenueInsightsList(
         transactions: allForDay,
         asModalEntry: true,
-      ),
+      ).appCardEntrance(delay: const Duration(milliseconds: 80)),
       if (futureTxs.isNotEmpty)
         _FutureTransactionsSection(
           transactions: futureTxs,
@@ -778,9 +779,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
             );
           },
-        ),
+        ).appCardEntrance(delay: const Duration(milliseconds: 120)),
     ];
 
+    var txAnimIndex = 0;
     for (final tx in transactions) {
       children.add(
         TransactionItem(
@@ -794,7 +796,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
             );
           },
-        ),
+        ).appListItemEntrance(txAnimIndex++),
       );
     }
 
@@ -1094,6 +1096,10 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                                         letterSpacing: -0.65,
                                         height: 1.1,
                                       ),
+                                ).appValueReveal(
+                                  key: ValueKey(
+                                    'rt_net_${netTotal}_${txs.length}',
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -1128,6 +1134,8 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                                       letterSpacing: -0.2,
                                       height: 1.2,
                                     ),
+                                  ).appValueReveal(
+                                    key: ValueKey('rt_gross_$grossTotal'),
                                   ),
                                 ],
                               ),
@@ -1147,6 +1155,8 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                               letterSpacing: -0.65,
                               height: 1.1,
                             ),
+                          ).appValueReveal(
+                            key: ValueKey('rt_${netTotal}_${txs.length}'),
                           ),
                         if (!state.realtimeLoadComplete) ...[
                           const SizedBox(height: 6),
@@ -1181,15 +1191,15 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                ),
+                ).appCardEntrance(),
                 RealtimeNextPaydayProceedsCard(
                   allLoadedTransactions: allLoadedTxs,
                   loadedTransactionCount: allLoadedTxs.length,
-                ),
+                ).appCardEntrance(delay: const Duration(milliseconds: 80)),
                 RealtimeRevenueInsightsList(
                   transactions: txs,
                   compactRevenueAmounts: false,
-                ),
+                ).appCardEntrance(delay: const Duration(milliseconds: 160)),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                   child: Text(
@@ -1200,7 +1210,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
+                ).appCardEntrance(delay: const Duration(milliseconds: 240)),
               ],
             ),
           );

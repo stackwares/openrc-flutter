@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/features/home/home_notifier.dart';
@@ -166,7 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final value = notifier.getValue(metric);
         final chartData = notifier.getChartData(metric);
         final loading = state.isLoading;
-        return OverviewItemCard(
+        final card = OverviewItemCard(
           metric: metric,
           value: value,
           chartData: loading ? null : chartData,
@@ -183,6 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 },
         );
+        return loading ? card : card.appListItemEntrance(index);
       },
     );
   }

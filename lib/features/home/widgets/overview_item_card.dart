@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/features/home/widgets/overview_sparkline_chart.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
@@ -78,6 +79,8 @@ class OverviewItemCard extends ConsumerWidget {
                 style: context.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
+              ).appValueReveal(
+                key: ValueKey('ov_${metric.name}_${value}_$subtitleText'),
               )
             else
               Text(
@@ -87,6 +90,10 @@ class OverviewItemCard extends ConsumerWidget {
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+              ).appValueReveal(
+                key: ValueKey(
+                  'ov_${metric.name}_${metric.formatValue(value)}_$subtitleText',
+                ),
               ),
             const SizedBox(height: 4),
             if (chartData != null && chartData!.isNotEmpty)

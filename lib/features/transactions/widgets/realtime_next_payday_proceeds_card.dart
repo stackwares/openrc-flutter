@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
@@ -22,8 +23,10 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final commission = ref.watch(commissionSettingsProvider);
-    final est =
-        computeNextPaydayProceedsEstimate(allLoadedTransactions, commission);
+    final est = computeNextPaydayProceedsEstimate(
+      allLoadedTransactions,
+      commission,
+    );
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final now = DateTime.now();
@@ -100,7 +103,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
               0.35,
             )!,
             now: now,
-          ),
+          ).appListItemEntrance(0),
           Divider(
             height: 1,
             indent: 14,
@@ -121,7 +124,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
               0.4,
             )!,
             now: now,
-          ),
+          ).appListItemEntrance(1),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
             child: Text(
@@ -135,7 +138,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ).appCardEntrance();
   }
 }
 
@@ -273,8 +276,9 @@ class _NextPayoutPlatformRow extends ConsumerWidget {
                   child: LinearProgressIndicator(
                     value: v,
                     minHeight: 8,
-                    backgroundColor:
-                        scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                    backgroundColor: scheme.surfaceContainerHighest.withValues(
+                      alpha: 0.55,
+                    ),
                     valueColor: AlwaysStoppedAnimation<Color>(barColor),
                   ),
                 ),
@@ -304,9 +308,7 @@ class _DaysToGoBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.38),
-        ),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.38)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -325,10 +327,7 @@ class _DaysToGoBadge extends StatelessWidget {
 }
 
 class _LeadingIconTile extends StatelessWidget {
-  const _LeadingIconTile({
-    required this.icon,
-    required this.iconColor,
-  });
+  const _LeadingIconTile({required this.icon, required this.iconColor});
 
   final IconData icon;
   final Color iconColor;

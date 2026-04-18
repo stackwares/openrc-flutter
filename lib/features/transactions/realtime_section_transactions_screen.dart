@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
@@ -143,7 +144,7 @@ class _RealtimeSectionTransactionsScreenState
                       ),
                     );
                   },
-                );
+                ).appListItemEntrance(i);
               },
             ),
     );

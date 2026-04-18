@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
@@ -216,22 +217,27 @@ class SettingsScreen extends ConsumerWidget {
           16 + mainShellFloatingTabBarScrollPadding(context),
         ),
         children: [
-          Text(
-            'Preferences',
-            style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.25,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Currency, appearance, and how revenue is shown.',
-            style: tt.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Preferences',
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.25,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Currency, appearance, and how revenue is shown.',
+                style: tt.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ).appCardEntrance(),
           _SettingsCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -279,7 +285,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
+          ).appCardEntrance(delay: const Duration(milliseconds: 50)),
           const SizedBox(height: 12),
           _SettingsCard(
             child: Column(
@@ -320,7 +326,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
+          ).appCardEntrance(delay: const Duration(milliseconds: 100)),
           const SizedBox(height: 12),
           _SettingsCard(
             child: Column(
@@ -380,74 +386,79 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ],
             ),
-          ),
+          ).appCardEntrance(delay: const Duration(milliseconds: 150)),
           const SizedBox(height: 24),
-          Text(
-            'Account',
-            style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.25,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _SettingsCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: scheme.primaryContainer.withValues(
-                      alpha: 0.65,
-                    ),
-                    foregroundColor: scheme.onPrimaryContainer,
-                    child: const Icon(Icons.person_outline, size: 22),
-                  ),
-                  title: const Text('Email'),
-                  subtitle: Text(
-                    me?.email ?? '—',
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Account',
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.25,
                 ),
-                const Divider(height: 28),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    Icons.fingerprint_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  title: const Text('Distinct ID'),
-                  subtitle: SelectableText(
-                    me?.distinctId ?? '—',
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 13,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: scheme.error,
-                      side: BorderSide(
-                        color: scheme.error.withValues(alpha: 0.45),
+              ),
+              const SizedBox(height: 12),
+              _SettingsCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: scheme.primaryContainer.withValues(
+                          alpha: 0.65,
+                        ),
+                        foregroundColor: scheme.onPrimaryContainer,
+                        child: const Icon(Icons.person_outline, size: 22),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      title: const Text('Email'),
+                      subtitle: Text(
+                        me?.email ?? '—',
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                    onPressed: () => _confirmSignOut(context, ref),
-                    icon: Icon(Icons.logout_rounded, color: scheme.error),
-                    label: const Text('Log out'),
-                  ),
+                    const Divider(height: 28),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.fingerprint_rounded,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      title: const Text('Distinct ID'),
+                      subtitle: SelectableText(
+                        me?.distinctId ?? '—',
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: scheme.error,
+                          side: BorderSide(
+                            color: scheme.error.withValues(alpha: 0.45),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () => _confirmSignOut(context, ref),
+                        icon: Icon(Icons.logout_rounded, color: scheme.error),
+                        label: const Text('Log out'),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            ],
+          ).appCardEntrance(delay: const Duration(milliseconds: 200)),
         ],
       ),
     );

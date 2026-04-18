@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/features/transactions/transactions_revenue_insights_compute.dart';
@@ -145,7 +146,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                       iconColor: StoreBrandIconColors.appleBlue,
                     ),
                     compactRevenueAmounts: useCompactRevenue,
-                  );
+                  ).appListItemEntrance(i);
                 }
                 return _InsightProgressRow(
                   label: 'Google Play',
@@ -161,7 +162,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                     iconColor: StoreBrandIconColors.androidGreen,
                   ),
                   compactRevenueAmounts: useCompactRevenue,
-                );
+                ).appListItemEntrance(i);
               },
             ),
           ),
@@ -193,7 +194,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                       iconColor: accent,
                     ),
                     compactRevenueAmounts: useCompactRevenue,
-                  );
+                  ).appListItemEntrance(2 + i);
                 }
                 final accent = transactionTypeAccentColor(
                   RcTransactionType.renewal,
@@ -209,7 +210,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                     iconColor: accent,
                   ),
                   compactRevenueAmounts: useCompactRevenue,
-                );
+                ).appListItemEntrance(2 + i);
               },
             ),
           ),
@@ -249,7 +250,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                           ),
                         ),
                         compactRevenueAmounts: useCompactRevenue,
-                      );
+                      ).appListItemEntrance(4 + i);
                     },
                   ),
           ),
@@ -278,7 +279,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                           countryKey: e.countryKey,
                         ),
                         compactRevenueAmounts: useCompactRevenue,
-                      );
+                      ).appListItemEntrance(4 + data.topApps.length + i);
                     },
                   ),
           ),
