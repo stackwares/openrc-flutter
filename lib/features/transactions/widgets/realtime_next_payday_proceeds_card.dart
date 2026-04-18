@@ -60,18 +60,32 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Icon(Icons.payments_outlined, color: scheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'NEXT PAYOUT ESTIMATES',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.primary,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.55,
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                DualCurrencyExactText(
+                  amount: total,
+                  applyCommissionAdjustment: false,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.25,
+                    color: scheme.onSurface,
+                  ),
+                  textAlign: TextAlign.right,
                 ),
               ],
             ),

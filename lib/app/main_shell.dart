@@ -94,10 +94,27 @@ class _MainShellState extends ConsumerState<MainShell> {
         barAlignment: Alignment.bottomCenter,
         body: (context, scrollController) {
           // Full-bleed content; tab bar is painted above in [BottomBar]'s Stack.
+          // Cross-fade between tabs while keeping every screen mounted (state).
+          final tabFadeDuration = MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 260);
           return SizedBox.expand(
-            child: IndexedStack(
-              index: currentIndex,
-              children: _screens,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                for (var i = 0; i < _screens.length; i++)
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      duration: tabFadeDuration,
+                      curve: Curves.easeOutCubic,
+                      opacity: currentIndex == i ? 1.0 : 0.0,
+                      child: IgnorePointer(
+                        ignoring: currentIndex != i,
+                        child: _screens[i],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           );
         },
