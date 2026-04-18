@@ -6,7 +6,7 @@ import 'package:revenuecat/services/commission_settings_store.dart';
 /// Background preload pages after the first fetch (Realtime progress).
 const int kRealtimeBackfillMaxPages = 100;
 
-/// First successful fetch + up to [kRealtimeBackfillMaxPages] backfill pages.
+/// Internal “done” value for realtime preload step (not a predictable page total in the UI).
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
 
 /// Subtitle under the Realtime app bar (month-to-date, local timezone).
@@ -113,17 +113,6 @@ DateTime? oldestPurchaseLocalCalendarDay(
     }
   }
   return oldest;
-}
-
-/// True once pagination has loaded at least one transaction on a local day **before**
-/// [monthStartLocal] (exclusive), so month-to-date rows should be complete.
-bool realtimeMonthBackfillBoundaryReached(
-  Map<String, List<RcTransaction>> grouped,
-  DateTime monthStartLocal,
-) {
-  final oldest = oldestPurchaseLocalCalendarDay(grouped);
-  if (oldest == null) return true;
-  return oldest.isBefore(monthStartLocal);
 }
 
 /// `/me/transactions` rows in the **current local calendar month** through today (inclusive).

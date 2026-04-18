@@ -1,5 +1,6 @@
 import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
+import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 
@@ -17,6 +18,33 @@ class NextPaydayProceedsEstimate {
     required this.googlePayday,
     required this.googleNetUsd,
   });
+}
+
+/// True when newest-first pagination has gone past:
+/// - the start of the current local calendar month (Realtime MTD), and
+/// - the start of [AppStorePayday.upcoming]'s accrual window (Apple next-payout sum).
+///
+/// [grouped] is the merged `/me/transactions` map; [oldestPurchaseLocalCalendarDay]
+/// must be strictly before each boundary to include all in-window days.
+bool realtimeTabPreloadBoundaryReached(
+  Map<String, List<RcTransaction>> grouped,
+) {
+  final oldest = oldestPurchaseLocalCalendarDay(grouped);
+  if (oldest == null) return true;
+
+  final monthStart = localStartOfCurrentMonth();
+  if (!oldest.isBefore(monthStart)) return false;
+
+  final apple = AppStorePayday.upcoming;
+  if (apple != null) {
+    final accrualStart = DateTime(
+      apple.startDate.year,
+      apple.startDate.month,
+      apple.startDate.day,
+    );
+    if (!oldest.isBefore(accrualStart)) return false;
+  }
+  return true;
 }
 
 bool _localPurchaseDayInInclusiveRange(

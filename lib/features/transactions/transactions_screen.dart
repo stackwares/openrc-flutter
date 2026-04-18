@@ -19,6 +19,7 @@ import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
+import 'package:revenuecat/features/transactions/realtime_next_payday_proceeds.dart';
 import 'package:revenuecat/features/transactions/realtime_section_transactions_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/realtime_next_payday_proceeds_card.dart';
 import 'package:revenuecat/features/transactions/widgets/realtime_revenue_insights_list.dart';
@@ -261,12 +262,8 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       final dailyTotals = _calculateDailyTotals(grouped);
       final nextCursor = _nextCursorFromResponse(raw, response.lastPurchaseMs);
       final hasMorePages = raw.isNotEmpty && nextCursor != null;
-      final monthStart = localStartOfCurrentMonth();
-      final monthBoundaryMet = realtimeMonthBackfillBoundaryReached(
-        grouped,
-        monthStart,
-      );
-      final realtimeDone = !hasMorePages || monthBoundaryMet;
+      final preloadBoundaryMet = realtimeTabPreloadBoundaryReached(grouped);
+      final realtimeDone = !hasMorePages || preloadBoundaryMet;
       state = state.copyWith(
         grouped: grouped,
         dailyTotals: dailyTotals,
@@ -278,7 +275,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         realtimeLoadStep: realtimeDone ? kRealtimeLoadTarget : 1,
         realtimeLoadComplete: realtimeDone,
       );
-      if (hasMorePages && !monthBoundaryMet && gen == _backfillGeneration) {
+      if (hasMorePages && !preloadBoundaryMet && gen == _backfillGeneration) {
         unawaited(backfillIncompleteCalendarDays(gen, true));
       }
     } on DioException catch (e) {
@@ -357,7 +354,8 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   /// Keeps calling [_performFetchMorePage] while [state.hasMore] and under
   /// [kRealtimeBackfillMaxPages]. When [onlyThroughCurrentMonth] is true (initial
-  /// Realtime preload), stops once the oldest loaded day is before this month.
+  /// Realtime preload), stops once [realtimeTabPreloadBoundaryReached] is true
+  /// (current local month + Apple next-payout accrual window).
   Future<void> backfillIncompleteCalendarDays([
     int? capturedGen,
     bool onlyThroughCurrentMonth = false,
@@ -366,14 +364,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     if (_backfillRunning) return;
     _backfillRunning = true;
     try {
-      final monthStart = localStartOfCurrentMonth();
       var pages = 0;
       while (pages < kRealtimeBackfillMaxPages &&
           gen == _backfillGeneration &&
           !state.isLoading &&
           state.hasMore) {
         if (onlyThroughCurrentMonth &&
-            realtimeMonthBackfillBoundaryReached(state.grouped, monthStart)) {
+            realtimeTabPreloadBoundaryReached(state.grouped)) {
           break;
         }
         while (state.isLoadingMore && gen == _backfillGeneration) {
@@ -389,7 +386,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           state = state.copyWith(realtimeLoadStep: state.realtimeLoadStep + 1);
         }
         if (onlyThroughCurrentMonth &&
-            realtimeMonthBackfillBoundaryReached(state.grouped, monthStart)) {
+            realtimeTabPreloadBoundaryReached(state.grouped)) {
           break;
         }
       }
@@ -923,9 +920,6 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
     final txs = collectTransactionsInCurrentLocalMonth(grouped);
     final grossTotal = grossRevenueSum(txs);
     final netTotal = netRevenueSum(txs, commission);
-    final progress = state.realtimeLoadComplete
-        ? 1.0
-        : (state.realtimeLoadStep / kRealtimeLoadTarget).clamp(0.0, 1.0);
 
     return Scaffold(
       appBar: AppBar(
@@ -1054,10 +1048,6 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
-                              value:
-                                  state.isLoading && state.realtimeLoadStep == 0
-                                  ? null
-                                  : progress,
                               minHeight: 4,
                             ),
                           ),
@@ -1131,8 +1121,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                         if (!state.realtimeLoadComplete) ...[
                           const SizedBox(height: 6),
                           Text(
-                            'Loading page ${state.realtimeLoadStep.clamp(0, kRealtimeLoadTarget)} '
-                            'of $kRealtimeLoadTarget…',
+                            'Fetching older transactions…',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
