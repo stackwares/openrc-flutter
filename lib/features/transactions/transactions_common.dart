@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
+import 'package:revenuecat/core/utils/region_display_name.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
+import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 
@@ -181,6 +183,64 @@ Map<String, List<RcTransaction>> filteredGroupedByApps(
   return out;
 }
 
+bool transactionMatchesCountryFilter(RcTransaction tx, String? countryCode) {
+  if (countryCode == null) return true;
+  final cc = tx.subscriberCountryCode?.trim().toUpperCase();
+  if (countryCode == '__') return cc == null || cc.isEmpty;
+  return cc == countryCode.toUpperCase();
+}
+
+bool transactionMatchesPlatformFilter(
+  RcTransaction tx,
+  StoreCommissionPlatform? platform,
+) {
+  if (platform == null) return true;
+  return classifyStore(tx.storeForCommission) == platform;
+}
+
+Map<String, List<RcTransaction>> filteredGroupedByTransactionMeta(
+  Map<String, List<RcTransaction>> grouped, {
+  String? countryCode,
+  StoreCommissionPlatform? platform,
+}) {
+  if (countryCode == null && platform == null) return grouped;
+  final out = <String, List<RcTransaction>>{};
+  for (final e in grouped.entries) {
+    final filtered = e.value.where((tx) {
+      if (!transactionMatchesCountryFilter(tx, countryCode)) return false;
+      if (!transactionMatchesPlatformFilter(tx, platform)) return false;
+      return true;
+    }).toList();
+    if (filtered.isNotEmpty) {
+      out[e.key] = filtered;
+    }
+  }
+  return out;
+}
+
+/// Distinct ISO alpha-2 codes (uppercase) and whether any row is missing country.
+({List<String> codes, bool hasUnknown}) collectCountryFilterCodes(
+  Iterable<RcTransaction> transactions,
+) {
+  final codes = <String>{};
+  var unknown = false;
+  for (final tx in transactions) {
+    final c = tx.subscriberCountryCode?.trim();
+    if (c == null || c.isEmpty) {
+      unknown = true;
+    } else {
+      codes.add(c.toUpperCase());
+    }
+  }
+  final list = codes.toList()
+    ..sort(
+      (a, b) => regionDisplayNameEnglish(
+        a,
+      ).toLowerCase().compareTo(regionDisplayNameEnglish(b).toLowerCase()),
+    );
+  return (codes: list, hasUnknown: unknown);
+}
+
 Map<String, double> dailyTotalsForGrouped(
   Map<String, List<RcTransaction>> grouped,
   CommissionSettings commission,
@@ -242,6 +302,34 @@ List<AppFilterOption> collectAppFilterOptions(
   final out = labelByKey.entries
       .map((e) => AppFilterOption(e.key, e.value, appIdByKey[e.key]))
       .toList();
+  out.sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
+  return out;
+}
+
+/// Apps shown in the filter sheet: every dashboard [projects] row, plus any extra
+/// keys seen only in [filterSource] (e.g. legacy bundle-id keys).
+List<AppFilterOption> collectAppFilterOptionsWithProjects(
+  Map<String, List<RcTransaction>> filterSource,
+  List<RcProject> projects,
+) {
+  if (projects.isEmpty) {
+    return collectAppFilterOptions(filterSource);
+  }
+
+  final byKey = <String, AppFilterOption>{};
+  for (final p in projects) {
+    final id = p.id?.trim();
+    if (id == null || id.isEmpty) continue;
+    final name = p.name?.trim();
+    final label = (name != null && name.isNotEmpty) ? name : id;
+    byKey[id] = AppFilterOption(id, label, id);
+  }
+
+  for (final opt in collectAppFilterOptions(filterSource)) {
+    byKey.putIfAbsent(opt.key, () => opt);
+  }
+
+  final out = byKey.values.toList();
   out.sort((a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()));
   return out;
 }

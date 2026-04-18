@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/shell_insets.dart';
+import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
+import 'package:revenuecat/services/rc_account_projects_provider.dart';
 
 /// Lists transactions in the Revenue tab window for one [TransactionDaySectionFilter] category.
-class RealtimeSectionTransactionsScreen extends StatefulWidget {
+class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
   final List<RcTransaction> windowTransactions;
   final TransactionDaySectionFilter filter;
 
@@ -20,18 +23,29 @@ class RealtimeSectionTransactionsScreen extends StatefulWidget {
   });
 
   @override
-  State<RealtimeSectionTransactionsScreen> createState() =>
+  ConsumerState<RealtimeSectionTransactionsScreen> createState() =>
       _RealtimeSectionTransactionsScreenState();
 }
 
 class _RealtimeSectionTransactionsScreenState
-    extends State<RealtimeSectionTransactionsScreen> {
+    extends ConsumerState<RealtimeSectionTransactionsScreen> {
   Set<String>? _appIncludeFilter;
+  String? _countryFilter;
+  StoreCommissionPlatform? _platformFilter;
 
   List<RcTransaction> _appFilteredWindow() {
-    if (_appIncludeFilter == null) return widget.windowTransactions;
-    return widget.windowTransactions
-        .where((tx) => _appIncludeFilter!.contains(appKeyForTransaction(tx)))
+    var list = widget.windowTransactions;
+    if (_appIncludeFilter != null) {
+      list = list
+          .where((tx) => _appIncludeFilter!.contains(appKeyForTransaction(tx)))
+          .toList();
+    }
+    return list
+        .where(
+          (tx) =>
+              transactionMatchesCountryFilter(tx, _countryFilter) &&
+              transactionMatchesPlatformFilter(tx, _platformFilter),
+        )
         .toList();
   }
 
@@ -57,13 +71,21 @@ class _RealtimeSectionTransactionsScreenState
     final heading =
         '${filtered.length} ${transactionDaySectionGridLabel(widget.filter)}';
 
-    final filterOptions =
-        collectAppFilterOptions({'_': widget.windowTransactions});
+    final accountProjects =
+        ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
+    final filterOptions = collectAppFilterOptionsWithProjects(
+      {'_': widget.windowTransactions},
+      accountProjects,
+    );
     final canFilterApps = filterOptions.isNotEmpty;
 
     String emptyMessage() {
-      if (appFiltered.isEmpty && _appIncludeFilter != null) {
-        return 'No transactions for the selected apps in this window.';
+      final filtersOn =
+          _appIncludeFilter != null ||
+          _countryFilter != null ||
+          _platformFilter != null;
+      if (appFiltered.isEmpty && filtersOn) {
+        return 'No transactions match your filters in this window.';
       }
       return 'No transactions in this category for the loaded window.';
     }
@@ -90,21 +112,50 @@ class _RealtimeSectionTransactionsScreenState
           ],
         ),
         actions: [
+          if (_appIncludeFilter != null ||
+              _countryFilter != null ||
+              _platformFilter != null)
+            IconButton(
+              icon: const Icon(Icons.filter_alt_off_outlined),
+              tooltip: 'Clear filters',
+              onPressed: () {
+                setState(() {
+                  _appIncludeFilter = null;
+                  _countryFilter = null;
+                  _platformFilter = null;
+                });
+              },
+            ),
           IconButton(
             icon: Icon(
               Icons.filter_list,
-              color: _appIncludeFilter != null ? scheme.primary : null,
+              color: _appIncludeFilter != null ||
+                      _countryFilter != null ||
+                      _platformFilter != null
+                  ? scheme.primary
+                  : null,
             ),
-            tooltip: 'Filter by app',
-            onPressed: !canFilterApps || widget.windowTransactions.isEmpty
+            tooltip: 'Filter transactions',
+            onPressed: !canFilterApps
                 ? null
-                : () {
+                : () async {
+                    final projects = await ref.read(
+                      rcAccountProjectsProvider.future,
+                    );
+                    if (!context.mounted) return;
                     showTransactionsAppFilterSheet(
                       context: context,
                       filterSource: {'_': widget.windowTransactions},
                       currentIncludeFilter: _appIncludeFilter,
-                      onApply: (next) {
-                        setState(() => _appIncludeFilter = next);
+                      currentCountryCode: _countryFilter,
+                      currentPlatform: _platformFilter,
+                      accountProjects: projects,
+                      onApply: (apps, countryCode, platform) {
+                        setState(() {
+                          _appIncludeFilter = apps;
+                          _countryFilter = countryCode;
+                          _platformFilter = platform;
+                        });
                       },
                     );
                   },

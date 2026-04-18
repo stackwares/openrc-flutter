@@ -9,12 +9,14 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:revenuecat/services/rc_account_projects_provider.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
@@ -441,6 +443,13 @@ final transactionsAppIncludeFilterProvider = StateProvider<Set<String>?>(
   (ref) => null,
 );
 
+/// Shared country filter (`null` = all, `'__'` = unknown / missing country).
+final transactionsCountryFilterProvider = StateProvider<String?>((ref) => null);
+
+/// Shared store platform filter (`null` = all).
+final transactionsPlatformFilterProvider =
+    StateProvider<StoreCommissionPlatform?>((ref) => null);
+
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -489,8 +498,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(transactionsProvider);
     final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
+    final countryFilter = ref.watch(transactionsCountryFilterProvider);
+    final platformFilter = ref.watch(transactionsPlatformFilterProvider);
+    final accountProjects =
+        ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
     final theme = Theme.of(context);
     final dateLabel = _dayHeaderDateLabel(state.selectedDayKey);
+    final dayTxs = state.grouped[state.selectedDayKey] ?? [];
+    final dayFilterSource = <String, List<RcTransaction>>{
+      if (dayTxs.isNotEmpty) state.selectedDayKey: dayTxs,
+    };
+    final canOpenTransactionFilter = !state.isLoading &&
+        collectAppFilterOptionsWithProjects(dayFilterSource, accountProjects)
+            .isNotEmpty;
+    final filtersActive =
+        appIncludeFilter != null ||
+        countryFilter != null ||
+        platformFilter != null ||
+        _sectionFilter != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -507,17 +532,19 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         ),
         actions: [
+          if (filtersActive)
+            IconButton(
+              icon: const Icon(Icons.filter_alt_off_outlined),
+              tooltip: 'Clear filters',
+              onPressed: _clearTransactionFilters,
+            ),
           IconButton(
             icon: Icon(
               Icons.filter_list,
-              color: appIncludeFilter != null
-                  ? context.colorScheme.primary
-                  : null,
+              color: filtersActive ? context.colorScheme.primary : null,
             ),
-            tooltip: 'Filter by app',
-            onPressed:
-                state.isLoading ||
-                    (state.grouped[state.selectedDayKey] ?? []).isEmpty
+            tooltip: 'Filter transactions',
+            onPressed: !canOpenTransactionFilter
                 ? null
                 : () => _showAppFilterSheet(context, state),
           ),
@@ -534,9 +561,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
+  void _clearTransactionFilters() {
+    ref.read(transactionsAppIncludeFilterProvider.notifier).state = null;
+    ref.read(transactionsCountryFilterProvider.notifier).state = null;
+    ref.read(transactionsPlatformFilterProvider.notifier).state = null;
+    setState(() => _sectionFilter = null);
+  }
+
   Widget _buildDayTab(BuildContext context, TransactionsState state) {
     final commission = ref.watch(commissionSettingsProvider);
     final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
+    final countryFilter = ref.watch(transactionsCountryFilterProvider);
+    final platformFilter = ref.watch(transactionsPlatformFilterProvider);
     if (state.isLoading && state.grouped.isEmpty) {
       return const TransactionsLoadingSkeleton();
     }
@@ -566,13 +602,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final selectedKey = state.selectedDayKey;
     final rawDayTxs = state.grouped[selectedKey] ?? [];
-    final groupedForList = filteredGroupedByApps(
-      state.grouped,
-      appIncludeFilter,
+    final groupedForList = filteredGroupedByTransactionMeta(
+      filteredGroupedByApps(state.grouped, appIncludeFilter),
+      countryCode: countryFilter,
+      platform: platformFilter,
     );
     final allForDay = groupedForList[selectedKey] ?? [];
 
-    if (appIncludeFilter != null && rawDayTxs.isNotEmpty && allForDay.isEmpty) {
+    final listFiltersActive =
+        appIncludeFilter != null ||
+        countryFilter != null ||
+        platformFilter != null;
+    if (listFiltersActive && rawDayTxs.isNotEmpty && allForDay.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -586,7 +627,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No transactions for the selected apps',
+                'No transactions match your filters',
                 textAlign: TextAlign.center,
                 style: context.textTheme.bodyLarge?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
@@ -594,14 +635,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               ),
               const SizedBox(height: 16),
               FilledButton.tonal(
-                onPressed: () {
-                  ref
-                          .read(transactionsAppIncludeFilterProvider.notifier)
-                          .state =
-                      null;
-                  setState(() => _sectionFilter = null);
-                },
-                child: const Text('Show all apps'),
+                onPressed: _clearTransactionFilters,
+                child: const Text('Clear filters'),
               ),
             ],
           ),
@@ -628,9 +663,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
     final canGoNext = selectedKey.compareTo(todayKey) < 0;
-    final groupedForHeader = filteredGroupedByApps(
-      state.grouped,
-      appIncludeFilter,
+    final groupedForHeader = filteredGroupedByTransactionMeta(
+      filteredGroupedByApps(state.grouped, appIncludeFilter),
+      countryCode: countryFilter,
+      platform: platformFilter,
     );
     final headerDailyTotals = dailyTotalsForGrouped(
       groupedForHeader,
@@ -750,11 +786,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     }
                   });
                 },
-                onClearFilter: sectionFiltered
-                    ? () {
-                        setState(() => _sectionFilter = null);
-                      }
-                    : null,
+                onClearFilter: null,
               ),
             ],
           ),
@@ -884,18 +916,32 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
   }
 
-  void _showAppFilterSheet(BuildContext context, TransactionsState state) {
+  Future<void> _showAppFilterSheet(
+    BuildContext context,
+    TransactionsState state,
+  ) async {
     final dayTxs = state.grouped[state.selectedDayKey] ?? [];
     final filterSource = <String, List<RcTransaction>>{
       if (dayTxs.isNotEmpty) state.selectedDayKey: dayTxs,
     };
+    final projects = await ref.read(rcAccountProjectsProvider.future);
+    if (!context.mounted) return;
     final current = ref.read(transactionsAppIncludeFilterProvider);
+    final country = ref.read(transactionsCountryFilterProvider);
+    final platform = ref.read(transactionsPlatformFilterProvider);
     showTransactionsAppFilterSheet(
       context: context,
       filterSource: filterSource,
       currentIncludeFilter: current,
-      onApply: (next) {
-        ref.read(transactionsAppIncludeFilterProvider.notifier).state = next;
+      currentCountryCode: country,
+      currentPlatform: platform,
+      accountProjects: projects,
+      onApply: (apps, countryCode, platformFilter) {
+        ref.read(transactionsAppIncludeFilterProvider.notifier).state = apps;
+        ref.read(transactionsCountryFilterProvider.notifier).state =
+            countryCode;
+        ref.read(transactionsPlatformFilterProvider.notifier).state =
+            platformFilter;
         setState(() => _sectionFilter = null);
       },
     );
@@ -925,14 +971,37 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
     final state = ref.watch(transactionsProvider);
     final commission = ref.watch(commissionSettingsProvider);
     final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
+    final countryFilter = ref.watch(transactionsCountryFilterProvider);
+    final platformFilter = ref.watch(transactionsPlatformFilterProvider);
     final theme = Theme.of(context);
 
-    final grouped = filteredGroupedByApps(state.grouped, appIncludeFilter);
+    final grouped = filteredGroupedByTransactionMeta(
+      filteredGroupedByApps(state.grouped, appIncludeFilter),
+      countryCode: countryFilter,
+      platform: platformFilter,
+    );
     final allLoadedTxs = flattenGroupedTransactionsDeduped(grouped);
     // Sum revenue from paginated `/me/transactions` merges only — not overview chart totals.
     final txs = collectTransactionsInCurrentLocalMonth(grouped);
     final grossTotal = grossRevenueSum(txs);
     final netTotal = netRevenueSum(txs, commission);
+
+    final filtersActive =
+        appIncludeFilter != null ||
+        countryFilter != null ||
+        platformFilter != null;
+
+    final accountProjects =
+        ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
+    final windowTxsRaw = collectTransactionsInCurrentLocalMonth(state.grouped);
+    final realtimeFilterSource = windowTxsRaw.isEmpty
+        ? <String, List<RcTransaction>>{}
+        : <String, List<RcTransaction>>{'_': windowTxsRaw};
+    final canOpenRealtimeFilter = !state.isLoading &&
+        collectAppFilterOptionsWithProjects(
+          realtimeFilterSource,
+          accountProjects,
+        ).isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -968,34 +1037,57 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          if (filtersActive)
+            IconButton(
+              icon: const Icon(Icons.filter_alt_off_outlined),
+              tooltip: 'Clear filters',
+              onPressed: () {
+                ref.read(transactionsAppIncludeFilterProvider.notifier).state =
+                    null;
+                ref.read(transactionsCountryFilterProvider.notifier).state =
+                    null;
+                ref.read(transactionsPlatformFilterProvider.notifier).state =
+                    null;
+              },
+            ),
           IconButton(
             icon: Icon(
               Icons.filter_list,
-              color: appIncludeFilter != null
-                  ? context.colorScheme.primary
-                  : null,
+              color: filtersActive ? context.colorScheme.primary : null,
             ),
-            tooltip: 'Filter by app',
-            onPressed: state.isLoading || txs.isEmpty
+            tooltip: 'Filter transactions',
+            onPressed: !canOpenRealtimeFilter
                 ? null
-                : () {
-                    final windowTxs = collectTransactionsInCurrentLocalMonth(
-                      state.grouped,
+                : () async {
+                    final filterSource = realtimeFilterSource;
+                    final projects = await ref.read(
+                      rcAccountProjectsProvider.future,
                     );
-                    final filterSource = windowTxs.isEmpty
-                        ? <String, List<RcTransaction>>{}
-                        : <String, List<RcTransaction>>{'_': windowTxs};
+                    if (!context.mounted) return;
                     showTransactionsAppFilterSheet(
                       context: context,
                       filterSource: filterSource,
                       currentIncludeFilter: appIncludeFilter,
-                      onApply: (next) {
+                      currentCountryCode: countryFilter,
+                      currentPlatform: platformFilter,
+                      accountProjects: projects,
+                      onApply: (apps, countryCode, platform) {
                         ref
                                 .read(
                                   transactionsAppIncludeFilterProvider.notifier,
                                 )
                                 .state =
-                            next;
+                            apps;
+                        ref
+                                .read(transactionsCountryFilterProvider.notifier)
+                                .state =
+                            countryCode;
+                        ref
+                                .read(
+                                  transactionsPlatformFilterProvider.notifier,
+                                )
+                                .state =
+                            platform;
                       },
                     );
                   },
