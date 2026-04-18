@@ -160,12 +160,14 @@ class RcTransactionsRequest {
   final bool sandboxMode;
   final int limit;
   final int? startFrom;
+  final String? startDate;
   final String? endDate;
 
   const RcTransactionsRequest({
     this.sandboxMode = false,
     this.limit = 20,
     this.startFrom,
+    this.startDate,
     this.endDate,
   });
 
@@ -173,6 +175,7 @@ class RcTransactionsRequest {
     'sandbox_mode': sandboxMode,
     'limit': limit,
     if (startFrom != null) 'start_from': startFrom,
+    if (startDate != null) 'start_date': startDate,
     if (endDate != null) 'end_date': endDate,
   };
 }

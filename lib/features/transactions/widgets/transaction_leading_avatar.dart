@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 /// Leading image or fallback to [fallback] inside a tinted rounded square.
 class TransactionLeadingAvatar extends StatelessWidget {
@@ -43,14 +44,10 @@ class TransactionLeadingAvatar extends StatelessWidget {
           imageUrl: url,
           fit: BoxFit.cover,
           fadeInDuration: const Duration(milliseconds: 150),
-          placeholder: (context, progress) => Center(
-            child: SizedBox(
-              width: size * 0.35,
-              height: size * 0.35,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: tintColor,
-              ),
+          placeholder: (context, progress) => Skeletonizer.zone(
+            child: Bone.square(
+              size: size,
+              borderRadius: BorderRadius.circular(borderRadius),
             ),
           ),
           errorWidget: (context, url, error) => Container(

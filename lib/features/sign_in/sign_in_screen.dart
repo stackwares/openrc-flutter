@@ -8,6 +8,7 @@ import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/utilities_service.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 enum SignInStatus { idle, loading, requires2Fa, success }
 
@@ -300,16 +301,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: isLoading
-          ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: context.colorScheme.onPrimary,
-              ),
-            )
-          : const Text('Sign In'),
+      child: Skeletonizer(
+        enabled: isLoading,
+        child: const Text('Sign In'),
+      ),
     );
   }
 }

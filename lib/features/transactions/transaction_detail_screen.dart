@@ -19,6 +19,7 @@ import 'package:revenuecat/services/app_icon_overrides_store.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class TransactionDetailState {
   final RcTransaction transaction;
@@ -227,10 +228,59 @@ class TransactionDetailScreen extends ConsumerWidget {
         ],
       ),
       body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? _buildDetailSkeleton(context)
           : state.error != null
               ? _buildError(context, ref, state.error!)
               : _buildContent(context, ref, state),
+    );
+  }
+
+  Widget _buildDetailSkeleton(BuildContext context) {
+    return Skeletonizer(
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        children: [
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Bone.square(
+                    size: 48,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Bone.text(fontSize: 18),
+                        const SizedBox(height: 8),
+                        Bone.text(fontSize: 12, width: 200),
+                      ],
+                    ),
+                  ),
+                  Bone.text(fontSize: 22, width: 72),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Bone.text(fontSize: 13),
+          ),
+          ...List.generate(
+            5,
+            (_) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Bone.multiText(lines: 2, fontSize: 14),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 
@@ -417,26 +467,34 @@ class TransactionDetailScreen extends ConsumerWidget {
 
   Widget _buildChip(BuildContext context, IconData? icon, String label,
       {Color? color, int maxLines = 1, Color? iconTint}) {
+    final accent = color ?? Theme.of(context).colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: Chip(
-        avatar: icon != null
-            ? Icon(
+      child: Container(
+        padding: TransactionPillStyle.padding,
+        decoration: TransactionPillStyle.decoration(accent),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
                 icon,
                 size: 14,
-                color: iconTint ??
-                    color ??
-                    context.colorScheme.onSurfaceVariant,
-              )
-            : null,
-        label: Text(
-          label,
-          style: context.textTheme.labelSmall?.copyWith(color: color),
-          maxLines: maxLines,
-          overflow: TextOverflow.ellipsis,
+                color: iconTint ?? accent,
+              ),
+              const SizedBox(width: 6),
+            ],
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: Text(
+                label,
+                style: TransactionPillStyle.textStyle(accent),
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
-        visualDensity: VisualDensity.compact,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -523,6 +581,8 @@ class TransactionDetailScreen extends ConsumerWidget {
         children: statuses.map((s) {
           final isActive = s.isAutoRenewing == true;
           final color = isActive ? Colors.green : Colors.orange;
+          final trialAccent =
+              transactionTypeAccentColor(RcTransactionType.trial, context);
           return Column(
             children: [
               Padding(
@@ -575,12 +635,14 @@ class TransactionDetailScreen extends ConsumerWidget {
                     if (s.isTrial == true)
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: Chip(
-                          label: Text('Trial',
-                              style: context.textTheme.labelSmall),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
+                        child: Container(
+                          padding: TransactionPillStyle.padding,
+                          decoration:
+                              TransactionPillStyle.decoration(trialAccent),
+                          child: Text(
+                            'TRIAL',
+                            style: TransactionPillStyle.textStyle(trialAccent),
+                          ),
                         ),
                       ),
                     if (s.expiresDate != null)

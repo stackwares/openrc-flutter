@@ -8,6 +8,49 @@ String regionDisplayNameEnglish(String? alpha2Code) {
   return _kIso3166Alpha2English[key] ?? key;
 }
 
+/// Shorter than [regionDisplayNameEnglish] for tight UI (e.g. pills): keeps normal
+/// names, uses the part before a comma for long formal names, otherwise alpha-2;
+/// then trims to at most the first two words when the label has more than two.
+const int _kCompactRegionNameMaxLength = 28;
+
+String _regionNameAtMostTwoWords(String name) {
+  final t = name.trim();
+  if (t.isEmpty) return t;
+  final parts = t.split(RegExp(r'\s+'));
+  if (parts.length <= 2) return t;
+  return '${parts[0]} ${parts[1]}';
+}
+
+String regionDisplayNameForCompactBadge(String? alpha2Code) {
+  if (alpha2Code == null || alpha2Code.isEmpty) return '';
+  final key = alpha2Code.trim().toUpperCase();
+  if (key.length != 2) {
+    return _regionNameAtMostTwoWords(regionDisplayNameEnglish(alpha2Code));
+  }
+
+  final full = regionDisplayNameEnglish(alpha2Code);
+
+  String base;
+  if (full.length <= _kCompactRegionNameMaxLength) {
+    base = full;
+  } else {
+    final comma = full.indexOf(',');
+    if (comma >= 3) {
+      final head = full.substring(0, comma).trim();
+      base = (head.isNotEmpty && head.length <= _kCompactRegionNameMaxLength)
+          ? head
+          : key;
+    } else {
+      base = key;
+    }
+  }
+
+  if (base == key) {
+    return _regionNameAtMostTwoWords(full);
+  }
+  return _regionNameAtMostTwoWords(base);
+}
+
 const Map<String, String> _kIso3166Alpha2English = {
   'AD': 'Andorra',
   'AE': 'United Arab Emirates',
