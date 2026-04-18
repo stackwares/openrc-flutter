@@ -1,12 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
+import 'package:revenuecat/models/rc_chart_response.dart';
 import 'package:revenuecat/models/rc_error_response.dart';
 import 'package:revenuecat/models/rc_login_request.dart';
 import 'package:revenuecat/models/rc_login_response.dart';
 import 'package:revenuecat/models/rc_me_response.dart';
+import 'package:revenuecat/models/rc_overview_response.dart';
 import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
+import 'package:revenuecat/models/rc_transaction_detail.dart';
+import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
 import 'package:revenuecat/services/talker_service.dart';
 import 'package:talker/talker.dart';
 
@@ -80,14 +84,7 @@ class RcApiService {
   }
 
   Future<List<RcProject>> projects() async {
-    final dio = Dio(BaseOptions(
-      baseUrl: AppConstants.rcApiInternalBaseUrl,
-      headers: {
-        'X-Requested-With': AppConstants.headerXRequestedWith,
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-      },
-    ));
-    final response = await dio.get<List<dynamic>>('/me/projects');
+    final response = await _internalDio().get<List<dynamic>>('/me/projects');
     return (response.data ?? [])
         .map((e) => RcProject.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -102,6 +99,67 @@ class RcApiService {
     );
     return RcTransactionsResponse.fromJson(response.data!);
   }
+
+  Future<RcTransactionDetailResponse> transactionDetail({
+    required String projectId,
+    required String subscriberId,
+    bool sandboxMode = false,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/me/apps/$projectId/subscribers/$subscriberId',
+      queryParameters: {'sandbox_mode': sandboxMode},
+    );
+    return RcTransactionDetailResponse.fromJson(response.data!);
+  }
+
+  Future<RcTransactionDetailActivityResponse> transactionDetailActivity({
+    required String projectId,
+    required String subscriberId,
+    bool sandboxMode = false,
+  }) async {
+    final response = await _internalDio().get<Map<String, dynamic>>(
+      '/me/apps/$projectId/subscribers/$subscriberId/activity',
+      queryParameters: {'sandbox_mode': sandboxMode},
+    );
+    return RcTransactionDetailActivityResponse.fromJson(response.data!);
+  }
+
+  /// RevenueCat dashboard overview (same contract as [Kedi `charts_v2/overview`](https://github.com/sereisoglu/Kedi)).
+  Future<RcOverviewResponse> overview() async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/me/charts_v2/overview',
+    );
+    return RcOverviewResponse.fromJson(response.data!);
+  }
+
+  /// Chart series under `charts_v2` (public `/v1/developers` base). [resolution] is the API enum int (0 = day per Kedi).
+  Future<RcChartResponse> charts({
+    required String name,
+    int resolution = 0,
+    String? startDate,
+    String? endDate,
+    String? revenueType,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/me/charts_v2/$name',
+      queryParameters: <String, dynamic>{
+        'resolution': resolution,
+        'start_date': ?startDate,
+        'end_date': ?endDate,
+        'revenue_type': ?revenueType,
+      },
+    );
+    return RcChartResponse.fromJson(response.data!);
+  }
+
+  /// Internal-only endpoints (projects list, subscriber activity, …).
+  Dio _internalDio() => Dio(BaseOptions(
+        baseUrl: AppConstants.rcApiInternalBaseUrl,
+        headers: {
+          'X-Requested-With': AppConstants.headerXRequestedWith,
+          if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+        },
+      ));
 
   RcErrorResponse? parseError(dynamic error) {
     if (error is DioException) {

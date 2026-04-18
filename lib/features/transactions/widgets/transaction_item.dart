@@ -1,34 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
+import 'package:revenuecat/core/utils/region_display_name.dart';
+import 'package:revenuecat/core/utils/relative_time_format.dart';
+import 'package:revenuecat/core/utils/product_identifier_display.dart';
+import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
+import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
+import 'package:revenuecat/services/app_icon_overrides_store.dart';
+import 'package:revenuecat/services/utilities_service.dart';
+import 'package:revenuecat/widgets/dual_currency_text.dart';
 
-class TransactionItem extends StatelessWidget {
+class TransactionItem extends ConsumerWidget {
   final RcTransaction transaction;
+  final VoidCallback? onTap;
 
-  const TransactionItem({super.key, required this.transaction});
+  /// When true, skips the outer [Card] (for rows inside a grouped day [Card]).
+  final bool inSectionCard;
+
+  const TransactionItem({
+    super.key,
+    required this.transaction,
+    this.onTap,
+    this.inSectionCard = false,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final type = transaction.type;
-    final color = _typeColor(context, type);
+    final color = transactionTypeAccentColor(type, context, transaction: transaction);
     final icon = _typeIcon(type);
     final storeIcon = _storeIcon(transaction.store);
+    final appId = transaction.app?.id;
+    final iconUrl =
+        appId != null ? ref.watch(appIconOverridesProvider)[appId] : null;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    final body = InkWell(
+      onTap: () {
+        UtilitiesService.hapticLight();
+        onTap?.call();
+      },
+      borderRadius: inSectionCard
+          ? BorderRadius.zero
+          : BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 20),
+            TransactionLeadingAvatar(
+              imageUrl: iconUrl,
+              tintColor: color,
+              fallback: Icon(icon, color: color, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -36,59 +59,105 @@ class TransactionItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Text(
-                          transaction.productIdentifier ?? 'Unknown',
+                          productIdentifierDisplayTitle(
+                            transaction.productIdentifier,
+                          ),
                           style: context.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TransactionTypeBadge(transaction: transaction),
+                      if (transaction.revenue != null) ...[
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: DualCurrencyExactText(
+                            amount: transaction.revenue!,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          transaction.productIdentifier ?? '',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontFeatures: [FontFeature.tabularFigures()],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      if (transaction.revenue != null)
-                        Text(
-                          _formatRevenue(transaction.revenue!),
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      if (storeIcon != null) ...[
-                        Icon(storeIcon, size: 14, color: context.colorScheme.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                      ],
-                      if (transaction.app?.name != null) ...[
-                        Flexible(
+                      Expanded(
+                        child: Row(
+                          children: [
+                            if (storeIcon != null) ...[
+                              Icon(
+                                storeIcon,
+                                size: 14,
+                                color: storeBrandIconTint(transaction.store) ??
+                                    context.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            if (transaction.app?.name != null) ...[
+                              Flexible(
+                                child: Text(
+                                  transaction.app!.name!,
+                                  style: context.textTheme.bodySmall?.copyWith(
+                                    color: context.colorScheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            if (transaction.subscriberCountryCode != null)
+                              Flexible(
+                                child: Text(
+                                  '${_countryFlag(transaction.subscriberCountryCode!)} ${regionDisplayNameEnglish(transaction.subscriberCountryCode)}',
+                                  style: context.textTheme.bodySmall?.copyWith(
+                                    color: context.colorScheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (transaction.purchaseDate != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
                           child: Text(
-                            transaction.app!.name!,
+                            formatTransactionListTime(transaction.purchaseDate),
                             style: context.textTheme.bodySmall?.copyWith(
                               color: context.colorScheme.onSurfaceVariant,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      if (transaction.subscriberCountryCode != null) ...[
-                        Text(
-                          _countryFlag(transaction.subscriberCountryCode!),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                      const Spacer(),
-                      if (transaction.purchaseDate != null)
-                        Text(
-                          _formatTime(transaction.purchaseDate!),
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
+                            textAlign: TextAlign.end,
                           ),
                         ),
                     ],
@@ -96,29 +165,28 @@ class TransactionItem extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              color: context.colorScheme.onSurfaceVariant,
+              size: 20,
+            ),
           ],
         ),
       ),
     );
-  }
 
-  Color _typeColor(BuildContext context, RcTransactionType type) {
-    switch (type) {
-      case RcTransactionType.newSubscription:
-        return Colors.blue;
-      case RcTransactionType.oneTimePurchase:
-        return Colors.purple;
-      case RcTransactionType.renewal:
-        return Colors.green;
-      case RcTransactionType.trial:
-        return Colors.orange;
-      case RcTransactionType.conversion:
-        return Colors.blue;
-      case RcTransactionType.refund:
-        return Colors.red;
-      case RcTransactionType.unknown:
-        return context.colorScheme.onSurfaceVariant;
+    if (inSectionCard) {
+      return Material(
+        color: Colors.transparent,
+        child: body,
+      );
     }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: body,
+    );
   }
 
   IconData _typeIcon(RcTransactionType type) {
@@ -152,21 +220,6 @@ class TransactionItem extends StatelessWidget {
       default:
         return Icons.store;
     }
-  }
-
-  String _formatRevenue(double revenue) {
-    final format = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
-    return format.format(revenue);
-  }
-
-  String _formatTime(String dateStr) {
-    try {
-      final dt = DateTime.tryParse(dateStr);
-      if (dt != null) {
-        return DateFormat.Hm().format(dt);
-      }
-    } catch (_) {}
-    return dateStr;
   }
 
   String _countryFlag(String code) {

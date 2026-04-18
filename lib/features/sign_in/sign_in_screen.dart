@@ -127,7 +127,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           _errorMessage = 'Verification code required.';
         });
       } else if (next == SignInStatus.success) {
-        context.go('/transactions');
+        context.go('/');
       }
     });
 

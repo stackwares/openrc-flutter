@@ -11,6 +11,12 @@ class RcTransactionApp {
         id: json['id'] as String?,
         name: json['name'] as String?,
       );
+
+  Map<String, dynamic> toJson() => {
+        if (bundleId != null) 'bundle_id': bundleId,
+        if (id != null) 'id': id,
+        if (name != null) 'name': name,
+      };
 }
 
 enum RcTransactionType {
@@ -25,7 +31,9 @@ enum RcTransactionType {
 
 class RcTransaction {
   final RcTransactionApp? app;
+  final String? cancellationDate;
   final String? expiresDate;
+  final bool? isAutoRenewing;
   final bool? isInIntroductoryPricePeriod;
   final bool? isRenewal;
   final bool? isSandbox;
@@ -39,11 +47,14 @@ class RcTransaction {
   final String? subscriberCountryCode;
   final String? subscriberId;
   final String? subscriberLastSeenPlatform;
+  final String? unsubscribeDetectedAt;
   final bool? wasRefunded;
 
   const RcTransaction({
     this.app,
+    this.cancellationDate,
     this.expiresDate,
+    this.isAutoRenewing,
     this.isInIntroductoryPricePeriod,
     this.isRenewal,
     this.isSandbox,
@@ -57,6 +68,7 @@ class RcTransaction {
     this.subscriberCountryCode,
     this.subscriberId,
     this.subscriberLastSeenPlatform,
+    this.unsubscribeDetectedAt,
     this.wasRefunded,
   });
 
@@ -64,7 +76,9 @@ class RcTransaction {
     app: json['app'] != null
         ? RcTransactionApp.fromJson(json['app'] as Map<String, dynamic>)
         : null,
+    cancellationDate: json['cancellation_date'] as String?,
     expiresDate: json['expires_date'] as String?,
+    isAutoRenewing: json['is_auto_renewing'] as bool?,
     isInIntroductoryPricePeriod:
         json['is_in_introductory_price_period'] as bool?,
     isRenewal: json['is_renewal'] as bool?,
@@ -81,8 +95,47 @@ class RcTransaction {
     subscriberId: json['subscriber_id'] as String?,
     subscriberLastSeenPlatform:
         json['subscriber_last_seen_platform'] as String?,
+    unsubscribeDetectedAt: json['unsubscribe_detected_at'] as String?,
     wasRefunded: json['was_refunded'] as bool?,
   );
+
+  Map<String, dynamic> toJson() => {
+        if (app != null) 'app': app!.toJson(),
+        if (cancellationDate != null) 'cancellation_date': cancellationDate,
+        if (expiresDate != null) 'expires_date': expiresDate,
+        if (isAutoRenewing != null) 'is_auto_renewing': isAutoRenewing,
+        if (isInIntroductoryPricePeriod != null)
+          'is_in_introductory_price_period': isInIntroductoryPricePeriod,
+        if (isRenewal != null) 'is_renewal': isRenewal,
+        if (isSandbox != null) 'is_sandbox': isSandbox,
+        if (isTrialConversion != null) 'is_trial_conversion': isTrialConversion,
+        if (isTrialPeriod != null) 'is_trial_period': isTrialPeriod,
+        if (productIdentifier != null) 'product_identifier': productIdentifier,
+        if (purchaseDate != null) 'purchase_date': purchaseDate,
+        if (revenue != null) 'revenue': revenue,
+        if (store != null) 'store': store,
+        if (storeTransactionIdentifier != null)
+          'store_transaction_identifier': storeTransactionIdentifier,
+        if (subscriberCountryCode != null)
+          'subscriber_country_code': subscriberCountryCode,
+        if (subscriberId != null) 'subscriber_id': subscriberId,
+        if (subscriberLastSeenPlatform != null)
+          'subscriber_last_seen_platform': subscriberLastSeenPlatform,
+        if (unsubscribeDetectedAt != null)
+          'unsubscribe_detected_at': unsubscribeDetectedAt,
+        if (wasRefunded != null) 'was_refunded': wasRefunded,
+      };
+
+  /// Trial where the user turned off renewal or a cancellation was detected.
+  bool get isCanceledTrial {
+    if (type != RcTransactionType.trial) return false;
+    final unsub = unsubscribeDetectedAt?.trim();
+    if (unsub != null && unsub.isNotEmpty) return true;
+    final canceled = cancellationDate?.trim();
+    if (canceled != null && canceled.isNotEmpty) return true;
+    if (isAutoRenewing == false) return true;
+    return false;
+  }
 
   RcTransactionType get type {
     if (wasRefunded == true) return RcTransactionType.refund;
@@ -143,4 +196,12 @@ class RcTransactionsResponse {
             ?.map((e) => RcTransaction.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
+
+  Map<String, dynamic> toJson() => {
+        if (firstPurchaseMs != null) 'first_purchase_ms': firstPurchaseMs,
+        if (lastPurchaseMs != null) 'last_purchase_ms': lastPurchaseMs,
+        if (transactions != null)
+          'transactions':
+              transactions!.map((e) => e.toJson()).toList(),
+      };
 }

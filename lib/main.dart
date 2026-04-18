@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/app/app.dart';
 import 'package:revenuecat/app/app_startup.dart';
-import 'package:revenuecat/router/initial_route_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +16,6 @@ void main() async {
 
   final startup = AppStartup(container);
   await startup.initialize();
-
-  container.read(initialRouteProvider.notifier).state = startup.initialRoute;
 
   runApp(
     UncontrolledProviderScope(

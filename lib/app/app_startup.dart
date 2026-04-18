@@ -26,9 +26,4 @@ class AppStartup {
 
     talker.info('App startup initialization completed');
   }
-
-  String get initialRoute {
-    final isSignedIn = container.read(isSignedInProvider);
-    return isSignedIn ? '/transactions' : '/sign-in';
-  }
 }
