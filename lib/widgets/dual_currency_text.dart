@@ -94,6 +94,10 @@ class DualCurrencyExactText extends ConsumerWidget {
   final String? commissionStore;
   final bool applyBlendedCommission;
 
+  /// When false, [amount] is shown as-is in USD (before per-store commission rules).
+  /// Use for **gross** figures when commission adjustment is enabled elsewhere.
+  final bool applyCommissionAdjustment;
+
   const DualCurrencyExactText({
     super.key,
     required this.amount,
@@ -101,10 +105,12 @@ class DualCurrencyExactText extends ConsumerWidget {
     this.textAlign = TextAlign.start,
     this.commissionStore,
     this.applyBlendedCommission = false,
+    this.applyCommissionAdjustment = true,
   });
 
   double _effectiveUsd(WidgetRef ref) {
     ref.watch(commissionSettingsProvider);
+    if (!applyCommissionAdjustment) return amount;
     final settings = ref.read(commissionSettingsProvider);
     return adjustUsdForDisplay(
       gross: amount,

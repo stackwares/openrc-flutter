@@ -10,6 +10,11 @@ class TransactionLeadingAvatar extends StatelessWidget {
   final double size;
   final double borderRadius;
 
+  /// When set, shown in the bottom-right corner on a small elevated chip.
+  final IconData? platformIcon;
+
+  final Color? platformIconColor;
+
   const TransactionLeadingAvatar({
     super.key,
     required this.imageUrl,
@@ -17,10 +22,11 @@ class TransactionLeadingAvatar extends StatelessWidget {
     required this.tintColor,
     this.size = 40,
     this.borderRadius = 10,
+    this.platformIcon,
+    this.platformIconColor,
   });
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildAvatarBody(BuildContext context) {
     final url = imageUrl?.trim();
     if (url == null || url.isEmpty) {
       return Container(
@@ -56,6 +62,46 @@ class TransactionLeadingAvatar extends StatelessWidget {
             child: fallback,
           ),
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final body = _buildAvatarBody(context);
+    final icon = platformIcon;
+    if (icon == null) return body;
+
+    final scheme = Theme.of(context).colorScheme;
+    final tint = platformIconColor ?? scheme.onSurfaceVariant;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(child: body),
+          Positioned(
+            right: -3,
+            bottom: -3,
+            child: Material(
+              elevation: 1.5,
+              shadowColor: Colors.black.withValues(alpha: 0.22),
+              color: scheme.surfaceContainerHigh,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+                side: BorderSide(
+                  color: scheme.outlineVariant.withValues(alpha: 0.55),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Icon(icon, size: 12, color: tint),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

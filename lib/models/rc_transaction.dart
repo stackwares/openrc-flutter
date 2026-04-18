@@ -173,6 +173,21 @@ class RcTransaction {
   }
 }
 
+extension RcTransactionStoreCommission on RcTransaction {
+  /// Store label used for App Store / Play fee multipliers. When [store] is
+  /// missing, infers from [subscriberLastSeenPlatform] so commission settings
+  /// still apply (e.g. some API payloads omit `store`).
+  String? get storeForCommission {
+    final s = store?.trim();
+    if (s != null && s.isNotEmpty) return store;
+    final p = subscriberLastSeenPlatform?.trim().toLowerCase() ?? '';
+    if (p.isEmpty) return null;
+    if (p.contains('ios') || p.contains('mac')) return 'App Store';
+    if (p.contains('android')) return 'Play Store';
+    return null;
+  }
+}
+
 extension RcTransactionTileRevenueDisplay on RcTransaction {
   static const double _eps = 1e-9;
 

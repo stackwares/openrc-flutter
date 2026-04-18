@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:revenuecat/features/home/home_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 
-/// Selected tab index for [MainShell] (`0` = transactions, `1` = overview).
+/// Selected tab index for [MainShell]
+/// (`0` = transactions, `1` = charts, `2` = realtime).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 class MainShell extends ConsumerStatefulWidget {
@@ -19,14 +20,50 @@ class _MainShellState extends ConsumerState<MainShell> {
   static const _screens = [
     TransactionsScreen(),
     HomeScreen(),
+    RealtimeTransactionsScreen(),
   ];
+
+  final GlobalKey _tabBarMeasureKey = GlobalKey();
+  bool _measureFrameScheduled = false;
+
+  /// `null` until first layout pass; then tight width around tab row + padding.
+  double? _barWidth;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(transactionsProvider.notifier).fetchInitial();
+    });
+  }
+
+  void _scheduleMeasureBarWidth() {
+    if (_measureFrameScheduled) return;
+    _measureFrameScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureFrameScheduled = false;
+      if (!mounted) return;
+      final box =
+          _tabBarMeasureKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return;
+      final measured = box.size.width;
+      if (measured <= 0) return;
+      final maxW = MediaQuery.sizeOf(context).width - 2 * 12;
+      final next = measured.clamp(120.0, maxW);
+      if (_barWidth == null || (_barWidth! - next).abs() > 0.5) {
+        setState(() => _barWidth = next);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(mainShellTabIndexProvider);
     final scheme = Theme.of(context).colorScheme;
-    // Wide enough for "Transactions" + "Overview" labels, padding, and font rounding.
-    const barWidth = 280.0;
+    final maxBarW = MediaQuery.sizeOf(context).width - 2 * 12;
+    final barW = (_barWidth ?? maxBarW).clamp(120.0, maxBarW);
+    _scheduleMeasureBarWidth();
 
     return Scaffold(
       extendBody: true,
@@ -35,7 +72,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         clip: Clip.none,
         hideOnScroll: false,
         showIcon: false,
-        width: barWidth,
+        width: barW,
         offset: 12,
         borderRadius: BorderRadius.circular(28),
         duration: const Duration(milliseconds: 220),
@@ -63,7 +100,8 @@ class _MainShellState extends ConsumerState<MainShell> {
           );
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          key: _tabBarMeasureKey,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -80,11 +118,21 @@ class _MainShellState extends ConsumerState<MainShell> {
               const SizedBox(width: 4),
               _MainShellTabButton(
                 selected: currentIndex == 1,
-                label: 'Overview',
+                label: 'Charts',
                 icon: Icons.dashboard_outlined,
                 selectedIcon: Icons.dashboard_rounded,
                 onTap: () {
                   ref.read(mainShellTabIndexProvider.notifier).state = 1;
+                },
+              ),
+              const SizedBox(width: 4),
+              _MainShellTabButton(
+                selected: currentIndex == 2,
+                label: 'Realtime',
+                icon: Icons.bolt_outlined,
+                selectedIcon: Icons.bolt_rounded,
+                onTap: () {
+                  ref.read(mainShellTabIndexProvider.notifier).state = 2;
                 },
               ),
             ],
@@ -114,10 +162,11 @@ class _MainShellTabButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final color = selected ? scheme.primary : scheme.onSurfaceVariant;
-    final textStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+    final textStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-          letterSpacing: -0.15,
+          letterSpacing: -0.1,
+          height: 1.05,
         );
 
     return Semantics(
@@ -131,20 +180,22 @@ class _MainShellTabButton extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(22),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     selected ? selectedIcon : icon,
                     color: color,
                     size: 22,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(height: 4),
                   Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                     style: textStyle,
                   ),
                 ],

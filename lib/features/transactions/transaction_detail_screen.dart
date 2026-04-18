@@ -462,7 +462,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                 if (tx.tileDisplayRevenue != null)
                   DualCurrencyExactText(
                     amount: tx.tileDisplayRevenue!,
-                    commissionStore: tx.store,
+                    commissionStore: tx.storeForCommission,
                     style: headerRevenueStyle,
                     textAlign: TextAlign.end,
                   ),
@@ -882,7 +882,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             for (int i = 0; i < items.length; i++)
               _HistoryTimelineEntry(
                 item: items[i],
-                commissionStore: tx.store,
+                commissionStore: tx.storeForCommission,
                 isFirst: i == 0,
                 isLast: i == items.length - 1,
               ),

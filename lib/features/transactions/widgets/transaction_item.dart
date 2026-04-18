@@ -76,6 +76,8 @@ class TransactionItem extends ConsumerWidget {
               imageUrl: iconUrl,
               tintColor: color,
               fallback: Icon(icon, color: color, size: 20),
+              platformIcon: storeIcon,
+              platformIconColor: storeBrandIconTint(transaction.store),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -108,7 +110,7 @@ class TransactionItem extends ConsumerWidget {
                           padding: const EdgeInsets.only(top: 1),
                           child: DualCurrencyExactText(
                             amount: transaction.tileDisplayRevenue!,
-                            commissionStore: transaction.store,
+                            commissionStore: transaction.storeForCommission,
                             style: revenueStyle,
                             textAlign: TextAlign.end,
                           ),
@@ -135,15 +137,6 @@ class TransactionItem extends ConsumerWidget {
                       Expanded(
                         child: Row(
                           children: [
-                            if (storeIcon != null) ...[
-                              Icon(
-                                storeIcon,
-                                size: 14,
-                                color: storeBrandIconTint(transaction.store) ??
-                                    context.colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 4),
-                            ],
                             if (transaction.app?.name != null) ...[
                               Flexible(
                                 child: Text(

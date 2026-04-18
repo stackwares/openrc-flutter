@@ -9,8 +9,10 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
+import 'package:revenuecat/features/transactions/transactions_common.dart';
+import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
+import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
@@ -18,10 +20,8 @@ import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
-import 'package:revenuecat/features/transactions/widgets/transactions_revenue_insights_card.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
+import 'package:revenuecat/features/transactions/widgets/realtime_revenue_insights_list.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
-import 'package:revenuecat/services/app_icon_overrides_store.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -38,6 +38,10 @@ class TransactionsState {
   final int? lastPurchaseMs;
   final String? error;
 
+  /// Preload steps for the Realtime tab (1 = first page loaded, then +1 per backfill page).
+  final int realtimeLoadStep;
+  final bool realtimeLoadComplete;
+
   const TransactionsState({
     required this.selectedDayKey,
     this.grouped = const {},
@@ -48,6 +52,8 @@ class TransactionsState {
     this.firstPurchaseMs,
     this.lastPurchaseMs,
     this.error,
+    this.realtimeLoadStep = 0,
+    this.realtimeLoadComplete = false,
   });
 
   TransactionsState copyWith({
@@ -60,57 +66,22 @@ class TransactionsState {
     int? firstPurchaseMs,
     int? lastPurchaseMs,
     String? error,
-  }) =>
-      TransactionsState(
-        selectedDayKey: selectedDayKey ?? this.selectedDayKey,
-        grouped: grouped ?? this.grouped,
-        dailyTotals: dailyTotals ?? this.dailyTotals,
-        isLoading: isLoading ?? this.isLoading,
-        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-        hasMore: hasMore ?? this.hasMore,
-        firstPurchaseMs: firstPurchaseMs ?? this.firstPurchaseMs,
-        lastPurchaseMs: lastPurchaseMs ?? this.lastPurchaseMs,
-        error: error,
-      );
+    int? realtimeLoadStep,
+    bool? realtimeLoadComplete,
+  }) => TransactionsState(
+    selectedDayKey: selectedDayKey ?? this.selectedDayKey,
+    grouped: grouped ?? this.grouped,
+    dailyTotals: dailyTotals ?? this.dailyTotals,
+    isLoading: isLoading ?? this.isLoading,
+    isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    hasMore: hasMore ?? this.hasMore,
+    firstPurchaseMs: firstPurchaseMs ?? this.firstPurchaseMs,
+    lastPurchaseMs: lastPurchaseMs ?? this.lastPurchaseMs,
+    error: error,
+    realtimeLoadStep: realtimeLoadStep ?? this.realtimeLoadStep,
+    realtimeLoadComplete: realtimeLoadComplete ?? this.realtimeLoadComplete,
+  );
 }
-
-/// Net revenue for a day: sum of [RcTransaction.revenue] (null → 0), including
-/// refunds (typically negative), with optional store commission when enabled.
-double _netRevenueSum(
-  Iterable<RcTransaction> transactions,
-  CommissionSettings commission,
-) {
-  return transactions.fold(0.0, (sum, tx) {
-    final gross = tx.revenue ?? 0;
-    return sum +
-        adjustUsdForDisplay(
-          gross: gross,
-          settings: commission,
-          store: tx.store,
-        );
-  });
-}
-
-String? _transactionDedupKey(RcTransaction tx) {
-  final stid = tx.storeTransactionIdentifier?.trim();
-  if (stid != null && stid.isNotEmpty) return 'stid:$stid';
-  final sub = tx.subscriberId?.trim();
-  final prod = tx.productIdentifier?.trim();
-  final pd = tx.purchaseDate?.trim();
-  if (sub != null &&
-      sub.isNotEmpty &&
-      prod != null &&
-      prod.isNotEmpty &&
-      pd != null &&
-      pd.isNotEmpty) {
-    return 'cmp:$sub|$prod|$pd';
-  }
-  return null;
-}
-
-final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');
-
-bool _isIsoCalendarDayKey(String key) => _isoCalendarDayKeyRe.hasMatch(key);
 
 /// Matches [Kedi](https://github.com/sereisoglu/Kedi): small first page + `end_date`,
 /// then pagination with `start_from` only (no date range on follow-up requests).
@@ -152,7 +123,7 @@ List<RcTransaction> _collectFutureTransactions({
         !_transactionMatchesSectionFilter(tx, sectionFilter)) {
       continue;
     }
-    final k = _transactionDedupKey(tx);
+    final k = rcTransactionDedupKey(tx);
     if (k != null) {
       if (seen.contains(k)) continue;
       seen.add(k);
@@ -184,11 +155,6 @@ int? _nextCursorFromResponse(List<RcTransaction> raw, int? apiLastPurchaseMs) {
   final oldest = _oldestPurchaseMsInTransactions(raw);
   if (oldest == null) return null;
   return oldest - 1;
-}
-
-String _localTodayDayKey() {
-  final n = DateTime.now();
-  return DateFormat('yyyy-MM-dd').format(DateTime(n.year, n.month, n.day));
 }
 
 String _dayKeyFromPurchaseDate(String dateStr) {
@@ -231,11 +197,11 @@ void _mergeTransactionsDeduping(
 ) {
   final seen = <String>{};
   for (final tx in into) {
-    final k = _transactionDedupKey(tx);
+    final k = rcTransactionDedupKey(tx);
     if (k != null) seen.add(k);
   }
   for (final tx in incoming) {
-    final k = _transactionDedupKey(tx);
+    final k = rcTransactionDedupKey(tx);
     if (k != null && seen.contains(k)) continue;
     if (k != null) seen.add(k);
     into.add(tx);
@@ -246,13 +212,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   final Ref _ref;
 
   TransactionsNotifier(this._ref)
-      : super(TransactionsState(selectedDayKey: _localTodayDayKey()));
+    : super(TransactionsState(selectedDayKey: localTodayDayKey()));
 
   int _backfillGeneration = 0;
   bool _backfillRunning = false;
 
   void setSelectedDayKey(String dayKey) {
-    if (!_isIsoCalendarDayKey(dayKey) || dayKey == state.selectedDayKey) return;
+    if (!isIsoCalendarDayKey(dayKey) || dayKey == state.selectedDayKey) return;
     state = state.copyWith(
       selectedDayKey: dayKey,
       error: null,
@@ -272,7 +238,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   /// Full reload (pull-to-refresh): same as Kedi’s first fetch — small limit,
   /// `end_date` only, then pagination uses `start_from` alone.
   Future<void> fetchSelectedDay() async {
-    state = state.copyWith(isLoading: true, isLoadingMore: false, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      isLoadingMore: false,
+      error: null,
+      realtimeLoadStep: 0,
+      realtimeLoadComplete: false,
+    );
     _backfillGeneration++;
     final gen = _backfillGeneration;
     try {
@@ -296,8 +268,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         hasMore: hasMorePages,
         firstPurchaseMs: response.firstPurchaseMs,
         lastPurchaseMs: hasMorePages ? nextCursor : null,
+        realtimeLoadStep: hasMorePages ? 1 : kRealtimeLoadTarget,
+        realtimeLoadComplete: !hasMorePages,
       );
-      if (gen == _backfillGeneration) {
+      if (hasMorePages && gen == _backfillGeneration) {
         unawaited(backfillIncompleteCalendarDays(gen));
       }
     } on DioException catch (e) {
@@ -306,12 +280,16 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         isLoading: false,
         isLoadingMore: false,
         error: _extractErrorMessage(e),
+        realtimeLoadStep: 0,
+        realtimeLoadComplete: false,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
         error: 'Failed to load transactions',
+        realtimeLoadStep: 0,
+        realtimeLoadComplete: false,
       );
     }
   }
@@ -335,7 +313,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       );
       final response = await api.transactions(request);
       final raw = response.transactions ?? [];
-      final existingGrouped = Map<String, List<RcTransaction>>.from(state.grouped);
+      final existingGrouped = Map<String, List<RcTransaction>>.from(
+        state.grouped,
+      );
       _mergeRawIntoGrouped(existingGrouped, raw);
 
       final dailyTotals = _calculateDailyTotals(existingGrouped);
@@ -376,8 +356,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     _backfillRunning = true;
     try {
       var pages = 0;
-      const maxPages = 30;
-      while (pages < maxPages &&
+      while (pages < kRealtimeBackfillMaxPages &&
           gen == _backfillGeneration &&
           !state.isLoading &&
           state.hasMore) {
@@ -390,9 +369,18 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         final ok = await _performFetchMorePage();
         if (!ok) break;
         pages++;
+        if (gen == _backfillGeneration) {
+          state = state.copyWith(realtimeLoadStep: state.realtimeLoadStep + 1);
+        }
       }
     } finally {
       _backfillRunning = false;
+      if (gen == _backfillGeneration) {
+        state = state.copyWith(
+          realtimeLoadComplete: true,
+          realtimeLoadStep: kRealtimeLoadTarget,
+        );
+      }
     }
   }
 
@@ -415,7 +403,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     final commission = _ref.read(commissionSettingsProvider);
     final totals = <String, double>{};
     for (final entry in grouped.entries) {
-      totals[entry.key] = _netRevenueSum(entry.value, commission);
+      totals[entry.key] = netRevenueSum(entry.value, commission);
     }
     return totals;
   }
@@ -423,104 +411,17 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
 final transactionsProvider =
     StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  final notifier = TransactionsNotifier(ref);
-  ref.listen<CommissionSettings>(commissionSettingsProvider, (prev, next) {
-    notifier.syncTotalsWithCommission();
-  });
-  return notifier;
-});
+      final notifier = TransactionsNotifier(ref);
+      ref.listen<CommissionSettings>(commissionSettingsProvider, (prev, next) {
+        notifier.syncTotalsWithCommission();
+      });
+      return notifier;
+    });
 
-String _appKeyForTransaction(RcTransaction tx) {
-  final a = tx.app;
-  if (a == null) return '';
-  final id = a.id?.trim();
-  if (id != null && id.isNotEmpty) return id;
-  final bid = a.bundleId?.trim();
-  if (bid != null && bid.isNotEmpty) return bid;
-  final name = a.name?.trim();
-  if (name != null && name.isNotEmpty) return name;
-  return '';
-}
-
-String _appLabelForTransaction(RcTransaction tx) {
-  final a = tx.app;
-  if (a == null) return 'Unknown app';
-  final name = a.name?.trim();
-  if (name != null && name.isNotEmpty) return name;
-  final bid = a.bundleId?.trim();
-  if (bid != null && bid.isNotEmpty) return bid;
-  final id = a.id?.trim();
-  if (id != null && id.isNotEmpty) return id;
-  return 'Unknown app';
-}
-
-class _AppFilterOption {
-  final String key;
-  final String label;
-
-  /// RevenueCat app id ([RcTransactionApp.id]) for icon override lookup; may be null.
-  final String? appId;
-
-  const _AppFilterOption(this.key, this.label, this.appId);
-}
-
-List<_AppFilterOption> _collectAppFilterOptions(
-  Map<String, List<RcTransaction>> grouped,
-) {
-  final labelByKey = <String, String>{};
-  final appIdByKey = <String, String>{};
-  for (final list in grouped.values) {
-    for (final tx in list) {
-      final k = _appKeyForTransaction(tx);
-      labelByKey.putIfAbsent(k, () => _appLabelForTransaction(tx));
-      final aid = tx.app?.id?.trim();
-      if (aid != null && aid.isNotEmpty) {
-        appIdByKey.putIfAbsent(k, () => aid);
-      }
-    }
-  }
-  final out = labelByKey.entries
-      .map(
-        (e) => _AppFilterOption(
-          e.key,
-          e.value,
-          appIdByKey[e.key],
-        ),
-      )
-      .toList();
-  out.sort(
-    (a, b) => a.label.toLowerCase().compareTo(b.label.toLowerCase()),
-  );
-  return out;
-}
-
-Map<String, List<RcTransaction>> _filteredGroupedByApps(
-  Map<String, List<RcTransaction>> grouped,
-  Set<String>? appFilter,
-) {
-  if (appFilter == null) return grouped;
-  final out = <String, List<RcTransaction>>{};
-  for (final e in grouped.entries) {
-    final filtered = e.value
-        .where((tx) => appFilter.contains(_appKeyForTransaction(tx)))
-        .toList();
-    if (filtered.isNotEmpty) {
-      out[e.key] = filtered;
-    }
-  }
-  return out;
-}
-
-Map<String, double> _dailyTotalsForGrouped(
-  Map<String, List<RcTransaction>> grouped,
-  CommissionSettings commission,
-) {
-  final totals = <String, double>{};
-  for (final entry in grouped.entries) {
-    totals[entry.key] = _netRevenueSum(entry.value, commission);
-  }
-  return totals;
-}
+/// Shared app filter for the Transactions (day) and Realtime tabs.
+final transactionsAppIncludeFilterProvider = StateProvider<Set<String>?>(
+  (ref) => null,
+);
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -537,10 +438,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   TransactionDaySectionFilter? _sectionFilter;
 
-  /// When non-null, only transactions for these app keys are listed.
-  /// When null, all apps are shown.
-  Set<String>? _appIncludeFilter;
-
   /// Expandable "Future transactions" (today only); collapsed by default.
   bool _futureTransactionsExpanded = false;
 
@@ -548,9 +445,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(transactionsProvider.notifier).fetchInitial();
-    });
   }
 
   @override
@@ -567,9 +461,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final pos = _scrollController.position;
     final maxExt = pos.maxScrollExtent;
-    final nearEnd = maxExt <= 0
-        ? true
-        : pos.pixels >= maxExt - _loadMoreLeadPx;
+    final nearEnd = maxExt <= 0 ? true : pos.pixels >= maxExt - _loadMoreLeadPx;
     if (nearEnd) {
       ref.read(transactionsProvider.notifier).fetchMore();
     }
@@ -578,6 +470,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(transactionsProvider);
+    final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
     final theme = Theme.of(context);
     final dateLabel = _dayHeaderDateLabel(state.selectedDayKey);
 
@@ -599,12 +492,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           IconButton(
             icon: Icon(
               Icons.filter_list,
-              color: _appIncludeFilter != null
+              color: appIncludeFilter != null
                   ? context.colorScheme.primary
                   : null,
             ),
             tooltip: 'Filter by app',
-            onPressed: state.isLoading ||
+            onPressed:
+                state.isLoading ||
                     (state.grouped[state.selectedDayKey] ?? []).isEmpty
                 ? null
                 : () => _showAppFilterSheet(context, state),
@@ -629,14 +523,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         ],
       ),
-      body: _buildBody(context, state),
+      body: _buildDayTab(context, state),
     );
   }
 
-  Widget _buildBody(BuildContext context, TransactionsState state) {
+  Widget _buildDayTab(BuildContext context, TransactionsState state) {
     final commission = ref.watch(commissionSettingsProvider);
+    final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
     if (state.isLoading && state.grouped.isEmpty) {
-      return _buildTransactionsScreenSkeleton(context);
+      return const TransactionsLoadingSkeleton();
     }
 
     if (state.error != null && state.grouped.isEmpty && !state.isLoading) {
@@ -664,13 +559,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final selectedKey = state.selectedDayKey;
     final rawDayTxs = state.grouped[selectedKey] ?? [];
-    final groupedForList =
-        _filteredGroupedByApps(state.grouped, _appIncludeFilter);
+    final groupedForList = filteredGroupedByApps(
+      state.grouped,
+      appIncludeFilter,
+    );
     final allForDay = groupedForList[selectedKey] ?? [];
 
-    if (_appIncludeFilter != null &&
-        rawDayTxs.isNotEmpty &&
-        allForDay.isEmpty) {
+    if (appIncludeFilter != null && rawDayTxs.isNotEmpty && allForDay.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -693,10 +588,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               const SizedBox(height: 16),
               FilledButton.tonal(
                 onPressed: () {
-                  setState(() {
-                    _appIncludeFilter = null;
-                    _sectionFilter = null;
-                  });
+                  ref
+                          .read(transactionsAppIncludeFilterProvider.notifier)
+                          .state =
+                      null;
+                  setState(() => _sectionFilter = null);
                 },
                 child: const Text('Show all apps'),
               ),
@@ -707,14 +603,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     final sectionFiltered = _sectionFilter != null;
-    final todayKey = _localTodayDayKey();
+    final todayKey = localTodayDayKey();
     final viewingToday = selectedKey == todayKey;
     var transactions = sectionFiltered
         ? allForDay
-            .where(
-              (tx) => _transactionMatchesSectionFilter(tx, _sectionFilter!),
-            )
-            .toList()
+              .where(
+                (tx) => _transactionMatchesSectionFilter(tx, _sectionFilter!),
+              )
+              .toList()
         : allForDay;
     if (viewingToday) {
       transactions = transactions
@@ -725,20 +621,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
     final canGoNext = selectedKey.compareTo(todayKey) < 0;
-    final groupedForHeader =
-        _filteredGroupedByApps(state.grouped, _appIncludeFilter);
-    final headerDailyTotals =
-        _dailyTotalsForGrouped(groupedForHeader, commission);
+    final groupedForHeader = filteredGroupedByApps(
+      state.grouped,
+      appIncludeFilter,
+    );
+    final headerDailyTotals = dailyTotalsForGrouped(
+      groupedForHeader,
+      commission,
+    );
     final headerDaily = headerDailyTotals[selectedKey] ?? 0;
-    final headerPrevTotal =
-        prevKey != null ? headerDailyTotals[prevKey] : null;
-    final previousDayForSummary =
-        prevKey != null ? (groupedForList[prevKey] ?? <RcTransaction>[]) : null;
+    final headerPrevTotal = prevKey != null ? headerDailyTotals[prevKey] : null;
+    final previousDayForSummary = prevKey != null
+        ? (groupedForList[prevKey] ?? <RcTransaction>[])
+        : null;
 
     final subscriberEarliestPurchaseDay =
         earliestPurchaseLocalDayBySubscriberId(
-      state.grouped.values.expand((e) => e),
-    );
+          state.grouped.values.expand((e) => e),
+        );
 
     final futureTxs = viewingToday
         ? _collectFutureTransactions(
@@ -775,7 +675,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           amount: headerDaily,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            fontSize: (theme.textTheme.headlineSmall?.fontSize ??
+                            fontSize:
+                                (theme.textTheme.headlineSmall?.fontSize ??
                                     24) *
                                 1.2,
                             fontWeight: FontWeight.w800,
@@ -840,7 +741,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         ),
       ),
-      TransactionsRevenueInsightsCard(transactions: allForDay),
+      RealtimeRevenueInsightsList(
+        transactions: allForDay,
+        expandable: true,
+        initiallyExpanded: false,
+      ),
       if (futureTxs.isNotEmpty)
         _FutureTransactionsSection(
           transactions: futureTxs,
@@ -848,14 +753,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           onExpandedChanged: (v) {
             setState(() => _futureTransactionsExpanded = v);
           },
-          subscriberEarliestPurchaseLocalDayById:
-              subscriberEarliestPurchaseDay,
+          subscriberEarliestPurchaseLocalDayById: subscriberEarliestPurchaseDay,
           onOpenTransaction: (tx) {
             Navigator.of(context).push<void>(
               MaterialPageRoute<void>(
-                builder: (context) => TransactionDetailScreen(
-                  transaction: tx,
-                ),
+                builder: (context) => TransactionDetailScreen(transaction: tx),
               ),
             );
           },
@@ -871,9 +773,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           onTap: () {
             Navigator.of(context).push<void>(
               MaterialPageRoute<void>(
-                builder: (context) => TransactionDetailScreen(
-                  transaction: tx,
-                ),
+                builder: (context) => TransactionDetailScreen(transaction: tx),
               ),
             );
           },
@@ -931,16 +831,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         );
       }
-      final runway = math.max(
-        280.0,
-        MediaQuery.sizeOf(context).height * 0.35,
-      );
+      final runway = math.max(280.0, MediaQuery.sizeOf(context).height * 0.35);
       children.add(SizedBox(height: runway));
     }
 
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(transactionsProvider.notifier).fetchInitial(),
+      onRefresh: () => ref.read(transactionsProvider.notifier).fetchInitial(),
       child: ListView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
@@ -960,148 +856,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     ref.read(transactionsProvider.notifier).setSelectedDayKey(dayKey);
   }
 
-  /// Full-screen placeholder while the selected day (and window) loads.
-  Widget _buildTransactionsScreenSkeleton(BuildContext context) {
-    final bottom = mainShellFloatingTabBarScrollPadding(context);
-    return Skeletonizer(
-      child: ListView(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.only(bottom: bottom),
-        children: [
-          Card(
-            margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Bone(
-                        width: 48,
-                        height: 48,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Column(
-                            children: [
-                              Bone.text(fontSize: 28, width: 160),
-                              const SizedBox(height: 8),
-                              Bone.text(fontSize: 14, width: 140),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Bone(
-                        width: 48,
-                        height: 48,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 10,
-                    runSpacing: 8,
-                    children: List.generate(
-                      6,
-                      (_) => Bone(
-                        width: 118,
-                        height: 30,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Card(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Bone.text(fontSize: 12, width: 120),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: List.generate(
-                      5,
-                      (_) => Bone(
-                        width: 88,
-                        height: 30,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: List.generate(
-                      4,
-                      (_) => Bone(
-                        width: 72,
-                        height: 30,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Bone(
-                        width: 96,
-                        height: 36,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      const SizedBox(width: 10),
-                      Bone(
-                        width: 110,
-                        height: 36,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          ...List.generate(
-            7,
-            (_) => Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Bone.circle(size: 44),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Bone.text(fontSize: 14),
-                        const SizedBox(height: 6),
-                        Bone.text(fontSize: 12, width: 180),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _dayHeaderDateLabel(String dayKey) {
     try {
       final date = DateFormat('yyyy-MM-dd').parse(dayKey);
@@ -1113,77 +867,334 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   void _showAppFilterSheet(BuildContext context, TransactionsState state) {
     final dayTxs = state.grouped[state.selectedDayKey] ?? [];
-    final dayMap = <String, List<RcTransaction>>{
+    final filterSource = <String, List<RcTransaction>>{
       if (dayTxs.isNotEmpty) state.selectedDayKey: dayTxs,
     };
-    final options = _collectAppFilterOptions(dayMap);
-    if (options.isEmpty) return;
-
-    final allKeys = options.map((o) => o.key).toSet();
-    final initialSelected = _appIncludeFilter == null
-        ? Set<String>.from(allKeys)
-        : () {
-            final i = _appIncludeFilter!.intersection(allKeys);
-            return i.isEmpty ? Set<String>.from(allKeys) : i;
-          }();
-
-    final maxHeight = MediaQuery.sizeOf(context).height * 0.62;
-
-    showModalBottomSheet<void>(
+    final current = ref.read(transactionsAppIncludeFilterProvider);
+    showTransactionsAppFilterSheet(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-            ),
-            child: SizedBox(
-              height: maxHeight,
-              child: _AppFilterModal(
-                options: options,
-                allKeys: allKeys,
-                initialSelected: initialSelected,
-                onApply: (selected) {
-                  Navigator.pop(sheetContext);
-                  setState(() {
-                    _sectionFilter = null;
-                    if (selected.length == allKeys.length) {
-                      _appIncludeFilter = null;
-                    } else {
-                      _appIncludeFilter = selected;
-                    }
-                  });
-                },
-              ),
-            ),
-          ),
-        );
+      filterSource: filterSource,
+      currentIncludeFilter: current,
+      onApply: (next) {
+        ref.read(transactionsAppIncludeFilterProvider.notifier).state = next;
+        setState(() => _sectionFilter = null);
       },
     );
   }
 }
 
+/// e.g. `After 15% store commission` or `After 15% / 12% store commission` when rates differ.
+String _afterStoreCommissionTitle(CommissionSettings commission) {
+  String fmt(double p) {
+    final v = p.clamp(0.0, 100.0);
+    if ((v - v.round()).abs() < 1e-6) return v.round().toString();
+    return v.toStringAsFixed(1);
+  }
+
+  final a = commission.appleCommissionPercent;
+  final g = commission.googleCommissionPercent;
+  final pct = (a - g).abs() < 0.05
+      ? '${fmt(a)}%'
+      : '${fmt(a)}% / ${fmt(g)}%';
+  return 'After $pct store commission';
+}
+
+/// Rolling 30-day totals (main-tab Realtime). Shares [transactionsProvider] with [TransactionsScreen].
+class RealtimeTransactionsScreen extends ConsumerWidget {
+  const RealtimeTransactionsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(transactionsProvider);
+    final commission = ref.watch(commissionSettingsProvider);
+    final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
+    final theme = Theme.of(context);
+
+    final grouped = filteredGroupedByApps(state.grouped, appIncludeFilter);
+    // Sum revenue from paginated `/me/transactions` merges only — not overview chart totals.
+    final txs = collectTransactionsInLastLocalDays(
+      grouped,
+      kRealtimeWindowDays,
+    );
+    final grossTotal = grossRevenueSum(txs);
+    final netTotal = netRevenueSum(txs, commission);
+    final progress = state.realtimeLoadComplete
+        ? 1.0
+        : (state.realtimeLoadStep / kRealtimeLoadTarget).clamp(0.0, 1.0);
+
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: false,
+        toolbarHeight: 72,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Realtime',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.start,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Last 30 days · local',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+                height: 1.15,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.filter_list,
+              color: appIncludeFilter != null
+                  ? context.colorScheme.primary
+                  : null,
+            ),
+            tooltip: 'Filter by app',
+            onPressed: state.isLoading || txs.isEmpty
+                ? null
+                : () {
+                    final windowTxs = collectTransactionsInLastLocalDays(
+                      state.grouped,
+                      kRealtimeWindowDays,
+                    );
+                    final filterSource = windowTxs.isEmpty
+                        ? <String, List<RcTransaction>>{}
+                        : <String, List<RcTransaction>>{'_': windowTxs};
+                    showTransactionsAppFilterSheet(
+                      context: context,
+                      filterSource: filterSource,
+                      currentIncludeFilter: appIncludeFilter,
+                      onApply: (next) {
+                        ref
+                                .read(
+                                  transactionsAppIncludeFilterProvider.notifier,
+                                )
+                                .state =
+                            next;
+                      },
+                    );
+                  },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: state.isLoading
+                ? null
+                : () => ref.read(transactionsProvider.notifier).fetchInitial(),
+          ),
+        ],
+      ),
+      body: Builder(
+        builder: (context) {
+          if (state.isLoading && state.grouped.isEmpty) {
+            return const TransactionsLoadingSkeleton();
+          }
+
+          if (state.error != null &&
+              state.grouped.isEmpty &&
+              !state.isLoading) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: context.colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(state.error!, style: context.textTheme.bodyMedium),
+                  const SizedBox(height: 16),
+                  FilledButton.tonal(
+                    onPressed: () =>
+                        ref.read(transactionsProvider.notifier).fetchInitial(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () =>
+                ref.read(transactionsProvider.notifier).fetchInitial(),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.only(
+                bottom: mainShellFloatingTabBarScrollPadding(context),
+              ),
+              children: [
+                Card(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!state.realtimeLoadComplete) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value:
+                                  state.isLoading && state.realtimeLoadStep == 0
+                                  ? null
+                                  : progress,
+                              minHeight: 4,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        if (commission.adjustmentEnabled) ...[
+                          Text(
+                            _afterStoreCommissionTitle(commission),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          DualCurrencyExactText(
+                            amount: netTotal,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontSize:
+                                  (theme.textTheme.headlineSmall?.fontSize ??
+                                      24) *
+                                  1.2,
+                              fontWeight: FontWeight.w800,
+                              color: theme.colorScheme.onSurface,
+                              letterSpacing: -0.65,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Original revenue',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.15,
+                              fontSize:
+                                  (theme.textTheme.labelSmall?.fontSize ?? 11) *
+                                  0.92,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          DualCurrencyExactText(
+                            amount: grossTotal,
+                            applyCommissionAdjustment: false,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.2,
+                              height: 1.2,
+                            ),
+                          ),
+                        ] else
+                          DualCurrencyExactText(
+                            amount: netTotal,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontSize:
+                                  (theme.textTheme.headlineSmall?.fontSize ??
+                                      24) *
+                                  1.2,
+                              fontWeight: FontWeight.w800,
+                              color: theme.colorScheme.onSurface,
+                              letterSpacing: -0.65,
+                              height: 1.1,
+                            ),
+                          ),
+                        if (!state.realtimeLoadComplete) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            'Loading page ${state.realtimeLoadStep.clamp(0, kRealtimeLoadTarget)} '
+                            'of $kRealtimeLoadTarget…',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        _DayTypeCountSummary(
+                          transactions: txs,
+                          previousDayTransactions: null,
+                          selectedFilter: null,
+                          onSelectFilter: (_) {},
+                          onClearFilter: null,
+                          enableFilterTaps: false,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                RealtimeRevenueInsightsList(transactions: txs),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                  child: Text(
+                    'Totals include every transaction loaded so far in the last 30 local days. '
+                    'Pull to refresh to reload.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 String? _previousCalendarDayKey(String dayKey) {
-  if (!_isIsoCalendarDayKey(dayKey)) return null;
+  if (!isIsoCalendarDayKey(dayKey)) return null;
   try {
     final d = DateFormat('yyyy-MM-dd').parse(dayKey);
-    return DateFormat('yyyy-MM-dd').format(
-      d.subtract(const Duration(days: 1)),
-    );
+    return DateFormat('yyyy-MM-dd').format(d.subtract(const Duration(days: 1)));
   } catch (_) {
     return null;
   }
 }
 
 String? _nextCalendarDayKey(String dayKey) {
-  if (!_isIsoCalendarDayKey(dayKey)) return null;
+  if (!isIsoCalendarDayKey(dayKey)) return null;
   try {
     final d = DateFormat('yyyy-MM-dd').parse(dayKey);
-    return DateFormat('yyyy-MM-dd').format(
-      d.add(const Duration(days: 1)),
-    );
+    return DateFormat('yyyy-MM-dd').format(d.add(const Duration(days: 1)));
   } catch (_) {
     return null;
   }
@@ -1332,135 +1343,6 @@ class _PrevDayRevenueRow extends StatelessWidget {
   }
 }
 
-class _AppFilterModal extends StatefulWidget {
-  final List<_AppFilterOption> options;
-  final Set<String> allKeys;
-  final Set<String> initialSelected;
-  final void Function(Set<String> selected) onApply;
-
-  const _AppFilterModal({
-    required this.options,
-    required this.allKeys,
-    required this.initialSelected,
-    required this.onApply,
-  });
-
-  @override
-  State<_AppFilterModal> createState() => _AppFilterModalState();
-}
-
-class _AppFilterModalState extends State<_AppFilterModal> {
-  late Set<String> _selected;
-
-  @override
-  void initState() {
-    super.initState();
-    _selected = Set<String>.from(widget.initialSelected);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
-          child: Row(
-            children: [
-              Text(
-                'Apps',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  setState(() => _selected = Set<String>.from(widget.allKeys));
-                },
-                child: const Text('ALL'),
-              ),
-              TextButton(
-                onPressed: () => setState(() => _selected = {}),
-                child: const Text('NONE'),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: widget.options.length,
-            itemBuilder: (context, index) {
-              final opt = widget.options[index];
-              return CheckboxListTile(
-                value: _selected.contains(opt.key),
-                onChanged: (checked) {
-                  setState(() {
-                    if (checked == true) {
-                      _selected.add(opt.key);
-                    } else {
-                      _selected.remove(opt.key);
-                    }
-                  });
-                },
-                title: Row(
-                  children: [
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final scheme = Theme.of(context).colorScheme;
-                        final url = opt.appId != null
-                            ? ref.watch(appIconOverridesProvider)[opt.appId]
-                            : null;
-                        return TransactionLeadingAvatar(
-                          imageUrl: url,
-                          size: 40,
-                          borderRadius: 10,
-                          tintColor: scheme.primary,
-                          fallback: Icon(
-                            Icons.apps_outlined,
-                            color: scheme.primary,
-                            size: 22,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        opt.label,
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                    ),
-                  ],
-                ),
-                controlAffinity: ListTileControlAffinity.leading,
-              );
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () => widget.onApply(Set<String>.from(_selected)),
-                child: const Text('Apply'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _DayTxnCounts {
   final int trials;
   final int conversions;
@@ -1575,8 +1457,10 @@ Color _daySummaryPillAccent(
   TransactionDaySectionFilter filter,
 ) {
   return switch (filter) {
-    TransactionDaySectionFilter.refunded =>
-        transactionTypeAccentColor(RcTransactionType.refund, context),
+    TransactionDaySectionFilter.refunded => transactionTypeAccentColor(
+      RcTransactionType.refund,
+      context,
+    ),
     TransactionDaySectionFilter.cancelled => Colors.deepOrange,
     _ => transactionTypeAccentColor(_sectionFilterAccentType(filter), context),
   };
@@ -1593,6 +1477,7 @@ class _DayTypeCountSummary extends StatelessWidget {
   final TransactionDaySectionFilter? selectedFilter;
   final void Function(TransactionDaySectionFilter filter) onSelectFilter;
   final VoidCallback? onClearFilter;
+  final bool enableFilterTaps;
 
   const _DayTypeCountSummary({
     required this.transactions,
@@ -1600,6 +1485,7 @@ class _DayTypeCountSummary extends StatelessWidget {
     required this.selectedFilter,
     required this.onSelectFilter,
     required this.onClearFilter,
+    this.enableFilterTaps = true,
   });
 
   @override
@@ -1627,6 +1513,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               previousCount: p?.trials,
               filter: TransactionDaySectionFilter.trial,
               selected: selectedFilter == TransactionDaySectionFilter.trial,
+              allowTap: enableFilterTaps,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1634,7 +1521,9 @@ class _DayTypeCountSummary extends StatelessWidget {
               count: n.conversions,
               previousCount: p?.conversions,
               filter: TransactionDaySectionFilter.conversion,
-              selected: selectedFilter == TransactionDaySectionFilter.conversion,
+              selected:
+                  selectedFilter == TransactionDaySectionFilter.conversion,
+              allowTap: enableFilterTaps,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1643,6 +1532,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               previousCount: p?.renewals,
               filter: TransactionDaySectionFilter.renewal,
               selected: selectedFilter == TransactionDaySectionFilter.renewal,
+              allowTap: enableFilterTaps,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1652,6 +1542,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               filter: TransactionDaySectionFilter.subscription,
               selected:
                   selectedFilter == TransactionDaySectionFilter.subscription,
+              allowTap: enableFilterTaps,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1660,6 +1551,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               previousCount: p?.refunds,
               filter: TransactionDaySectionFilter.refunded,
               selected: selectedFilter == TransactionDaySectionFilter.refunded,
+              allowTap: enableFilterTaps,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1668,6 +1560,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               previousCount: p?.cancelled,
               filter: TransactionDaySectionFilter.cancelled,
               selected: selectedFilter == TransactionDaySectionFilter.cancelled,
+              allowTap: enableFilterTaps,
               onTap: onSelectFilter,
             ),
           ],
@@ -1699,6 +1592,7 @@ class _DaySummaryStatCell extends StatelessWidget {
     required this.previousCount,
     required this.filter,
     required this.selected,
+    required this.allowTap,
     required this.onTap,
   });
 
@@ -1707,6 +1601,7 @@ class _DaySummaryStatCell extends StatelessWidget {
   final int? previousCount;
   final TransactionDaySectionFilter filter;
   final bool selected;
+  final bool allowTap;
   final void Function(TransactionDaySectionFilter filter) onTap;
 
   @override
@@ -1732,7 +1627,7 @@ class _DaySummaryStatCell extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: enabled ? () => onTap(filter) : null,
+        onTap: allowTap && enabled ? () => onTap(filter) : null,
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -1740,10 +1635,7 @@ class _DaySummaryStatCell extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: borderColor,
-              width: selected ? 1.5 : 1,
-            ),
+            border: Border.all(color: borderColor, width: selected ? 1.5 : 1),
             color: fill,
           ),
           child: Opacity(
@@ -1823,8 +1715,8 @@ class _DayCountTrendRow extends StatelessWidget {
       final improved = higherIsBetter ? up : !up;
       accent = improved
           ? (theme.brightness == Brightness.dark
-              ? const Color(0xFF81C784)
-              : const Color(0xFF2E7D32))
+                ? const Color(0xFF81C784)
+                : const Color(0xFF2E7D32))
           : theme.colorScheme.error;
     }
 
