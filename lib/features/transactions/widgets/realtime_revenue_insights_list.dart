@@ -21,11 +21,16 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
   /// Used when [expandable] is true. Realtime tab typically leaves this `true`.
   final bool initiallyExpanded;
 
+  /// When false (e.g. Realtime tab), revenue amounts use full grouping ($5,001.00)
+  /// instead of compact ($5.1K).
+  final bool compactRevenueAmounts;
+
   const RealtimeRevenueInsightsList({
     super.key,
     required this.transactions,
     this.expandable = false,
     this.initiallyExpanded = true,
+    this.compactRevenueAmounts = true,
   });
 
   @override
@@ -58,6 +63,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
       letterSpacing: 0.6,
     );
 
+    final useCompactRevenue = compactRevenueAmounts;
     final insightsBody = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -89,6 +95,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                       icon: Icons.apple,
                       iconColor: StoreBrandIconColors.appleBlue,
                     ),
+                    compactRevenueAmounts: useCompactRevenue,
                   );
                 }
                 return _InsightProgressRow(
@@ -104,6 +111,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                     icon: Icons.android,
                     iconColor: StoreBrandIconColors.androidGreen,
                   ),
+                  compactRevenueAmounts: useCompactRevenue,
                 );
               },
             ),
@@ -135,6 +143,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                       icon: Icons.add_circle_outline,
                       iconColor: accent,
                     ),
+                    compactRevenueAmounts: useCompactRevenue,
                   );
                 }
                 final accent = transactionTypeAccentColor(
@@ -150,6 +159,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                     icon: Icons.autorenew,
                     iconColor: accent,
                   ),
+                  compactRevenueAmounts: useCompactRevenue,
                 );
               },
             ),
@@ -189,6 +199,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
+                        compactRevenueAmounts: useCompactRevenue,
                       );
                     },
                   ),
@@ -217,6 +228,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                         leading: _InsightLeadingCountryEmoji(
                           countryKey: e.countryKey,
                         ),
+                        compactRevenueAmounts: useCompactRevenue,
                       );
                     },
                   ),
@@ -362,12 +374,13 @@ class _InsightLeadingCountryEmoji extends StatelessWidget {
   }
 }
 
-class _InsightProgressRow extends StatelessWidget {
+class _InsightProgressRow extends ConsumerWidget {
   final String label;
   final double pct;
   final double revenue;
   final Color barColor;
   final Widget leading;
+  final bool compactRevenueAmounts;
 
   const _InsightProgressRow({
     required this.label,
@@ -375,10 +388,11 @@ class _InsightProgressRow extends StatelessWidget {
     required this.revenue,
     required this.barColor,
     required this.leading,
+    required this.compactRevenueAmounts,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final v = (pct / 100.0).clamp(0.0, 1.0);
     final titleStyle = context.textTheme.bodyMedium?.copyWith(
@@ -423,9 +437,26 @@ class _InsightProgressRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    DualCurrencyCompactText(
-                      amount: revenue,
-                      style: amountStyle,
+                    Flexible(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: compactRevenueAmounts
+                            ? DualCurrencyCompactText(
+                                amount: revenue,
+                                style: amountStyle,
+                                textAlign: TextAlign.end,
+                              )
+                            : FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: DualCurrencyExactText(
+                                  amount: revenue,
+                                  applyCommissionAdjustment: false,
+                                  style: amountStyle,
+                                  textAlign: TextAlign.end,
+                                ),
+                              ),
+                      ),
                     ),
                   ],
                 ),

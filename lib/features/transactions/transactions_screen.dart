@@ -1156,7 +1156,10 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                   allLoadedTransactions: allLoadedTxs,
                   loadedTransactionCount: allLoadedTxs.length,
                 ),
-                RealtimeRevenueInsightsList(transactions: txs),
+                RealtimeRevenueInsightsList(
+                  transactions: txs,
+                  compactRevenueAmounts: false,
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                   child: Text(

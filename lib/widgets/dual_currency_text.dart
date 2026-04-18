@@ -16,6 +16,7 @@ import 'package:revenuecat/services/exchange_rate_provider.dart';
 class DualCurrencyCompactText extends ConsumerWidget {
   final double amount;
   final TextStyle? style;
+  final TextAlign textAlign;
   final String? commissionStore;
   final bool applyBlendedCommission;
 
@@ -23,6 +24,7 @@ class DualCurrencyCompactText extends ConsumerWidget {
     super.key,
     required this.amount,
     this.style,
+    this.textAlign = TextAlign.start,
     this.commissionStore,
     this.applyBlendedCommission = false,
   });
@@ -46,6 +48,7 @@ class DualCurrencyCompactText extends ConsumerWidget {
       return Text(
         formatCompactUsd(displayUsd),
         style: style,
+        textAlign: textAlign,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       );
@@ -59,6 +62,7 @@ class DualCurrencyCompactText extends ConsumerWidget {
           return Text(
             formatCompactUsd(displayUsd),
             style: style,
+            textAlign: textAlign,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           );
@@ -66,6 +70,7 @@ class DualCurrencyCompactText extends ConsumerWidget {
         return Text(
           formatCompactForeign(displayUsd * r, currency),
           style: style,
+          textAlign: textAlign,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
@@ -73,12 +78,14 @@ class DualCurrencyCompactText extends ConsumerWidget {
       loading: () => Text(
         formatCompactUsd(displayUsd),
         style: style,
+        textAlign: textAlign,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
       error: (_, _) => Text(
         formatCompactUsd(displayUsd),
         style: style,
+        textAlign: textAlign,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),

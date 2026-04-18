@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
 import 'package:revenuecat/features/transactions/realtime_next_payday_proceeds.dart';
@@ -27,115 +28,133 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
     final scheme = theme.colorScheme;
     final now = DateTime.now();
 
+    final total = est.appleNetUsd + est.googleNetUsd;
+    final totalNonZero = total.abs() > 1e-9;
+    double share(double part) =>
+        totalNonZero ? (part / total * 100).clamp(0.0, 100.0) : 0.0;
+    final applePct = share(est.appleNetUsd);
+    final googlePct = share(est.googleNetUsd);
+
+    final appleAccrual = est.applePayday != null
+        ? _accrualRangeShort(
+            est.applePayday!.startDate,
+            est.applePayday!.endDate,
+          )
+        : null;
+    final googleAccrual = est.googlePayday != null
+        ? _accrualRangeShort(
+            est.googlePayday!.earningsStart,
+            est.googlePayday!.earningsEnd,
+          )
+        : null;
+
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+            child: Row(
               children: [
-                Icon(Icons.payments_outlined, color: scheme.primary, size: 22),
-                const SizedBox(width: 10),
+                Icon(Icons.payments_outlined, color: scheme.primary, size: 20),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Next payout estimates',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    'NEXT PAYOUT ESTIMATES',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.primary,
                       fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
+                      letterSpacing: 0.55,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+            child: Text(
               commission.adjustmentEnabled
-                  ? 'Net proceeds after your store-fee settings, for the accrual window paid on each date.'
-                  : 'Proceeds for each accrual window (same basis as your totals).',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, c) {
-                final wide = c.maxWidth > 420;
-                final apple = _PlatformProceedsPanel(
-                  icon: Icons.apple,
-                  iconColor: StoreBrandIconColors.appleBlue,
-                  storeLabel: 'App Store',
-                  paymentDate: est.applePayday?.paymentDate,
-                  netUsd: est.appleNetUsd,
-                  periodLines: est.applePayday != null
-                      ? [
-                          'Fiscal ${DateFormat.yMMMM().format(est.applePayday!.fiscalMonthStart)}',
-                          '${formatPaydayAbbrev(est.applePayday!.startDate)} – ${formatPaydayAbbrev(est.applePayday!.endDate)}',
-                        ]
-                      : const <String>[],
-                  now: now,
-                );
-                final google = _PlatformProceedsPanel(
-                  icon: Icons.android,
-                  iconColor: StoreBrandIconColors.androidGreen,
-                  storeLabel: 'Google Play',
-                  paymentDate: est.googlePayday?.paymentDate,
-                  netUsd: est.googleNetUsd,
-                  periodLines: est.googlePayday != null
-                      ? [
-                          '${formatPaydayMonthYear(est.googlePayday!.earningsStart)} earnings',
-                          '${formatPaydayAbbrev(est.googlePayday!.earningsStart)} – ${formatPaydayAbbrev(est.googlePayday!.earningsEnd)}',
-                        ]
-                      : const <String>[],
-                  now: now,
-                );
-                if (wide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: apple),
-                      const SizedBox(width: 12),
-                      Expanded(child: google),
-                    ],
-                  );
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    apple,
-                    const SizedBox(height: 12),
-                    google,
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'From $loadedTransactionCount loaded transaction${loadedTransactionCount == 1 ? '' : 's'}. '
-              'Only purchases in each accrual window are counted; gaps in loaded history are excluded.',
+                  ? 'Net after your store-fee settings · share of combined next-window total'
+                  : 'Share of combined next-window total',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.92),
-                height: 1.35,
+                color: scheme.onSurfaceVariant,
+                height: 1.25,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
-        ),
+          ),
+          _NextPayoutPlatformRow(
+            icon: Icons.apple,
+            iconColor: StoreBrandIconColors.appleBlue,
+            storeLabel: 'App Store',
+            paymentDate: est.applePayday?.paymentDate,
+            accrualLine: appleAccrual,
+            netUsd: est.appleNetUsd,
+            pct: applePct,
+            barColor: Color.lerp(
+              StoreBrandIconColors.appleBlue,
+              scheme.surface,
+              0.35,
+            )!,
+            now: now,
+          ),
+          Divider(
+            height: 1,
+            indent: 14,
+            endIndent: 14,
+            color: scheme.outlineVariant.withValues(alpha: 0.35),
+          ),
+          _NextPayoutPlatformRow(
+            icon: Icons.android,
+            iconColor: StoreBrandIconColors.androidGreen,
+            storeLabel: 'Google Play',
+            paymentDate: est.googlePayday?.paymentDate,
+            accrualLine: googleAccrual,
+            netUsd: est.googleNetUsd,
+            pct: googlePct,
+            barColor: Color.lerp(
+              StoreBrandIconColors.androidGreen,
+              scheme.surface,
+              0.4,
+            )!,
+            now: now,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            child: Text(
+              '$loadedTransactionCount loaded transaction'
+              '${loadedTransactionCount == 1 ? '' : 's'} · gaps in history may lower totals',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+                height: 1.25,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _PlatformProceedsPanel extends ConsumerWidget {
-  const _PlatformProceedsPanel({
+String _accrualRangeShort(DateTime start, DateTime end) {
+  final a = DateFormat.MMMd().format(start);
+  final b = DateFormat.MMMd().format(end);
+  return 'Accrual $a–$b';
+}
+
+class _NextPayoutPlatformRow extends ConsumerWidget {
+  const _NextPayoutPlatformRow({
     required this.icon,
     required this.iconColor,
     required this.storeLabel,
     required this.paymentDate,
+    required this.accrualLine,
     required this.netUsd,
-    required this.periodLines,
+    required this.pct,
+    required this.barColor,
     required this.now,
   });
 
@@ -143,113 +162,189 @@ class _PlatformProceedsPanel extends ConsumerWidget {
   final Color iconColor;
   final String storeLabel;
   final DateTime? paymentDate;
+  final String? accrualLine;
   final double netUsd;
-  final List<String> periodLines;
+  final double pct;
+  final Color barColor;
   final DateTime now;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fill = Color.alphaBlend(
-      iconColor.withValues(alpha: 0.1),
-      scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+    final titleStyle = context.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: scheme.onSurface,
     );
+    final captionStyle = context.textTheme.labelSmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w500,
+    );
+    final amountStyle = context.textTheme.bodySmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      color: scheme.onSurface,
+    );
+    final v = (pct / 100.0).clamp(0.0, 1.0);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: iconColor.withValues(alpha: 0.32),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: scheme.surface.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
+          SizedBox(
+            width: 36,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: _LeadingIconTile(icon: icon, iconColor: iconColor),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      storeLabel,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
+                    Expanded(
+                      child: Text(
+                        storeLabel,
+                        style: titleStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    if (paymentDate != null) ...[
-                      Text(
-                        'Payout ${formatPaydayAbbrev(paymentDate!)}',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        paydayDaysToGoLabel(paymentDate!, now),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ] else
-                      Text(
-                        'Schedule unavailable',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
+                    const SizedBox(width: 8),
+                    DualCurrencyExactText(
+                      amount: netUsd,
+                      applyCommissionAdjustment: false,
+                      style: amountStyle,
+                      textAlign: TextAlign.end,
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          if (periodLines.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            for (final line in periodLines)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 3),
-                child: Text(
-                  line,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.25,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(height: 2),
+                if (paymentDate != null)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Payout ${formatPaydayAbbrev(paymentDate!)}',
+                          style: captionStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _DaysToGoBadge(
+                        label: paydayDaysToGoLabel(paymentDate!, now),
+                        scheme: scheme,
+                        textStyle: theme.textTheme.labelSmall,
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    'Schedule unavailable',
+                    style: captionStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if (accrualLine != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    accrualLine!,
+                    style: captionStyle?.copyWith(
+                      fontSize: (captionStyle.fontSize ?? 12) * 0.95,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  '${pct.toStringAsFixed(1)}% of next-payout total',
+                  style: captionStyle,
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: v,
+                    minHeight: 8,
+                    backgroundColor:
+                        scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                    valueColor: AlwaysStoppedAnimation<Color>(barColor),
                   ),
                 ),
-              ),
-          ],
-          const SizedBox(height: 12),
-          DualCurrencyExactText(
-            amount: netUsd,
-            applyCommissionAdjustment: false,
-            textAlign: TextAlign.start,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.55,
-              height: 1.05,
-              color: scheme.onSurface,
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DaysToGoBadge extends StatelessWidget {
+  const _DaysToGoBadge({
+    required this.label,
+    required this.scheme,
+    required this.textStyle,
+  });
+
+  final String label;
+  final ColorScheme scheme;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: 0.38),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Text(
+          label,
+          style: textStyle?.copyWith(
+            color: scheme.primary,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+            height: 1.1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LeadingIconTile extends StatelessWidget {
+  const _LeadingIconTile({
+    required this.icon,
+    required this.iconColor,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: scheme.onSurfaceVariant.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 20, color: iconColor),
     );
   }
 }
