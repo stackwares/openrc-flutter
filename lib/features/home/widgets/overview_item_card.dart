@@ -29,11 +29,16 @@ class OverviewItemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final color = metric.color(context.colorScheme);
+    final scheme = context.colorScheme;
+    final color = metric.color(scheme);
     final subtitleText = chartPeriodLabel ?? metric.subtitle;
+    final cardSurface =
+        Color.lerp(scheme.surface, color, 0.07) ?? scheme.surface;
 
     return Card(
       margin: const EdgeInsets.all(4),
+      color: cardSurface,
+      surfaceTintColor: Colors.transparent,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

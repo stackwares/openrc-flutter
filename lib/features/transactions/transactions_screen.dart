@@ -118,8 +118,7 @@ bool _isIsoCalendarDayKey(String key) => _isoCalendarDayKeyRe.hasMatch(key);
 const int _kediFirstPageLimit = 20;
 const int _kediPaginationLimit = 100;
 
-/// Upper bound for the first-page `/me/transactions` query (`end_date`) and for
-/// the latest calendar day the user can open — matches
+/// Upper bound for the first-page `/me/transactions` query (`end_date`) — matches
 /// [Kedi](https://github.com/sereisoglu/Kedi) (`Date().byAdding(.day, value: 7)`).
 String _kediEndDateString() {
   final n = DateTime.now();
@@ -131,6 +130,41 @@ int? _purchaseDateMs(String? s) {
   if (s == null || s.trim().isEmpty) return null;
   final d = DateTime.tryParse(s.trim());
   return d?.millisecondsSinceEpoch;
+}
+
+bool _isPurchaseInstantInFuture(RcTransaction tx) {
+  final p = tx.purchaseDate?.trim();
+  if (p == null || p.isEmpty) return false;
+  final dt = DateTime.tryParse(p);
+  if (dt == null) return false;
+  return dt.toLocal().isAfter(DateTime.now());
+}
+
+List<RcTransaction> _collectFutureTransactions({
+  required Map<String, List<RcTransaction>> groupedForList,
+  required TransactionDaySectionFilter? sectionFilter,
+}) {
+  final out = <RcTransaction>[];
+  final seen = <String>{};
+  for (final tx in groupedForList.values.expand((e) => e)) {
+    if (!_isPurchaseInstantInFuture(tx)) continue;
+    if (sectionFilter != null &&
+        !_transactionMatchesSectionFilter(tx, sectionFilter)) {
+      continue;
+    }
+    final k = _transactionDedupKey(tx);
+    if (k != null) {
+      if (seen.contains(k)) continue;
+      seen.add(k);
+    }
+    out.add(tx);
+  }
+  out.sort((a, b) {
+    final ma = _purchaseDateMs(a.purchaseDate) ?? 0;
+    final mb = _purchaseDateMs(b.purchaseDate) ?? 0;
+    return ma.compareTo(mb);
+  });
+  return out;
 }
 
 /// Oldest [RcTransaction.purchaseDate] on the page (cursor fallback if API omits
@@ -507,6 +541,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   /// When null, all apps are shown.
   Set<String>? _appIncludeFilter;
 
+  /// Expandable "Future transactions" (today only); collapsed by default.
+  bool _futureTransactionsExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -670,18 +707,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     final sectionFiltered = _sectionFilter != null;
-    final transactions = sectionFiltered
+    final todayKey = _localTodayDayKey();
+    final viewingToday = selectedKey == todayKey;
+    var transactions = sectionFiltered
         ? allForDay
             .where(
               (tx) => _transactionMatchesSectionFilter(tx, _sectionFilter!),
             )
             .toList()
         : allForDay;
+    if (viewingToday) {
+      transactions = transactions
+          .where((tx) => !_isPurchaseInstantInFuture(tx))
+          .toList();
+    }
 
     final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
-    final latestNavigableKey = _kediEndDateString();
-    final canGoNext = selectedKey.compareTo(latestNavigableKey) < 0;
+    final canGoNext = selectedKey.compareTo(todayKey) < 0;
     final groupedForHeader =
         _filteredGroupedByApps(state.grouped, _appIncludeFilter);
     final headerDailyTotals =
@@ -691,6 +734,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         prevKey != null ? headerDailyTotals[prevKey] : null;
     final previousDayForSummary =
         prevKey != null ? (groupedForList[prevKey] ?? <RcTransaction>[]) : null;
+
+    final subscriberEarliestPurchaseDay =
+        earliestPurchaseLocalDayBySubscriberId(
+      state.grouped.values.expand((e) => e),
+    );
+
+    final futureTxs = viewingToday
+        ? _collectFutureTransactions(
+            groupedForList: groupedForList,
+            sectionFilter: sectionFiltered ? _sectionFilter : null,
+          )
+        : <RcTransaction>[];
 
     final children = <Widget>[
       Card(
@@ -720,6 +775,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           amount: headerDaily,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall?.copyWith(
+                            fontSize: (theme.textTheme.headlineSmall?.fontSize ??
+                                    24) *
+                                1.2,
                             fontWeight: FontWeight.w800,
                             color: theme.colorScheme.onSurface,
                             letterSpacing: -0.65,
@@ -783,12 +841,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ),
       ),
       TransactionsRevenueInsightsCard(transactions: allForDay),
+      if (futureTxs.isNotEmpty)
+        _FutureTransactionsSection(
+          transactions: futureTxs,
+          expanded: _futureTransactionsExpanded,
+          onExpandedChanged: (v) {
+            setState(() => _futureTransactionsExpanded = v);
+          },
+          subscriberEarliestPurchaseLocalDayById:
+              subscriberEarliestPurchaseDay,
+          onOpenTransaction: (tx) {
+            Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (context) => TransactionDetailScreen(
+                  transaction: tx,
+                ),
+              ),
+            );
+          },
+        ),
     ];
-
-    final subscriberEarliestPurchaseDay =
-        earliestPurchaseLocalDayBySubscriberId(
-      state.grouped.values.expand((e) => e),
-    );
 
     for (final tx in transactions) {
       children.add(
@@ -881,7 +953,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   void _goToDay(String dayKey) {
-    setState(() => _sectionFilter = null);
+    setState(() {
+      _sectionFilter = null;
+      _futureTransactionsExpanded = false;
+    });
     ref.read(transactionsProvider.notifier).setSelectedDayKey(dayKey);
   }
 
@@ -1114,6 +1189,100 @@ String? _nextCalendarDayKey(String dayKey) {
   }
 }
 
+class _FutureTransactionsSection extends StatelessWidget {
+  final List<RcTransaction> transactions;
+  final bool expanded;
+  final ValueChanged<bool> onExpandedChanged;
+  final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
+  final void Function(RcTransaction tx) onOpenTransaction;
+
+  const _FutureTransactionsSection({
+    required this.transactions,
+    required this.expanded,
+    required this.onExpandedChanged,
+    required this.subscriberEarliestPurchaseLocalDayById,
+    required this.onOpenTransaction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => onExpandedChanged(!expanded),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 6, 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'FUTURE TRANSACTIONS',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${transactions.length} scheduled after now',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: AnimatedRotation(
+                        turns: expanded ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        child: Icon(
+                          Icons.expand_more_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (expanded) ...[
+            Divider(
+              height: 1,
+              color: scheme.outlineVariant.withValues(alpha: 0.35),
+            ),
+            for (final tx in transactions)
+              TransactionItem(
+                transaction: tx,
+                subscriberEarliestPurchaseLocalDayById:
+                    subscriberEarliestPurchaseLocalDayById,
+                inSectionCard: true,
+                onTap: () => onOpenTransaction(tx),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _PrevDayRevenueRow extends StatelessWidget {
   final double previousTotal;
   final double currentTotal;
@@ -1148,15 +1317,6 @@ class _PrevDayRevenueRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Icon(icon, size: 18, color: accent),
-        const SizedBox(width: 6),
-        Text(
-          'Prev',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.25,
-          ),
-        ),
         const SizedBox(width: 6),
         DualCurrencyExactText(
           amount: previousTotal,
@@ -1459,7 +1619,7 @@ class _DayTypeCountSummary extends StatelessWidget {
           crossAxisCount: 3,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 1.22,
+          childAspectRatio: 1.45,
           children: [
             _DaySummaryStatCell(
               label: 'Trials',
@@ -1536,6 +1696,7 @@ class _DaySummaryStatCell extends StatelessWidget {
   const _DaySummaryStatCell({
     required this.label,
     required this.count,
+    required this.previousCount,
     required this.filter,
     required this.selected,
     required this.onTap,
@@ -1543,6 +1704,7 @@ class _DaySummaryStatCell extends StatelessWidget {
 
   final String label;
   final int count;
+  final int? previousCount;
   final TransactionDaySectionFilter filter;
   final bool selected;
   final void Function(TransactionDaySectionFilter filter) onTap;
@@ -1564,6 +1726,8 @@ class _DaySummaryStatCell extends StatelessWidget {
             accent.withValues(alpha: 0.28),
             scheme.outlineVariant.withValues(alpha: 0.45),
           );
+    final prev = previousCount;
+    final higherIsBetter = _sectionCountHigherIsBetter(filter);
 
     return Material(
       color: Colors.transparent,
@@ -1599,21 +1763,87 @@ class _DaySummaryStatCell extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  '$count',
-                  textAlign: TextAlign.center,
-                  style: tt.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.6,
-                    height: 1,
-                    color: selected ? accent : scheme.onSurface,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$count',
+                      textAlign: TextAlign.center,
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                        height: 1,
+                        color: selected ? accent : scheme.onSurface,
+                      ),
+                    ),
+                    if (prev != null) ...[
+                      const SizedBox(width: 6),
+                      _DayCountTrendRow(
+                        current: count,
+                        previous: prev,
+                        higherIsBetter: higherIsBetter,
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DayCountTrendRow extends StatelessWidget {
+  final int current;
+  final int previous;
+  final bool higherIsBetter;
+
+  const _DayCountTrendRow({
+    required this.current,
+    required this.previous,
+    required this.higherIsBetter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final delta = current - previous;
+    final IconData icon;
+    final Color accent;
+    if (delta == 0) {
+      icon = Icons.horizontal_rule_rounded;
+      accent = theme.colorScheme.onSurfaceVariant;
+    } else {
+      final up = delta > 0;
+      icon = up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded;
+      final improved = higherIsBetter ? up : !up;
+      accent = improved
+          ? (theme.brightness == Brightness.dark
+              ? const Color(0xFF81C784)
+              : const Color(0xFF2E7D32))
+          : theme.colorScheme.error;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(icon, size: 14, color: accent),
+        const SizedBox(width: 4),
+        Text(
+          '$previous',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }
