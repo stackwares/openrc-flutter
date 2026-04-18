@@ -184,3 +184,47 @@ String localTodayDayKey() {
   final n = DateTime.now();
   return DateFormat('yyyy-MM-dd').format(DateTime(n.year, n.month, n.day));
 }
+
+/// Day header grid categories (Transactions day view + Realtime).
+enum TransactionDaySectionFilter {
+  trial,
+  conversion,
+  renewal,
+  subscription,
+  refunded,
+  cancelled,
+}
+
+bool transactionMatchesSectionFilter(
+  RcTransaction tx,
+  TransactionDaySectionFilter filter,
+) {
+  final t = tx.type;
+  switch (filter) {
+    case TransactionDaySectionFilter.trial:
+      return t == RcTransactionType.trial;
+    case TransactionDaySectionFilter.conversion:
+      return t == RcTransactionType.conversion;
+    case TransactionDaySectionFilter.renewal:
+      return t == RcTransactionType.renewal;
+    case TransactionDaySectionFilter.subscription:
+      return t == RcTransactionType.newSubscription ||
+          t == RcTransactionType.oneTimePurchase;
+    case TransactionDaySectionFilter.refunded:
+      return t == RcTransactionType.refund;
+    case TransactionDaySectionFilter.cancelled:
+      return tx.isCancelledSummaryBadge;
+  }
+}
+
+/// Label text matching the summary grid cells.
+String transactionDaySectionGridLabel(TransactionDaySectionFilter filter) {
+  return switch (filter) {
+    TransactionDaySectionFilter.trial => 'Trials',
+    TransactionDaySectionFilter.conversion => 'Conversions',
+    TransactionDaySectionFilter.renewal => 'Renewals',
+    TransactionDaySectionFilter.subscription => 'Purchases',
+    TransactionDaySectionFilter.refunded => 'Refunds',
+    TransactionDaySectionFilter.cancelled => 'Cancellations',
+  };
+}

@@ -20,6 +20,7 @@ import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
+import 'package:revenuecat/features/transactions/realtime_section_transactions_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/realtime_revenue_insights_list.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
@@ -120,7 +121,7 @@ List<RcTransaction> _collectFutureTransactions({
   for (final tx in groupedForList.values.expand((e) => e)) {
     if (!_isPurchaseInstantInFuture(tx)) continue;
     if (sectionFilter != null &&
-        !_transactionMatchesSectionFilter(tx, sectionFilter)) {
+        !transactionMatchesSectionFilter(tx, sectionFilter)) {
       continue;
     }
     final k = rcTransactionDedupKey(tx);
@@ -608,7 +609,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     var transactions = sectionFiltered
         ? allForDay
               .where(
-                (tx) => _transactionMatchesSectionFilter(tx, _sectionFilter!),
+                (tx) => transactionMatchesSectionFilter(tx, _sectionFilter!),
               )
               .toList()
         : allForDay;
@@ -1151,9 +1152,20 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                           transactions: txs,
                           previousDayTransactions: null,
                           selectedFilter: null,
-                          onSelectFilter: (_) {},
+                          onSelectFilter: (f) {
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (ctx) =>
+                                    RealtimeSectionTransactionsScreen(
+                                  windowTransactions: txs,
+                                  filter: f,
+                                ),
+                              ),
+                            );
+                          },
                           onClearFilter: null,
-                          enableFilterTaps: false,
+                          enableFilterTaps: true,
+                          allowTapWhenEmpty: true,
                         ),
                       ],
                     ),
@@ -1403,38 +1415,6 @@ _DayTxnCounts _aggregateDayCounts(List<RcTransaction> transactions) {
   );
 }
 
-/// Day header pills for filtering the transaction list.
-enum TransactionDaySectionFilter {
-  trial,
-  conversion,
-  renewal,
-  subscription,
-  refunded,
-  cancelled,
-}
-
-bool _transactionMatchesSectionFilter(
-  RcTransaction tx,
-  TransactionDaySectionFilter filter,
-) {
-  final t = tx.type;
-  switch (filter) {
-    case TransactionDaySectionFilter.trial:
-      return t == RcTransactionType.trial;
-    case TransactionDaySectionFilter.conversion:
-      return t == RcTransactionType.conversion;
-    case TransactionDaySectionFilter.renewal:
-      return t == RcTransactionType.renewal;
-    case TransactionDaySectionFilter.subscription:
-      return t == RcTransactionType.newSubscription ||
-          t == RcTransactionType.oneTimePurchase;
-    case TransactionDaySectionFilter.refunded:
-      return t == RcTransactionType.refund;
-    case TransactionDaySectionFilter.cancelled:
-      return tx.isCancelledSummaryBadge;
-  }
-}
-
 RcTransactionType _sectionFilterAccentType(TransactionDaySectionFilter f) {
   switch (f) {
     case TransactionDaySectionFilter.trial:
@@ -1479,6 +1459,9 @@ class _DayTypeCountSummary extends StatelessWidget {
   final VoidCallback? onClearFilter;
   final bool enableFilterTaps;
 
+  /// When true, cells call [onSelectFilter] even if the count is zero (e.g. Realtime drill-down).
+  final bool allowTapWhenEmpty;
+
   const _DayTypeCountSummary({
     required this.transactions,
     required this.previousDayTransactions,
@@ -1486,6 +1469,7 @@ class _DayTypeCountSummary extends StatelessWidget {
     required this.onSelectFilter,
     required this.onClearFilter,
     this.enableFilterTaps = true,
+    this.allowTapWhenEmpty = false,
   });
 
   @override
@@ -1514,6 +1498,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               filter: TransactionDaySectionFilter.trial,
               selected: selectedFilter == TransactionDaySectionFilter.trial,
               allowTap: enableFilterTaps,
+              allowTapWhenEmpty: allowTapWhenEmpty,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1524,6 +1509,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               selected:
                   selectedFilter == TransactionDaySectionFilter.conversion,
               allowTap: enableFilterTaps,
+              allowTapWhenEmpty: allowTapWhenEmpty,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1533,6 +1519,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               filter: TransactionDaySectionFilter.renewal,
               selected: selectedFilter == TransactionDaySectionFilter.renewal,
               allowTap: enableFilterTaps,
+              allowTapWhenEmpty: allowTapWhenEmpty,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1543,6 +1530,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               selected:
                   selectedFilter == TransactionDaySectionFilter.subscription,
               allowTap: enableFilterTaps,
+              allowTapWhenEmpty: allowTapWhenEmpty,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1552,6 +1540,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               filter: TransactionDaySectionFilter.refunded,
               selected: selectedFilter == TransactionDaySectionFilter.refunded,
               allowTap: enableFilterTaps,
+              allowTapWhenEmpty: allowTapWhenEmpty,
               onTap: onSelectFilter,
             ),
             _DaySummaryStatCell(
@@ -1561,6 +1550,7 @@ class _DayTypeCountSummary extends StatelessWidget {
               filter: TransactionDaySectionFilter.cancelled,
               selected: selectedFilter == TransactionDaySectionFilter.cancelled,
               allowTap: enableFilterTaps,
+              allowTapWhenEmpty: allowTapWhenEmpty,
               onTap: onSelectFilter,
             ),
           ],
@@ -1593,6 +1583,7 @@ class _DaySummaryStatCell extends StatelessWidget {
     required this.filter,
     required this.selected,
     required this.allowTap,
+    required this.allowTapWhenEmpty,
     required this.onTap,
   });
 
@@ -1602,6 +1593,7 @@ class _DaySummaryStatCell extends StatelessWidget {
   final TransactionDaySectionFilter filter;
   final bool selected;
   final bool allowTap;
+  final bool allowTapWhenEmpty;
   final void Function(TransactionDaySectionFilter filter) onTap;
 
   @override
@@ -1623,11 +1615,12 @@ class _DaySummaryStatCell extends StatelessWidget {
           );
     final prev = previousCount;
     final higherIsBetter = _sectionCountHigherIsBetter(filter);
+    final tappable = allowTap && (enabled || allowTapWhenEmpty);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: allowTap && enabled ? () => onTap(filter) : null,
+        onTap: tappable ? () => onTap(filter) : null,
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
@@ -1639,7 +1632,7 @@ class _DaySummaryStatCell extends StatelessWidget {
             color: fill,
           ),
           child: Opacity(
-            opacity: enabled ? 1 : 0.38,
+            opacity: (enabled || allowTapWhenEmpty) ? 1 : 0.38,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
