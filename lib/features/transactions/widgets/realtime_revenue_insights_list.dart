@@ -288,6 +288,8 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
     );
 
     if (asModalEntry) {
+      final previewApps = data.topApps.take(6).toList();
+      final previewCountries = data.topCountries.take(6).toList();
       return Card(
         margin: cardMargin,
         clipBehavior: Clip.antiAlias,
@@ -298,36 +300,55 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
             compactRevenueAmounts: useCompactRevenue,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Text(
-                    'REVENUE INSIGHTS',
-                    style: headerStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _CollapsedStoreShareRow(
-                        scheme: scheme,
-                        applePct: data.applePct,
-                        googlePct: data.googlePct,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'REVENUE INSIGHTS',
+                        style: headerStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: scheme.onSurfaceVariant,
+                    ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _CollapsedStoreShareRow(
+                            scheme: scheme,
+                            applePct: data.applePct,
+                            googlePct: data.googlePct,
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+                if (previewApps.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _CollapsedTopAppsIconRow(
+                    apps: previewApps,
+                    appIconOverrides: appIconOverrides,
+                    scheme: scheme,
+                  ),
+                ],
+                if (previewCountries.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _CollapsedTopCountriesFlagRow(countries: previewCountries),
+                ],
               ],
             ),
           ),
@@ -363,6 +384,131 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         style: context.textTheme.bodySmall?.copyWith(
           color: context.colorScheme.onSurfaceVariant,
         ),
+      ),
+    );
+  }
+}
+
+/// Collapsed preview: ~2× smaller than 26px insight avatars.
+const double _kCollapsedInsightAppIconSize = 13;
+const double _kCollapsedInsightEmojiFont = 11;
+
+/// Top apps on the collapsed card: ~½-size icons with revenue % beside each.
+class _CollapsedTopAppsIconRow extends StatelessWidget {
+  static const double _radius = 3;
+
+  final List<RevenueInsightAppLine> apps;
+  final Map<String, String> appIconOverrides;
+  final ColorScheme scheme;
+
+  const _CollapsedTopAppsIconRow({
+    required this.apps,
+    required this.appIconOverrides,
+    required this.scheme,
+  });
+
+  static TextStyle? _pctStyle(TextTheme tt, ColorScheme scheme) =>
+      tt.labelSmall?.copyWith(
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
+        color: scheme.onSurfaceVariant,
+        height: 1.05,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final pctStyle = _pctStyle(tt, scheme);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          for (var i = 0; i < apps.length; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TransactionLeadingAvatar(
+                  imageUrl: apps[i].appId != null
+                      ? appIconOverrides[apps[i].appId]
+                      : null,
+                  size: _kCollapsedInsightAppIconSize,
+                  borderRadius: _radius,
+                  tintColor: scheme.onSurfaceVariant,
+                  fallback: Icon(
+                    Icons.apps_outlined,
+                    size: 8,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${apps[i].pct.toStringAsFixed(1)}%',
+                  style: pctStyle,
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Top countries on the collapsed card: ~½-size emoji with revenue % beside each.
+class _CollapsedTopCountriesFlagRow extends StatelessWidget {
+  final List<RevenueInsightCountryLine> countries;
+
+  const _CollapsedTopCountriesFlagRow({required this.countries});
+
+  static TextStyle? _pctStyle(TextTheme tt, ColorScheme scheme) =>
+      tt.labelSmall?.copyWith(
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
+        color: scheme.onSurfaceVariant,
+        height: 1.05,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final pctStyle = _pctStyle(tt, scheme);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          for (var i = 0; i < countries.length; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  countryInsightLeadingEmoji(countries[i].countryKey),
+                  style: const TextStyle(
+                    fontSize: _kCollapsedInsightEmojiFont,
+                    height: 1.05,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${countries[i].pct.toStringAsFixed(1)}%',
+                  style: pctStyle,
+                  maxLines: 1,
+                ),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
