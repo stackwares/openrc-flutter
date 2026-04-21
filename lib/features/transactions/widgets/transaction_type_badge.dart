@@ -134,6 +134,63 @@ Color transactionTypeAccentColor(
   }
 }
 
+/// Accent for customer history / activity [event] strings (e.g. `REFUND`, `CANCELLATION`,
+/// `INITIAL_PURCHASE`, `RENEWAL`), matching [transactionTypeAccentColor] and
+/// [TransactionTypeBadge] (cancel / refund list-row behavior).
+Color transactionHistoryEventAccentColor(
+  String rawType,
+  BuildContext context,
+) {
+  var t = rawType.trim().toUpperCase();
+  t = t.replaceAll(RegExp(r'\s+'), '_');
+  if (t.isEmpty) {
+    return context.colorScheme.onSurfaceVariant;
+  }
+
+  if (t.contains('UNCANCELLATION') || t.contains('REACTIVAT')) {
+    return transactionTypeAccentColor(RcTransactionType.renewal, context);
+  }
+  if (t.contains('REFUND')) {
+    return transactionTypeAccentColor(RcTransactionType.refund, context);
+  }
+  if (t.contains('CANCELLATION') ||
+      t.contains('EXPIRATION') ||
+      t == 'EXPIRED' ||
+      (t.contains('CANCEL') && !t.contains('UNCANCELLATION'))) {
+    return Colors.deepOrange;
+  }
+  if (t.contains('CONVERSION') || t.contains('CONVERTED')) {
+    return transactionTypeAccentColor(RcTransactionType.conversion, context);
+  }
+  if (t.contains('RENEWAL') || t == 'RENEW' || t.contains('RENEWED')) {
+    return transactionTypeAccentColor(RcTransactionType.renewal, context);
+  }
+  if (t.contains('TRIAL')) {
+    return transactionTypeAccentColor(RcTransactionType.trial, context);
+  }
+  if (t.contains('PURCHASE') ||
+      t.contains('NON_RENEWING') ||
+      t.contains('INITIAL') ||
+      t.contains('ONE_TIME') ||
+      t.contains('NEW_SUBSCRIPTION') ||
+      t.contains('PRODUCT_CHANGE') ||
+      t.contains('LIFETIME') ||
+      t.contains('NON_CONSUMABLE') ||
+      t.contains('CONSUMABLE') ||
+      t.contains('IAP') ||
+      t.contains('PROMO')) {
+    return transactionTypeAccentColor(RcTransactionType.newSubscription, context);
+  }
+  if (t.contains('EXTENDED')) {
+    return transactionTypeAccentColor(RcTransactionType.renewal, context);
+  }
+  if (t.contains('SUBSCRIPTION') && t.contains('CONVERT')) {
+    return transactionTypeAccentColor(RcTransactionType.conversion, context);
+  }
+
+  return context.colorScheme.onSurfaceVariant;
+}
+
 /// Compact pill label for [RcTransaction.type] (e.g. plural labels on detail).
 ///
 /// When [useHeaderPillStyle] is true (list rows on the transactions screen),

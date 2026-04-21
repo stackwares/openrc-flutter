@@ -2,7 +2,7 @@
 /// `{name...}.{entitlement}.{sub|iap}.{period}.{offer_flag}`
 /// where [name] may contain additional `.` segments.
 ///
-/// Titles are only ever **Monthly**, **Weekly**, or **Annual**, optionally
+/// Titles are **Monthly**, **Weekly**, **Annual**, or **Lifetime**, optionally
 /// suffixed with ** Offer**. Segment suffixes like `:base` / `_base` / `-base`
 /// are stripped before interpreting the period.
 String productIdentifierDisplayTitle(
@@ -78,13 +78,22 @@ bool _isOfferSegment(String raw) {
   return offer.contains(s);
 }
 
-/// Only [Monthly], [Weekly], or [Annual].
+/// [Monthly], [Weekly], [Annual], or [Lifetime].
 String _periodToStrictLabel(String raw) {
   var key = _stripBaseArtifacts(raw).toLowerCase().replaceAll('_', '');
   if (key.isEmpty) return 'Monthly';
 
   const weeklyExact = {'weekly', 'week', 'w1'};
   const monthlyExact = {'monthly', 'month', 'm1', 'p1m', 'everymonth'};
+  /// Non-renewing / permanent access; checked before [annual] heuristics.
+  const lifetimeExact = {
+    'lifetime',
+    'life',
+    'forever',
+    'ltf',
+    'once',
+    'onetime',
+  };
   const annualExact = {
     'annual',
     'yearly',
@@ -94,21 +103,20 @@ String _periodToStrictLabel(String raw) {
     'quarterly',
     'semiannual',
     'biannual',
-    'lifetime',
-    'life',
-    'once',
-    'onetime',
   };
 
   if (weeklyExact.contains(key)) return 'Weekly';
   if (monthlyExact.contains(key)) return 'Monthly';
+  if (lifetimeExact.contains(key)) return 'Lifetime';
   if (annualExact.contains(key)) return 'Annual';
 
   if (key.contains('week')) return 'Weekly';
   if (key.contains('month') || key.contains('mth')) return 'Monthly';
+  if (key.contains('lifetime') || key.contains('forever')) {
+    return 'Lifetime';
+  }
   if (key.contains('year') ||
       key.contains('annual') ||
-      key.contains('life') ||
       key.contains('quarter') ||
       key.contains('biannual') ||
       key.contains('semiannual') ||

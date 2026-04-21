@@ -1606,12 +1606,20 @@ Color _daySummaryPlatformDistColor(
     TransactionDaySummaryPlatform.apple => StoreBrandIconColors.appleBlue,
     TransactionDaySummaryPlatform.google => StoreBrandIconColors.androidGreen,
     TransactionDaySummaryPlatform.web => scheme.tertiary,
-    TransactionDaySummaryPlatform.test => const Color(0xFFFFA726),
     TransactionDaySummaryPlatform.other => scheme.outline,
   };
 }
 
-/// Colorized share percentages per platform (fixed order; omitted when count is 0).
+IconData _daySummaryPlatformDistIcon(TransactionDaySummaryPlatform p) {
+  return switch (p) {
+    TransactionDaySummaryPlatform.apple => Icons.apple,
+    TransactionDaySummaryPlatform.google => Icons.android_rounded,
+    TransactionDaySummaryPlatform.web => Icons.language_rounded,
+    TransactionDaySummaryPlatform.other => Icons.storefront_outlined,
+  };
+}
+
+/// Share per platform: store icon + colorized % (fixed order; omitted when count is 0).
 class _DaySummaryPlatformShare extends StatelessWidget {
   const _DaySummaryPlatformShare({required this.platformCounts});
 
@@ -1651,12 +1659,23 @@ class _DaySummaryPlatformShare extends StatelessWidget {
         ));
       }
       final pct = ((count * 100) / total).round().clamp(0, 100);
+      final tint = _daySummaryPlatformDistColor(p, scheme);
       children.add(
-        Text(
-          '$pct%',
-          style: basePctStyle?.copyWith(
-            color: _daySummaryPlatformDistColor(p, scheme),
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              _daySummaryPlatformDistIcon(p),
+              size: 12,
+              color: tint,
+            ),
+            const SizedBox(width: 3),
+            Text(
+              '$pct%',
+              style: basePctStyle?.copyWith(color: tint),
+            ),
+          ],
         ),
       );
     }

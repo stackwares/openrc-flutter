@@ -250,18 +250,16 @@ bool transactionMatchesPlatformFilter(
 }
 
 /// Single store bucket per transaction for day-summary **count** distribution.
-/// Sandbox rows are grouped under [test]; web-style billing uses the same
-/// heuristic as [TransactionPlatformFilter.web].
+/// Sandbox rows are omitted from distribution ([platformCountsByDaySection] skips them).
+/// Web-style billing uses the same heuristic as [TransactionPlatformFilter.web].
 enum TransactionDaySummaryPlatform {
   apple,
   google,
   web,
-  test,
   other,
 }
 
 TransactionDaySummaryPlatform transactionDaySummaryPlatform(RcTransaction tx) {
-  if (tx.isSandbox == true) return TransactionDaySummaryPlatform.test;
   switch (classifyStore(tx.storeForCommission)) {
     case StoreCommissionPlatform.apple:
       return TransactionDaySummaryPlatform.apple;
@@ -518,6 +516,7 @@ platformCountsByDaySection(List<RcTransaction> transactions) {
           f: {for (final p in platforms) p: 0},
       };
   for (final tx in transactions) {
+    if (tx.isSandbox == true) continue;
     final bucket = transactionDaySummaryPlatform(tx);
     for (final f in TransactionDaySectionFilter.values) {
       if (transactionMatchesSectionFilter(tx, f)) {

@@ -74,3 +74,28 @@ String formatRelativeTimeShort(String? dateStr) {
   if (months < 12) return '${months}mon ago';
   return '${months ~/ 12}y ago';
 }
+
+/// Shown next to an entitlement expiry: future `in 3 days` / `in 2h`; past uses
+/// [formatRelativeTimeShort] (`1d ago`, …).
+String formatEntitlementExpiresInLabel(String? dateStr) {
+  if (dateStr == null || dateStr.isEmpty) return '';
+  final dt = DateTime.tryParse(dateStr);
+  if (dt == null) return '';
+
+  final local = dt.toLocal();
+  final now = DateTime.now();
+  if (local.isAfter(now)) {
+    final today = DateTime(now.year, now.month, now.day);
+    final expDay = DateTime(local.year, local.month, local.day);
+    final calDays = expDay.difference(today).inDays;
+    if (calDays >= 1) {
+      if (calDays == 1) return 'in 1 day';
+      return 'in $calDays days';
+    }
+    final until = local.difference(now);
+    if (until.inHours >= 1) return 'in ${until.inHours}h';
+    if (until.inMinutes >= 1) return 'in ${until.inMinutes}m';
+    return 'soon';
+  }
+  return formatRelativeTimeShort(dateStr);
+}

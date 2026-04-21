@@ -356,13 +356,22 @@ class TransactionDetailScreen extends ConsumerWidget {
           appName: tx.app?.name,
           customIconUrl: customIconUrl,
         ).appCardEntrance(delay: nextSectionDelay()),
-        if (detail != null) ...[
-          _SectionHeader(title: 'Info'),
-          _buildInfoSection(
+        if (detail?.history?.isNotEmpty == true ||
+            activity?.events?.isNotEmpty == true) ...[
+          _SectionHeader(
+            title: 'History',
+            trailing: detail != null && detail.dollarsSpent != null
+                ? _buildHistoryHeaderTotalSpent(context, detail)
+                : null,
+          ),
+          _buildHistory(
             context,
-            detail,
             tx,
+            detail?.history,
+            activity?.events,
           ).appCardEntrance(delay: nextSectionDelay()),
+        ],
+        if (detail != null) ...[
           if (detail.subscriptionStatuses?.isNotEmpty == true) ...[
             _SectionHeader(title: 'Entitlements'),
             _buildEntitlements(
@@ -371,6 +380,12 @@ class TransactionDetailScreen extends ConsumerWidget {
               tx,
             ).appCardEntrance(delay: nextSectionDelay()),
           ],
+          _SectionHeader(title: 'Info'),
+          _buildInfoSection(
+            context,
+            detail,
+            tx,
+          ).appCardEntrance(delay: nextSectionDelay()),
           _SectionHeader(title: 'Insights'),
           _buildInsights(
             context,
@@ -386,16 +401,6 @@ class TransactionDetailScreen extends ConsumerWidget {
               tx,
             ).appCardEntrance(delay: nextSectionDelay()),
           ],
-        ],
-        if (detail?.history?.isNotEmpty == true ||
-            activity?.events?.isNotEmpty == true) ...[
-          _SectionHeader(title: 'History'),
-          _buildHistory(
-            context,
-            tx,
-            detail?.history,
-            activity?.events,
-          ).appCardEntrance(delay: nextSectionDelay()),
         ],
         const SizedBox(height: 32),
       ],
@@ -669,10 +674,6 @@ class TransactionDetailScreen extends ConsumerWidget {
         children: statuses.map((s) {
           final isActive = s.isAutoRenewing == true;
           final color = isActive ? Colors.green : Colors.orange;
-          final trialAccent = transactionTypeAccentColor(
-            RcTransactionType.trial,
-            context,
-          );
           return Column(
             children: [
               Padding(
@@ -720,34 +721,31 @@ class TransactionDetailScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                child: Row(
-                  children: [
-                    if (s.isTrial == true)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Container(
-                          padding: TransactionPillStyle.padding,
-                          decoration: TransactionPillStyle.decoration(
-                            trialAccent,
-                          ),
-                          child: Text(
-                            'TRIALS',
-                            style: TransactionPillStyle.textStyle(trialAccent),
+              if (s.expiresDate != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Expires ${_formatDateTime(s.expiresDate!)}',
+                          style: context.textTheme.labelSmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
-                    if (s.expiresDate != null)
+                      const SizedBox(width: 8),
                       Text(
-                        'Expires ${_formatDateTime(s.expiresDate!)}',
+                        formatEntitlementExpiresInLabel(s.expiresDate!),
                         style: context.textTheme.labelSmall?.copyWith(
                           color: context.colorScheme.onSurfaceVariant,
                         ),
+                        textAlign: TextAlign.end,
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               if (s != statuses.last) const _Divider(),
             ],
           );
@@ -932,25 +930,10 @@ class TransactionDetailScreen extends ConsumerWidget {
       );
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: _txCardSurface(context, tx),
-      surfaceTintColor: Colors.transparent,
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 12, 12),
-        child: Column(
-          children: [
-            for (int i = 0; i < items.length; i++)
-              _HistoryTimelineEntry(
-                item: items[i],
-                commissionStore: tx.storeForCommission,
-                isFirst: i == 0,
-                isLast: i == items.length - 1,
-              ),
-          ],
-        ),
-      ),
+    return _ExpandableHistoryListCard(
+      cardColor: _txCardSurface(context, tx),
+      transaction: tx,
+      items: items,
     );
   }
 
@@ -1007,24 +990,134 @@ class TransactionDetailScreen extends ConsumerWidget {
       code.toUpperCase().codeUnits.map((c) => c + 127397),
     );
   }
+
+  /// Right side of the History section header; matches Info → Total Spent.
+  Widget _buildHistoryHeaderTotalSpent(
+    BuildContext context,
+    RcTransactionDetailResponse detail,
+  ) {
+    final spentColor = transactionTypeAccentColor(
+      RcTransactionType.renewal,
+      context,
+    );
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          'Spent ',
+          style: context.textTheme.labelSmall?.copyWith(
+            color: spentColor,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        DualCurrencyExactText(
+          amount: detail.dollarsSpent!,
+          applyBlendedCommission: true,
+          style: context.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: spentColor,
+          ),
+          textAlign: TextAlign.end,
+        ),
+      ],
+    );
+  }
+}
+
+const int _kHistoryInitialVisibleCount = 5;
+
+class _ExpandableHistoryListCard extends StatefulWidget {
+  final Color cardColor;
+  final RcTransaction transaction;
+  final List<_HistoryItem> items;
+
+  const _ExpandableHistoryListCard({
+    required this.cardColor,
+    required this.transaction,
+    required this.items,
+  });
+
+  @override
+  State<_ExpandableHistoryListCard> createState() =>
+      _ExpandableHistoryListCardState();
+}
+
+class _ExpandableHistoryListCardState
+    extends State<_ExpandableHistoryListCard> {
+  bool _showAll = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
+    final total = items.length;
+    final needsToggle = total > _kHistoryInitialVisibleCount;
+    final visible = !_showAll && needsToggle
+        ? items.sublist(0, _kHistoryInitialVisibleCount)
+        : items;
+    final remaining = total - _kHistoryInitialVisibleCount;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: widget.cardColor,
+      surfaceTintColor: Colors.transparent,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 12, 12, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (int i = 0; i < visible.length; i++)
+              _HistoryTimelineEntry(
+                item: visible[i],
+                commissionStore: widget.transaction.storeForCommission,
+                isFirst: i == 0,
+                isLast: i == visible.length - 1,
+              ),
+            if (needsToggle)
+              Center(
+                child: TextButton(
+                  onPressed: () => setState(() => _showAll = !_showAll),
+                  child: Text(
+                    _showAll
+                        ? 'Show less'
+                        : 'Show all ($remaining more)',
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
   final String title;
+  final Widget? trailing;
 
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.title, this.trailing});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        title.toUpperCase(),
-        style: context.textTheme.labelMedium?.copyWith(
-          color: context.colorScheme.primary,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Text(
+              title.toUpperCase(),
+              style: context.textTheme.labelMedium?.copyWith(
+                color: context.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          ?trailing,
+        ],
       ),
     );
   }
@@ -1179,13 +1272,14 @@ class _HistoryTimelineEntry extends ConsumerWidget {
     const dotSize = 12.0;
     const stubH = 10.0;
 
+    final accent = transactionHistoryEventAccentColor(item.title, context);
     final dot = Container(
       width: dotSize,
       height: dotSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: scheme.surface,
-        border: Border.all(color: scheme.primary, width: 2),
+        color: Color.lerp(scheme.surface, accent, 0.18) ?? scheme.surface,
+        border: Border.all(color: accent, width: 2),
       ),
     );
 
@@ -1233,6 +1327,7 @@ class _HistoryTimelineEntry extends ConsumerWidget {
                             _formatEventType(item.title),
                             style: context.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
+                              color: accent,
                             ),
                           ),
                           if (item.subtitle.isNotEmpty) ...[
@@ -1259,6 +1354,7 @@ class _HistoryTimelineEntry extends ConsumerWidget {
                             commissionStore: commissionStore,
                             style: context.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
+                              color: accent,
                             ),
                             textAlign: TextAlign.end,
                           ),
