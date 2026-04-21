@@ -3,9 +3,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 /// Shared motion timing for list and card entrances ([flutter_animate]).
 abstract final class AppMotion {
-  static const Duration duration = Duration(milliseconds: 380);
-  static const int staggerMs = 42;
-  static const int maxStaggerIndex = 28;
+  static const Duration duration = Duration(milliseconds: 320);
+  /// Capped so builder rows that mount while scrolling are not delayed ~1s+.
+  static const int staggerMs = 18;
+  static const int maxStaggerIndex = 8;
   static const Curve curve = Curves.easeOutCubic;
 
   static int cappedIndex(int index) =>

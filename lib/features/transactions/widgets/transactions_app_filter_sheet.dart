@@ -47,6 +47,7 @@ InputDecoration _filterSheetSearchDecoration(ColorScheme scheme, String hint) {
 }
 
 /// Bottom sheet to filter transactions by app, store platform, and country.
+/// Changes apply immediately; dismiss by dragging the sheet or tapping outside.
 Future<void> showTransactionsAppFilterSheet({
   required BuildContext context,
   required Map<String, List<RcTransaction>> filterSource,
@@ -63,12 +64,12 @@ Future<void> showTransactionsAppFilterSheet({
   if (options.isEmpty) return Future.value();
 
   final allKeys = options.map((o) => o.key).toSet();
+  // `null` = no app restriction (treat as “all apps”). Any non-null set is an
+  // exact selection — including `{}` (no apps). Never map empty intersection
+  // back to “all”, or reopening the sheet would wipe the user’s choice.
   final initialSelected = currentIncludeFilter == null
       ? Set<String>.from(allKeys)
-      : () {
-          final i = currentIncludeFilter.intersection(allKeys);
-          return i.isEmpty ? Set<String>.from(allKeys) : i;
-        }();
+      : currentIncludeFilter.intersection(allKeys);
 
   final maxHeight = MediaQuery.sizeOf(context).height * 0.75;
 
@@ -95,8 +96,7 @@ Future<void> showTransactionsAppFilterSheet({
                   currentPlatforms == null || currentPlatforms.isEmpty
                   ? <TransactionPlatformFilter>{}
                   : Set<TransactionPlatformFilter>.from(currentPlatforms),
-              onApply: (selected, countries, platforms) {
-                Navigator.pop(sheetContext);
+              onFiltersChanged: (selected, countries, platforms) {
                 final apps = selected.length == allKeys.length ? null : selected;
                 onApply(apps, countries, platforms);
               },
@@ -119,7 +119,7 @@ class TransactionsAppFilterModal extends ConsumerStatefulWidget {
     Set<String>? countryCodes,
     Set<TransactionPlatformFilter>? platforms,
   )
-  onApply;
+  onFiltersChanged;
 
   const TransactionsAppFilterModal({
     super.key,
@@ -128,7 +128,7 @@ class TransactionsAppFilterModal extends ConsumerStatefulWidget {
     required this.initialSelected,
     required this.initialCountrySelection,
     required this.initialPlatformSelection,
-    required this.onApply,
+    required this.onFiltersChanged,
   });
 
   @override
@@ -152,6 +152,18 @@ class _TransactionsAppFilterModalState
     _platformSelection =
         Set<TransactionPlatformFilter>.from(widget.initialPlatformSelection);
     _countrySelection = Set<String>.from(widget.initialCountrySelection);
+  }
+
+  void _notifyParent() {
+    widget.onFiltersChanged(
+      Set<String>.from(_selected),
+      _countrySelection.isEmpty
+          ? null
+          : Set<String>.from(_countrySelection),
+      _platformSelection.isEmpty
+          ? null
+          : Set<TransactionPlatformFilter>.from(_platformSelection),
+    );
   }
 
   List<AppFilterOption> get _appsMatchingSearch {
@@ -274,7 +286,10 @@ class _TransactionsAppFilterModalState
                   TextButton(
                     onPressed: _platformSelection.isEmpty
                         ? null
-                        : () => setState(() => _platformSelection = {}),
+                        : () {
+                            setState(() => _platformSelection = {});
+                            _notifyParent();
+                          },
                     child: const Text('Reset'),
                   ),
                 ],
@@ -310,6 +325,7 @@ class _TransactionsAppFilterModalState
                             _platformSelection.remove(p.filter);
                           }
                         });
+                        _notifyParent();
                       },
                     ),
                 ],
@@ -346,32 +362,7 @@ class _TransactionsAppFilterModalState
         ),
         const SizedBox(height: 8),
         Expanded(child: _buildPanelBody(theme, scheme)),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Row(
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () => widget.onApply(
-                  Set<String>.from(_selected),
-                  _countrySelection.isEmpty
-                      ? null
-                      : Set<String>.from(_countrySelection),
-                  _platformSelection.isEmpty
-                      ? null
-                      : Set<TransactionPlatformFilter>.from(
-                          _platformSelection,
-                        ),
-                ),
-                child: const Text('Apply'),
-              ),
-            ],
-          ),
-        ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -403,15 +394,21 @@ class _TransactionsAppFilterModalState
                     onPressed:
                         _allAppsSelected || widget.allKeys.isEmpty
                         ? null
-                        : () => setState(
-                            () => _selected = Set<String>.from(widget.allKeys),
-                          ),
+                        : () {
+                            setState(
+                              () => _selected = Set<String>.from(widget.allKeys),
+                            );
+                            _notifyParent();
+                          },
                     child: const Text('All'),
                   ),
                   TextButton(
                     onPressed: _selected.isEmpty
                         ? null
-                        : () => setState(() => _selected = {}),
+                        : () {
+                            setState(() => _selected = {});
+                            _notifyParent();
+                          },
                     child: const Text('None'),
                   ),
                 ],
@@ -454,6 +451,7 @@ class _TransactionsAppFilterModalState
                               _selected.remove(opt.key);
                             }
                           });
+                          _notifyParent();
                         },
                       ),
                   ],
@@ -484,7 +482,10 @@ class _TransactionsAppFilterModalState
                   TextButton(
                     onPressed: _countrySelection.isEmpty
                         ? null
-                        : () => setState(() => _countrySelection = {}),
+                        : () {
+                            setState(() => _countrySelection = {});
+                            _notifyParent();
+                          },
                     child: const Text('Clear'),
                   ),
                 ],
@@ -523,6 +524,7 @@ class _TransactionsAppFilterModalState
                               _countrySelection.remove('__');
                             }
                           });
+                          _notifyParent();
                         },
                       ),
                     ..._countriesMatchingSearch.map((e) {
@@ -543,6 +545,7 @@ class _TransactionsAppFilterModalState
                               _countrySelection.remove(code);
                             }
                           });
+                          _notifyParent();
                         },
                       );
                     }),

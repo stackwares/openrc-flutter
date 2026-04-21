@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
+import 'package:revenuecat/models/transaction_list_sort_mode.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 
 /// Background preload pages after the first fetch (Revenue tab progress).
@@ -248,6 +249,33 @@ bool transactionMatchesPlatformFilter(
   return false;
 }
 
+/// Single store bucket per transaction for day-summary **count** distribution.
+/// Sandbox rows are grouped under [test]; web-style billing uses the same
+/// heuristic as [TransactionPlatformFilter.web].
+enum TransactionDaySummaryPlatform {
+  apple,
+  google,
+  web,
+  test,
+  other,
+}
+
+TransactionDaySummaryPlatform transactionDaySummaryPlatform(RcTransaction tx) {
+  if (tx.isSandbox == true) return TransactionDaySummaryPlatform.test;
+  switch (classifyStore(tx.storeForCommission)) {
+    case StoreCommissionPlatform.apple:
+      return TransactionDaySummaryPlatform.apple;
+    case StoreCommissionPlatform.google:
+      return TransactionDaySummaryPlatform.google;
+    case StoreCommissionPlatform.other:
+      break;
+  }
+  if (_transactionStoreLooksLikeWebBilling(tx)) {
+    return TransactionDaySummaryPlatform.web;
+  }
+  return TransactionDaySummaryPlatform.other;
+}
+
 Map<String, List<RcTransaction>> filteredGroupedByTransactionMeta(
   Map<String, List<RcTransaction>> grouped, {
   Set<String>? countryCodes,
@@ -279,6 +307,54 @@ Map<String, double> dailyTotalsForGrouped(
     totals[entry.key] = netRevenueSum(entry.value, commission);
   }
   return totals;
+}
+
+int _transactionPurchaseDateMs(RcTransaction tx) {
+  final s = tx.purchaseDate?.trim();
+  if (s == null || s.isEmpty) return 0;
+  return DateTime.tryParse(s)?.millisecondsSinceEpoch ?? 0;
+}
+
+/// Sorts [list] in place according to [mode]. Uses [RcTransaction.tileDisplayRevenue]
+/// for amount modes (matches list tile amounts, including refund display rules).
+void sortMutableTransactionList(
+  List<RcTransaction> list,
+  TransactionListSortMode mode,
+) {
+  switch (mode) {
+    case TransactionListSortMode.purchaseNewestFirst:
+      list.sort(
+        (a, b) => _transactionPurchaseDateMs(b).compareTo(
+          _transactionPurchaseDateMs(a),
+        ),
+      );
+    case TransactionListSortMode.purchaseOldestFirst:
+      list.sort(
+        (a, b) => _transactionPurchaseDateMs(a).compareTo(
+          _transactionPurchaseDateMs(b),
+        ),
+      );
+    case TransactionListSortMode.revenueHighToLow:
+      list.sort((a, b) {
+        final cmp = (b.tileDisplayRevenue ?? 0.0).compareTo(
+          a.tileDisplayRevenue ?? 0.0,
+        );
+        if (cmp != 0) return cmp;
+        return _transactionPurchaseDateMs(b).compareTo(
+          _transactionPurchaseDateMs(a),
+        );
+      });
+    case TransactionListSortMode.revenueLowToHigh:
+      list.sort((a, b) {
+        final cmp = (a.tileDisplayRevenue ?? 0.0).compareTo(
+          b.tileDisplayRevenue ?? 0.0,
+        );
+        if (cmp != 0) return cmp;
+        return _transactionPurchaseDateMs(b).compareTo(
+          _transactionPurchaseDateMs(a),
+        );
+      });
+  }
 }
 
 String appKeyForTransaction(RcTransaction tx) {
@@ -429,6 +505,27 @@ bool transactionMatchesSectionFilter(
     case TransactionDaySectionFilter.cancelled:
       return tx.isCancelledSummaryBadge;
   }
+}
+
+/// Per–section-filter platform counts for the day summary grid (a row may match
+/// more than one section, same as the headline counts).
+Map<TransactionDaySectionFilter, Map<TransactionDaySummaryPlatform, int>>
+platformCountsByDaySection(List<RcTransaction> transactions) {
+  final platforms = TransactionDaySummaryPlatform.values;
+  final out =
+      <TransactionDaySectionFilter, Map<TransactionDaySummaryPlatform, int>>{
+        for (final f in TransactionDaySectionFilter.values)
+          f: {for (final p in platforms) p: 0},
+      };
+  for (final tx in transactions) {
+    final bucket = transactionDaySummaryPlatform(tx);
+    for (final f in TransactionDaySectionFilter.values) {
+      if (transactionMatchesSectionFilter(tx, f)) {
+        out[f]![bucket] = out[f]![bucket]! + 1;
+      }
+    }
+  }
+  return out;
 }
 
 /// Label text matching the summary grid cells.

@@ -232,7 +232,6 @@ class TransactionDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(
           _transactionDetailAppBarTitle(transaction),
-          style: context.textTheme.titleMedium,
           overflow: TextOverflow.ellipsis,
         ),
         actions: [

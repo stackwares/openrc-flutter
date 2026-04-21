@@ -51,10 +51,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           rangeLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.1,
-          ),
         ),
         bottom: state.isLoading
             ? PreferredSize(

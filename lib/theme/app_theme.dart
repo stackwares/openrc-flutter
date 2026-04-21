@@ -2,6 +2,8 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 
 abstract class AppTheme {
+  /// AppBar titles: plain [Text] in each screen — no per-title [TextStyle];
+  /// uses Flex + Material 3 default [AppBarTheme] / framework fallbacks.
   static ThemeData light(FlexScheme scheme) => FlexThemeData.light(
     scheme: scheme,
     surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,

@@ -6,9 +6,11 @@ import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
+import 'package:revenuecat/features/transactions/widgets/transaction_list_sort_menu.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_account_projects_provider.dart';
+import 'package:revenuecat/services/transaction_list_sort_store.dart';
 
 /// Lists transactions in the Revenue tab window for one [TransactionDaySectionFilter] category.
 class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
@@ -52,17 +54,12 @@ class _RealtimeSectionTransactionsScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final listSort = ref.watch(transactionListSortProvider);
     final appFiltered = _appFilteredWindow();
     final filtered = appFiltered
         .where((t) => transactionMatchesSectionFilter(t, widget.filter))
         .toList();
-    filtered.sort((a, b) {
-      final ma =
-          DateTime.tryParse(a.purchaseDate ?? '')?.millisecondsSinceEpoch ?? 0;
-      final mb =
-          DateTime.tryParse(b.purchaseDate ?? '')?.millisecondsSinceEpoch ?? 0;
-      return mb.compareTo(ma);
-    });
+    sortMutableTransactionList(filtered, listSort);
 
     final tenureMap =
         earliestPurchaseLocalDayBySubscriberId(widget.windowTransactions);
@@ -99,12 +96,7 @@ class _RealtimeSectionTransactionsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              heading,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text(heading),
             Text(
               kRealtimeWindowSubtitle,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -115,6 +107,7 @@ class _RealtimeSectionTransactionsScreenState
           ],
         ),
         actions: [
+          const TransactionListSortMenuButton(),
           if (_appIncludeFilter != null ||
               (_countryFilter != null && _countryFilter!.isNotEmpty) ||
               (_platformFilter != null && _platformFilter!.isNotEmpty))

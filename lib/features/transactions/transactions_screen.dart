@@ -9,12 +9,15 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
+import 'package:revenuecat/features/transactions/widgets/transaction_list_sort_menu.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:revenuecat/services/transaction_list_sort_store.dart';
 import 'package:revenuecat/services/rc_account_projects_provider.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
@@ -517,7 +520,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final platformFilter = ref.watch(transactionsPlatformFilterProvider);
     final accountProjects =
         ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
-    final theme = Theme.of(context);
     final dateLabel = _dayHeaderDateLabel(state.selectedDayKey);
     final dayTxs = state.grouped[state.selectedDayKey] ?? [];
     final dayFilterSource = <String, List<RcTransaction>>{
@@ -545,10 +547,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.1,
-          ),
         ),
         actions: [
           if (filtersActive)
@@ -557,6 +555,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               tooltip: 'Clear filters',
               onPressed: _clearTransactionFilters,
             ),
+          const TransactionListSortMenuButton(),
           IconButton(
             icon: Icon(
               Icons.filter_list,
@@ -588,6 +587,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   Widget _buildDayTab(BuildContext context, TransactionsState state) {
+    final listSort = ref.watch(transactionListSortProvider);
     final commission = ref.watch(commissionSettingsProvider);
     final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
     final countryFilter = ref.watch(transactionsCountryFilterProvider);
@@ -678,6 +678,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     var transactions = allForDayForMetrics
         .where((tx) => !viewingToday || !_isPurchaseInstantInFuture(tx))
         .toList();
+    sortMutableTransactionList(transactions, listSort);
 
     final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
@@ -1040,16 +1041,11 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         centerTitle: false,
-        toolbarHeight: 56,
         title: Text(
           'Revenue',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.1,
-          ),
         ),
         actions: [
           if (filtersActive)
@@ -1602,6 +1598,84 @@ bool _sectionCountHigherIsBetter(TransactionDaySectionFilter filter) {
       filter != TransactionDaySectionFilter.cancelled;
 }
 
+Color _daySummaryPlatformDistColor(
+  TransactionDaySummaryPlatform p,
+  ColorScheme scheme,
+) {
+  return switch (p) {
+    TransactionDaySummaryPlatform.apple => StoreBrandIconColors.appleBlue,
+    TransactionDaySummaryPlatform.google => StoreBrandIconColors.androidGreen,
+    TransactionDaySummaryPlatform.web => scheme.tertiary,
+    TransactionDaySummaryPlatform.test => const Color(0xFFFFA726),
+    TransactionDaySummaryPlatform.other => scheme.outline,
+  };
+}
+
+/// Colorized share percentages per platform (fixed order; omitted when count is 0).
+class _DaySummaryPlatformShare extends StatelessWidget {
+  const _DaySummaryPlatformShare({required this.platformCounts});
+
+  final Map<TransactionDaySummaryPlatform, int> platformCounts;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final total = TransactionDaySummaryPlatform.values.fold<int>(
+      0,
+      (s, p) => s + (platformCounts[p] ?? 0),
+    );
+    if (total <= 0) return const SizedBox.shrink();
+
+    final dotStyle = tt.labelSmall?.copyWith(
+      color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
+      fontSize: 10,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+    final basePctStyle = tt.labelSmall?.copyWith(
+      fontSize: 10,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+    final children = <Widget>[];
+    for (final p in TransactionDaySummaryPlatform.values) {
+      final count = platformCounts[p] ?? 0;
+      if (count <= 0) continue;
+      if (children.isNotEmpty) {
+        children.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Text('·', style: dotStyle),
+        ));
+      }
+      final pct = ((count * 100) / total).round().clamp(0, 100);
+      children.add(
+        Text(
+          '$pct%',
+          style: basePctStyle?.copyWith(
+            color: _daySummaryPlatformDistColor(p, scheme),
+          ),
+        ),
+      );
+    }
+
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 0,
+        runSpacing: 2,
+        children: children,
+      ),
+    );
+  }
+}
+
 class _DayTypeCountSummary extends StatelessWidget {
   final List<RcTransaction> transactions;
   final List<RcTransaction>? previousDayTransactions;
@@ -1626,6 +1700,7 @@ class _DayTypeCountSummary extends StatelessWidget {
     final p = previousDayTransactions != null
         ? _aggregateDayCounts(previousDayTransactions!)
         : null;
+    final platformBySection = platformCountsByDaySection(transactions);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1636,7 +1711,7 @@ class _DayTypeCountSummary extends StatelessWidget {
           crossAxisCount: 3,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
-          childAspectRatio: 1.45,
+          childAspectRatio: 1.05,
           children: [
             _DaySummaryStatCell(
               label: 'Trials',
@@ -1646,6 +1721,8 @@ class _DayTypeCountSummary extends StatelessWidget {
               selected: selectedFilters.contains(TransactionDaySectionFilter.trial),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
+              platformCounts:
+                  platformBySection[TransactionDaySectionFilter.trial]!,
             ),
             _DaySummaryStatCell(
               label: 'Conversions',
@@ -1657,6 +1734,8 @@ class _DayTypeCountSummary extends StatelessWidget {
               ),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
+              platformCounts:
+                  platformBySection[TransactionDaySectionFilter.conversion]!,
             ),
             _DaySummaryStatCell(
               label: 'Renewals',
@@ -1666,6 +1745,8 @@ class _DayTypeCountSummary extends StatelessWidget {
               selected: selectedFilters.contains(TransactionDaySectionFilter.renewal),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
+              platformCounts:
+                  platformBySection[TransactionDaySectionFilter.renewal]!,
             ),
             _DaySummaryStatCell(
               label: 'Purchases',
@@ -1677,6 +1758,8 @@ class _DayTypeCountSummary extends StatelessWidget {
               ),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
+              platformCounts:
+                  platformBySection[TransactionDaySectionFilter.subscription]!,
             ),
             _DaySummaryStatCell(
               label: 'Refunds',
@@ -1686,6 +1769,8 @@ class _DayTypeCountSummary extends StatelessWidget {
               selected: selectedFilters.contains(TransactionDaySectionFilter.refunded),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
+              platformCounts:
+                  platformBySection[TransactionDaySectionFilter.refunded]!,
             ),
             _DaySummaryStatCell(
               label: 'Cancellations',
@@ -1697,6 +1782,8 @@ class _DayTypeCountSummary extends StatelessWidget {
               ),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
+              platformCounts:
+                  platformBySection[TransactionDaySectionFilter.cancelled]!,
             ),
           ],
         ),
@@ -1729,6 +1816,7 @@ class _DaySummaryStatCell extends StatelessWidget {
     required this.selected,
     required this.allowTap,
     required this.onTap,
+    required this.platformCounts,
   });
 
   final String label;
@@ -1738,6 +1826,7 @@ class _DaySummaryStatCell extends StatelessWidget {
   final bool selected;
   final bool allowTap;
   final void Function(TransactionDaySectionFilter filter) onTap;
+  final Map<TransactionDaySummaryPlatform, int> platformCounts;
 
   @override
   Widget build(BuildContext context) {
@@ -1812,6 +1901,7 @@ class _DaySummaryStatCell extends StatelessWidget {
                   ],
                 ],
               ),
+              _DaySummaryPlatformShare(platformCounts: platformCounts),
             ],
           ),
         ),
