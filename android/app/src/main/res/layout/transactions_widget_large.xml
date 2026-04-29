@@ -37,11 +37,11 @@
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="14dp">
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_vertical" android:padding="14dp" android:background="@drawable/bg_mtd_card">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TODAY" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
-            <TextView android:id="@+id/tvRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$1,235" android:textSize="38sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="4dp" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TODAY" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
+            <TextView android:id="@+id/tvRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$1,235" android:textSize="32sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="4dp" />
         </LinearLayout>
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_vertical" android:padding="14dp" android:background="@drawable/bg_mtd_card" android:layout_marginStart="12dp">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="YESTERDAY" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="YESTERDAY" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
             <TextView android:id="@+id/tvYesterday" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$890" android:textSize="32sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="4dp" />
         </LinearLayout>
     </LinearLayout>
@@ -57,20 +57,26 @@
             android:paddingTop="14dp"
             android:paddingBottom="14dp"
             android:background="@drawable/bg_count_cell_trial">
-            <ImageView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_widget_sparkles"
                     android:contentDescription="@null" />
-            <TextView
-                android:id="@+id/tvTrials"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="42"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                <TextView
+                    android:id="@+id/tvTrials"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -78,7 +84,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellConversions"
@@ -91,20 +97,26 @@
             android:paddingBottom="14dp"
             android:background="@drawable/bg_count_cell_conversion"
             android:layout_marginStart="10dp">
-            <ImageView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_widget_arrow_up_right"
                     android:contentDescription="@null" />
-            <TextView
-                android:id="@+id/tvConversions"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="42"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                <TextView
+                    android:id="@+id/tvConversions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -112,7 +124,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellRenewals"
@@ -125,20 +137,26 @@
             android:paddingBottom="14dp"
             android:background="@drawable/bg_count_cell_renewal"
             android:layout_marginStart="10dp">
-            <ImageView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_widget_renewal"
                     android:contentDescription="@null" />
-            <TextView
-                android:id="@+id/tvRenewals"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="42"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                <TextView
+                    android:id="@+id/tvRenewals"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -146,7 +164,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
         </LinearLayout>
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="10dp">
@@ -160,20 +178,26 @@
             android:paddingTop="14dp"
             android:paddingBottom="14dp"
             android:background="@drawable/bg_count_cell_purchase">
-            <ImageView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_widget_bag"
                     android:contentDescription="@null" />
-            <TextView
-                android:id="@+id/tvPurchases"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="42"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                <TextView
+                    android:id="@+id/tvPurchases"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -181,7 +205,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellRefunds"
@@ -194,20 +218,26 @@
             android:paddingBottom="14dp"
             android:background="@drawable/bg_count_cell_refund"
             android:layout_marginStart="10dp">
-            <ImageView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_widget_refund"
                     android:contentDescription="@null" />
-            <TextView
-                android:id="@+id/tvRefunds"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="42"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                <TextView
+                    android:id="@+id/tvRefunds"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -215,7 +245,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellCancellations"
@@ -228,20 +258,26 @@
             android:paddingBottom="14dp"
             android:background="@drawable/bg_count_cell_refund"
             android:layout_marginStart="10dp">
-            <ImageView
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ImageView
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:src="@drawable/ic_widget_cancel"
                     android:contentDescription="@null" />
-            <TextView
-                android:id="@+id/tvCancellations"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="42"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                <TextView
+                    android:id="@+id/tvCancellations"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp"
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -249,7 +285,7 @@
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="true" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

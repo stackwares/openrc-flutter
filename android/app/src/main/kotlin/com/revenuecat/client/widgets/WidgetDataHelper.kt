@@ -79,7 +79,7 @@ object WidgetDataHelper {
         return when {
             kotlin.math.abs(value) >= 1_000_000 -> String.format("$sym%.1fM", value / 1_000_000)
             kotlin.math.abs(value) >= 10_000 -> String.format("$sym%.1fK", value / 1_000)
-            kotlin.math.abs(value) >= 1_000 -> String.format("$sym%.0f", value)
+            kotlin.math.abs(value) >= 1_000 -> String.format("$sym%,.0f", value)
             else -> {
                 val minorUnits = if (code in setOf("BIF", "CLP", "DJF", "GNF", "IDR", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF", "UGX", "UYI", "VND", "VUV", "XAF", "XOF", "XPF")) 0 else 2
                 String.format("$sym%,.${minorUnits}f", value)
