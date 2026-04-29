@@ -1,205 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="14dp"
     android:background="@color/widgetBackground">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        <LinearLayout
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_widget_chart_pie"
+            android:contentDescription="@null" />
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🥧"
-                android:textSize="18sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="REVENUE INSIGHTS"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:layout_marginStart="4dp"
-                android:fontFamily="sans-serif-medium" />
-        </LinearLayout>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:text="REVENUE INSIGHTS"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginStart="6dp"
+            android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+        <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
         <TextView
             android:id="@+id/tvLastUpdated"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="2m ago"
             android:textSize="10sp"
-            android:textColor="@color/widgetTextQuaternary"
-            android:fontFamily="sans-serif-medium" />
+            android:textColor="@color/widgetTextQuaternary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
     </LinearLayout>
-
-    <!-- Platform + New vs Renewal row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="10dp">
-
-        <!-- Platform -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PLATFORM"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:fontFamily="sans-serif-medium" />
-            <ImageView
-                android:id="@+id/imgPlatformBar"
-                android:layout_width="match_parent"
-                android:layout_height="12dp"
-                android:layout_marginTop="6dp"
-                android:scaleType="fitXY" />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="6dp">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="6dp"
-                        android:layout_height="6dp"
-                        android:background="@drawable/bg_circle_apple" />
-                    <TextView
-                        android:id="@+id/tvAppleLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Apple 65%"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginStart="4dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="10dp">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PLATFORM" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <ImageView android:id="@+id/imgPlatformBar" android:layout_width="match_parent" android:layout_height="12dp" android:layout_marginTop="6dp" android:scaleType="fitXY" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="6dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_apple" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apple" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    </LinearLayout>
+                    <TextView android:id="@+id/tvAppleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvApplePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="6dp"
-                        android:layout_height="6dp"
-                        android:background="@drawable/bg_circle_google" />
-                    <TextView
-                        android:id="@+id/tvGoogleLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Google 35%"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginStart="4dp" />
+                <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_google" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    </LinearLayout>
+                    <TextView android:id="@+id/tvGoogleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvGooglePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-
         <TextView
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/widgetDivider"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp" />
-
-        <!-- New vs Renewal -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="NEW VS RENEWAL"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:fontFamily="sans-serif-medium" />
-            <ImageView
-                android:id="@+id/imgNewRenewalBar"
-                android:layout_width="match_parent"
-                android:layout_height="12dp"
-                android:layout_marginTop="6dp"
-                android:scaleType="fitXY" />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="6dp">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="6dp"
-                        android:layout_height="6dp"
-                        android:background="@drawable/bg_circle_new" />
-                    <TextView
-                        android:id="@+id/tvNewLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="New 28%"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginStart="4dp" />
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/widgetDivider"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEW VS RENEWAL" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <ImageView android:id="@+id/imgNewRenewalBar" android:layout_width="match_parent" android:layout_height="12dp" android:layout_marginTop="6dp" android:scaleType="fitXY" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="6dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_new" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="New" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    </LinearLayout>
+                    <TextView android:id="@+id/tvNewRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvNewPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="6dp"
-                        android:layout_height="6dp"
-                        android:background="@drawable/bg_circle_renewal" />
-                    <TextView
-                        android:id="@+id/tvRenewLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Renew 72%"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium"
-                        android:layout_marginStart="4dp" />
+                <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_renewal" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Renewal" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    </LinearLayout>
+                    <TextView android:id="@+id/tvRenewalRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvRenewalPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -212,530 +96,78 @@
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp" />
 
-    <!-- Top Apps + Top Countries row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <!-- Top Apps -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TOP APPS"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:fontFamily="sans-serif-medium" />
-
-            <!-- Row 1 -->
-            <LinearLayout
-                android:id="@+id/rowApp1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvAppRank1"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="1"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetAccent"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppName1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="MyApp Pro"
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvAppRevenue1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$5,627"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppPct1"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text="45%"
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 2 -->
-            <LinearLayout
-                android:id="@+id/rowApp2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvAppRank2"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="2"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetAccent"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppName2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Widget Hub"
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvAppRevenue2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$3,748"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppPct2"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text="30%"
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 3 -->
-            <LinearLayout
-                android:id="@+id/rowApp3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvAppRank3"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="3"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetAccent"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppName3"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Lite Version"
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvAppRevenue3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$3,075"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppPct3"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text="25%"
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 4 -->
-            <LinearLayout
-                android:id="@+id/rowApp4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvAppRank4"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="4"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetAccent"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppName4"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text=""
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvAppRevenue4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppPct4"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 5 -->
-            <LinearLayout
-                android:id="@+id/rowApp5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvAppRank5"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="5"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetAccent"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppName5"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text=""
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvAppRevenue5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvAppPct5"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TOP APPS" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <LinearLayout android:id="@+id/rowApp1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvAppRank1" android:layout_width="18dp" android:layout_height="wrap_content" android:text="1" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppName1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="MyApp Pro" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppRevenue1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppPct1" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowApp2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvAppRank2" android:layout_width="18dp" android:layout_height="wrap_content" android:text="2" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppName2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="MyApp Pro" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppRevenue2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppPct2" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowApp3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvAppRank3" android:layout_width="18dp" android:layout_height="wrap_content" android:text="3" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppName3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="MyApp Pro" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppRevenue3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppPct3" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowApp4" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvAppRank4" android:layout_width="18dp" android:layout_height="wrap_content" android:text="4" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppName4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="MyApp Pro" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppRevenue4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppPct4" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowApp5" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvAppRank5" android:layout_width="18dp" android:layout_height="wrap_content" android:text="5" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppName5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="MyApp Pro" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppRevenue5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppPct5" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
         </LinearLayout>
-
         <TextView
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/widgetDivider"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp" />
-
-        <!-- Top Countries -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TOP COUNTRIES"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:fontFamily="sans-serif-medium" />
-
-            <!-- Row 1 -->
-            <LinearLayout
-                android:id="@+id/rowCountry1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="6dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCountryRank1"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="1"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/appleBlue"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryName1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="🇺🇸 United States"
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvCountryRevenue1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$4,744"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryPct1"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text="38%"
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 2 -->
-            <LinearLayout
-                android:id="@+id/rowCountry2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCountryRank2"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="2"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/appleBlue"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryName2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="🇬🇧 United Kingdom"
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvCountryRevenue2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$1,892"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryPct2"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text="15%"
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 3 -->
-            <LinearLayout
-                android:id="@+id/rowCountry3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCountryRank3"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="3"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/appleBlue"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryName3"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="🇩🇪 Germany"
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvCountryRevenue3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="$1,594"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryPct3"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text="13%"
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 4 -->
-            <LinearLayout
-                android:id="@+id/rowCountry4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCountryRank4"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="4"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/appleBlue"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryName4"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text=""
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvCountryRevenue4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryPct4"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
-
-            <!-- Row 5 -->
-            <LinearLayout
-                android:id="@+id/rowCountry5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCountryRank5"
-                    android:layout_width="18dp"
-                    android:layout_height="wrap_content"
-                    android:text="5"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/appleBlue"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryName5"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text=""
-                    android:textSize="12sp"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-medium"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
-                <TextView
-                    android:id="@+id/tvCountryRevenue5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/widgetTextPrimary"
-                    android:fontFamily="sans-serif-black" />
-                <TextView
-                    android:id="@+id/tvCountryPct5"
-                    android:layout_width="28dp"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:textSize="10sp"
-                    android:textColor="@color/widgetTextSecondary"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="end" />
-            </LinearLayout>
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/widgetDivider"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TOP COUNTRIES" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <LinearLayout android:id="@+id/rowCountry1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvCountryRank1" android:layout_width="18dp" android:layout_height="wrap_content" android:text="1" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/appleBlue" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryName1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🇺🇸 United States" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryRevenue1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryPct1" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowCountry2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvCountryRank2" android:layout_width="18dp" android:layout_height="wrap_content" android:text="2" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/appleBlue" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryName2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🇺🇸 United States" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryRevenue2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryPct2" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowCountry3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvCountryRank3" android:layout_width="18dp" android:layout_height="wrap_content" android:text="3" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/appleBlue" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryName3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🇺🇸 United States" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryRevenue3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryPct3" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowCountry4" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvCountryRank4" android:layout_width="18dp" android:layout_height="wrap_content" android:text="4" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/appleBlue" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryName4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🇺🇸 United States" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryRevenue4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryPct4" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
+<LinearLayout android:id="@+id/rowCountry5" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="6dp">
+                    <TextView android:id="@+id/tvCountryRank5" android:layout_width="18dp" android:layout_height="wrap_content" android:text="5" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/appleBlue" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryName5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🇺🇸 United States" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginStart="6dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryRevenue5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$5,627" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvCountryPct5" android:layout_width="28dp" android:layout_height="wrap_content" android:text="45%" android:textSize="10sp" android:gravity="end" android:layout_marginStart="5dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
 </LinearLayout>

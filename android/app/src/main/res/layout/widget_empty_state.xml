@@ -1,26 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
     android:padding="16dp"
     android:background="@color/widgetBackground">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🔄"
-        android:textSize="24sp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/widget_empty"
-        android:textSize="12sp"
-        android:textColor="@color/widgetTextSecondary"
-        android:fontFamily="sans-serif-medium"
-        android:gravity="center"
-        android:layout_marginTop="8dp" />
-
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_widget_refresh" android:contentDescription="@null" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/widget_empty" android:textSize="12sp" android:gravity="center" android:layout_marginTop="8dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+    </LinearLayout>
 </LinearLayout>

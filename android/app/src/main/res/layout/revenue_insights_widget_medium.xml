@@ -1,292 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="12dp"
     android:background="@color/widgetBackground">
 
-    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        <LinearLayout
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_widget_chart_pie"
+            android:contentDescription="@null" />
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🥧"
-                android:textSize="12sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="REVENUE INSIGHTS"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:layout_marginStart="4dp"
-                android:fontFamily="sans-serif-medium" />
-        </LinearLayout>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:text="REVENUE INSIGHTS"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginStart="4dp"
+            android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+        <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
         <TextView
             android:id="@+id/tvLastUpdated"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="2m ago"
             android:textSize="9sp"
-            android:textColor="@color/widgetTextQuaternary"
-            android:fontFamily="sans-serif-medium" />
+            android:textColor="@color/widgetTextQuaternary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
     </LinearLayout>
-
-    <!-- Content row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
-
-        <!-- Platform -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PLATFORM"
-                android:textSize="8sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:fontFamily="sans-serif-medium" />
-            <ImageView
-                android:id="@+id/imgPlatformBar"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="4dp"
-                android:scaleType="fitXY" />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:layout_width="5dp"
-                            android:layout_height="5dp"
-                            android:background="@drawable/bg_circle_apple" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Apple"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/widgetTextSecondary"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginStart="3dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PLATFORM" android:textSize="8sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <ImageView android:id="@+id/imgPlatformBar" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="4dp" android:scaleType="fitXY" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_apple" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apple" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView
-                        android:id="@+id/tvAppleRevenue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="$8,130"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextPrimary"
-                        android:fontFamily="sans-serif-black" />
-                    <TextView
-                        android:id="@+id/tvApplePct"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="65%"
-                        android:textSize="8sp"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium" />
+                    <TextView android:id="@+id/tvAppleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvApplePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:layout_width="5dp"
-                            android:layout_height="5dp"
-                            android:background="@drawable/bg_circle_google" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Google"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/widgetTextSecondary"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginStart="3dp" />
+                <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_google" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView
-                        android:id="@+id/tvGoogleRevenue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="$4,321"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextPrimary"
-                        android:fontFamily="sans-serif-black" />
-                    <TextView
-                        android:id="@+id/tvGooglePct"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="35%"
-                        android:textSize="8sp"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium" />
+                    <TextView android:id="@+id/tvGoogleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvGooglePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-
         <TextView
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="@color/widgetDivider"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
-
-        <!-- New vs Renewal -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="NEW VS RENEWAL"
-                android:textSize="8sp"
-                android:textStyle="bold"
-                android:textColor="@color/widgetTextSecondary"
-                android:fontFamily="sans-serif-medium" />
-            <ImageView
-                android:id="@+id/imgNewRenewalBar"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="4dp"
-                android:scaleType="fitXY" />
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="4dp">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:layout_width="5dp"
-                            android:layout_height="5dp"
-                            android:background="@drawable/bg_circle_new" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="New"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/widgetTextSecondary"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginStart="3dp" />
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/widgetDivider"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEW VS RENEWAL" android:textSize="8sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <ImageView android:id="@+id/imgNewRenewalBar" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="4dp" android:scaleType="fitXY" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_new" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="New" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView
-                        android:id="@+id/tvNewRevenue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="$3,548"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextPrimary"
-                        android:fontFamily="sans-serif-black" />
-                    <TextView
-                        android:id="@+id/tvNewPct"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="28%"
-                        android:textSize="8sp"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium" />
+                    <TextView android:id="@+id/tvNewRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvNewPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:layout_width="5dp"
-                            android:layout_height="5dp"
-                            android:background="@drawable/bg_circle_renewal" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Renewal"
-                            android:textSize="9sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/widgetTextSecondary"
-                            android:fontFamily="sans-serif-medium"
-                            android:layout_marginStart="3dp" />
+                <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+                        <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_renewal" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Renewal" android:textSize="9sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView
-                        android:id="@+id/tvRenewalRevenue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="$8,902"
-                        android:textSize="10sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/widgetTextPrimary"
-                        android:fontFamily="sans-serif-black" />
-                    <TextView
-                        android:id="@+id/tvRenewalPct"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="72%"
-                        android:textSize="8sp"
-                        android:textColor="@color/widgetTextSecondary"
-                        android:fontFamily="sans-serif-medium" />
+                    <TextView android:id="@+id/tvRenewalRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvRenewalPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="8sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
 </LinearLayout>

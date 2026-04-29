@@ -102,15 +102,18 @@ class RevenueTabWidgetProvider : AppWidgetProvider() {
                     }
                 } else {
                     val emptyViews = RemoteViews(context.packageName, R.layout.widget_empty_state)
+                    WidgetDataHelper.addOpenAppClick(context, emptyViews)
                     appWidgetManager.updateAppWidget(appWidgetId, emptyViews)
                     return
                 }
 
+                WidgetDataHelper.addOpenAppClick(context, views)
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating widget $appWidgetId", e)
                 try {
                     val emptyViews = RemoteViews(context.packageName, R.layout.widget_empty_state)
+                    WidgetDataHelper.addOpenAppClick(context, emptyViews)
                     appWidgetManager.updateAppWidget(appWidgetId, emptyViews)
                 } catch (_: Exception) {
                     // Nothing more we can do

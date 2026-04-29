@@ -1,16 +1,35 @@
 package com.revenuecat.client.widgets
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.widget.RemoteViews
+import com.revenuecat.client.MainActivity
+import com.revenuecat.client.R
 import org.json.JSONObject
 
 object WidgetDataHelper {
     private const val PREFS_NAME = "widget_data"
     private const val KEY_DATA = "widget_data_json"
     private const val KEY_CURRENCY = "widget_currency_code"
+    private const val REQUEST_OPEN_APP = 7001
 
     fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    fun addOpenAppClick(context: Context, views: RemoteViews) {
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            REQUEST_OPEN_APP,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        views.setOnClickPendingIntent(R.id.widgetRoot, pendingIntent)
     }
 
     fun loadPayload(context: Context): JSONObject? {
@@ -53,6 +72,29 @@ object WidgetDataHelper {
 
     private fun currencySymbol(code: String): String {
         return when (code.uppercase()) {
+            "AED" -> "د.إ"
+            "AFN" -> "؋"
+            "ALL" -> "L"
+            "AMD" -> "֏"
+            "ANG" -> "ƒ"
+            "AOA" -> "Kz"
+            "ARS" -> "$"
+            "AWG" -> "ƒ"
+            "AZN" -> "₼"
+            "BAM" -> "KM"
+            "BBD" -> "$"
+            "BDT" -> "৳"
+            "BGN" -> "лв"
+            "BHD" -> ".د.ب"
+            "BIF" -> "FBu"
+            "BMD" -> "$"
+            "BND" -> "$"
+            "BOB" -> "Bs."
+            "BSD" -> "$"
+            "BTN" -> "Nu."
+            "BWP" -> "P"
+            "BYN" -> "Br"
+            "BZD" -> "$"
             "USD" -> "$"
             "EUR" -> "€"
             "GBP" -> "£"
@@ -60,12 +102,132 @@ object WidgetDataHelper {
             "KRW" -> "₩"
             "CNY" -> "¥"
             "BRL" -> "R$"
-            "AUD" -> "A$"
-            "CAD" -> "C$"
-            "MXN" -> "MX$"
+            "AUD" -> "$"
+            "CAD" -> "$"
+            "CDF" -> "FC"
+            "CHF" -> "CHF"
+            "CLP" -> "$"
+            "COP" -> "$"
+            "CRC" -> "₡"
+            "CUP" -> "$"
+            "CVE" -> "$"
+            "CZK" -> "Kč"
+            "DJF" -> "Fdj"
+            "DKK" -> "kr"
+            "DOP" -> "$"
+            "DZD" -> "د.ج"
+            "EGP" -> "£"
+            "ERN" -> "Nfk"
+            "ETB" -> "Br"
+            "FJD" -> "$"
+            "FKP" -> "£"
+            "GEL" -> "₾"
+            "GHS" -> "₵"
+            "GIP" -> "£"
+            "GMD" -> "D"
+            "GNF" -> "FG"
+            "GTQ" -> "Q"
+            "GYD" -> "$"
+            "HKD" -> "$"
+            "HNL" -> "L"
+            "HTG" -> "G"
+            "HUF" -> "Ft"
+            "IDR" -> "Rp"
+            "ILS" -> "₪"
+            "INR" -> "₹"
+            "IQD" -> "ع.د"
+            "IRR" -> "﷼"
+            "ISK" -> "kr"
+            "JMD" -> "$"
+            "JOD" -> "د.ا"
+            "KES" -> "KSh"
+            "KGS" -> "с"
+            "KHR" -> "៛"
+            "KMF" -> "CF"
+            "KPW" -> "₩"
+            "KWD" -> "د.ك"
+            "KYD" -> "$"
+            "KZT" -> "₸"
+            "LAK" -> "₭"
+            "LBP" -> "ل.ل"
+            "LKR" -> "Rs"
+            "LRD" -> "$"
+            "LSL" -> "L"
+            "LYD" -> "ل.د"
+            "MAD" -> "د.م."
+            "MDL" -> "L"
+            "MGA" -> "Ar"
+            "MKD" -> "ден"
+            "MMK" -> "K"
+            "MNT" -> "₮"
+            "MOP" -> "MOP$"
+            "MRU" -> "UM"
+            "MUR" -> "₨"
+            "MVR" -> "Rf"
+            "MWK" -> "MK"
+            "MXN" -> "$"
+            "MYR" -> "RM"
+            "MZN" -> "MT"
+            "NAD" -> "$"
+            "NGN" -> "₦"
+            "NIO" -> "C$"
+            "NOK" -> "kr"
+            "NPR" -> "₨"
+            "NZD" -> "$"
+            "OMR" -> "ر.ع."
+            "PAB" -> "B/."
+            "PEN" -> "S/"
+            "PGK" -> "K"
+            "PHP" -> "₱"
+            "PKR" -> "₨"
             "SEK" -> "kr"
             "PLN" -> "zł"
-            else -> code
+            "PYG" -> "₲"
+            "QAR" -> "ر.ق"
+            "RON" -> "lei"
+            "RSD" -> "дин"
+            "RUB" -> "₽"
+            "RWF" -> "FRw"
+            "SAR" -> "﷼"
+            "SBD" -> "$"
+            "SCR" -> "₨"
+            "SDG" -> "ج.س."
+            "SGD" -> "$"
+            "SHP" -> "£"
+            "SLE" -> "Le"
+            "SOS" -> "Sh"
+            "SRD" -> "$"
+            "SSP" -> "£"
+            "STN" -> "Db"
+            "SYP" -> "£"
+            "SZL" -> "L"
+            "THB" -> "฿"
+            "TJS" -> "ЅМ"
+            "TMT" -> "m"
+            "TND" -> "د.ت"
+            "TOP" -> "T$"
+            "TRY" -> "₺"
+            "TTD" -> "$"
+            "TWD" -> "$"
+            "TZS" -> "TSh"
+            "UAH" -> "₴"
+            "UGX" -> "USh"
+            "UYU" -> "$"
+            "UZS" -> "so'm"
+            "VES" -> "Bs."
+            "VND" -> "₫"
+            "VUV" -> "VT"
+            "WST" -> "T"
+            "XAF" -> "FCFA"
+            "XCD" -> "$"
+            "XOF" -> "CFA"
+            "XPF" -> "₣"
+            "YER" -> "﷼"
+            "ZAR" -> "R"
+            "ZMW" -> "ZK"
+            "ZWL" -> "$"
+            "US" -> "$"
+            else -> "¤"
         }
     }
 

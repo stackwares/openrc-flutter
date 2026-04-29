@@ -132,11 +132,42 @@ func currentWidgetCurrencyCode() -> String {
     return defaults?.string(forKey: currencyKey)?.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() ?? "USD"
 }
 
+let widgetCurrencySymbols: [String: String] = [
+    "AED": "د.إ", "AFN": "؋", "ALL": "L", "AMD": "֏", "ANG": "ƒ",
+    "AOA": "Kz", "ARS": "$", "AUD": "$", "AWG": "ƒ", "AZN": "₼",
+    "BAM": "KM", "BBD": "$", "BDT": "৳", "BGN": "лв", "BHD": ".د.ب",
+    "BIF": "FBu", "BMD": "$", "BND": "$", "BOB": "Bs.", "BRL": "R$",
+    "BSD": "$", "BTN": "Nu.", "BWP": "P", "BYN": "Br", "BZD": "$",
+    "CAD": "$", "CDF": "FC", "CHF": "CHF", "CLP": "$", "CNY": "¥",
+    "COP": "$", "CRC": "₡", "CUP": "$", "CVE": "$", "CZK": "Kč",
+    "DJF": "Fdj", "DKK": "kr", "DOP": "$", "DZD": "د.ج", "EGP": "£",
+    "ERN": "Nfk", "ETB": "Br", "EUR": "€", "FJD": "$", "FKP": "£",
+    "GBP": "£", "GEL": "₾", "GHS": "₵", "GIP": "£", "GMD": "D",
+    "GNF": "FG", "GTQ": "Q", "GYD": "$", "HKD": "$", "HNL": "L",
+    "HTG": "G", "HUF": "Ft", "IDR": "Rp", "ILS": "₪", "INR": "₹",
+    "IQD": "ع.د", "IRR": "﷼", "ISK": "kr", "JMD": "$", "JOD": "د.ا",
+    "JPY": "¥", "KES": "KSh", "KGS": "с", "KHR": "៛", "KMF": "CF",
+    "KPW": "₩", "KRW": "₩", "KWD": "د.ك", "KYD": "$", "KZT": "₸",
+    "LAK": "₭", "LBP": "ل.ل", "LKR": "Rs", "LRD": "$", "LSL": "L",
+    "LYD": "ل.د", "MAD": "د.م.", "MDL": "L", "MGA": "Ar", "MKD": "ден",
+    "MMK": "K", "MNT": "₮", "MOP": "MOP$", "MRU": "UM", "MUR": "₨",
+    "MVR": "Rf", "MWK": "MK", "MXN": "$", "MYR": "RM", "MZN": "MT",
+    "NAD": "$", "NGN": "₦", "NIO": "C$", "NOK": "kr", "NPR": "₨",
+    "NZD": "$", "OMR": "ر.ع.", "PAB": "B/.", "PEN": "S/", "PGK": "K",
+    "PHP": "₱", "PKR": "₨", "PLN": "zł", "PYG": "₲", "QAR": "ر.ق",
+    "RON": "lei", "RSD": "дин", "RUB": "₽", "RWF": "FRw", "SAR": "﷼",
+    "SBD": "$", "SCR": "₨", "SDG": "ج.س.", "SEK": "kr", "SGD": "$",
+    "SHP": "£", "SLE": "Le", "SOS": "Sh", "SRD": "$", "SSP": "£",
+    "STN": "Db", "SYP": "£", "SZL": "L", "THB": "฿", "TJS": "ЅМ",
+    "TMT": "m", "TND": "د.ت", "TOP": "T$", "TRY": "₺", "TTD": "$",
+    "TWD": "$", "TZS": "TSh", "UAH": "₴", "UGX": "USh", "USD": "$",
+    "UYU": "$", "UZS": "so'm", "VES": "Bs.", "VND": "₫", "VUV": "VT",
+    "WST": "T", "XAF": "FCFA", "XCD": "$", "XOF": "CFA", "XPF": "₣",
+    "YER": "﷼", "ZAR": "R", "ZMW": "ZK", "ZWL": "$", "US": "$",
+]
+
 func currencySymbol(for code: String) -> String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.currencyCode = code
-    return formatter.currencySymbol ?? code
+    widgetCurrencySymbols[code.uppercased()] ?? "¤"
 }
 
 func widgetCurrencyMinorUnits(_ code: String) -> Int {
@@ -150,20 +181,23 @@ func widgetCurrencyMinorUnits(_ code: String) -> Int {
 
 // MARK: - Common helpers
 
+func formatWidgetNumber(_ value: Double, fractionDigits: Int) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.maximumFractionDigits = fractionDigits
+    formatter.minimumFractionDigits = fractionDigits
+    return formatter.string(from: NSNumber(value: value)) ?? String(format: "%.\(fractionDigits)f", value)
+}
+
 func formatCurrency(_ value: Double) -> String {
     let code = currentWidgetCurrencyCode()
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.currencyCode = code
     let minorUnits = widgetCurrencyMinorUnits(code)
+    let sym = currencySymbol(for: code)
     if value >= 1000 {
-        formatter.maximumFractionDigits = 0
-        formatter.minimumFractionDigits = 0
+        return "\(sym)\(formatWidgetNumber(value, fractionDigits: 0))"
     } else {
-        formatter.maximumFractionDigits = minorUnits
-        formatter.minimumFractionDigits = minorUnits
+        return "\(sym)\(formatWidgetNumber(value, fractionDigits: minorUnits))"
     }
-    return formatter.string(from: NSNumber(value: value)) ?? "\(currencySymbol(for: code))0"
 }
 
 func formatCompactCurrency(_ value: Double) -> String {
@@ -176,13 +210,8 @@ func formatCompactCurrency(_ value: Double) -> String {
     } else if abs(value) >= 1_000 {
         return String(format: "\(sym)%.0f", value)
     } else {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = code
         let minorUnits = widgetCurrencyMinorUnits(code)
-        formatter.maximumFractionDigits = minorUnits
-        formatter.minimumFractionDigits = minorUnits
-        return formatter.string(from: NSNumber(value: value)) ?? "\(sym)\(String(format: "%.\(minorUnits)f", value))"
+        return "\(sym)\(formatWidgetNumber(value, fractionDigits: minorUnits))"
     }
 }
 
