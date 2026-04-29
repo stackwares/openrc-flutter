@@ -5,4 +5,22 @@
     <string name="widget_transactions_desc">Today\'s revenue and transaction summary</string>
     <string name="widget_insights_desc">Platform, New vs Renewals, Top Apps &amp; Countries</string>
     <string name="widget_revenue_desc">Month-to-date revenue dashboard</string>
+    <string name="widget_transactions_small_label">Transactions Small</string>
+    <string name="widget_transactions_medium_label">Transactions Medium</string>
+    <string name="widget_transactions_large_label">Transactions Large</string>
+    <string name="widget_insights_small_label">Revenue Insights Small</string>
+    <string name="widget_insights_medium_label">Revenue Insights Medium</string>
+    <string name="widget_insights_large_label">Revenue Insights Large</string>
+    <string name="widget_revenue_small_label">Revenue Small</string>
+    <string name="widget_revenue_medium_label">Revenue Medium</string>
+    <string name="widget_revenue_large_label">Revenue Large</string>
+    <string name="widget_transactions_small_desc">Small today revenue and transaction summary</string>
+    <string name="widget_transactions_medium_desc">Medium transaction count dashboard</string>
+    <string name="widget_transactions_large_desc">Large revenue and transaction dashboard</string>
+    <string name="widget_insights_small_desc">Small platform and renewal insights</string>
+    <string name="widget_insights_medium_desc">Medium platform and revenue insights</string>
+    <string name="widget_insights_large_desc">Large insights with top apps and countries</string>
+    <string name="widget_revenue_small_desc">Small month-to-date revenue summary</string>
+    <string name="widget_revenue_medium_desc">Medium month-to-date and period revenue dashboard</string>
+    <string name="widget_revenue_large_desc">Large revenue dashboard with insights</string>
 </resources>

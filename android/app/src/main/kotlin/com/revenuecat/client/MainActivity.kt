@@ -1,16 +1,27 @@
 package com.revenuecat.client
 
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.util.Log
+import com.revenuecat.client.widgets.RevenueInsightsLargeWidgetProvider
+import com.revenuecat.client.widgets.RevenueInsightsSmallWidgetProvider
+import com.revenuecat.client.widgets.RevenueInsightsWidgetProvider
+import com.revenuecat.client.widgets.RevenueInsightsWidgetUpdater
+import com.revenuecat.client.widgets.RevenueTabLargeWidgetProvider
+import com.revenuecat.client.widgets.RevenueTabSmallWidgetProvider
+import com.revenuecat.client.widgets.RevenueTabWidgetProvider
+import com.revenuecat.client.widgets.RevenueTabWidgetUpdater
+import com.revenuecat.client.widgets.TransactionsLargeWidgetProvider
+import com.revenuecat.client.widgets.TransactionsSmallWidgetProvider
+import com.revenuecat.client.widgets.TransactionsWidgetProvider
+import com.revenuecat.client.widgets.TransactionsWidgetUpdater
+import com.revenuecat.client.widgets.WidgetDataHelper
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
-import com.revenuecat.client.widgets.TransactionsWidgetProvider
-import com.revenuecat.client.widgets.RevenueInsightsWidgetProvider
-import com.revenuecat.client.widgets.RevenueTabWidgetProvider
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.revenuecat.client/widgets"
@@ -22,7 +33,7 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "updateWidgetData" -> {
                     try {
-                        val args = call.arguments as? Map<String, Any>
+                        val args = call.arguments as? Map<*, *>
                         if (args != null) {
                             val prefs = getSharedPreferences("widget_data", Context.MODE_PRIVATE)
                             val editor = prefs.edit()
@@ -62,25 +73,48 @@ class MainActivity : FlutterActivity() {
         try {
             val appWidgetManager = AppWidgetManager.getInstance(this)
 
-            val txComponent = ComponentName(this, TransactionsWidgetProvider::class.java)
-            val txIds = appWidgetManager.getAppWidgetIds(txComponent)
-            if (txIds.isNotEmpty()) {
-                TransactionsWidgetProvider.updateWidgets(this, appWidgetManager, txIds)
+            updateProvider(appWidgetManager, TransactionsSmallWidgetProvider::class.java) { ids ->
+                TransactionsWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.SMALL)
+            }
+            updateProvider(appWidgetManager, TransactionsWidgetProvider::class.java) { ids ->
+                TransactionsWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.MEDIUM)
+            }
+            updateProvider(appWidgetManager, TransactionsLargeWidgetProvider::class.java) { ids ->
+                TransactionsWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.LARGE)
             }
 
-            val insightsComponent = ComponentName(this, RevenueInsightsWidgetProvider::class.java)
-            val insightsIds = appWidgetManager.getAppWidgetIds(insightsComponent)
-            if (insightsIds.isNotEmpty()) {
-                RevenueInsightsWidgetProvider.updateWidgets(this, appWidgetManager, insightsIds)
+            updateProvider(appWidgetManager, RevenueInsightsSmallWidgetProvider::class.java) { ids ->
+                RevenueInsightsWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.SMALL)
+            }
+            updateProvider(appWidgetManager, RevenueInsightsWidgetProvider::class.java) { ids ->
+                RevenueInsightsWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.MEDIUM)
+            }
+            updateProvider(appWidgetManager, RevenueInsightsLargeWidgetProvider::class.java) { ids ->
+                RevenueInsightsWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.LARGE)
             }
 
-            val tabComponent = ComponentName(this, RevenueTabWidgetProvider::class.java)
-            val tabIds = appWidgetManager.getAppWidgetIds(tabComponent)
-            if (tabIds.isNotEmpty()) {
-                RevenueTabWidgetProvider.updateWidgets(this, appWidgetManager, tabIds)
+            updateProvider(appWidgetManager, RevenueTabSmallWidgetProvider::class.java) { ids ->
+                RevenueTabWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.SMALL)
+            }
+            updateProvider(appWidgetManager, RevenueTabWidgetProvider::class.java) { ids ->
+                RevenueTabWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.MEDIUM)
+            }
+            updateProvider(appWidgetManager, RevenueTabLargeWidgetProvider::class.java) { ids ->
+                RevenueTabWidgetUpdater.updateWidgets(this, appWidgetManager, ids, WidgetDataHelper.WidgetFamily.LARGE)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update widgets", e)
+        }
+    }
+
+    private fun updateProvider(
+        appWidgetManager: AppWidgetManager,
+        providerClass: Class<out AppWidgetProvider>,
+        update: (IntArray) -> Unit,
+    ) {
+        val ids = appWidgetManager.getAppWidgetIds(ComponentName(this, providerClass))
+        if (ids.isNotEmpty()) {
+            update(ids)
         }
     }
 }

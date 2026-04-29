@@ -30,8 +30,21 @@
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <!-- Widget receivers -->
         <receiver
+            android:name=".widgets.TransactionsSmallWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_transactions_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/transactions_widget_small_info" />
+        </receiver>
+
+        <receiver
             android:name=".widgets.TransactionsWidgetProvider"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_transactions_medium_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -41,8 +54,33 @@
         </receiver>
 
         <receiver
+            android:name=".widgets.TransactionsLargeWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_transactions_large_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/transactions_widget_large_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.RevenueInsightsSmallWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_insights_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/revenue_insights_widget_small_info" />
+        </receiver>
+
+        <receiver
             android:name=".widgets.RevenueInsightsWidgetProvider"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_insights_medium_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -52,14 +90,51 @@
         </receiver>
 
         <receiver
+            android:name=".widgets.RevenueInsightsLargeWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_insights_large_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/revenue_insights_widget_large_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.RevenueTabSmallWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_revenue_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/revenue_tab_widget_small_info" />
+        </receiver>
+
+        <receiver
             android:name=".widgets.RevenueTabWidgetProvider"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/widget_revenue_medium_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/revenue_tab_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.RevenueTabLargeWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_revenue_large_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/revenue_tab_widget_large_info" />
         </receiver>
 
         <meta-data
