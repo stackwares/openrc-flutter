@@ -40,10 +40,10 @@ class RevenueInsightsWidgetProvider : AppWidgetProvider() {
                 val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
                 val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
 
-                val layoutRes = when {
-                    maxHeight >= 200 -> R.layout.revenue_insights_widget_large
-                    maxWidth >= 200 -> R.layout.revenue_insights_widget_medium
-                    else -> R.layout.revenue_insights_widget_small
+                val layoutRes = when (WidgetDataHelper.widgetFamily(maxWidth, maxHeight)) {
+                    WidgetDataHelper.WidgetFamily.LARGE -> R.layout.revenue_insights_widget_large
+                    WidgetDataHelper.WidgetFamily.MEDIUM -> R.layout.revenue_insights_widget_medium
+                    WidgetDataHelper.WidgetFamily.SMALL -> R.layout.revenue_insights_widget_small
                 }
 
                 val payload = WidgetDataHelper.loadPayload(context)
@@ -100,6 +100,15 @@ class RevenueInsightsWidgetProvider : AppWidgetProvider() {
                     if (layoutRes == R.layout.revenue_insights_widget_large) {
                         val topApps = insights.optJSONArray("topApps") ?: JSONArray()
                         val topCountries = insights.optJSONArray("topCountries") ?: JSONArray()
+
+                        views.setViewVisibility(
+                            R.id.tvTopAppsEmpty,
+                            if (topApps.length() == 0) android.view.View.VISIBLE else android.view.View.GONE,
+                        )
+                        views.setViewVisibility(
+                            R.id.tvTopCountriesEmpty,
+                            if (topCountries.length() == 0) android.view.View.VISIBLE else android.view.View.GONE,
+                        )
 
                         for (i in 0 until 5) {
                             val appRow = topApps.optJSONObject(i)

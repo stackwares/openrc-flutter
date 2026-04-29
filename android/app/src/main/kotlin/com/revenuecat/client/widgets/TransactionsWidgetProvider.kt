@@ -35,10 +35,10 @@ class TransactionsWidgetProvider : AppWidgetProvider() {
                 val maxWidth = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
                 val maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
 
-                val layoutRes = when {
-                    maxHeight >= 200 -> R.layout.transactions_widget_large
-                    maxWidth >= 200 -> R.layout.transactions_widget_medium
-                    else -> R.layout.transactions_widget_small
+                val layoutRes = when (WidgetDataHelper.widgetFamily(maxWidth, maxHeight)) {
+                    WidgetDataHelper.WidgetFamily.LARGE -> R.layout.transactions_widget_large
+                    WidgetDataHelper.WidgetFamily.MEDIUM -> R.layout.transactions_widget_medium
+                    WidgetDataHelper.WidgetFamily.SMALL -> R.layout.transactions_widget_small
                 }
 
                 val payload = WidgetDataHelper.loadPayload(context)

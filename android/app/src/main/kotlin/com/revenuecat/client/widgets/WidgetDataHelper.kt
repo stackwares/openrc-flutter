@@ -14,6 +14,23 @@ object WidgetDataHelper {
     private const val KEY_DATA = "widget_data_json"
     private const val KEY_CURRENCY = "widget_currency_code"
     private const val REQUEST_OPEN_APP = 7001
+    private const val MEDIUM_MIN_WIDTH_DP = 200
+    private const val LARGE_MIN_WIDTH_DP = 300
+    private const val LARGE_MIN_HEIGHT_DP = 220
+
+    enum class WidgetFamily {
+        SMALL,
+        MEDIUM,
+        LARGE,
+    }
+
+    fun widgetFamily(maxWidthDp: Int, maxHeightDp: Int): WidgetFamily {
+        return when {
+            maxWidthDp >= LARGE_MIN_WIDTH_DP && maxHeightDp >= LARGE_MIN_HEIGHT_DP -> WidgetFamily.LARGE
+            maxWidthDp >= MEDIUM_MIN_WIDTH_DP -> WidgetFamily.MEDIUM
+            else -> WidgetFamily.SMALL
+        }
+    }
 
     fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
