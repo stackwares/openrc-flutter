@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/widgetBackground">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💰"
+            android:textSize="12sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MTD REVENUE"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="@color/widgetTextSecondary"
+            android:layout_marginStart="4dp"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- Revenue -->
+    <TextView
+        android:id="@+id/tvMtdRevenue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="$12,451"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:textColor="@color/widgetTextPrimary"
+        android:fontFamily="sans-serif-black"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/tvMtdLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This month · local"
+        android:textSize="9sp"
+        android:textColor="@color/widgetTextSecondary"
+        android:fontFamily="sans-serif-medium" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Today / Yesterday row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Today"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+            <TextView
+                android:id="@+id/tvToday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$951"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetAccent"
+                android:fontFamily="sans-serif-black" />
+        </LinearLayout>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yesterday"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+            <TextView
+                android:id="@+id/tvYesterday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$850"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextPrimary"
+                android:fontFamily="sans-serif-black" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

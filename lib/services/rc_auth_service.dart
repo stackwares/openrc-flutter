@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,7 +11,9 @@ import 'package:revenuecat/models/rc_login_request.dart';
 import 'package:revenuecat/models/rc_login_response.dart';
 import 'package:revenuecat/models/rc_me_response.dart';
 import 'package:revenuecat/services/firestore_service.dart';
+import 'package:revenuecat/services/push_registration_service.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
+import 'package:revenuecat/services/widget_data_channel.dart';
 
 final _log = Logger('RcAuthService');
 
@@ -51,6 +54,8 @@ class RcAuthService {
         _ref.read(isSignedInProvider.notifier).state = true;
         _log.info('Signed in as ${response.email}');
 
+        await PushRegistrationService.instance.ensureFirebaseAuthForFirestore();
+
         try {
           final me = await _api.me();
           _ref.read(rcMeProvider.notifier).state = me;
@@ -77,7 +82,14 @@ class RcAuthService {
     } catch (e) {
       _log.warning('Logout API call failed: $e');
     }
-    await _ref.read(firestoreServiceProvider).clearRevenueCatProfile();
+
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      _log.warning('Firebase sign out failed: $e');
+    }
+
+    await WidgetDataChannel.clearWidgetData();
     await _clearToken();
     _api.clearAuthToken();
     _ref.read(isSignedInProvider.notifier).state = false;

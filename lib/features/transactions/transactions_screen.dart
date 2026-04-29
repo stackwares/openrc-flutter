@@ -17,6 +17,9 @@ import 'package:revenuecat/features/transactions/widgets/transaction_list_sort_m
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:revenuecat/services/display_currency_store.dart';
+import 'package:revenuecat/services/exchange_rate_provider.dart';
+import 'package:revenuecat/services/widget_data_channel.dart';
 import 'package:revenuecat/services/transaction_list_sort_store.dart';
 import 'package:revenuecat/services/rc_account_projects_provider.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
@@ -284,6 +287,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         realtimeLoadStep: realtimeDone ? kRealtimeLoadTarget : 1,
         realtimeLoadComplete: realtimeDone,
       );
+      _syncWidgetData();
       if (hasMorePages && !preloadBoundaryMet && gen == _backfillGeneration) {
         unawaited(backfillIncompleteCalendarDays(gen, true));
       }
@@ -413,6 +417,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           realtimeLoadComplete: true,
           realtimeLoadStep: kRealtimeLoadTarget,
         );
+        _syncWidgetData();
       }
     }
   }
@@ -439,6 +444,15 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       totals[entry.key] = netRevenueSum(entry.value, commission);
     }
     return totals;
+  }
+
+  /// Push current state to native home screen widgets.
+  void _syncWidgetData() {
+    final commission = _ref.read(commissionSettingsProvider);
+    final currency = _ref.read(displayCurrencyProvider);
+    final ratesAsync = _ref.read(usdExchangeRatesProvider);
+    final rates = ratesAsync is AsyncData<Map<String, double>> ? ratesAsync.value : <String, double>{};
+    unawaited(WidgetDataChannel.pushWidgetData(state, commission, currency, rates));
   }
 }
 

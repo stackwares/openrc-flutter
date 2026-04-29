@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/widgetBackground">
+
+    <!-- Header row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="top">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊"
+                    android:textSize="12sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TODAY'S REVENUE"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextSecondary"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/tvRevenue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$1,235"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextPrimary"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="YESTERDAY"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+            <TextView
+                android:id="@+id/tvYesterday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$890"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextPrimary"
+                android:fontFamily="sans-serif-black" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Row 1 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:id="@+id/cellTrials"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_count_cell_trial">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✨"
+                    android:textSize="8sp" />
+                <TextView
+                    android:id="@+id/tvTrials"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="42"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginStart="2dp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trials"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cellConversions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_count_cell_conversion"
+            android:layout_marginStart="6dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="↗️"
+                    android:textSize="8sp" />
+                <TextView
+                    android:id="@+id/tvConversions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="18"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginStart="2dp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Conversions"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cellRenewals"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_count_cell_renewal"
+            android:layout_marginStart="6dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔄"
+                    android:textSize="8sp" />
+                <TextView
+                    android:id="@+id/tvRenewals"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="156"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginStart="2dp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Renewals"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Row 2 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
+
+        <LinearLayout
+            android:id="@+id/cellPurchases"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_count_cell_purchase">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛍️"
+                    android:textSize="8sp" />
+                <TextView
+                    android:id="@+id/tvPurchases"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginStart="2dp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Purchases"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cellRefunds"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_count_cell_refund"
+            android:layout_marginStart="6dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="↩️"
+                    android:textSize="8sp" />
+                <TextView
+                    android:id="@+id/tvRefunds"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginStart="2dp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Refunds"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cellCancellations"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="@drawable/bg_count_cell_refund"
+            android:layout_marginStart="6dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="❌"
+                    android:textSize="8sp" />
+                <TextView
+                    android:id="@+id/tvCancellations"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="7"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextPrimary"
+                    android:fontFamily="sans-serif-black"
+                    android:layout_marginStart="2dp" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancels"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

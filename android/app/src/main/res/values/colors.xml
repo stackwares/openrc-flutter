@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget background -->
+    <color name="widgetBackground">#1A1A1A</color>
+    <color name="widgetCardBackground">#1E1E1E</color>
+
+    <!-- Accent / Semantic -->
+    <color name="widgetAccent">#4DD9A4</color>
+    <color name="appleBlue">#007AFF</color>
+    <color name="googleGreen">#34A853</color>
+    <color name="renewalPurple">#9463E0</color>
+    <color name="newTeal">#33C7C7</color>
+    <color name="trialOrange">#FF9E0A</color>
+    <color name="refundRed">#ED4242</color>
+    <color name="conversionGreen">#4CDA66</color>
+
+    <!-- Text -->
+    <color name="widgetTextPrimary">#FFFFFF</color>
+    <color name="widgetTextSecondary">#99FFFFFF</color>
+    <color name="widgetTextTertiary">#66FFFFFF</color>
+    <color name="widgetTextQuaternary">#4DFFFFFF</color>
+
+    <!-- Divider -->
+    <color name="widgetDivider">#1FFFFFFF</color>
+</resources>

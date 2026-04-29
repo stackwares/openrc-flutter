@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@color/widgetBackground">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="top">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💰"
+                    android:textSize="12sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MONTH-TO-DATE"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/widgetTextSecondary"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/tvMtdRevenue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$12,451"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextPrimary"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <TextView
+                android:id="@+id/tvMtdLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="This month · local"
+                android:textSize="9sp"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+        <TextView
+            android:id="@+id/tvLastUpdated"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2m ago"
+            android:textSize="9sp"
+            android:textColor="@color/widgetTextQuaternary"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- Period cards row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:background="@drawable/bg_period_card_today">
+            <TextView
+                android:id="@+id/tvToday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$951"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetAccent"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Today"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:background="@drawable/bg_period_card_yesterday"
+            android:layout_marginStart="6dp">
+            <TextView
+                android:id="@+id/tvYesterday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$850"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextPrimary"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yesterday"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:background="@drawable/bg_period_card_7days"
+            android:layout_marginStart="6dp">
+            <TextView
+                android:id="@+id/tvLast7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$5.2K"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/appleBlue"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="7 Days"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:background="@drawable/bg_period_card_30days"
+            android:layout_marginStart="6dp">
+            <TextView
+                android:id="@+id/tvLast30"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$18.5K"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/renewalPurple"
+                android:fontFamily="sans-serif-black"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="30 Days"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:textColor="@color/widgetTextSecondary"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
