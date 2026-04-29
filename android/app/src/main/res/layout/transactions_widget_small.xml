@@ -27,7 +27,7 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:layout_marginStart="4dp"
-            android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
     </LinearLayout>
 
     <TextView
@@ -40,7 +40,7 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:layout_marginTop="5dp"
-        android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+        android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
 
     <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
 
@@ -49,9 +49,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yesterday" android:textSize="11sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Yesterday" android:textSize="11sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
-        <TextView android:id="@+id/tvYesterday" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$890" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+        <TextView android:id="@+id/tvYesterday" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$890" android:textSize="12sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
     </LinearLayout>
 
     <TextView
@@ -66,10 +66,10 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
-        <TextView android:id="@+id/tvPillTrials" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TRL 42" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/trialOrange" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
-        <TextView android:id="@+id/tvPillRenewals" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="RNW 156" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="sans-serif-black" android:includeFontPadding="false" android:layout_marginStart="8dp" />
-        <TextView android:id="@+id/tvPillRefunds" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="REF 3" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/refundRed" android:fontFamily="sans-serif-black" android:includeFontPadding="false" android:layout_marginStart="8dp" />
+        <TextView android:id="@+id/tvPillTrials" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TRL 42" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/trialOrange" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+        <TextView android:id="@+id/tvPillRenewals" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="RNW 156" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/widgetAccent" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" android:layout_marginStart="8dp" />
+        <TextView android:id="@+id/tvPillRefunds" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="REF 3" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/refundRed" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" android:layout_marginStart="8dp" />
     </LinearLayout>
 
-    <TextView android:id="@+id/tvLastUpdated" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2m ago" android:textSize="9sp" android:layout_marginTop="4dp" android:textColor="@color/widgetTextQuaternary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+    <TextView android:id="@+id/tvLastUpdated" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="2m ago" android:textSize="9sp" android:layout_marginTop="4dp" android:textColor="@color/widgetTextQuaternary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
 </LinearLayout>

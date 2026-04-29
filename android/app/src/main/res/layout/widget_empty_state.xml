@@ -8,6 +8,6 @@
     android:background="@color/widgetBackground">
     <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_widget_refresh" android:contentDescription="@null" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/widget_empty" android:textSize="12sp" android:gravity="center" android:layout_marginTop="8dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/widget_empty" android:textSize="12sp" android:gravity="center" android:layout_marginTop="8dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
     </LinearLayout>
 </LinearLayout>

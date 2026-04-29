@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 abstract class AppTheme {
   /// AppBar titles: plain [Text] in each screen — no per-title [TextStyle];
   /// uses Flex + Material 3 default [AppBarTheme] / framework fallbacks.
-  static ThemeData light(FlexScheme scheme) => FlexThemeData.light(
+  static ThemeData light(FlexScheme scheme) {
+    final base = FlexThemeData.light(
     scheme: scheme,
     surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
     blendLevel: 7,
@@ -31,9 +32,16 @@ abstract class AppTheme {
     ),
     visualDensity: FlexColorScheme.comfortablePlatformDensity,
     useMaterial3: true,
-  );
+    );
+    return base.copyWith(
+      textTheme: base.textTheme.apply(fontFamily: 'SanFrancisco'),
+      primaryTextTheme:
+          base.primaryTextTheme.apply(fontFamily: 'SanFrancisco'),
+    );
+  }
 
-  static ThemeData dark(FlexScheme scheme) => FlexThemeData.dark(
+  static ThemeData dark(FlexScheme scheme) {
+    final base = FlexThemeData.dark(
     scheme: scheme,
     surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
     blendLevel: 13,
@@ -59,5 +67,11 @@ abstract class AppTheme {
     ),
     visualDensity: FlexColorScheme.comfortablePlatformDensity,
     useMaterial3: true,
-  );
+    );
+    return base.copyWith(
+      textTheme: base.textTheme.apply(fontFamily: 'SanFrancisco'),
+      primaryTextTheme:
+          base.primaryTextTheme.apply(fontFamily: 'SanFrancisco'),
+    );
+  }
 }

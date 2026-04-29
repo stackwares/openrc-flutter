@@ -27,32 +27,32 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:layout_marginStart="4dp"
-            android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
     </LinearLayout>
     <ImageView android:id="@+id/imgPlatformBar" android:layout_width="match_parent" android:layout_height="10dp" android:layout_marginTop="8dp" android:scaleType="fitXY" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                     <TextView android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/bg_circle_apple" />
-                    <TextView android:id="@+id/tvAppleLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apple 65%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppleLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apple 65%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
         <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                     <TextView android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/bg_circle_google" />
-                    <TextView android:id="@+id/tvGoogleLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google 35%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvGoogleLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google 35%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
     </LinearLayout>
     <TextView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEW VS RENEWAL" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEW VS RENEWAL" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
     <ImageView android:id="@+id/imgNewRenewalBar" android:layout_width="match_parent" android:layout_height="10dp" android:layout_marginTop="7dp" android:scaleType="fitXY" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="7dp">
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                     <TextView android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/bg_circle_new" />
-                    <TextView android:id="@+id/tvNewLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="New 28%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvNewLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="New 28%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
         <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                     <TextView android:layout_width="6dp" android:layout_height="6dp" android:background="@drawable/bg_circle_renewal" />
-                    <TextView android:id="@+id/tvRenewLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Renew 72%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvRenewLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Renew 72%" android:textSize="12sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
     </LinearLayout>
 </LinearLayout>

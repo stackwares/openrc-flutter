@@ -15,13 +15,13 @@
             android:layout_height="14dp"
             android:src="@drawable/ic_widget_chart_bar"
             android:contentDescription="@null" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TODAY'S REVENUE" android:textSize="11sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TODAY'S REVENUE" android:textSize="11sp" android:textStyle="bold" android:layout_marginStart="4dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
             </LinearLayout>
-            <TextView android:id="@+id/tvRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$1,235" android:textSize="28sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="2dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+            <TextView android:id="@+id/tvRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$1,235" android:textSize="28sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="2dp" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="end">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="YESTERDAY" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
-            <TextView android:id="@+id/tvYesterday" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$890" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="YESTERDAY" android:textSize="10sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
+            <TextView android:id="@+id/tvYesterday" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$890" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
         </LinearLayout>
     </LinearLayout>
 
@@ -54,7 +54,7 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
-                    android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -63,7 +63,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:layout_marginTop="1dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellConversions"
@@ -94,7 +94,7 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
-                    android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -103,7 +103,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:layout_marginTop="1dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellRenewals"
@@ -134,7 +134,7 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
-                    android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -143,7 +143,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:layout_marginTop="1dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         </LinearLayout>
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="6dp">
@@ -175,7 +175,7 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
-                    android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -184,7 +184,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:layout_marginTop="1dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellRefunds"
@@ -215,7 +215,7 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
-                    android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -224,7 +224,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:layout_marginTop="1dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout
             android:id="@+id/cellCancellations"
@@ -255,7 +255,7 @@
                     android:textSize="17sp"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
-                    android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
+                    android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
@@ -264,7 +264,7 @@
                 android:textSize="9sp"
                 android:textStyle="bold"
                 android:layout_marginTop="1dp"
-                android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

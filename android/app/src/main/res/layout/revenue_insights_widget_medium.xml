@@ -24,7 +24,7 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:layout_marginStart="4dp"
-            android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
         <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
         <TextView
             android:id="@+id/tvLastUpdated"
@@ -32,29 +32,29 @@
             android:layout_height="wrap_content"
             android:text="2m ago"
             android:textSize="10sp"
-            android:textColor="@color/widgetTextQuaternary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            android:textColor="@color/widgetTextQuaternary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PLATFORM" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="PLATFORM" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
             <ImageView android:id="@+id/imgPlatformBar" android:layout_width="match_parent" android:layout_height="10dp" android:layout_marginTop="4dp" android:scaleType="fitXY" />
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_apple" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apple" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Apple" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView android:id="@+id/tvAppleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
-                    <TextView android:id="@+id/tvApplePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvAppleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvApplePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
                 <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_google" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Google" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView android:id="@+id/tvGoogleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
-                    <TextView android:id="@+id/tvGooglePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvGoogleRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvGooglePct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -65,25 +65,25 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp" />
         <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center_vertical">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEW VS RENEWAL" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NEW VS RENEWAL" android:textSize="9sp" android:textStyle="bold" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
             <ImageView android:id="@+id/imgNewRenewalBar" android:layout_width="match_parent" android:layout_height="10dp" android:layout_marginTop="4dp" android:scaleType="fitXY" />
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_new" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="New" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="New" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView android:id="@+id/tvNewRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
-                    <TextView android:id="@+id/tvNewPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvNewRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvNewPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
                 <TextView android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
                         <TextView android:layout_width="5dp" android:layout_height="5dp" android:background="@drawable/bg_circle_renewal" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Renewal" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Renewal" android:textSize="10sp" android:textStyle="bold" android:layout_marginStart="3dp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                     </LinearLayout>
-                    <TextView android:id="@+id/tvRenewalRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="sans-serif-black" android:includeFontPadding="false" />
-                    <TextView android:id="@+id/tvRenewalPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvRenewalRevenue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$8,130" android:textSize="11sp" android:textStyle="bold" android:textColor="@color/widgetTextPrimary" android:fontFamily="@font/sfns_black" android:includeFontPadding="false" />
+                    <TextView android:id="@+id/tvRenewalPct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="65%" android:textSize="9sp" android:textColor="@color/widgetTextSecondary" android:fontFamily="@font/sfns_medium" android:includeFontPadding="false" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
