@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -486,45 +484,10 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  final _scrollController = ScrollController();
-
-  /// Distance from the end of the list that triggers the next page.
-  static const _loadMoreLeadPx = 420.0;
-
   Set<TransactionDaySectionFilter> _sectionFilters = {};
 
   /// Expandable "Future transactions" (today only); collapsed by default.
   bool _futureTransactionsExpanded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final state = ref.read(transactionsProvider);
-    if (!state.hasMore || state.isLoading) return;
-    if (state.isLoadingMore) return;
-
-    final pos = _scrollController.position;
-    final maxExt = pos.maxScrollExtent;
-    // If nothing actually scrolls (`maxScrollExtent <= 0`), treating that as
-    // "at end" fires `fetchMore` on every notification — endless HTTP while
-    // `hasMore` stays true (e.g. section filters hide every loaded row).
-    final nearEnd =
-        maxExt > 0 && pos.pixels >= maxExt - _loadMoreLeadPx;
-    if (nearEnd) {
-      ref.read(transactionsProvider.notifier).fetchMore();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -911,30 +874,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             ),
           ),
         );
-      } else {
-        children.add(
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: Center(
-              child: Text(
-                'Swipe up for more',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        );
       }
-      final runway = math.max(280.0, MediaQuery.sizeOf(context).height * 0.35);
-      children.add(SizedBox(height: runway));
     }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(transactionsProvider.notifier).fetchInitial(),
       child: ListView(
-        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(
           bottom: mainShellFloatingTabBarScrollPadding(context),
@@ -1547,6 +1492,7 @@ _DayTxnCounts _aggregateDayCounts(List<RcTransaction> transactions) {
     } else if (tx.isCancelledSummaryBadge) {
       cancelled++;
     }
+    if (tx.isCancelledSummaryBadge) continue;
     switch (tx.type) {
       case RcTransactionType.trial:
         trials++;

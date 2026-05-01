@@ -161,6 +161,12 @@ class WidgetDataChannel {
     for (final tx in todayTxs) {
       if (tx.isSandbox == true) continue;
       final t = tx.type;
+      if (t == RcTransactionType.refund) refunds++;
+      if (tx.isCancelledSummaryBadge) cancellations++;
+      
+      // Skip cancelled transactions for non-cancelled counts
+      if (tx.isCancelledSummaryBadge) continue;
+      
       if (t == RcTransactionType.trial) trials++;
       if (t == RcTransactionType.conversion) conversions++;
       if (t == RcTransactionType.renewal) renewals++;
@@ -168,8 +174,6 @@ class WidgetDataChannel {
           t == RcTransactionType.oneTimePurchase) {
         purchases++;
       }
-      if (t == RcTransactionType.refund) refunds++;
-      if (tx.isCancelledSummaryBadge) cancellations++;
     }
 
     return {
