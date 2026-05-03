@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
-import 'package:revenuecat/features/transactions/transactions_revenue_insights_compute.dart';
+import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';

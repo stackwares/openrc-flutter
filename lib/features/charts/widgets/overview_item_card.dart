@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/home/widgets/overview_sparkline_chart.dart';
+import 'package:revenuecat/features/charts/widgets/overview_sparkline_chart.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 import 'package:revenuecat/models/rc_chart_response.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';

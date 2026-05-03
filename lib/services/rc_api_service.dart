@@ -13,7 +13,6 @@ import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/models/rc_transaction_detail.dart';
 import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
-import 'package:revenuecat/models/rc_webhook.dart';
 
 /// [Options.extra] key: short label for debug logging (e.g. `transactions:scroll`).
 const kRcApiRequestContextExtraKey = 'rc_api_request_context';
@@ -209,60 +208,6 @@ class RcApiService {
       },
     );
     return RcChartResponse.fromJson(response.data!);
-  }
-
-  Future<List<RcWebhook>> listWebhooks(String projectId) async {
-    final response = await _internalDio().get<List<dynamic>>(
-      '/me/projects/$projectId/integrations/webhooks',
-    );
-    return (response.data ?? [])
-        .map((e) => RcWebhook.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<RcWebhook> createWebhook({
-    required String projectId,
-    required RcCreateWebhookRequest request,
-  }) async {
-    final response = await _internalDio().post<Map<String, dynamic>>(
-      '/me/projects/$projectId/integrations/webhooks',
-      data: request.toJson(),
-      options: Options(headers: {'Content-Type': 'application/json'}),
-    );
-    return RcWebhook.fromJson(response.data!);
-  }
-
-  Future<RcWebhook> updateWebhook({
-    required String projectId,
-    required String webhookId,
-    required RcUpdateWebhookRequest request,
-  }) async {
-    final response = await _internalDio().put<Map<String, dynamic>>(
-      '/me/projects/$projectId/integrations/webhooks/$webhookId',
-      data: request.toJson(),
-      options: Options(headers: {'Content-Type': 'application/json'}),
-    );
-    return RcWebhook.fromJson(response.data!);
-  }
-
-  Future<void> deleteWebhook({
-    required String projectId,
-    required String webhookId,
-  }) async {
-    await _internalDio().delete(
-      '/me/projects/$projectId/integrations/webhooks/$webhookId',
-      options: Options(headers: {'Content-Type': 'application/json'}),
-    );
-  }
-
-  Future<void> testWebhook({
-    required String projectId,
-    required String webhookId,
-  }) async {
-    await _internalDio().post(
-      '/me/projects/$projectId/integrations/webhooks/$webhookId/test_webhook',
-      options: Options(headers: {'Content-Type': 'application/json'}),
-    );
   }
 
   /// Internal-only endpoints (projects list, subscriber activity, …).

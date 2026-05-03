@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/transactions_revenue_insights_compute.dart';
+import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';

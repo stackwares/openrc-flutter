@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:revenuecat/features/home/home_screen.dart';
+import 'package:revenuecat/features/charts/home_screen.dart';
 import 'package:revenuecat/features/settings/settings_screen.dart';
+import 'package:revenuecat/features/revenue/revenue_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 
 /// Selected tab index for [MainShell]

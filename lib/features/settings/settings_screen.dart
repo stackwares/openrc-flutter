@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/features/settings/webhooks_screen.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/display_currency_store.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
@@ -328,49 +327,6 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ).appCardEntrance(delay: const Duration(milliseconds: 100)),
-          const SizedBox(height: 12),
-          _SettingsCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _SettingsCardHeader(
-                  icon: Icons.notifications_active_outlined,
-                  title: 'Purchase alerts',
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Webhook relay and Firebase Cloud Messaging.',
-                  style: tt.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.link_rounded, color: scheme.primary),
-                  title: const Text('RevenueCat webhooks'),
-                  subtitle: Text(
-                    'Enable per-project notifications',
-                    style: tt.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  trailing: Icon(
-                    Icons.chevron_right_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  onTap: () {
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (ctx) => const WebhooksScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ).appCardEntrance(delay: const Duration(milliseconds: 125)),
           const SizedBox(height: 12),
           _SettingsCard(
             child: Column(

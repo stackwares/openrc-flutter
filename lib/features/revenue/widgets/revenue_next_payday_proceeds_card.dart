@@ -5,7 +5,7 @@ import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
-import 'package:revenuecat/features/transactions/realtime_next_payday_proceeds.dart';
+import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';

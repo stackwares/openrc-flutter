@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/features/home/home_notifier.dart';
+import 'package:revenuecat/features/charts/home_notifier.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/features/home/widgets/overview_detail_line_chart.dart';
+import 'package:revenuecat/features/charts/widgets/overview_detail_line_chart.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
 

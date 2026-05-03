@@ -60,20 +60,32 @@ class PushRegistrationService {
       _log.warning('Notification permission: $e\n$st');
     }
 
-    try {
-      final token = await messaging.getToken();
-      if (token != null) {
-        await registerFcmToken(token);
-      }
-    } catch (e, st) {
-      _log.warning('FCM getToken: $e\n$st');
-    }
-
+    // Listen for token refresh before first fetch so we never miss a new token.
     FirebaseMessaging.instance.onTokenRefresh.listen(
       registerFcmToken,
       onError: (Object e, StackTrace st) =>
           _log.warning('onTokenRefresh error: $e\n$st'),
     );
+
+    await _fetchAndRegisterToken(messaging);
+  }
+
+  Future<void> _fetchAndRegisterToken(FirebaseMessaging messaging) async {
+    try {
+      await _waitForApnsToken(messaging);
+      final token = await messaging.getToken();
+      if (token != null) {
+        await registerFcmToken(token);
+      }
+    } on FirebaseException catch (e) {
+      if (e.code == 'apns-token-not-set') {
+        _log.info('APNS token not ready yet; will register via onTokenRefresh');
+        return;
+      }
+      _log.warning('FCM getToken: $e\n${e.stackTrace}');
+    } catch (e, st) {
+      _log.warning('FCM getToken: $e\n$st');
+    }
   }
 
   Future<void> registerFcmToken(String token) async {
@@ -94,12 +106,25 @@ class PushRegistrationService {
     }
   }
 
-  /// Signs out and creates a new anonymous user. Caller must update RevenueCat webhooks.
+  /// iOS requires the APNS token before FCM can generate a token.
+  /// Polls `getAPNSToken()` up to ~5 seconds since it arrives asynchronously.
+  Future<void> _waitForApnsToken(FirebaseMessaging messaging) async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    for (var i = 0; i < 10; i++) {
+      if (await messaging.getAPNSToken() != null) return;
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+    _log.warning('APNS token not available after 5s, proceeding anyway');
+  }
+
+  /// Signs out and creates a new anonymous user.
   Future<User?> rotatePushUser() async {
     if (kIsWeb) return null;
     await FirebaseAuth.instance.signOut();
     final cred = await FirebaseAuth.instance.signInAnonymously();
-    final token = await FirebaseMessaging.instance.getToken();
+    final messaging = FirebaseMessaging.instance;
+    await _waitForApnsToken(messaging);
+    final token = await messaging.getToken();
     if (token != null) {
       await registerFcmToken(token);
     }

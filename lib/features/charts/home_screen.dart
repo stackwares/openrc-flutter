@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/features/home/home_notifier.dart';
-import 'package:revenuecat/features/home/overview_metric_detail_screen.dart';
-import 'package:revenuecat/features/home/widgets/home_chart_date_range_sheet.dart';
-import 'package:revenuecat/features/home/widgets/overview_item_card.dart';
+import 'package:revenuecat/features/charts/home_notifier.dart';
+import 'package:revenuecat/features/charts/overview_metric_detail_screen.dart';
+import 'package:revenuecat/features/charts/widgets/home_chart_date_range_sheet.dart';
+import 'package:revenuecat/features/charts/widgets/overview_item_card.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 
