@@ -360,9 +360,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             activity?.events?.isNotEmpty == true) ...[
           _SectionHeader(
             title: 'History',
-            trailing: detail != null && detail.dollarsSpent != null
-                ? _buildHistoryHeaderTotalSpent(context, detail)
-                : null,
+            trailing: _buildHistoryHeaderTrailing(context, detail, activity),
           ),
           _buildHistory(
             context,
@@ -991,37 +989,81 @@ class TransactionDetailScreen extends ConsumerWidget {
     );
   }
 
-  /// Right side of the History section header; matches Info → Total Spent.
-  Widget _buildHistoryHeaderTotalSpent(
+  /// Right side of the History section header; shows total renewals + total spent.
+  Widget _buildHistoryHeaderTrailing(
     BuildContext context,
-    RcTransactionDetailResponse detail,
+    RcTransactionDetailResponse? detail,
+    RcTransactionDetailActivityResponse? activity,
   ) {
-    final spentColor = transactionTypeAccentColor(
+    final renewalColor = transactionTypeAccentColor(
       RcTransactionType.renewal,
       context,
     );
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
+
+    final historyRenewalCount =
+        detail?.history?.where((h) {
+          final e = h.event?.toUpperCase() ?? '';
+          return e == 'RENEWAL' ||
+              e == 'RENEWED' ||
+              e == 'CONVERTED FROM A TRIAL';
+        }).length ??
+        0;
+
+    final eventsRenewalCount =
+        activity?.events?.where((e) {
+          return e.type?.toUpperCase() == 'RENEWAL';
+        }).length ??
+        0;
+
+    final totalRenewals = historyRenewalCount + eventsRenewalCount;
+
+    final children = <Widget>[];
+
+    if (totalRenewals > 0) {
+      children.addAll([
+        Icon(Icons.autorenew, size: 14, color: renewalColor),
+        const SizedBox(width: 4),
+        Text(
+          '$totalRenewals',
+          style: context.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: renewalColor,
+          ),
+        ),
+      ]);
+    }
+
+    if (detail?.dollarsSpent != null) {
+      if (totalRenewals > 0) {
+        children.add(const SizedBox(width: 12));
+      }
+      children.addAll([
         Text(
           'Spent ',
           style: context.textTheme.labelSmall?.copyWith(
-            color: spentColor,
+            color: context.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
           ),
         ),
         DualCurrencyExactText(
-          amount: detail.dollarsSpent!,
+          amount: detail!.dollarsSpent!,
           applyBlendedCommission: true,
           style: context.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: spentColor,
+            color: context.colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.end,
         ),
-      ],
+      ]);
+    }
+
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: children,
     );
   }
 }
@@ -1080,9 +1122,7 @@ class _ExpandableHistoryListCardState
                 child: TextButton(
                   onPressed: () => setState(() => _showAll = !_showAll),
                   child: Text(
-                    _showAll
-                        ? 'Show less'
-                        : 'Show all ($remaining more)',
+                    _showAll ? 'Show less' : 'Show all ($remaining more)',
                   ),
                 ),
               ),

@@ -50,7 +50,6 @@ DayTxnCounts aggregateDayCounts(List<RcTransaction> transactions) {
     } else if (tx.isCancelledSummaryBadge) {
       cancelled++;
     }
-    if (tx.isCancelledSummaryBadge) continue;
     switch (tx.type) {
       case RcTransactionType.trial:
         trials++;
@@ -171,10 +170,12 @@ class DaySummaryPlatformShare extends StatelessWidget {
       final count = platformCounts[p] ?? 0;
       if (count <= 0) continue;
       if (children.isNotEmpty) {
-        children.add(Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Text('\u00b7', style: dotStyle),
-        ));
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Text('\u00b7', style: dotStyle),
+          ),
+        );
       }
       final pct = ((count * 100) / total).round().clamp(0, 100);
       final tint = daySummaryPlatformDistColor(p, scheme);
@@ -183,16 +184,9 @@ class DaySummaryPlatformShare extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              daySummaryPlatformDistIcon(p),
-              size: 12,
-              color: tint,
-            ),
+            Icon(daySummaryPlatformDistIcon(p), size: 12, color: tint),
             const SizedBox(width: 3),
-            Text(
-              '$pct%',
-              style: basePctStyle?.copyWith(color: tint),
-            ),
+            Text('$pct%', style: basePctStyle?.copyWith(color: tint)),
           ],
         ),
       );
@@ -256,7 +250,9 @@ class DayTypeCountSummary extends StatelessWidget {
               count: n.trials,
               previousCount: p?.trials,
               filter: TransactionDaySectionFilter.trial,
-              selected: selectedFilters.contains(TransactionDaySectionFilter.trial),
+              selected: selectedFilters.contains(
+                TransactionDaySectionFilter.trial,
+              ),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
               platformCounts:
@@ -280,7 +276,9 @@ class DayTypeCountSummary extends StatelessWidget {
               count: n.renewals,
               previousCount: p?.renewals,
               filter: TransactionDaySectionFilter.renewal,
-              selected: selectedFilters.contains(TransactionDaySectionFilter.renewal),
+              selected: selectedFilters.contains(
+                TransactionDaySectionFilter.renewal,
+              ),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
               platformCounts:
@@ -304,7 +302,9 @@ class DayTypeCountSummary extends StatelessWidget {
               count: n.refunds,
               previousCount: p?.refunds,
               filter: TransactionDaySectionFilter.refunded,
-              selected: selectedFilters.contains(TransactionDaySectionFilter.refunded),
+              selected: selectedFilters.contains(
+                TransactionDaySectionFilter.refunded,
+              ),
               allowTap: enableFilterTaps,
               onTap: onFilterCellTap,
               platformCounts:
