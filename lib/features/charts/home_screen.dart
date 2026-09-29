@@ -7,7 +7,6 @@ import 'package:revenuecat/features/charts/home_notifier.dart';
 import 'package:revenuecat/features/charts/overview_metric_detail_screen.dart';
 import 'package:revenuecat/features/charts/widgets/home_chart_date_range_sheet.dart';
 import 'package:revenuecat/features/charts/widgets/overview_item_card.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -39,7 +38,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(commissionSettingsProvider);
     final state = ref.watch(homeProvider);
     final notifier = ref.read(homeProvider.notifier);
     final metrics = OverviewMetricType.values;

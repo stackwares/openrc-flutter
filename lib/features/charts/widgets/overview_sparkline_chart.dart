@@ -65,40 +65,42 @@ class OverviewSparklineChart extends StatelessWidget {
     final yRange = (maxY ?? 0) - (minY ?? 0);
     final padding = yRange == 0 ? 1.0 : yRange * 0.1;
 
-    return SizedBox(
-      height: 40,
-      child: LineChart(
-        LineChartData(
-          lineTouchData: const LineTouchData(enabled: false),
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: (spots.length - 1).toDouble(),
-          minY: (minY ?? 0) - padding,
-          maxY: (maxY ?? 0) + padding,
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              curveSmoothness: 0.35,
-              preventCurveOverShooting: true,
-              color: lineColor,
-              barWidth: 2,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    lineColor.withValues(alpha: 0.4),
-                    lineColor.withValues(alpha: 0.0),
-                  ],
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 40,
+        child: LineChart(
+          LineChartData(
+            lineTouchData: const LineTouchData(enabled: false),
+            gridData: const FlGridData(show: false),
+            titlesData: const FlTitlesData(show: false),
+            borderData: FlBorderData(show: false),
+            minX: 0,
+            maxX: (spots.length - 1).toDouble(),
+            minY: (minY ?? 0) - padding,
+            maxY: (maxY ?? 0) + padding,
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                curveSmoothness: 0.35,
+                preventCurveOverShooting: true,
+                color: lineColor,
+                barWidth: 2,
+                dotData: const FlDotData(show: false),
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      lineColor.withValues(alpha: 0.4),
+                      lineColor.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

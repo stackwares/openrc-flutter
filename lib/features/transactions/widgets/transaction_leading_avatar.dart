@@ -40,6 +40,8 @@ class TransactionLeadingAvatar extends StatelessWidget {
       );
     }
 
+    final cacheDim = (size * 2.5).round().clamp(60, 240);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: Container(
@@ -49,6 +51,10 @@ class TransactionLeadingAvatar extends StatelessWidget {
         child: CachedNetworkImage(
           imageUrl: url,
           fit: BoxFit.cover,
+          memCacheWidth: cacheDim,
+          memCacheHeight: cacheDim,
+          maxWidthDiskCache: cacheDim,
+          maxHeightDiskCache: cacheDim,
           fadeInDuration: const Duration(milliseconds: 150),
           placeholder: (context, progress) => Skeletonizer.zone(
             child: Bone.square(

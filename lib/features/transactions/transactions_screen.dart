@@ -681,205 +681,225 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           )
         : <RcTransaction>[];
 
-    final children = <Widget>[
-      Card(
-        margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+    final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (scrollInfo.metrics.pixels >=
+            scrollInfo.metrics.maxScrollExtent - 240) {
+          if (state.hasMore && !state.isLoadingMore && !state.isLoading) {
+            ref.read(transactionsProvider.notifier).fetchMore();
+          }
+        }
+        return false;
+      },
+      child: RefreshIndicator(
+        onRefresh: () => ref.read(transactionsProvider.notifier).fetchInitial(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IconButton(
-                    tooltip: 'Previous day',
-                    onPressed: state.isLoading || prevKey == null
-                        ? null
-                        : () => _goToDay(prevKey),
-                    icon: const Icon(Icons.chevron_left_rounded),
-                  ),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Revenue',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.1,
+                  Card(
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                    clipBehavior: Clip.antiAlias,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                tooltip: 'Previous day',
+                                onPressed: state.isLoading || prevKey == null
+                                    ? null
+                                    : () => _goToDay(prevKey),
+                                icon: const Icon(Icons.chevron_left_rounded),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Revenue',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.1,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    DualCurrencyExactText(
+                                      amount: headerDaily,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.headlineSmall?.copyWith(
+                                        fontSize:
+                                            (theme.textTheme.headlineSmall?.fontSize ??
+                                                24) *
+                                            1.2,
+                                        fontWeight: FontWeight.w800,
+                                        color: theme.colorScheme.onSurface,
+                                        letterSpacing: -0.65,
+                                        height: 1.1,
+                                      ),
+                                    ).appValueReveal(
+                                      key: ValueKey(
+                                        'rev_${selectedKey}_${_sectionFilters.map((e) => e.name).join(',')}',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    if (headerPrevTotal != null)
+                                      Center(
+                                        child: _PrevDayRevenueRow(
+                                          previousTotal: headerPrevTotal,
+                                          currentTotal: headerDaily,
+                                        ),
+                                      )
+                                    else
+                                      Text(
+                                        'Previous day: —',
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.labelMedium?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Next day',
+                                onPressed: state.isLoading || !canGoNext
+                                    ? null
+                                    : () {
+                                        final n = _nextCalendarDayKey(selectedKey);
+                                        if (n != null) _goToDay(n);
+                                      },
+                                icon: const Icon(Icons.chevron_right_rounded),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        DualCurrencyExactText(
-                          amount: headerDaily,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontSize:
-                                (theme.textTheme.headlineSmall?.fontSize ??
-                                    24) *
-                                1.2,
-                            fontWeight: FontWeight.w800,
-                            color: theme.colorScheme.onSurface,
-                            letterSpacing: -0.65,
-                            height: 1.1,
+                          const SizedBox(height: 12),
+                          DayTypeCountSummary(
+                            transactions: allForDay,
+                            previousDayTransactions: previousDayForSummary,
+                            selectedFilters: _sectionFilters,
+                            onFilterCellTap: (filter) {
+                              setState(() {
+                                final next = Set<TransactionDaySectionFilter>.from(
+                                  _sectionFilters,
+                                );
+                                if (next.contains(filter)) {
+                                  next.remove(filter);
+                                } else {
+                                  next.add(filter);
+                                }
+                                _sectionFilters = next;
+                              });
+                            },
+                            onClearFilter: null,
                           ),
-                        ).appValueReveal(
-                          key: ValueKey(
-                            'rev_${selectedKey}_${_sectionFilters.map((e) => e.name).join(',')}',
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        if (headerPrevTotal != null)
-                          Center(
-                            child: _PrevDayRevenueRow(
-                              previousTotal: headerPrevTotal,
-                              currentTotal: headerDaily,
-                            ),
-                          )
-                        else
-                          Text(
-                            'Previous day: —',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'Next day',
-                    onPressed: state.isLoading || !canGoNext
-                        ? null
-                        : () {
-                            final n = _nextCalendarDayKey(selectedKey);
-                            if (n != null) _goToDay(n);
-                          },
-                    icon: const Icon(Icons.chevron_right_rounded),
-                  ),
+                  ).appCardEntrance(),
+                  RealtimeRevenueInsightsList(
+                    transactions: allForDayForMetrics,
+                    asModalEntry: true,
+                  ).appCardEntrance(delay: const Duration(milliseconds: 80)),
+                  if (futureTxs.isNotEmpty)
+                    _FutureTransactionsSection(
+                      transactions: futureTxs,
+                      expanded: _futureTransactionsExpanded,
+                      onExpandedChanged: (v) {
+                        setState(() => _futureTransactionsExpanded = v);
+                      },
+                      subscriberEarliestPurchaseLocalDayById:
+                          subscriberEarliestPurchaseDay,
+                      subscriberEarliestPurchaseLocalInstantById:
+                          subscriberEarliestPurchaseInstant,
+                      onOpenTransaction: (tx) {
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute<void>(
+                            builder: (context) =>
+                                TransactionDetailScreen(transaction: tx),
+                          ),
+                        );
+                      },
+                    ).appCardEntrance(delay: const Duration(milliseconds: 120)),
                 ],
               ),
-              const SizedBox(height: 12),
-              DayTypeCountSummary(
-                transactions: allForDay,
-                previousDayTransactions: previousDayForSummary,
-                selectedFilters: _sectionFilters,
-                onFilterCellTap: (filter) {
-                  setState(() {
-                    final next = Set<TransactionDaySectionFilter>.from(
-                      _sectionFilters,
+            ),
+            SliverList.builder(
+              itemCount: transactions.length,
+              itemBuilder: (context, index) {
+                final tx = transactions[index];
+                return TransactionItem(
+                  key: ValueKey(rcTransactionDedupKey(tx) ?? '$index'),
+                  transaction: tx,
+                  subscriberEarliestPurchaseLocalDayById:
+                      subscriberEarliestPurchaseDay,
+                  subscriberEarliestPurchaseLocalInstantById:
+                      subscriberEarliestPurchaseInstant,
+                  inSectionCard: false,
+                  onTap: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) =>
+                            TransactionDetailScreen(transaction: tx),
+                      ),
                     );
-                    if (next.contains(filter)) {
-                      next.remove(filter);
-                    } else {
-                      next.add(filter);
-                    }
-                    _sectionFilters = next;
-                  });
-                },
-                onClearFilter: null,
-              ),
-            ],
-          ),
-        ),
-      ).appCardEntrance(),
-      RealtimeRevenueInsightsList(
-        transactions: allForDayForMetrics,
-        asModalEntry: true,
-      ).appCardEntrance(delay: const Duration(milliseconds: 80)),
-      if (futureTxs.isNotEmpty)
-        _FutureTransactionsSection(
-          transactions: futureTxs,
-          expanded: _futureTransactionsExpanded,
-          onExpandedChanged: (v) {
-            setState(() => _futureTransactionsExpanded = v);
-          },
-          subscriberEarliestPurchaseLocalDayById: subscriberEarliestPurchaseDay,
-          subscriberEarliestPurchaseLocalInstantById:
-              subscriberEarliestPurchaseInstant,
-          onOpenTransaction: (tx) {
-            Navigator.of(context).push<void>(
-              MaterialPageRoute<void>(
-                builder: (context) => TransactionDetailScreen(transaction: tx),
-              ),
-            );
-          },
-        ).appCardEntrance(delay: const Duration(milliseconds: 120)),
-    ];
-
-    var txAnimIndex = 0;
-    for (final tx in transactions) {
-      children.add(
-        TransactionItem(
-          transaction: tx,
-          subscriberEarliestPurchaseLocalDayById: subscriberEarliestPurchaseDay,
-          subscriberEarliestPurchaseLocalInstantById:
-              subscriberEarliestPurchaseInstant,
-          inSectionCard: false,
-          onTap: () {
-            Navigator.of(context).push<void>(
-              MaterialPageRoute<void>(
-                builder: (context) => TransactionDetailScreen(transaction: tx),
-              ),
-            );
-          },
-        ).appListItemEntrance(txAnimIndex++),
-      );
-    }
-
-    if (state.hasMore) {
-      if (state.isLoadingMore) {
-        children.add(
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Skeletonizer(
-              child: Column(
-                children: List.generate(
-                  3,
-                  (i) => Padding(
-                    padding: EdgeInsets.only(bottom: i < 2 ? 12 : 0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Bone.circle(size: 44),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
+                  },
+                ).appListItemEntrance(index);
+              },
+            ),
+            if (state.hasMore && state.isLoadingMore)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Skeletonizer(
+                    child: Column(
+                      children: List.generate(
+                        3,
+                        (i) => Padding(
+                          padding: EdgeInsets.only(bottom: i < 2 ? 12 : 0),
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Bone.text(fontSize: 14),
-                              const SizedBox(height: 6),
-                              Bone.text(fontSize: 12, width: 140),
+                              const Bone.circle(size: 44),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Bone.text(fontSize: 14),
+                                    const SizedBox(height: 6),
+                                    Bone.text(fontSize: 12, width: 140),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
+            SliverPadding(
+              padding: EdgeInsets.only(bottom: bottomPadding),
             ),
-          ),
-        );
-      }
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => ref.read(transactionsProvider.notifier).fetchInitial(),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(
-          bottom: mainShellFloatingTabBarScrollPadding(context),
+          ],
         ),
-        children: children,
       ),
     );
   }

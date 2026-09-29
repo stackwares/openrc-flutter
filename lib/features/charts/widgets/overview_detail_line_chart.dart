@@ -53,9 +53,10 @@ class OverviewDetailLineChart extends StatelessWidget {
             ? 1
             : (spots.length / 5).ceil().clamp(1, spots.length - 1);
 
-    return SizedBox(
-      height: 260,
-      child: LineChart(
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 260,
+        child: LineChart(
         LineChartData(
           lineTouchData: LineTouchData(
             enabled: true,
@@ -200,6 +201,7 @@ class OverviewDetailLineChart extends StatelessWidget {
         ),
         duration: Duration.zero,
       ),
-    );
-  }
+    ),
+  );
+}
 }

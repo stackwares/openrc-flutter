@@ -15,6 +15,21 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
+        },
+        {
+            "name": "ADB For Release",
+            "request": "launch",
+            "type": "node-terminal",
+            "command": "adb devices && adb logcat -c && adb shell monkey -p ${input:androidPackageName} 1 && exec adb logcat -v time",
+            "cwd": "${workspaceFolder}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "androidPackageName",
+            "type": "promptString",
+            "description": "Android package name to launch",
+            "default": "com.revenuecat.client"
         }
     ]
 }
