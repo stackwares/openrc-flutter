@@ -43,16 +43,14 @@ class DayRevenueStrip extends StatelessWidget {
     final maxTotal = days
         .map((d) => d.total ?? 0)
         .fold<double>(0, (m, v) => v > m ? v : m);
-    final duration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : const Duration(milliseconds: 260);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final weekday = DateFormat('EEEEE');
     final longDate = DateFormat('EEE, MMM d');
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        for (final d in days)
+        for (final (i, d) in days.indexed)
           Expanded(
             child: Semantics(
               button: onDaySelected != null,
@@ -76,13 +74,29 @@ class DayRevenueStrip extends StatelessWidget {
                         height: barAreaHeight,
                         child: Align(
                           alignment: Alignment.bottomCenter,
-                          child: AnimatedContainer(
-                            duration: duration,
+                          // Grows from zero on first show (left to right),
+                          // then glides between heights on later changes.
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(
+                              begin: 0,
+                              end: _barHeight(d.total, maxTotal),
+                            ),
+                            duration: reduceMotion
+                                ? Duration.zero
+                                : Duration(milliseconds: 420 + i * 45),
                             curve: Curves.easeOutCubic,
-                            height: _barHeight(d.total, maxTotal),
-                            decoration: BoxDecoration(
-                              color: _barColor(context, d),
-                              borderRadius: BorderRadius.circular(4),
+                            builder: (context, height, _) => SizedBox(
+                              height: height,
+                              width: double.infinity,
+                              child: AnimatedContainer(
+                                duration: reduceMotion
+                                    ? Duration.zero
+                                    : const Duration(milliseconds: 220),
+                                decoration: BoxDecoration(
+                                  color: _barColor(context, d),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
                             ),
                           ),
                         ),

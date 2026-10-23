@@ -19,8 +19,9 @@ import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/rc_account_projects_provider.dart';
 import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/animated_number.dart';
+import 'package:revenuecat/widgets/animated_reveal.dart';
 import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
 import 'package:revenuecat/widgets/shell_header.dart';
 
 /// Month-to-date Revenue tab totals (local calendar month). Shares [transactionsProvider] with [TransactionsScreen].
@@ -141,8 +142,9 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                 bottom: mainShellFloatingTabBarScrollPadding(context),
               ),
               children: [
-                if (filtersActive)
-                  ActiveFiltersRow(
+                AnimatedReveal(
+                  visible: filtersActive,
+                  child: ActiveFiltersRow(
                     appCount: appIncludeFilter?.length,
                     countryCodes: countryFilter,
                     platforms: platformFilter,
@@ -170,6 +172,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                             null,
                     onClearAll: clearFilters,
                   ),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   child: _MonthHeroCard(
@@ -177,7 +180,6 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                     grossTotal: grossTotal,
                     showGross: commission.adjustmentEnabled,
                     loadComplete: state.realtimeLoadComplete,
-                    transactionCount: txs.length,
                   ).appCardEntrance(),
                 ),
                 Padding(
@@ -234,14 +236,12 @@ class _MonthHeroCard extends StatelessWidget {
     required this.grossTotal,
     required this.showGross,
     required this.loadComplete,
-    required this.transactionCount,
   });
 
   final double netTotal;
   final double grossTotal;
   final bool showGross;
   final bool loadComplete;
-  final int transactionCount;
 
   @override
   Widget build(BuildContext context) {
@@ -264,18 +264,17 @@ class _MonthHeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          DualCurrencyExactText(
+          AnimatedExactAmount(
             amount: netTotal,
+            countFromZero: true,
             style: AppText.amount(context, size: 34),
-          ).appValueReveal(
-            key: ValueKey('rt_net_${netTotal}_$transactionCount'),
           ),
           if (showGross) ...[
             const SizedBox(height: 6),
             Row(
               children: [
                 Text('Before store fees  ', style: muted),
-                DualCurrencyExactText(
+                AnimatedExactAmount(
                   amount: grossTotal,
                   applyCommissionAdjustment: false,
                   style: muted,

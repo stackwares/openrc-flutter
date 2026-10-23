@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/theme/app_tokens.dart';
 
@@ -82,11 +83,18 @@ class ShareRow extends StatelessWidget {
                         excludeSemantics: true,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(
-                            value: v,
-                            minHeight: 6,
-                            backgroundColor: scheme.surfaceContainerHighest,
-                            valueColor: AlwaysStoppedAnimation(barColor),
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: v),
+                            duration: AppMotion.of(context, AppMotion.counter),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, value, _) =>
+                                LinearProgressIndicator(
+                                  value: value,
+                                  minHeight: 6,
+                                  backgroundColor:
+                                      scheme.surfaceContainerHighest,
+                                  valueColor: AlwaysStoppedAnimation(barColor),
+                                ),
                           ),
                         ),
                       ),

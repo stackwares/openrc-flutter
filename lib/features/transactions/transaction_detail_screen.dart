@@ -217,7 +217,14 @@ Future<void> _showAppIconUrlDialog(
 class TransactionDetailScreen extends ConsumerWidget {
   final RcTransaction transaction;
 
-  const TransactionDetailScreen({super.key, required this.transaction});
+  /// Matches the list row's icon [Hero] so the app icon flies into place.
+  final Object? heroTag;
+
+  const TransactionDetailScreen({
+    super.key,
+    required this.transaction,
+    this.heroTag,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -241,58 +248,39 @@ class TransactionDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: state.isLoading
-          ? _buildDetailSkeleton(context)
-          : state.error != null
+      // The header only needs the transaction, so it shows right away (and
+      // receives the icon hero); the customer sections load below it.
+      body: !state.isLoading && state.error != null
           ? _buildError(context, ref, state.error!)
           : _buildContent(context, ref, state),
     );
   }
 
-  Widget _buildDetailSkeleton(BuildContext context) {
+  /// Placeholder for the customer sections while they load.
+  Widget _buildSectionsSkeleton(BuildContext context) {
     return Skeletonizer(
-      child: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 16, 8),
+            child: Bone.text(fontSize: 15, width: 90),
+          ),
           Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Bone.square(
-                    size: 48,
-                    borderRadius: BorderRadius.circular(12),
+              child: Column(
+                children: List.generate(
+                  4,
+                  (i) => Padding(
+                    padding: EdgeInsets.only(bottom: i < 3 ? 14 : 0),
+                    child: const Bone.multiText(lines: 2, fontSize: 14),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Bone.text(fontSize: 18),
-                        const SizedBox(height: 8),
-                        Bone.text(fontSize: 12, width: 200),
-                      ],
-                    ),
-                  ),
-                  Bone.text(fontSize: 22, width: 72),
-                ],
+                ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Bone.text(fontSize: 13),
-          ),
-          ...List.generate(
-            5,
-            (_) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Bone.multiText(lines: 2, fontSize: 14),
-            ),
-          ),
-          const SizedBox(height: 32),
         ],
       ),
     );
@@ -327,22 +315,30 @@ class TransactionDetailScreen extends ConsumerWidget {
       return Duration(milliseconds: ms);
     }
 
+    final summary = _buildTransactionSummary(
+      context,
+      ref,
+      tx,
+      appId: appId,
+      appName: tx.app?.name,
+      customIconUrl: customIconUrl,
+    );
+    final summaryDelay = nextSectionDelay();
+
     return ListView(
       padding: EdgeInsets.only(
         top: 4,
         bottom: 24 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
-        _buildTransactionSummary(
-          context,
-          ref,
-          tx,
-          appId: appId,
-          appName: tx.app?.name,
-          customIconUrl: customIconUrl,
-        ).appCardEntrance(delay: nextSectionDelay()),
-        if (detail?.history?.isNotEmpty == true ||
-            activity?.events?.isNotEmpty == true) ...[
+        // With a hero the icon already carries the eye; skip the card fade.
+        heroTag != null
+            ? summary
+            : summary.appCardEntrance(delay: summaryDelay),
+        if (state.isLoading) _buildSectionsSkeleton(context),
+        if (!state.isLoading &&
+            (detail?.history?.isNotEmpty == true ||
+                activity?.events?.isNotEmpty == true)) ...[
           _SectionHeader(
             title: 'History',
             trailing: _buildHistoryHeaderTrailing(context, detail, activity),
@@ -354,7 +350,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             activity?.events,
           ).appCardEntrance(delay: nextSectionDelay()),
         ],
-        if (detail != null) ...[
+        if (!state.isLoading && detail != null) ...[
           if (detail.subscriptionStatuses?.isNotEmpty == true) ...[
             _SectionHeader(title: 'Entitlements'),
             _buildEntitlements(
@@ -421,6 +417,7 @@ class TransactionDetailScreen extends ConsumerWidget {
         size: 24,
       ),
     );
+    if (heroTag != null) avatar = Hero(tag: heroTag!, child: avatar);
     if (appId != null) {
       avatar = Tooltip(
         message: 'Set app icon',
@@ -1116,26 +1113,32 @@ class _ExpandableHistoryListCardState
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 16, 16, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (int i = 0; i < visible.length; i++)
-              _HistoryTimelineEntry(
-                item: visible[i],
-                commissionStore: widget.transaction.storeForCommission,
-                isFirst: i == 0,
-                isLast: i == visible.length - 1,
-              ),
-            if (needsToggle)
-              Center(
-                child: TextButton(
-                  onPressed: () => setState(() => _showAll = !_showAll),
-                  child: Text(
-                    _showAll ? 'Show less' : 'Show all ($remaining more)',
+        // "Show all" grows the card open instead of jumping.
+        child: AnimatedSize(
+          duration: AppMotion.of(context, const Duration(milliseconds: 280)),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (int i = 0; i < visible.length; i++)
+                _HistoryTimelineEntry(
+                  item: visible[i],
+                  commissionStore: widget.transaction.storeForCommission,
+                  isFirst: i == 0,
+                  isLast: i == visible.length - 1,
+                ),
+              if (needsToggle)
+                Center(
+                  child: TextButton(
+                    onPressed: () => setState(() => _showAll = !_showAll),
+                    child: Text(
+                      _showAll ? 'Show less' : 'Show all ($remaining more)',
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

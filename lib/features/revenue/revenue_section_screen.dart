@@ -11,6 +11,7 @@ import 'package:revenuecat/features/transactions/widgets/transactions_app_filter
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/rc_account_projects_provider.dart';
 import 'package:revenuecat/services/transaction_list_sort_store.dart';
+import 'package:revenuecat/widgets/animated_reveal.dart';
 import 'package:revenuecat/widgets/grouped_list.dart';
 import 'package:revenuecat/widgets/shell_header.dart';
 
@@ -63,29 +64,27 @@ class _RealtimeSectionTransactionsScreenState
         .toList();
     sortMutableTransactionList(filtered, listSort);
 
-    final tenureMap =
-        earliestPurchaseLocalDayBySubscriberId(widget.windowTransactions);
-    final tenureInstantMap =
-        earliestPurchaseLocalInstantBySubscriberId(widget.windowTransactions);
+    final tenureMap = earliestPurchaseLocalDayBySubscriberId(
+      widget.windowTransactions,
+    );
+    final tenureInstantMap = earliestPurchaseLocalInstantBySubscriberId(
+      widget.windowTransactions,
+    );
 
     final heading =
         '${filtered.length} ${transactionDaySectionGridLabel(widget.filter)}';
 
     final accountProjects =
         ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
-    final filterOptions = collectAppFilterOptionsWithProjects(
-      {'_': widget.windowTransactions},
-      accountProjects,
-    );
+    final filterOptions = collectAppFilterOptionsWithProjects({
+      '_': widget.windowTransactions,
+    }, accountProjects);
     final canFilterApps = filterOptions.isNotEmpty;
 
     String emptyMessage() {
-      final countryOn =
-          _countryFilter != null && _countryFilter!.isNotEmpty;
-      final platformOn =
-          _platformFilter != null && _platformFilter!.isNotEmpty;
-      final filtersOn =
-          _appIncludeFilter != null || countryOn || platformOn;
+      final countryOn = _countryFilter != null && _countryFilter!.isNotEmpty;
+      final platformOn = _platformFilter != null && _platformFilter!.isNotEmpty;
+      final filtersOn = _appIncludeFilter != null || countryOn || platformOn;
       if (appFiltered.isEmpty && filtersOn) {
         return 'No transactions match your filters in this window.';
       }
@@ -146,8 +145,9 @@ class _RealtimeSectionTransactionsScreenState
       ),
       body: CustomScrollView(
         slivers: [
-          if (filtersOn)
-            SliverToBoxAdapter(
+          SliverToBoxAdapter(
+            child: AnimatedReveal(
+              visible: filtersOn,
               child: ActiveFiltersRow(
                 appCount: _appIncludeFilter?.length,
                 countryCodes: _countryFilter,
@@ -163,6 +163,7 @@ class _RealtimeSectionTransactionsScreenState
                 }),
               ),
             ),
+          ),
           if (filtered.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -186,15 +187,20 @@ class _RealtimeSectionTransactionsScreenState
               dividerIndent: kTransactionRowDividerIndent,
               itemBuilder: (context, i) {
                 final tx = filtered[i];
+                final key = rcTransactionDedupKey(tx);
+                final heroTag = key == null ? null : 'tx-section-$key';
                 return TransactionItem(
                   transaction: tx,
+                  heroTag: heroTag,
                   subscriberEarliestPurchaseLocalDayById: tenureMap,
                   subscriberEarliestPurchaseLocalInstantById: tenureInstantMap,
                   onTap: () {
                     Navigator.of(context).push<void>(
                       MaterialPageRoute<void>(
-                        builder: (context) =>
-                            TransactionDetailScreen(transaction: tx),
+                        builder: (context) => TransactionDetailScreen(
+                          transaction: tx,
+                          heroTag: heroTag,
+                        ),
                       ),
                     );
                   },

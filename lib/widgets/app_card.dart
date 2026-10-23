@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/pressable_scale.dart';
 
 /// Neutral card with a hairline border; the base surface for every section.
 class AppCard extends StatelessWidget {
@@ -35,14 +36,20 @@ class AppCard extends StatelessWidget {
       ),
     );
     final content = Padding(padding: padding, child: child);
-    return Card(
-      margin: margin,
-      color: color ?? context.colorScheme.surfaceContainerLow,
-      shape: shape,
-      clipBehavior: Clip.antiAlias,
-      child: onTap == null
-          ? content
-          : InkWell(onTap: onTap, customBorder: shape, child: content),
+    return Padding(
+      padding: margin,
+      child: PressableScale(
+        enabled: onTap != null,
+        scale: 0.985,
+        child: Card(
+          color: color ?? context.colorScheme.surfaceContainerLow,
+          shape: shape,
+          clipBehavior: Clip.antiAlias,
+          child: onTap == null
+              ? content
+              : InkWell(onTap: onTap, customBorder: shape, child: content),
+        ),
+      ),
     );
   }
 }

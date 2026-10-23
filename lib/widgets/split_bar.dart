@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:revenuecat/widgets/wipe_in.dart';
 
 class SplitSegment {
   const SplitSegment({
@@ -14,6 +16,8 @@ class SplitSegment {
 }
 
 /// Thin stacked bar showing how a whole splits into weighted parts.
+///
+/// Wipes in on first show; segments glide to new widths when shares change.
 class SplitBar extends StatelessWidget {
   const SplitBar({
     super.key,
@@ -35,6 +39,8 @@ class SplitBar extends StatelessWidget {
         : visible
               .map((s) => '${s.label} ${(s.value / total * 100).round()}%')
               .join(', ');
+    final duration = AppMotion.of(context, const Duration(milliseconds: 420));
+
     return Semantics(
       label: semantics,
       excludeSemantics: true,
@@ -45,20 +51,36 @@ class SplitBar extends StatelessWidget {
           width: double.infinity,
           child: total <= 0
               ? ColoredBox(color: context.appColors.hairline)
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < visible.length; i++) ...[
-                      if (i > 0) SizedBox(width: gap),
-                      Expanded(
-                        flex: (visible[i].value / total * 1000).round().clamp(
-                          1,
-                          1000,
-                        ),
-                        child: ColoredBox(color: visible[i].color),
-                      ),
-                    ],
-                  ],
+              : WipeIn(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final usable =
+                          constraints.maxWidth - gap * (visible.length - 1);
+                      var left = 0.0;
+                      return Stack(
+                        children: [
+                          for (final s in segments)
+                            () {
+                              final width = s.value > 0
+                                  ? usable * s.value / total
+                                  : 0.0;
+                              final segment = AnimatedPositioned(
+                                key: ValueKey(s.label),
+                                duration: duration,
+                                curve: Curves.easeOutCubic,
+                                left: left,
+                                top: 0,
+                                bottom: 0,
+                                width: width,
+                                child: ColoredBox(color: s.color),
+                              );
+                              if (width > 0) left += width + gap;
+                              return segment;
+                            }(),
+                        ],
+                      );
+                    },
+                  ),
                 ),
         ),
       ),

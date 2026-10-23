@@ -10,6 +10,7 @@ import 'package:revenuecat/features/charts/overview_metric_detail_screen.dart';
 import 'package:revenuecat/features/charts/widgets/home_chart_date_range_sheet.dart';
 import 'package:revenuecat/features/charts/widgets/overview_item_card.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
+import 'package:revenuecat/widgets/pressable_scale.dart';
 import 'package:revenuecat/widgets/shell_header.dart';
 
 /// Quick chart ranges shown as chips (all end today).
@@ -250,40 +251,50 @@ class _RangeChip extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      child: Material(
-        color: selected
-            ? Color.alphaBlend(
-                scheme.primary.withValues(alpha: 0.16),
-                scheme.surfaceContainerLow,
-              )
-            : scheme.surfaceContainerLow,
-        shape: StadiumBorder(
-          side: BorderSide(
+      child: PressableScale(
+        enabled: onTap != null,
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.fast),
+          curve: Curves.easeOut,
+          decoration: ShapeDecoration(
             color: selected
-                ? scheme.primary.withValues(alpha: 0.5)
-                : context.appColors.hairline,
+                ? Color.alphaBlend(
+                    scheme.primary.withValues(alpha: 0.16),
+                    scheme.surfaceContainerLow,
+                  )
+                : scheme.surfaceContainerLow,
+            shape: StadiumBorder(
+              side: BorderSide(
+                color: selected
+                    ? scheme.primary.withValues(alpha: 0.5)
+                    : context.appColors.hairline,
+              ),
+            ),
           ),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const StadiumBorder(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 15, color: fg),
-                  const SizedBox(width: 6),
-                ],
-                Text(
-                  label,
-                  style: context.textTheme.labelLarge?.copyWith(
-                    color: selected ? scheme.primary : scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              customBorder: const StadiumBorder(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, size: 15, color: fg),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      label,
+                      style: context.textTheme.labelLarge?.copyWith(
+                        color: selected ? scheme.primary : scheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

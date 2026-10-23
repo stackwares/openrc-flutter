@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/animated_number.dart';
 import 'package:revenuecat/widgets/delta_badge.dart';
+import 'package:revenuecat/widgets/pressable_scale.dart';
 import 'package:revenuecat/widgets/split_bar.dart';
 
 /// e.g. `After 15% store commission` or `After 15% / 12% store commission` when rates differ.
@@ -258,76 +261,79 @@ class DaySummaryStatCell extends StatelessWidget {
         if (delta != null) delta.semanticsLabel,
       ].join(', '),
       excludeSemantics: true,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: allowTap ? () => onTap(filter) : null,
-          borderRadius: radius,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              color: fill,
-              border: Border.all(
-                color: selected ? scheme.primary : colors.hairline,
-                width: selected ? 1.5 : 1,
+      child: PressableScale(
+        enabled: allowTap,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: allowTap ? () => onTap(filter) : null,
+            borderRadius: radius,
+            child: AnimatedContainer(
+              duration: AppMotion.of(context, AppMotion.fast),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                color: fill,
+                border: Border.all(
+                  color: selected ? scheme.primary : colors.hairline,
+                  width: selected ? 1.5 : 1,
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: accent,
+                          shape: BoxShape.circle,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                // Wraps the delta under the count when text is large.
-                Wrap(
-                  spacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  children: [
-                    Text(
-                      '$count',
-                      style: AppText.amount(
-                        context,
-                        size: 22,
-                        color: count == 0
-                            ? scheme.onSurfaceVariant
-                            : scheme.onSurface,
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.labelMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
-                    ?delta,
-                  ],
-                ),
-                const Spacer(),
-                const SizedBox(height: 8),
-                if (segments.isNotEmpty)
-                  SplitBar(segments: segments, height: 3)
-                else
-                  const SizedBox(height: 3),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  // Wraps the delta under the count when text is large.
+                  Wrap(
+                    spacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    children: [
+                      AnimatedCount(
+                        count: count,
+                        style: AppText.amount(
+                          context,
+                          size: 22,
+                          color: count == 0
+                              ? scheme.onSurfaceVariant
+                              : scheme.onSurface,
+                        ),
+                      ),
+                      ?delta,
+                    ],
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: 8),
+                  if (segments.isNotEmpty)
+                    SplitBar(segments: segments, height: 3)
+                  else
+                    const SizedBox(height: 3),
+                ],
+              ),
             ),
           ),
         ),

@@ -35,9 +35,10 @@ import 'package:revenuecat/features/transactions/transaction_detail_screen.dart'
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/widgets/day_summary_card.dart';
 import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/animated_number.dart';
+import 'package:revenuecat/widgets/animated_reveal.dart';
 import 'package:revenuecat/widgets/app_card.dart';
 import 'package:revenuecat/widgets/delta_badge.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
 import 'package:revenuecat/widgets/grouped_list.dart';
 import 'package:revenuecat/widgets/section_header.dart';
 import 'package:revenuecat/widgets/shell_header.dart';
@@ -696,10 +697,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
 
-    void openTransaction(RcTransaction tx) {
+    void openTransaction(RcTransaction tx, {Object? heroTag}) {
       Navigator.of(context).push<void>(
         MaterialPageRoute<void>(
-          builder: (context) => TransactionDetailScreen(transaction: tx),
+          builder: (context) =>
+              TransactionDetailScreen(transaction: tx, heroTag: heroTag),
         ),
       );
     }
@@ -719,8 +721,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            if (listFiltersActive || _sectionFilters.isNotEmpty)
-              SliverToBoxAdapter(
+            SliverToBoxAdapter(
+              child: AnimatedReveal(
+                visible: listFiltersActive || _sectionFilters.isNotEmpty,
                 child: ActiveFiltersRow(
                   appCount: appIncludeFilter?.length,
                   countryCodes: countryFilter,
@@ -748,6 +751,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   onClearAll: _clearTransactionFilters,
                 ),
               ),
+            ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               sliver: SliverToBoxAdapter(
@@ -757,8 +761,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       : 'Revenue',
                   total: headerDaily,
                   previousTotal: headerPrevTotal,
-                  valueKey:
-                      'rev_${selectedKey}_${_sectionFilters.map((e) => e.name).join(',')}',
                   strip: DayRevenueStrip(
                     days: stripDays,
                     selectedDayKey: selectedKey,
@@ -851,14 +853,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   dividerIndent: kTransactionRowDividerIndent,
                   itemBuilder: (context, index) {
                     final tx = transactions[index];
+                    final key = rcTransactionDedupKey(tx);
+                    final heroTag = key == null ? null : 'tx-$key';
                     return TransactionItem(
+                      heroTag: heroTag,
                       key: ValueKey(rcTransactionDedupKey(tx) ?? '$index'),
                       transaction: tx,
                       subscriberEarliestPurchaseLocalDayById:
                           subscriberEarliestPurchaseDay,
                       subscriberEarliestPurchaseLocalInstantById:
                           subscriberEarliestPurchaseInstant,
-                      onTap: () => openTransaction(tx),
+                      onTap: () => openTransaction(tx, heroTag: heroTag),
                     ).appListItemEntrance(index);
                   },
                 ),
@@ -1017,7 +1022,6 @@ class _DayHeroCard extends StatelessWidget {
     required this.label,
     required this.total,
     required this.previousTotal,
-    required this.valueKey,
     required this.strip,
   });
 
@@ -1026,8 +1030,26 @@ class _DayHeroCard extends StatelessWidget {
 
   /// Null when the previous day isn't loaded yet.
   final double? previousTotal;
-  final String valueKey;
   final Widget strip;
+
+  /// Cross-fades when the change moves to a new value or direction.
+  Widget _changeBadge(BuildContext context, double prev) {
+    final badge = DeltaBadge.percent(current: total, previous: prev);
+    return AnimatedSwitcher(
+      duration: AppMotion.of(context, AppMotion.fast),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.9, end: 1).animate(animation),
+          child: child,
+        ),
+      ),
+      child: KeyedSubtree(
+        key: ValueKey('${badge.direction}_${badge.label}'),
+        child: badge,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1051,10 +1073,11 @@ class _DayHeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          DualCurrencyExactText(
+          AnimatedExactAmount(
             amount: total,
+            countFromZero: true,
             style: AppText.amount(context, size: 34),
-          ).appValueReveal(key: ValueKey(valueKey)),
+          ),
           const SizedBox(height: 8),
           if (prev == null)
             Text('Previous day not loaded yet', style: muted)
@@ -1064,13 +1087,12 @@ class _DayHeroCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 4,
               children: [
-                if (prev.abs() > 1e-6)
-                  DeltaBadge.percent(current: total, previous: prev),
+                if (prev.abs() > 1e-6) _changeBadge(context, prev),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('vs yesterday  ', style: muted),
-                    DualCurrencyExactText(amount: prev, style: muted),
+                    AnimatedExactAmount(amount: prev, style: muted),
                   ],
                 ),
               ],
@@ -1089,7 +1111,12 @@ class _FutureTransactionsSection extends StatelessWidget {
   final ValueChanged<bool> onExpandedChanged;
   final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
   final Map<String, DateTime> subscriberEarliestPurchaseLocalInstantById;
-  final void Function(RcTransaction tx) onOpenTransaction;
+  final void Function(RcTransaction tx, {Object? heroTag}) onOpenTransaction;
+
+  static Object? _heroTag(RcTransaction tx) {
+    final key = rcTransactionDedupKey(tx);
+    return key == null ? null : 'tx-scheduled-$key';
+  }
 
   const _FutureTransactionsSection({
     required this.transactions,
@@ -1156,18 +1183,26 @@ class _FutureTransactionsSection extends StatelessWidget {
               ),
             ),
           ),
-          if (expanded)
-            for (final tx in transactions) ...[
-              const Divider(indent: kTransactionRowDividerIndent),
-              TransactionItem(
-                transaction: tx,
-                subscriberEarliestPurchaseLocalDayById:
-                    subscriberEarliestPurchaseLocalDayById,
-                subscriberEarliestPurchaseLocalInstantById:
-                    subscriberEarliestPurchaseLocalInstantById,
-                onTap: () => onOpenTransaction(tx),
-              ),
-            ],
+          AnimatedReveal(
+            visible: expanded,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final tx in transactions) ...[
+                  const Divider(indent: kTransactionRowDividerIndent),
+                  TransactionItem(
+                    transaction: tx,
+                    heroTag: _heroTag(tx),
+                    subscriberEarliestPurchaseLocalDayById:
+                        subscriberEarliestPurchaseLocalDayById,
+                    subscriberEarliestPurchaseLocalInstantById:
+                        subscriberEarliestPurchaseLocalInstantById,
+                    onTap: () => onOpenTransaction(tx, heroTag: _heroTag(tx)),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -107,21 +107,42 @@ class _FloatingPillBar extends StatelessWidget {
           child: Container(
             height: FloatingTabChrome.barHeight,
             padding: const EdgeInsets.all(6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Stack(
               children: [
-                for (var i = 0; i < destinations.length; i++)
-                  SizedBox(
-                    width: FloatingTabChrome.tabSlotWidth,
-                    child: _FloatingTabButton(
-                      spec: destinations[i],
-                      selected: i == currentIndex,
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        onDestinationSelected(i);
-                      },
+                // One indicator that glides to the selected slot.
+                AnimatedPositioned(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 380),
+                  curve: Curves.easeOutBack,
+                  left: currentIndex * FloatingTabChrome.tabSlotWidth,
+                  top: 0,
+                  bottom: 0,
+                  width: FloatingTabChrome.tabSlotWidth,
+                  child: DecoratedBox(
+                    decoration: ShapeDecoration(
+                      shape: const StadiumBorder(),
+                      color: scheme.primary.withValues(alpha: 0.16),
                     ),
                   ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < destinations.length; i++)
+                      SizedBox(
+                        width: FloatingTabChrome.tabSlotWidth,
+                        child: _FloatingTabButton(
+                          spec: destinations[i],
+                          selected: i == currentIndex,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            onDestinationSelected(i);
+                          },
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -156,28 +177,28 @@ class _FloatingTabButton extends StatelessWidget {
         button: true,
         selected: selected,
         label: spec.label,
-        child: AnimatedContainer(
-          duration: duration,
-          curve: FloatingTabChrome.motionCurve,
-          decoration: ShapeDecoration(
-            shape: const StadiumBorder(),
-            color: selected
-                ? scheme.primary.withValues(alpha: 0.16)
-                : Colors.transparent,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: selected ? null : onTap,
-              customBorder: const StadiumBorder(),
-              child: Column(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: selected ? null : onTap,
+            customBorder: const StadiumBorder(),
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: color),
+              duration: duration,
+              curve: FloatingTabChrome.motionCurve,
+              builder: (context, tint, _) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    selected ? spec.selectedIcon : spec.icon,
-                    size: 22,
-                    color: color,
-                    semanticLabel: spec.label,
+                  AnimatedScale(
+                    scale: selected ? 1 : 0.92,
+                    duration: duration,
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      selected ? spec.selectedIcon : spec.icon,
+                      size: 22,
+                      color: tint,
+                      semanticLabel: spec.label,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -186,7 +207,7 @@ class _FloatingTabButton extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: color,
+                      color: tint,
                       fontSize: 11,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                       height: 1.1,

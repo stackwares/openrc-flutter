@@ -30,10 +30,14 @@ class TransactionItem extends ConsumerWidget {
   /// Earliest loaded purchase **instant** per subscriber (same-day tenure `ago` anchor).
   final Map<String, DateTime> subscriberEarliestPurchaseLocalInstantById;
 
+  /// When set, the app icon flies into [TransactionDetailScreen] with this tag.
+  final Object? heroTag;
+
   const TransactionItem({
     super.key,
     required this.transaction,
     this.onTap,
+    this.heroTag,
     this.subscriberEarliestPurchaseLocalDayById = const {},
     this.subscriberEarliestPurchaseLocalInstantById = const {},
   });
@@ -105,12 +109,14 @@ class TransactionItem extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TransactionLeadingAvatar(
-              imageUrl: iconUrl,
-              tintColor: statusColor,
-              fallback: Icon(_typeIcon(type), color: statusColor, size: 20),
-              platformIcon: _storeIcon(transaction.store),
-              platformIconColor: storeBrandIconTint(transaction.store),
+            _withHero(
+              TransactionLeadingAvatar(
+                imageUrl: iconUrl,
+                tintColor: statusColor,
+                fallback: Icon(_typeIcon(type), color: statusColor, size: 20),
+                platformIcon: _storeIcon(transaction.store),
+                platformIconColor: storeBrandIconTint(transaction.store),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -178,6 +184,11 @@ class TransactionItem extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _withHero(Widget avatar) {
+    final tag = heroTag;
+    return tag == null ? avatar : Hero(tag: tag, child: avatar);
   }
 
   IconData _typeIcon(RcTransactionType type) {
