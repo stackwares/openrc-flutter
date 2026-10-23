@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:intl/intl.dart';
 
 /// Apple App Store fiscal-month payout schedule (same data as [Kedi](https://github.com/sereisoglu/Kedi)).
@@ -10,6 +12,7 @@ class AppStorePayday {
     required this.startDate,
     required this.endDate,
     required this.paymentDate,
+    this.isProjected = false,
   });
 
   final int fiscalYear;
@@ -18,12 +21,32 @@ class AppStorePayday {
   final DateTime endDate;
   final DateTime paymentDate;
 
-  static final List<AppStorePayday> _all = _parseEmbedded();
+  /// Computed from Apple's fiscal rules rather than a published calendar.
+  final bool isProjected;
+
+  /// Published calendar, then projected fiscal years after it so the next
+  /// payout is never missing when the table runs out.
+  static final List<AppStorePayday> _all = () {
+    final published = _parseEmbedded();
+    final lastYear = published.last.fiscalYear;
+    return [
+      ...published,
+      for (var fy = lastYear + 1; fy <= lastYear + 5; fy++)
+        ...projectFiscalYear(fy),
+    ];
+  }();
 
   static List<AppStorePayday> get all => List.unmodifiable(_all);
 
-  static AppStorePayday? get upcoming {
-    final now = DateTime.now();
+  /// Rows from the published calendar only.
+  @visibleForTesting
+  static List<AppStorePayday> get published =>
+      _all.where((p) => !p.isProjected).toList();
+
+  static AppStorePayday? get upcoming => upcomingOn(DateTime.now());
+
+  /// First payout on or after [now]'s calendar day.
+  static AppStorePayday? upcomingOn(DateTime now) {
     for (final p in _all) {
       if (_isSameCalendarDay(p.paymentDate, now) ||
           p.paymentDate.isAfter(_startOfDay(now))) {
@@ -31,6 +54,43 @@ class AppStorePayday {
       }
     }
     return null;
+  }
+
+  /// Last Saturday of September of [fiscalYear]: Apple's fiscal year end.
+  static DateTime fiscalYearEnd(int fiscalYear) {
+    var d = DateTime(fiscalYear, 9, 30);
+    while (d.weekday != DateTime.saturday) {
+      d = DateTime(d.year, d.month, d.day - 1);
+    }
+    return d;
+  }
+
+  /// One fiscal year of payout periods from Apple's rules: quarters of 5, 4
+  /// and 4 weeks (a 53-week year adds a week to December), paid 33 days
+  /// after each period closes. Matches every published row in the table.
+  static List<AppStorePayday> projectFiscalYear(int fiscalYear) {
+    final start = _addDays(fiscalYearEnd(fiscalYear - 1), 1);
+    final end = fiscalYearEnd(fiscalYear);
+    final weeks = (end.difference(start).inDays + 1) ~/ 7;
+    final pattern = [5, 4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 4];
+    if (weeks == 53) pattern[2] = 5;
+    final out = <AppStorePayday>[];
+    var periodStart = start;
+    for (var i = 0; i < pattern.length; i++) {
+      final periodEnd = _addDays(periodStart, pattern[i] * 7 - 1);
+      out.add(
+        AppStorePayday(
+          fiscalYear: fiscalYear,
+          fiscalMonthStart: DateTime(fiscalYear - 1, 10 + i, 1),
+          startDate: periodStart,
+          endDate: periodEnd,
+          paymentDate: _addDays(periodEnd, 33),
+          isProjected: true,
+        ),
+      );
+      periodStart = _addDays(periodEnd, 1);
+    }
+    return out;
   }
 
   PaydayProximityState proximityState(DateTime now) {
@@ -172,6 +232,10 @@ enum PaydayProximityState {
 }
 
 DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
+
+/// Calendar-day arithmetic that stays at midnight across DST changes.
+DateTime _addDays(DateTime d, int days) =>
+    DateTime(d.year, d.month, d.day + days);
 
 bool _isSameCalendarDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;

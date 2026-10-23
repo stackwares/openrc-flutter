@@ -98,7 +98,7 @@ class WidgetDataChannel {
     final mtdTxs = collectTransactionsInCurrentLocalMonth(state.grouped);
 
     // Transaction summary: today's transactions for the Transactions Widget
-    final summary = _buildTransactionsSummary(
+    final summary = buildTransactionsSummary(
       todayTxs,
       yesterdayTxs,
       commission,
@@ -132,7 +132,8 @@ class WidgetDataChannel {
     };
   }
 
-  static Map<String, dynamic> _buildTransactionsSummary(
+  @visibleForTesting
+  static Map<String, dynamic> buildTransactionsSummary(
     List<RcTransaction> todayTxs,
     List<RcTransaction> yesterdayTxs,
     CommissionSettings commission,
@@ -150,41 +151,20 @@ class WidgetDataChannel {
       exchangeRates,
     );
 
-    // Count by type for today
-    int trials = 0;
-    int conversions = 0;
-    int renewals = 0;
-    int purchases = 0;
-    int refunds = 0;
-    int cancellations = 0;
-
-    for (final tx in todayTxs) {
-      if (tx.isSandbox == true) continue;
-      final t = tx.type;
-      if (t == RcTransactionType.refund) refunds++;
-      if (tx.isCancelledSummaryBadge) cancellations++;
-      
-      // Skip cancelled transactions for non-cancelled counts
-      if (tx.isCancelledSummaryBadge) continue;
-      
-      if (t == RcTransactionType.trial) trials++;
-      if (t == RcTransactionType.conversion) conversions++;
-      if (t == RcTransactionType.renewal) renewals++;
-      if (t == RcTransactionType.newSubscription ||
-          t == RcTransactionType.oneTimePurchase) {
-        purchases++;
-      }
-    }
+    // Same counting as the app's summary tiles.
+    final counts = aggregateDayCounts(
+      todayTxs.where((tx) => tx.isSandbox != true).toList(),
+    );
 
     return {
       'totalRevenue': todayRevenue,
       'yesterdayRevenue': yesterdayRevenue,
-      'trials': trials,
-      'conversions': conversions,
-      'renewals': renewals,
-      'purchases': purchases,
-      'refunds': refunds,
-      'cancellations': cancellations,
+      'trials': counts.trials,
+      'conversions': counts.conversions,
+      'renewals': counts.renewals,
+      'purchases': counts.purchases,
+      'refunds': counts.refunds,
+      'cancellations': counts.cancelled,
     };
   }
 

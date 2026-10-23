@@ -101,9 +101,11 @@ class ShareRow extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpace.xs),
                     SizedBox(
-                      width: 44,
+                      width: 52,
                       child: Text(
                         '${pct.toStringAsFixed(1)}%',
+                        maxLines: 1,
+                        softWrap: false,
                         textAlign: TextAlign.end,
                         style: context.textTheme.labelMedium?.copyWith(
                           color: scheme.onSurfaceVariant,

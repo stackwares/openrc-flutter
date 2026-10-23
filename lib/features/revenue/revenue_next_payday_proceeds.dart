@@ -4,8 +4,9 @@ import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 
-/// Estimated net proceeds (after [CommissionSettings] store-fee rules) from loaded
-/// transactions that fall in each platform’s **next** payout accrual window.
+/// Estimated net proceeds from loaded transactions that fall in each
+/// platform’s **next** payout accrual window, always after the configured
+/// store-fee rates (payouts are net of fees whatever the display setting).
 class NextPaydayProceedsEstimate {
   final AppStorePayday? applePayday;
   final double appleNetUsd;
@@ -72,11 +73,14 @@ NextPaydayProceedsEstimate computeNextPaydayProceedsEstimate(
   var appleSum = 0.0;
   var googleSum = 0.0;
 
+  // Stores always keep their fee before paying out, so apply the configured
+  // rates even when revenue elsewhere is shown before fees.
+  final fees = commission.copyWith(adjustmentEnabled: true);
   for (final tx in transactions) {
     final gross = tx.revenue ?? 0;
     final net = adjustUsdForDisplay(
       gross: gross,
-      settings: commission,
+      settings: fees,
       store: tx.storeForCommission,
     );
 

@@ -18,6 +18,8 @@ class RevenueCatApp extends ConsumerStatefulWidget {
 
 class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
     with WidgetsBindingObserver {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +34,13 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
 
   @override
   Widget build(BuildContext context) {
+    // Swapping `home` only replaces the root screen; anything pushed on top
+    // (Settings, a transaction, a sheet) would stay visible after sign-out.
+    ref.listen<bool>(isSignedInProvider, (previous, next) {
+      if (previous == true && !next) {
+        _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+      }
+    });
     final signedIn = ref.watch(isSignedInProvider);
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
@@ -40,6 +49,7 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
         : colorScheme;
 
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'RevenueCat',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(effectiveColorScheme),

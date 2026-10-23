@@ -91,9 +91,9 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
             child: Text(
-              commission.adjustmentEnabled
-                  ? 'Estimated, after your store fees'
-                  : 'Estimated from loaded transactions',
+              'Estimated after store fees of '
+              '${_pct(commission.appleCommissionPercent)} (App Store) and '
+              '${_pct(commission.googleCommissionPercent)} (Google Play)',
               style: muted,
             ),
           ),
@@ -102,6 +102,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
             iconColor: colors.apple,
             storeLabel: 'App Store',
             paymentDate: est.applePayday?.paymentDate,
+            projected: est.applePayday?.isProjected ?? false,
             accrualLine: appleAccrual,
             netUsd: est.appleNetUsd,
             pct: applePct,
@@ -132,6 +133,10 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
   }
 }
 
+String _pct(double v) => (v - v.roundToDouble()).abs() < 1e-9
+    ? '${v.round()}%'
+    : '${v.toStringAsFixed(1)}%';
+
 String _accrualRangeShort(DateTime start, DateTime end) {
   final a = DateFormat.MMMd().format(start);
   final b = DateFormat.MMMd().format(end);
@@ -144,6 +149,7 @@ class _NextPayoutPlatformRow extends StatelessWidget {
     required this.iconColor,
     required this.storeLabel,
     required this.paymentDate,
+    this.projected = false,
     required this.accrualLine,
     required this.netUsd,
     required this.pct,
@@ -154,6 +160,9 @@ class _NextPayoutPlatformRow extends StatelessWidget {
   final Color iconColor;
   final String storeLabel;
   final DateTime? paymentDate;
+
+  /// Date comes from Apple's fiscal rules, not the published calendar.
+  final bool projected;
   final String? accrualLine;
   final double netUsd;
   final double pct;
@@ -192,7 +201,8 @@ class _NextPayoutPlatformRow extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  'Pays ${formatPaydayAbbrev(paymentDate!)}',
+                  'Pays ${projected ? 'about ' : ''}'
+                  '${formatPaydayAbbrev(paymentDate!)}',
                   style: caption,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

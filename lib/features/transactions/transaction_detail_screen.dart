@@ -88,6 +88,8 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
           subscriberId: subscriberId,
         ),
       ]);
+      // The screen may have closed (and disposed this) while loading.
+      if (!mounted) return;
 
       state = state.copyWith(
         detail: results[0] as RcTransactionDetailResponse,
@@ -95,6 +97,7 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
         isLoading: false,
       );
     } on DioException catch (e) {
+      if (!mounted) return;
       final rcError = _ref.read(rcApiServiceProvider).parseError(e);
       if (rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
           rcError?.code == AppConstants.rcErrorExpiredAuthToken) {
@@ -105,13 +108,17 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
         error: friendlyApiErrorMessage(e, serverMessage: rcError?.message),
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: friendlyApiErrorMessage(e));
     }
   }
 }
 
+/// Disposed when its screen closes: keyed by the transaction object, a
+/// kept-alive family would hold every opened customer's history for the
+/// whole session.
 final transactionDetailProvider =
-    StateNotifierProvider.family<
+    StateNotifierProvider.autoDispose.family<
       TransactionDetailNotifier,
       TransactionDetailState,
       RcTransaction

@@ -326,17 +326,54 @@ class _CollapsedBreakdownCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+          // Names give way (ellipsis) before the percentages on narrow
+          // screens or large text.
           Row(
             children: [
-              Icon(Icons.apple, size: 15, color: colors.apple),
-              const SizedBox(width: 4),
-              Text('App Store ', style: labelStyle),
-              Text('${data.applePct.toStringAsFixed(1)}%', style: valueStyle),
-              const Spacer(),
-              Text('Google Play ', style: labelStyle),
-              Text('${data.googlePct.toStringAsFixed(1)}%', style: valueStyle),
-              const SizedBox(width: 4),
-              Icon(Icons.android, size: 15, color: colors.google),
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.apple, size: 15, color: colors.apple),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        'App Store',
+                        style: labelStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${data.applePct.toStringAsFixed(1)}%',
+                      style: valueStyle,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Google Play',
+                        style: labelStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${data.googlePct.toStringAsFixed(1)}%',
+                      style: valueStyle,
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(Icons.android, size: 15, color: colors.google),
+                  ],
+                ),
+              ),
             ],
           ),
           if (apps.isNotEmpty) ...[

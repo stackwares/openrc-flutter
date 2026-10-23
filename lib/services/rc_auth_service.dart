@@ -60,6 +60,7 @@ class RcAuthService {
         _log.info('Signed in as ${response.email}');
 
         await PushRegistrationService.instance.ensureFirebaseAuthForFirestore();
+        unawaited(PushRegistrationService.instance.registerForSignedInUser());
 
         try {
           final me = await _api.me();
@@ -90,11 +91,16 @@ class RcAuthService {
       _signOut().whenComplete(() => _signOutInFlight = null);
 
   Future<void> _signOut() async {
-    try {
-      await _api.logout();
-    } catch (e) {
-      _log.warning('Logout API call failed: $e');
-    }
+    await Future.wait([
+      () async {
+        try {
+          await _api.logout();
+        } catch (e) {
+          _log.warning('Logout API call failed: $e');
+        }
+      }(),
+      _detachDeviceFromAccount(),
+    ]);
 
     try {
       await FirebaseAuth.instance.signOut();
@@ -116,6 +122,20 @@ class RcAuthService {
     _ref.read(isSignedInProvider.notifier).state = false;
     _ref.read(rcMeProvider.notifier).state = null;
     _log.info('Signed out');
+  }
+
+  /// Before leaving Firebase: stop this device's sale pushes for the account
+  /// and remove the RevenueCat identity saved for it. Bounded so a slow
+  /// network never holds up sign-out.
+  Future<void> _detachDeviceFromAccount() async {
+    try {
+      await Future.wait([
+        PushRegistrationService.instance.unregisterForSignOut(),
+        _ref.read(firestoreServiceProvider).clearRevenueCatProfile(),
+      ]).timeout(const Duration(seconds: 5));
+    } catch (e) {
+      _log.warning('Detaching device from account failed: $e');
+    }
   }
 
   Future<bool> restoreSession() async {

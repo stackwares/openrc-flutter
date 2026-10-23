@@ -42,6 +42,7 @@ import 'package:revenuecat/widgets/delta_badge.dart';
 import 'package:revenuecat/widgets/grouped_list.dart';
 import 'package:revenuecat/widgets/section_header.dart';
 import 'package:revenuecat/widgets/shell_header.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class TransactionsState {
   /// Local calendar day being viewed (`yyyy-MM-dd`).
@@ -99,6 +100,18 @@ class TransactionsState {
     realtimeLoadStep: realtimeLoadStep ?? this.realtimeLoadStep,
     realtimeLoadComplete: realtimeLoadComplete ?? this.realtimeLoadComplete,
   );
+
+  /// True once [dayKey] can't gain transactions from older pages: an older
+  /// day has been merged (pages go newest first), or there are no more pages.
+  bool isDayFullyLoaded(String dayKey) {
+    if (!hasMore) return true;
+    String? oldest;
+    for (final k in grouped.keys) {
+      if (!isIsoCalendarDayKey(k)) continue;
+      if (oldest == null || k.compareTo(oldest) < 0) oldest = k;
+    }
+    return oldest != null && dayKey.compareTo(oldest) > 0;
+  }
 }
 
 /// Matches [Kedi](https://github.com/sereisoglu/Kedi): small first page + `end_date`,
@@ -232,7 +245,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     : super(TransactionsState(selectedDayKey: localTodayDayKey()));
 
   int _backfillGeneration = 0;
-  bool _backfillRunning = false;
+
+  /// The running backfill and the generation it loads for.
+  Future<void>? _backfillTask;
+  int? _backfillTaskGen;
+
+  /// Upper bound of pages fetched to reach a day picked by day navigation.
+  static const int _maxPagesPerDayJump = 10;
 
   void setSelectedDayKey(String dayKey) {
     if (!isIsoCalendarDayKey(dayKey) || dayKey == state.selectedDayKey) return;
@@ -241,9 +260,35 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       error: null,
       isLoadingMore: false,
     );
-    // Day navigation only changes which bucket of [grouped] is shown. Older
-    // pages are fetched via scroll (`fetchMore`), not a full backfill here —
-    // that used to fire up to [kRealtimeBackfillMaxPages] requests per tap.
+    unawaited(_loadDay(dayKey));
+  }
+
+  /// Fetches older pages until [dayKey] is complete, so stepping back shows
+  /// real totals instead of an empty day. Bounded per call (a full backfill
+  /// per tap used to fire up to [kRealtimeBackfillMaxPages] requests) and
+  /// abandoned when the user moves to another day or a refresh starts.
+  Future<void> _loadDay(String dayKey) async {
+    final gen = _backfillGeneration;
+    for (var i = 0; i < _maxPagesPerDayJump; i++) {
+      if (!mounted || gen != _backfillGeneration || state.isLoading) return;
+      if (dayKey != state.selectedDayKey || state.isDayFullyLoaded(dayKey)) {
+        return;
+      }
+      while (state.isLoadingMore && gen == _backfillGeneration && mounted) {
+        await Future<void>.delayed(const Duration(milliseconds: 24));
+      }
+      if (!mounted ||
+          gen != _backfillGeneration ||
+          state.isLoading ||
+          state.isDayFullyLoaded(dayKey)) {
+        return;
+      }
+      final ok = await _performFetchMorePage(
+        requestContext: 'transactions:day_jump',
+      );
+      // Another loader grabbed the page slot first; wait and try again.
+      if (!ok && !(mounted && state.isLoadingMore)) return;
+    }
   }
 
   /// Looks up App Store / Google Play icons for apps seen in [txs].
@@ -307,6 +352,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       if (hasMorePages && !preloadBoundaryMet && gen == _backfillGeneration) {
         unawaited(backfillIncompleteCalendarDays(gen, true));
       }
+      if (hasMorePages) unawaited(_loadDay(state.selectedDayKey));
     } on DioException catch (e) {
       if (!mounted || gen != _backfillGeneration) return;
       _handleAuthError(e);
@@ -401,8 +447,30 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     bool onlyThroughCurrentMonth = false,
   ]) async {
     final gen = capturedGen ?? _backfillGeneration;
-    if (_backfillRunning) return;
-    _backfillRunning = true;
+    // A run for an older generation (a refresh landed mid-backfill) is still
+    // unwinding: wait for it rather than skipping, or this generation would
+    // never load the month or mark the Revenue tab complete.
+    while (_backfillTask != null) {
+      if (_backfillTaskGen == gen) return;
+      try {
+        await _backfillTask;
+      } catch (_) {}
+      if (!mounted || gen != _backfillGeneration) return;
+    }
+    final task = _runBackfill(gen, onlyThroughCurrentMonth);
+    _backfillTask = task;
+    _backfillTaskGen = gen;
+    try {
+      await task;
+    } finally {
+      if (identical(_backfillTask, task)) {
+        _backfillTask = null;
+        _backfillTaskGen = null;
+      }
+    }
+  }
+
+  Future<void> _runBackfill(int gen, bool onlyThroughCurrentMonth) async {
     try {
       var pages = 0;
       while (pages < kRealtimeBackfillMaxPages &&
@@ -425,7 +493,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         final ok = await _performFetchMorePage(
           requestContext: '$backfillKind page=${pages + 1}',
         );
-        if (!ok) break;
+        if (!ok) {
+          // A scroll or day load took the page slot; wait for it and go on.
+          if (mounted && state.isLoadingMore && gen == _backfillGeneration) {
+            continue;
+          }
+          break;
+        }
         pages++;
         if (gen == _backfillGeneration) {
           state = state.copyWith(realtimeLoadStep: state.realtimeLoadStep + 1);
@@ -436,8 +510,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         }
       }
     } finally {
-      _backfillRunning = false;
-      if (gen == _backfillGeneration) {
+      if (mounted && gen == _backfillGeneration) {
         state = state.copyWith(
           realtimeLoadComplete: true,
           realtimeLoadStep: kRealtimeLoadTarget,
@@ -639,7 +712,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       countryCodes: countryFilter,
       platforms: platformFilter,
     );
-    final allForDay = groupedForList[selectedKey] ?? [];
+    final todayKey = localTodayDayKey();
+    final viewingToday = selectedKey == todayKey;
+
+    // Scheduled (future-dated) rows on today haven't happened yet: they have
+    // their own section and stay out of the day's totals, tiles and bars.
+    List<RcTransaction> happened(String dayKey) {
+      final txs = groupedForList[dayKey] ?? const <RcTransaction>[];
+      if (dayKey != todayKey) return txs;
+      return txs.where((tx) => !_isPurchaseInstantInFuture(tx)).toList();
+    }
+
+    final allForDay = happened(selectedKey);
 
     final listFiltersActive =
         appIncludeFilter != null || countryFilterActive || platformFilterActive;
@@ -650,11 +734,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     final allForDayForMetrics = sectionFiltered(allForDay);
 
-    final todayKey = localTodayDayKey();
-    final viewingToday = selectedKey == todayKey;
-    var transactions = allForDayForMetrics
-        .where((tx) => !viewingToday || !_isPurchaseInstantInFuture(tx))
-        .toList();
+    final transactions = List.of(allForDayForMetrics);
     sortMutableTransactionList(transactions, listSort);
 
     final prevKey = _previousCalendarDayKey(selectedKey);
@@ -663,7 +743,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ? (groupedForList[prevKey] ?? <RcTransaction>[])
         : null;
     final previousDayLoaded =
-        prevKey != null && _isDayFullyLoaded(prevKey, state);
+        prevKey != null && state.isDayFullyLoaded(prevKey);
     final headerPrevTotal = previousDayForSummary != null && previousDayLoaded
         ? netRevenueSum(sectionFiltered(previousDayForSummary), commission)
         : null;
@@ -684,15 +764,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final filtersHideResults =
         transactions.isEmpty &&
         (listFiltersActive || _sectionFilters.isNotEmpty);
-    final dayLoaded = _isDayFullyLoaded(selectedKey, state);
+    final dayLoaded = state.isDayFullyLoaded(selectedKey);
 
     final stripDays = _stripDays(
       selectedKey: selectedKey,
       state: state,
-      totalFor: (key) => netRevenueSum(
-        sectionFiltered(groupedForList[key] ?? const []),
-        commission,
-      ),
+      totalFor: (key) =>
+          netRevenueSum(sectionFiltered(happened(key)), commission),
     );
 
     final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
@@ -761,6 +839,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       : 'Revenue',
                   total: headerDaily,
                   previousTotal: headerPrevTotal,
+                  loading: !dayLoaded,
                   strip: DayRevenueStrip(
                     days: stripDays,
                     selectedDayKey: selectedKey,
@@ -773,17 +852,23 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: SliverToBoxAdapter(
-                child: DayTypeCountSummary(
-                  transactions: allForDay,
-                  previousDayTransactions: previousDayLoaded
-                      ? previousDayForSummary
-                      : null,
-                  selectedFilters: _sectionFilters,
-                  onFilterCellTap: _toggleSectionFilter,
+                // Bones, not zeros, while the day is still loading.
+                child: Skeletonizer(
+                  enabled: !dayLoaded,
+                  child: DayTypeCountSummary(
+                    transactions: allForDay,
+                    previousDayTransactions: previousDayLoaded
+                        ? previousDayForSummary
+                        : null,
+                    selectedFilters: _sectionFilters,
+                    onFilterCellTap: _toggleSectionFilter,
+                  ),
                 ).appCardEntrance(delay: const Duration(milliseconds: 60)),
               ),
             ),
-            if (!filtersHideResults && allForDayForMetrics.isNotEmpty)
+            if (dayLoaded &&
+                !filtersHideResults &&
+                allForDayForMetrics.isNotEmpty)
               SliverToBoxAdapter(
                 child: RealtimeRevenueInsightsList(
                   transactions: allForDayForMetrics,
@@ -840,7 +925,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           ? (viewingToday
                                 ? 'No transactions yet today.'
                                 : 'No transactions on this day.')
-                          : 'Scroll down to load this day.',
+                          : 'This day didn\u2019t finish loading. Pull down '
+                                'to try again.',
                       style: context.textTheme.bodyMedium?.copyWith(
                         color: context.colorScheme.onSurfaceVariant,
                       ),
@@ -878,18 +964,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-  /// A day is complete once an older page has been merged (or there are no
-  /// more pages); the oldest loaded day may still be partial.
-  bool _isDayFullyLoaded(String dayKey, TransactionsState state) {
-    if (!state.hasMore) return true;
-    String? oldest;
-    for (final k in state.grouped.keys) {
-      if (!isIsoCalendarDayKey(k)) continue;
-      if (oldest == null || k.compareTo(oldest) < 0) oldest = k;
-    }
-    return oldest != null && dayKey.compareTo(oldest) > 0;
-  }
-
   List<DayRevenueStripDay> _stripDays({
     required String selectedKey,
     required TransactionsState state,
@@ -913,9 +987,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           return DayRevenueStripDay(
             dayKey: key,
             date: date,
-            total: _isDayFullyLoaded(key, state) || key == selectedKey
-                ? totalFor(key)
-                : null,
+            total: state.isDayFullyLoaded(key) ? totalFor(key) : null,
           );
         }(),
     ];
@@ -1023,10 +1095,14 @@ class _DayHeroCard extends StatelessWidget {
     required this.total,
     required this.previousTotal,
     required this.strip,
+    this.loading = false,
   });
 
   final String label;
   final double total;
+
+  /// The day's older pages are still loading; its total isn't known yet.
+  final bool loading;
 
   /// Null when the previous day isn't loaded yet.
   final double? previousTotal;
@@ -1073,13 +1149,25 @@ class _DayHeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          AnimatedExactAmount(
-            amount: total,
-            countFromZero: true,
-            style: AppText.amount(context, size: 34),
-          ),
+          if (loading)
+            Text(
+              '\u2014',
+              style: AppText.amount(
+                context,
+                size: 34,
+                color: scheme.onSurfaceVariant,
+              ),
+            )
+          else
+            AnimatedExactAmount(
+              amount: total,
+              countFromZero: true,
+              style: AppText.amount(context, size: 34),
+            ),
           const SizedBox(height: 8),
-          if (prev == null)
+          if (loading)
+            Text('Loading this day\u2026', style: muted)
+          else if (prev == null)
             Text('Previous day not loaded yet', style: muted)
           else
             Wrap(

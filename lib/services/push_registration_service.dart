@@ -99,12 +99,42 @@ class PushRegistrationService {
     }
   }
 
+  /// Installation id last registered with the relay (current Firebase user).
+  String? _lastFid;
+
+  bool get _pushSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
   Future<void> registerFcmToken(String fid) async {
+    _lastFid = fid;
     await _callTokenEndpoint(fid, remove: false);
   }
 
   Future<void> _unregisterFid(String fid) async {
+    if (_lastFid == fid) _lastFid = null;
     await _callTokenEndpoint(fid, remove: true);
+  }
+
+  /// Stops this device receiving sale pushes for the signed-in account.
+  /// Call before signing out of Firebase (the relay keys tokens by user).
+  Future<void> unregisterForSignOut() async {
+    if (!_pushSupported) return;
+    final fid = _lastFid;
+    if (fid == null) return;
+    await _callTokenEndpoint(fid, remove: true);
+  }
+
+  /// Registers this device for the current Firebase user after a sign-in.
+  Future<void> registerForSignedInUser() async {
+    if (!_pushSupported) return;
+    final fid = _lastFid;
+    if (fid == null) {
+      await initialize();
+      return;
+    }
+    await _callTokenEndpoint(fid, remove: false);
   }
 
   Future<void> _callTokenEndpoint(String fid, {required bool remove}) async {

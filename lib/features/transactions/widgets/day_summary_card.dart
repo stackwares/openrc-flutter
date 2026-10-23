@@ -24,66 +24,6 @@ String afterStoreCommissionTitle(CommissionSettings commission) {
   return 'After $pct store commission';
 }
 
-class DayTxnCounts {
-  final int trials;
-  final int conversions;
-  final int renewals;
-  final int purchases;
-  final int refunds;
-  final int cancelled;
-
-  DayTxnCounts({
-    required this.trials,
-    required this.conversions,
-    required this.renewals,
-    required this.purchases,
-    required this.refunds,
-    required this.cancelled,
-  });
-}
-
-DayTxnCounts aggregateDayCounts(List<RcTransaction> transactions) {
-  var trials = 0;
-  var conversions = 0;
-  var renewals = 0;
-  var purchases = 0;
-  var refunds = 0;
-  var cancelled = 0;
-  for (final tx in transactions) {
-    if (tx.type == RcTransactionType.refund) {
-      refunds++;
-    } else if (tx.isCancelledSummaryBadge) {
-      cancelled++;
-    }
-    switch (tx.type) {
-      case RcTransactionType.trial:
-        trials++;
-        break;
-      case RcTransactionType.conversion:
-        conversions++;
-        break;
-      case RcTransactionType.renewal:
-        renewals++;
-        break;
-      case RcTransactionType.newSubscription:
-      case RcTransactionType.oneTimePurchase:
-        purchases++;
-        break;
-      case RcTransactionType.refund:
-      case RcTransactionType.unknown:
-        break;
-    }
-  }
-  return DayTxnCounts(
-    trials: trials,
-    conversions: conversions,
-    renewals: renewals,
-    purchases: purchases,
-    refunds: refunds,
-    cancelled: cancelled,
-  );
-}
-
 Color daySummaryPillAccent(
   BuildContext context,
   TransactionDaySectionFilter filter,
