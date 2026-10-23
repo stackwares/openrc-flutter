@@ -17,19 +17,34 @@ function tokenDocId(fcmToken: string): string {
   return crypto.createHash("sha256").update(fcmToken).digest("hex").slice(0, 40);
 }
 
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
+}
+
+/** Fails closed: with no secret configured every request is rejected. */
 function verifyWebhookAuth(
   req: {header: (name: string) => string | undefined},
   secret: string,
 ): boolean {
   if (!secret) {
-    logger.warn(
-      "RC_WEBHOOK_BEARER secret empty; webhook auth skipped (set secret for production)",
-    );
-    return true;
+    logger.error("RC_WEBHOOK_BEARER is not set; rejecting webhook");
+    return false;
   }
-  const auth = req.header("Authorization") ?? req.header("authorization") ?? "";
-  return auth === `Bearer ${secret}` || auth === secret;
+  const auth = req.header("Authorization") ?? "";
+  return safeEqual(auth, `Bearer ${secret}`) || safeEqual(auth, secret);
 }
+
+/** Firebase uids are <=128 chars and never contain "/". */
+function isValidUid(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(value);
+}
+
+const STALE_TOKEN_CODES = new Set([
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+]);
 
 interface WebhookBody {
   event?: RCWebhookEvent;
@@ -57,11 +72,9 @@ export const revenueCatWebhook = onRequest(
       return;
     }
 
-    const userId =
-      (req.query.userId as string | undefined) ??
-      (req.query.id as string | undefined);
-    if (!userId || typeof userId !== "string") {
-      res.status(400).send("Missing userId query parameter");
+    const userId = req.query.userId ?? req.query.id;
+    if (!isValidUid(userId)) {
+      res.status(400).send("Missing or invalid userId query parameter");
       return;
     }
 
@@ -84,63 +97,86 @@ export const revenueCatWebhook = onRequest(
       return;
     }
 
-    const eventId = event.id;
-    if (eventId) {
-      const dedupeRef = db.collection("webhookDedupe").doc(eventId);
-      const got = await db.runTransaction(async (tx) => {
-        const snap = await tx.get(dedupeRef);
-        if (snap.exists) return false;
-        tx.set(dedupeRef, {at: FieldValue.serverTimestamp()});
-        return true;
-      });
-      if (!got) {
-        res.status(200).send("Duplicate");
+    let claimedDedupe: FirebaseFirestore.DocumentReference | undefined;
+    try {
+      const eventId = typeof event.id === "string" && event.id.length <= 200 &&
+        !event.id.includes("/") ? event.id : undefined;
+      if (eventId) {
+        const dedupeRef = db.collection("webhookDedupe").doc(eventId);
+        const got = await db.runTransaction(async (tx) => {
+          const snap = await tx.get(dedupeRef);
+          if (snap.exists) return false;
+          tx.set(dedupeRef, {at: FieldValue.serverTimestamp()});
+          return true;
+        });
+        if (!got) {
+          res.status(200).send("Duplicate");
+          return;
+        }
+        claimedDedupe = dedupeRef;
+      }
+
+      const {title, body: notifBody} = buildNotificationCopy(event);
+
+      const tokensSnap = await db
+        .collection("pushUsers")
+        .doc(userId)
+        .collection("tokens")
+        .get();
+
+      const tokenDocs = tokensSnap.docs.filter(
+        (d) => typeof d.data().token === "string" && d.data().token,
+      );
+      const tokens = tokenDocs.map((d) => d.data().token as string);
+
+      if (tokens.length === 0) {
+        logger.info("No FCM tokens for user", {userId});
+        res.status(200).send("OK");
         return;
       }
-    }
 
-    const {title, body: notifBody} = buildNotificationCopy(event);
+      const messageBase = {
+        notification: {title, body: notifBody},
+        data: {
+          eventId: eventId ?? "",
+          eventType: event.type ?? "",
+          url: `https://app.revenuecat.com/projects/${event.app_id ?? ""}`,
+        },
+      };
 
-    const tokensSnap = await db
-      .collection("pushUsers")
-      .doc(userId)
-      .collection("tokens")
-      .get();
+      const batch = tokens.map((token) =>
+        getMessaging().send({
+          ...messageBase,
+          token,
+          apns: {payload: {aps: {"thread-id": eventId ?? "revenuecat"}}},
+          android: {priority: "high" as const},
+        }),
+      );
 
-    const tokens = tokensSnap.docs
-      .map((d) => d.data().token as string)
-      .filter(Boolean);
-
-    if (tokens.length === 0) {
-      logger.info("No FCM tokens for user", {userId});
-      res.status(200).send("OK");
+      const results = await Promise.allSettled(batch);
+      const stale: Promise<unknown>[] = [];
+      let failures = 0;
+      results.forEach((r, i) => {
+        if (r.status !== "rejected") return;
+        failures++;
+        const code = (r.reason as {code?: string} | undefined)?.code ?? "";
+        if (STALE_TOKEN_CODES.has(code)) stale.push(tokenDocs[i].ref.delete());
+      });
+      if (failures > 0) {
+        logger.warn("Some FCM sends failed", {
+          failures,
+          removedStale: stale.length,
+          total: tokens.length,
+        });
+        await Promise.allSettled(stale);
+      }
+    } catch (e) {
+      logger.error("Webhook processing failed", e);
+      // Release the dedupe claim so RevenueCat's retry is not dropped.
+      await claimedDedupe?.delete().catch(() => undefined);
+      res.status(500).send("Internal error");
       return;
     }
-
-    const messageBase = {
-      notification: {title, body: notifBody},
-      data: {
-        eventId: eventId ?? "",
-        eventType: event.type ?? "",
-        url: `https://app.revenuecat.com/projects/${event.app_id ?? ""}`,
-      },
-    };
-
-    const batch = tokens.map((token) =>
-      getMessaging().send({
-        ...messageBase,
-        token,
-        apns: {payload: {aps: {"thread-id": eventId ?? "revenuecat"}}},
-        android: {priority: "high" as const},
-      }),
-    );
-
-    const results = await Promise.allSettled(batch);
-    const failures = results.filter((r) => r.status === "rejected").length;
-    if (failures > 0) {
-      logger.warn("Some FCM sends failed", {failures, total: tokens.length});
-    }
-
     res.status(200).send("OK");
   },
 );
@@ -160,12 +196,13 @@ export const registerFcmToken = onCall(
       throw new HttpsError("unauthenticated", "Authentication required");
     }
     const uid = request.auth.uid;
-    const data = request.data as RegisterTokenData;
-    const token = data.token?.trim();
-    if (!token) {
+    const data = (request.data ?? {}) as RegisterTokenData;
+    const token = typeof data.token === "string" ? data.token.trim() : "";
+    if (!token || token.length > 4096) {
       throw new HttpsError("invalid-argument", "token is required");
     }
-    const platform = data.platform ?? "unknown";
+    const platform = ["android", "iOS", "macOS"].includes(data.platform ?? "") ?
+      (data.platform as string) : "unknown";
 
     await db
       .collection("pushUsers")
