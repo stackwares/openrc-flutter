@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:revenuecat/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
@@ -310,7 +311,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
-        error: 'Failed to load transactions',
+        error: friendlyApiErrorMessage(e),
         realtimeLoadStep: 0,
         realtimeLoadComplete: false,
       );
@@ -592,25 +593,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     if (state.error != null && state.grouped.isEmpty && !state.isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: context.colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(state.error!, style: context.textTheme.bodyMedium),
-            const SizedBox(height: 16),
-            FilledButton.tonal(
-              onPressed: () =>
-                  ref.read(transactionsProvider.notifier).fetchInitial(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
+      return AppStateMessage.error(
+        title: 'Couldn\u2019t load transactions',
+        message: state.error!,
+        onRetry: () => ref.read(transactionsProvider.notifier).fetchInitial(),
       );
     }
 
@@ -628,33 +614,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         countryFilterActive ||
         platformFilterActive;
     if (listFiltersActive && rawDayTxs.isNotEmpty && allForDay.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.filter_list_off_outlined,
-                size: 48,
-                color: context.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No transactions match your filters',
-                textAlign: TextAlign.center,
-                style: context.textTheme.bodyLarge?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 16),
-              FilledButton.tonal(
-                onPressed: _clearTransactionFilters,
-                child: const Text('Clear filters'),
-              ),
-            ],
-          ),
-        ),
+      return AppStateMessage(
+        icon: Icons.filter_list_off_outlined,
+        title: 'No transactions match your filters',
+        message: 'Try another app, country or store, or clear the filters.',
+        actionLabel: 'Clear filters',
+        actionIcon: Icons.filter_alt_off_outlined,
+        onAction: _clearTransactionFilters,
       );
     }
 

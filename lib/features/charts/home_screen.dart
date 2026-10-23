@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/features/charts/home_notifier.dart';
 import 'package:revenuecat/features/charts/overview_metric_detail_screen.dart';
@@ -112,32 +112,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     if (state.error != null && state.overview == null) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.only(
-          bottom: mainShellFloatingTabBarScrollPadding(context),
-        ),
-        children: [
-          SizedBox(height: context.screenHeight * 0.3),
-          Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: context.colorScheme.error,
-                ),
-                const SizedBox(height: 16),
-                Text(state.error!, style: context.textTheme.bodyMedium),
-                const SizedBox(height: 16),
-                FilledButton.tonal(
-                  onPressed: () => notifier.fetchData(),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        ],
+      return AppStateMessage.error(
+        title: 'Couldn\u2019t load your overview',
+        message: state.error!,
+        onRetry: notifier.fetchData,
+        bottomPadding: mainShellFloatingTabBarScrollPadding(context),
       );
     }
 

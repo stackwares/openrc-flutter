@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:revenuecat/core/utils/api_error_message.dart';
+import 'package:revenuecat/widgets/app_state_message.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -97,10 +99,10 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
       }
       state = state.copyWith(
         isLoading: false,
-        error: rcError?.message ?? 'Failed to load details',
+        error: friendlyApiErrorMessage(e, serverMessage: rcError?.message),
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to load details');
+      state = state.copyWith(isLoading: false, error: friendlyApiErrorMessage(e));
     }
   }
 }
@@ -307,22 +309,11 @@ class TransactionDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildError(BuildContext context, WidgetRef ref, String error) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 48, color: context.colorScheme.error),
-          const SizedBox(height: 16),
-          Text(error, style: context.textTheme.bodyMedium),
-          const SizedBox(height: 16),
-          FilledButton.tonal(
-            onPressed: () => ref
-                .read(transactionDetailProvider(transaction).notifier)
-                .refresh(),
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
+    return AppStateMessage.error(
+      title: 'Couldn\u2019t load customer details',
+      message: error,
+      onRetry: () =>
+          ref.read(transactionDetailProvider(transaction).notifier).refresh(),
     );
   }
 

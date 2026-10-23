@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
@@ -145,25 +146,11 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
           if (state.error != null &&
               state.grouped.isEmpty &&
               !state.isLoading) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: context.colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(state.error!, style: context.textTheme.bodyMedium),
-                  const SizedBox(height: 16),
-                  FilledButton.tonal(
-                    onPressed: () =>
-                        ref.read(transactionsProvider.notifier).fetchInitial(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            return AppStateMessage.error(
+              title: 'Couldn\u2019t load revenue',
+              message: state.error!,
+              onRetry: () =>
+                  ref.read(transactionsProvider.notifier).fetchInitial(),
             );
           }
 
