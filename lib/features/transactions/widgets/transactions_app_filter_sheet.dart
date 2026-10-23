@@ -193,7 +193,6 @@ class _TransactionsAppFilterModalState
         TransactionPlatformFilter.apple => 'Apple App Store',
         TransactionPlatformFilter.google => 'Google Play',
         TransactionPlatformFilter.web => 'Web & third-party billing',
-        TransactionPlatformFilter.test => 'Sandbox & test purchases',
       };
     }
     return '${_platformSelection.length} platforms selected';
@@ -225,12 +224,6 @@ class _TransactionsAppFilterModalState
         filter: TransactionPlatformFilter.web,
         label: 'Web',
         icon: Icons.language_rounded,
-        iconColor: scheme.primary,
-      ),
-      (
-        filter: TransactionPlatformFilter.test,
-        label: 'Test',
-        icon: Icons.science_outlined,
         iconColor: scheme.primary,
       ),
     ];

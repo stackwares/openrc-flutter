@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/app/main_shell.dart';
 import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/sign_in/sign_in_screen.dart';
+import 'package:revenuecat/services/exchange_rate_provider.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/utilities_service.dart';
 import 'package:revenuecat/theme/app_theme.dart';
@@ -30,6 +31,15 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Rates that failed (e.g. launched offline) get another try on return.
+    if (state == AppLifecycleState.resumed &&
+        ref.read(usdExchangeRatesProvider).hasError) {
+      ref.invalidate(usdExchangeRatesProvider);
+    }
   }
 
   @override

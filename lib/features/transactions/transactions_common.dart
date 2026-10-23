@@ -199,11 +199,13 @@ bool transactionMatchesCountryFilters(
 }
 
 /// Store source filter for transaction lists. `null` means no store restriction.
+///
+/// There is no sandbox option: transactions are always requested with
+/// `sandbox_mode=false`, so a sandbox filter could never match.
 enum TransactionPlatformFilter {
   apple,
   google,
   web,
-  test,
 }
 
 bool _transactionStoreLooksLikeWebBilling(RcTransaction tx) {
@@ -233,8 +235,6 @@ bool _transactionMatchesOnePlatformFilter(
           StoreCommissionPlatform.google;
     case TransactionPlatformFilter.web:
       return _transactionStoreLooksLikeWebBilling(tx);
-    case TransactionPlatformFilter.test:
-      return tx.isSandbox == true;
   }
 }
 

@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:go_router/go_router.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
@@ -118,14 +117,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final status = ref.watch(signInProvider);
     final isLoading = status == SignInStatus.loading;
 
+    // Success needs no navigation here: signing in flips isSignedInProvider
+    // and RevenueCatApp swaps this screen for the main shell.
     ref.listen<SignInStatus>(signInProvider, (prev, next) {
       if (next == SignInStatus.requires2Fa &&
           prev != SignInStatus.requires2Fa) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _openOtpSheet();
         });
-      } else if (next == SignInStatus.success) {
-        context.go('/');
       }
     });
 

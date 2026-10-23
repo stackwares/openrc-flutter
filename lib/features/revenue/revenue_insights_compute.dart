@@ -49,6 +49,11 @@ class RevenueInsightsSnapshot {
   final double googlePct;
   final double appleRevenue;
   final double googleRevenue;
+
+  /// Web billing (Stripe, Paddle, RevenueCat Billing) and any other store,
+  /// so the store shares add up to the whole.
+  final double otherStoresPct;
+  final double otherStoresRevenue;
   final double newPct;
   final double renewalPct;
   final double newRevenue;
@@ -61,6 +66,8 @@ class RevenueInsightsSnapshot {
     required this.googlePct,
     required this.appleRevenue,
     required this.googleRevenue,
+    this.otherStoresPct = 0,
+    this.otherStoresRevenue = 0,
     required this.newPct,
     required this.renewalPct,
     required this.newRevenue,
@@ -136,6 +143,7 @@ RevenueInsightsSnapshot computeRevenueInsights(
   final byCountry = <String, double>{};
   double appleRev = 0;
   double googleRev = 0;
+  double otherStoresRev = 0;
   double renewalRev = 0;
   double newRev = 0;
 
@@ -175,6 +183,7 @@ RevenueInsightsSnapshot computeRevenueInsights(
         googleRev += r;
         break;
       case _StorePlatformBucket.other:
+        otherStoresRev += r;
         break;
     }
 
@@ -242,6 +251,8 @@ RevenueInsightsSnapshot computeRevenueInsights(
     googlePct: pctOf(googleRev),
     appleRevenue: appleRev,
     googleRevenue: googleRev,
+    otherStoresPct: pctOf(otherStoresRev),
+    otherStoresRevenue: otherStoresRev,
     newPct: pctOf(newRev),
     renewalPct: pctOf(renewalRev),
     newRevenue: newRev,

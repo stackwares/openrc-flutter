@@ -126,16 +126,22 @@ class HomeNotifier extends StateNotifier<HomeState> {
       final api = _ref.read(rcApiServiceProvider);
       final overviewResp = await api.overview();
 
-      final chartFutures = <Future<MapEntry<OverviewMetricType, RcChartResponse>>>[];
+      // Several metrics read different series of the same chart (e.g.
+      // Subscriptions and Users are both `actives`): request each chart once.
+      final requests = <String, Future<RcChartResponse>>{};
       for (final metric in OverviewMetricType.values) {
-        chartFutures.add(_fetchChart(api, metric));
+        requests.putIfAbsent(
+          '${metric.chartName}|${metric.chartRevenueTypeParam ?? ''}',
+          () => _fetchChart(api, metric),
+        );
       }
-
-      final chartResults = await Future.wait(chartFutures);
-      final chartsMap = <OverviewMetricType, RcChartResponse>{};
-      for (final entry in chartResults) {
-        chartsMap[entry.key] = entry.value;
-      }
+      final responses = await Future.wait(requests.values);
+      final byKey = Map.fromIterables(requests.keys, responses);
+      final chartsMap = <OverviewMetricType, RcChartResponse>{
+        for (final metric in OverviewMetricType.values)
+          metric: byKey[
+              '${metric.chartName}|${metric.chartRevenueTypeParam ?? ''}']!,
+      };
 
       if (!_isCurrent(generation)) return;
       state = state.copyWith(
@@ -167,7 +173,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
     }
   }
 
-  Future<MapEntry<OverviewMetricType, RcChartResponse>> _fetchChart(
+  Future<RcChartResponse> _fetchChart(
     RcApiService api,
     OverviewMetricType metric,
   ) async {
@@ -182,14 +188,14 @@ class HomeNotifier extends StateNotifier<HomeState> {
         endDate: ymd.format(end),
         revenueType: metric.chartRevenueTypeParam,
       );
-      return MapEntry(metric, response);
+      return response;
     } catch (e, st) {
       _homeLog.severe(
         'Home chart failed (${metric.name} / ${metric.chartName})',
         e,
         st,
       );
-      return MapEntry(metric, const RcChartResponse());
+      return const RcChartResponse();
     }
   }
 

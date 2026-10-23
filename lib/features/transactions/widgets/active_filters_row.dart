@@ -34,7 +34,6 @@ class ActiveFiltersRow extends StatelessWidget {
     TransactionPlatformFilter.apple => 'App Store',
     TransactionPlatformFilter.google => 'Google Play',
     TransactionPlatformFilter.web => 'Web',
-    TransactionPlatformFilter.test => 'Sandbox',
   };
 
   static String _countLabel(String singular, String plural, int n) =>

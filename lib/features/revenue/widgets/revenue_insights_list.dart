@@ -155,6 +155,19 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
               ),
             ),
           ),
+          if (data.otherStoresRevenue.abs() > 1e-9)
+            enter(
+              ShareRow(
+                label: 'Web and other stores',
+                pct: data.otherStoresPct,
+                amount: amount(data.otherStoresRevenue),
+                barColor: colors.web,
+                leading: _LeadingIconTile(
+                  icon: Icons.language_rounded,
+                  color: colors.web,
+                ),
+              ),
+            ),
         ],
       ),
       _InsightsSection(
@@ -323,6 +336,11 @@ class _CollapsedBreakdownCard extends StatelessWidget {
                 color: colors.google,
                 label: 'Google Play',
               ),
+              SplitSegment(
+                value: data.otherStoresPct,
+                color: colors.web,
+                label: 'Web and other stores',
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -331,47 +349,40 @@ class _CollapsedBreakdownCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.apple, size: 15, color: colors.apple),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        'App Store',
-                        style: labelStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${data.applePct.toStringAsFixed(1)}%',
-                      style: valueStyle,
-                    ),
-                  ],
+                child: _StoreShareLabel(
+                  icon: Icons.apple,
+                  color: colors.apple,
+                  name: 'App Store',
+                  pct: data.applePct,
+                  labelStyle: labelStyle,
+                  valueStyle: valueStyle,
                 ),
               ),
-              const SizedBox(width: 12),
+              if (data.otherStoresPct.abs() >= 0.05) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StoreShareLabel(
+                    icon: Icons.language_rounded,
+                    color: colors.web,
+                    name: 'Web',
+                    pct: data.otherStoresPct,
+                    labelStyle: labelStyle,
+                    valueStyle: valueStyle,
+                    alignment: MainAxisAlignment.center,
+                  ),
+                ),
+              ],
+              const SizedBox(width: 8),
               Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Google Play',
-                        style: labelStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${data.googlePct.toStringAsFixed(1)}%',
-                      style: valueStyle,
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(Icons.android, size: 15, color: colors.google),
-                  ],
+                child: _StoreShareLabel(
+                  icon: Icons.android,
+                  color: colors.google,
+                  name: 'Google Play',
+                  pct: data.googlePct,
+                  labelStyle: labelStyle,
+                  valueStyle: valueStyle,
+                  alignment: MainAxisAlignment.end,
+                  iconAfter: true,
                 ),
               ),
             ],
@@ -414,6 +425,51 @@ class _CollapsedBreakdownCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// One store's share on the compact Breakdown card.
+class _StoreShareLabel extends StatelessWidget {
+  const _StoreShareLabel({
+    required this.icon,
+    required this.color,
+    required this.name,
+    required this.pct,
+    required this.labelStyle,
+    required this.valueStyle,
+    this.alignment = MainAxisAlignment.start,
+    this.iconAfter = false,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String name;
+  final double pct;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+  final MainAxisAlignment alignment;
+  final bool iconAfter;
+
+  @override
+  Widget build(BuildContext context) {
+    final mark = Icon(icon, size: 15, color: color);
+    return Row(
+      mainAxisAlignment: alignment,
+      children: [
+        if (!iconAfter) ...[mark, const SizedBox(width: 4)],
+        Flexible(
+          child: Text(
+            name,
+            style: labelStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text('${pct.toStringAsFixed(1)}%', style: valueStyle),
+        if (iconAfter) ...[const SizedBox(width: 4), mark],
+      ],
     );
   }
 }
