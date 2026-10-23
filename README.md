@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/brand/openrc-mark.png" width="112" alt="OpenRC logo: a white cat hugging a red database">
+<img src="assets/brand/openrc-readme-banner.jpg" width="900" alt="OpenRC — open source mobile app for RevenueCat">
 
 # OpenRC
 
