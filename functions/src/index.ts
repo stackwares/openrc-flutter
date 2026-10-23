@@ -1,12 +1,14 @@
 import * as crypto from "crypto";
-import * as admin from "firebase-admin";
+import {initializeApp} from "firebase-admin/app";
+import {getFirestore, FieldValue} from "firebase-admin/firestore";
+import {getMessaging} from "firebase-admin/messaging";
 import {onCall, HttpsError, onRequest} from "firebase-functions/v2/https";
 import {defineString} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import {buildNotificationCopy, type RCWebhookEvent} from "./notificationCopy";
 
-admin.initializeApp();
-const db = admin.firestore();
+initializeApp();
+const db = getFirestore();
 
 /** Set in `functions/.env` (see docs) or Firebase console → Functions → environment. */
 const rcWebhookBearer = defineString("RC_WEBHOOK_BEARER", {default: ""});
@@ -88,7 +90,7 @@ export const revenueCatWebhook = onRequest(
       const got = await db.runTransaction(async (tx) => {
         const snap = await tx.get(dedupeRef);
         if (snap.exists) return false;
-        tx.set(dedupeRef, {at: admin.firestore.FieldValue.serverTimestamp()});
+        tx.set(dedupeRef, {at: FieldValue.serverTimestamp()});
         return true;
       });
       if (!got) {
@@ -125,7 +127,7 @@ export const revenueCatWebhook = onRequest(
     };
 
     const batch = tokens.map((token) =>
-      admin.messaging().send({
+      getMessaging().send({
         ...messageBase,
         token,
         apns: {payload: {aps: {"thread-id": eventId ?? "revenuecat"}}},
@@ -173,7 +175,7 @@ export const registerFcmToken = onCall(
       .set({
         token,
         platform,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
 
     return {ok: true};
