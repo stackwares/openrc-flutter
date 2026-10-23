@@ -62,55 +62,113 @@ void _rcApiLogError(DioException e) {
   _log.warning('[API] $kind ${ro.method} ${ro.path}');
 }
 
-enum RcEndpoint {
-  login,
-  logout,
-  me,
-  projects,
-  overview,
-  transactions,
-}
+enum RcEndpoint { login, logout, me, projects, overview, transactions }
 
 final rcApiServiceProvider = Provider<RcApiService>((ref) {
   return RcApiService();
 });
 
+/// Throws a [DioException] when a successful response has no usable body,
+/// instead of crashing on a null-check.
+T requireBody<T>(Response<T> response) {
+  final data = response.data;
+  if (data == null) {
+    throw DioException(
+      requestOptions: response.requestOptions,
+      response: response,
+      type: DioExceptionType.badResponse,
+      error: 'Empty response body',
+    );
+  }
+  return data;
+}
+
 class RcApiService {
   late final Dio _dio;
+  late final Dio _internal;
   String? _authToken;
 
-  RcApiService() {
-    _dio = Dio(BaseOptions(
-      baseUrl: AppConstants.rcApiBaseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {
-        'X-Requested-With': AppConstants.headerXRequestedWith,
-      },
-    ));
+  /// Called once per token when an authenticated request returns 401, so the
+  /// app can sign out instead of showing endless errors.
+  void Function()? onUnauthorized;
+  String? _unauthorizedReportedFor;
+
+  RcApiService({Dio? dio, Dio? internalDio}) {
+    _dio = dio ?? Dio(_baseOptions(AppConstants.rcApiBaseUrl));
+    _internal =
+        internalDio ?? Dio(_baseOptions(AppConstants.rcApiInternalBaseUrl));
+    for (final client in [_dio, _internal]) {
+      client.interceptors.add(
+        InterceptorsWrapper(
+          onError: (e, handler) {
+            _maybeReportUnauthorized(e);
+            handler.next(e);
+          },
+        ),
+      );
+    }
 
     if (kDebugMode) {
-      _dio.interceptors.add(InterceptorsWrapper(
-        onResponse: (response, handler) {
-          _rcApiLogSuccess(response);
-          handler.next(response);
-        },
-        onError: (e, handler) {
-          _rcApiLogError(e);
-          handler.next(e);
-        },
-      ));
+      _internal.interceptors.add(
+        InterceptorsWrapper(
+          onResponse: (response, handler) {
+            _rcApiLogSuccess(response);
+            handler.next(response);
+          },
+          onError: (e, handler) {
+            _rcApiLogError(e);
+            handler.next(e);
+          },
+        ),
+      );
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onResponse: (response, handler) {
+            _rcApiLogSuccess(response);
+            handler.next(response);
+          },
+          onError: (e, handler) {
+            _rcApiLogError(e);
+            handler.next(e);
+          },
+        ),
+      );
     }
+  }
+
+  static BaseOptions _baseOptions(String baseUrl) => BaseOptions(
+    baseUrl: baseUrl,
+    connectTimeout: const Duration(seconds: 20),
+    receiveTimeout: const Duration(seconds: 30),
+    sendTimeout: const Duration(seconds: 20),
+    headers: {'X-Requested-With': AppConstants.headerXRequestedWith},
+  );
+
+  void _maybeReportUnauthorized(DioException e) {
+    final token = _authToken;
+    if (token == null || e.response?.statusCode != 401) return;
+    if (e.requestOptions.path.endsWith('/login') ||
+        e.requestOptions.path.endsWith('/logout')) {
+      return;
+    }
+    if (_unauthorizedReportedFor == token) return;
+    _unauthorizedReportedFor = token;
+    onUnauthorized?.call();
   }
 
   void setAuthToken(String token) {
     _authToken = token;
-    _dio.options.headers['Authorization'] = 'Bearer $token';
+    _unauthorizedReportedFor = null;
+    for (final client in [_dio, _internal]) {
+      client.options.headers['Authorization'] = 'Bearer $token';
+    }
   }
 
   void clearAuthToken() {
     _authToken = null;
-    _dio.options.headers.remove('Authorization');
+    for (final client in [_dio, _internal]) {
+      client.options.headers.remove('Authorization');
+    }
   }
 
   String? get authToken => _authToken;
@@ -120,7 +178,7 @@ class RcApiService {
       '/login',
       data: request.toJson(),
     );
-    return RcLoginResponse.fromJson(response.data!);
+    return RcLoginResponse.fromJson(requireBody(response));
   }
 
   Future<void> logout() async {
@@ -132,13 +190,14 @@ class RcApiService {
 
   Future<RcMeResponse> me() async {
     final response = await _dio.get<Map<String, dynamic>>('/me');
-    return RcMeResponse.fromJson(response.data!);
+    return RcMeResponse.fromJson(requireBody(response));
   }
 
   Future<List<RcProject>> projects() async {
-    final response = await _internalDio().get<List<dynamic>>('/me/projects');
-    return (response.data ?? [])
-        .map((e) => RcProject.fromJson(e as Map<String, dynamic>))
+    final response = await _internal.get<List<dynamic>>('/me/projects');
+    return (response.data ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(RcProject.fromJson)
         .toList();
   }
 
@@ -155,7 +214,7 @@ class RcApiService {
             : const {},
       ),
     );
-    return RcTransactionsResponse.fromJson(response.data!);
+    return RcTransactionsResponse.fromJson(requireBody(response));
   }
 
   Future<RcTransactionDetailResponse> transactionDetail({
@@ -167,7 +226,7 @@ class RcApiService {
       '/me/apps/$projectId/subscribers/$subscriberId',
       queryParameters: {'sandbox_mode': sandboxMode},
     );
-    return RcTransactionDetailResponse.fromJson(response.data!);
+    return RcTransactionDetailResponse.fromJson(requireBody(response));
   }
 
   Future<RcTransactionDetailActivityResponse> transactionDetailActivity({
@@ -175,11 +234,11 @@ class RcApiService {
     required String subscriberId,
     bool sandboxMode = false,
   }) async {
-    final response = await _internalDio().get<Map<String, dynamic>>(
+    final response = await _internal.get<Map<String, dynamic>>(
       '/me/apps/$projectId/subscribers/$subscriberId/activity',
       queryParameters: {'sandbox_mode': sandboxMode},
     );
-    return RcTransactionDetailActivityResponse.fromJson(response.data!);
+    return RcTransactionDetailActivityResponse.fromJson(requireBody(response));
   }
 
   /// RevenueCat dashboard overview (same contract as [Kedi `charts_v2/overview`](https://github.com/sereisoglu/Kedi)).
@@ -187,7 +246,7 @@ class RcApiService {
     final response = await _dio.get<Map<String, dynamic>>(
       '/me/charts_v2/overview',
     );
-    return RcOverviewResponse.fromJson(response.data!);
+    return RcOverviewResponse.fromJson(requireBody(response));
   }
 
   /// Chart series under `charts_v2` (public `/v1/developers` base). [resolution] is the API enum int (0 = day per Kedi).
@@ -207,23 +266,18 @@ class RcApiService {
         'revenue_type': ?revenueType,
       },
     );
-    return RcChartResponse.fromJson(response.data!);
+    return RcChartResponse.fromJson(requireBody(response));
   }
-
-  /// Internal-only endpoints (projects list, subscriber activity, …).
-  Dio _internalDio() => Dio(BaseOptions(
-        baseUrl: AppConstants.rcApiInternalBaseUrl,
-        headers: {
-          'X-Requested-With': AppConstants.headerXRequestedWith,
-          if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-        },
-      ));
 
   RcErrorResponse? parseError(dynamic error) {
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
-        return RcErrorResponse.fromJson(data);
+        try {
+          return RcErrorResponse.fromJson(data);
+        } catch (_) {
+          return null;
+        }
       }
     }
     return null;
