@@ -1,3 +1,8 @@
+// FCM token APIs are deprecated in firebase_messaging 17 in favour of FID
+// registration, but the webhook relay (functions/) still sends to FCM tokens.
+// Keep tokens until the backend migrates to FID-based sends.
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
