@@ -7,7 +7,7 @@ import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/app_icon_overrides_store.dart';
+import 'package:revenuecat/services/auto_app_icons_store.dart';
 
 typedef TransactionsFilterSheetOnApply =
     void Function(
@@ -568,7 +568,7 @@ class _AppChipAvatar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final url = appId != null
-        ? ref.watch(appIconOverridesProvider)[appId]
+        ? ref.watch(resolvedAppIconsProvider)[appId]
         : null;
     return CircleAvatar(
       radius: 14,

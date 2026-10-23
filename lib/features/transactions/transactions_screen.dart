@@ -15,6 +15,7 @@ import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
+import 'package:revenuecat/services/auto_app_icons_store.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/display_currency_store.dart';
 import 'package:revenuecat/services/exchange_rate_provider.dart';
@@ -233,6 +234,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     // that used to fire up to [kRealtimeBackfillMaxPages] requests per tap.
   }
 
+  /// Looks up App Store / Google Play icons for apps seen in [txs].
+  void _ensureAppIcons(Iterable<RcTransaction> txs) {
+    final apps = txs.map(AppIconIdentity.fromTransaction).nonNulls;
+    unawaited(_ref.read(autoAppIconsProvider.notifier).ensure(apps));
+  }
+
   /// Recomputes [TransactionsState.dailyTotals] after commission settings change.
   void syncTotalsWithCommission() {
     if (state.grouped.isEmpty) return;
@@ -284,6 +291,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         realtimeLoadComplete: realtimeDone,
       );
       _syncWidgetData();
+      _ensureAppIcons(raw);
       if (hasMorePages && !preloadBoundaryMet && gen == _backfillGeneration) {
         unawaited(backfillIncompleteCalendarDays(gen, true));
       }
@@ -354,6 +362,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         firstPurchaseMs: state.firstPurchaseMs ?? response.firstPurchaseMs,
         lastPurchaseMs: hasMorePages ? nextCursor : null,
       );
+      _ensureAppIcons(raw);
       return true;
     } on DioException catch (e) {
       if (stale()) return false;

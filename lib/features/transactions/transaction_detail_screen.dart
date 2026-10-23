@@ -17,6 +17,7 @@ import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/models/rc_transaction_detail.dart';
 import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
 import 'package:revenuecat/services/app_icon_overrides_store.dart';
+import 'package:revenuecat/services/auto_app_icons_store.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
@@ -145,8 +146,8 @@ Future<void> _showAppIconUrlDialog(
             children: [
               Text(
                 appName != null
-                    ? 'Optional image URL for $appName. Used in the transactions list for this app.'
-                    : 'Optional HTTPS image URL. Used in the transactions list for this app.',
+                    ? 'Icons are fetched from the App Store or Google Play automatically. Enter an image URL to use a different icon for $appName.'
+                    : 'Icons are fetched from the App Store or Google Play automatically. Enter an image URL to use a different icon.',
                 style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
                   color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                 ),
@@ -178,7 +179,7 @@ Future<void> _showAppIconUrlDialog(
                   .setOverride(appId, null);
               if (!context.mounted) return;
               Navigator.pop(dialogContext);
-              context.showSnackBar('Using default icon');
+              context.showSnackBar('Using the store icon');
             },
             child: const Text('Clear'),
           ),
@@ -195,7 +196,7 @@ Future<void> _showAppIconUrlDialog(
               if (!context.mounted) return;
               Navigator.pop(dialogContext);
               context.showSnackBar(
-                text.isEmpty ? 'Using default icon' : 'App icon saved',
+                text.isEmpty ? 'Using the store icon' : 'App icon saved',
               );
             },
             child: const Text('Save'),
@@ -335,7 +336,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     final tx = state.transaction;
     final appId = tx.app?.id;
     final customIconUrl = appId != null
-        ? ref.watch(appIconOverridesProvider)[appId]
+        ? ref.watch(resolvedAppIconsProvider)[appId]
         : null;
 
     var sectionStep = 0;
@@ -449,7 +450,7 @@ class TransactionDetailScreen extends ConsumerWidget {
               ref,
               appId: appId,
               appName: appName,
-              currentUrl: customIconUrl,
+              currentUrl: ref.read(appIconOverridesProvider)[appId],
             ),
             borderRadius: BorderRadius.circular(12),
             child: avatar,

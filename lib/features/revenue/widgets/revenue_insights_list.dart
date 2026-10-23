@@ -7,7 +7,7 @@ import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/app_icon_overrides_store.dart';
+import 'package:revenuecat/services/auto_app_icons_store.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
 
@@ -105,7 +105,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
 
     final commission = ref.watch(commissionSettingsProvider);
     final data = computeRevenueInsights(transactions, commission);
-    final appIconOverrides = ref.watch(appIconOverridesProvider);
+    final appIconOverrides = ref.watch(resolvedAppIconsProvider);
 
     final headerStyle = context.textTheme.labelMedium?.copyWith(
       color: scheme.primary,
