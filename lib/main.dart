@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,8 +18,15 @@ final _mainLog = Logger('main');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   configureAppLogging();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    _installCrashReporting();
+  } catch (e, st) {
+    _mainLog.severe('Firebase init failed', e, st);
+  }
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
@@ -27,8 +35,12 @@ void main() async {
 
   final container = ProviderContainer();
 
-  final startup = AppStartup(container);
-  await startup.initialize();
+  try {
+    await AppStartup(container).initialize();
+  } catch (e, st) {
+    // Never block the first frame: the app falls back to signed-out defaults.
+    _mainLog.severe('App startup failed', e, st);
+  }
 
   runApp(
     UncontrolledProviderScope(
@@ -42,6 +54,28 @@ void main() async {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     unawaited(_initializePushAfterFirstFrame(container));
   });
+}
+
+bool get _crashlyticsSupported =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS);
+
+/// Sends uncaught Flutter and async errors to Crashlytics (release builds).
+void _installCrashReporting() {
+  if (!_crashlyticsSupported) return;
+  final crashlytics = FirebaseCrashlytics.instance;
+  unawaited(crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode));
+  final previous = FlutterError.onError;
+  FlutterError.onError = (details) {
+    previous?.call(details);
+    crashlytics.recordFlutterFatalError(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    crashlytics.recordError(error, stack, fatal: true);
+    return true;
+  };
 }
 
 Future<void> _initializePushAfterFirstFrame(ProviderContainer container) async {
