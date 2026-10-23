@@ -22,7 +22,10 @@ import 'package:revenuecat/services/app_icon_overrides_store.dart';
 import 'package:revenuecat/services/auto_app_icons_store.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:revenuecat/widgets/section_header.dart';
+import 'package:revenuecat/widgets/status_label.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class TransactionDetailState {
@@ -216,17 +219,6 @@ class TransactionDetailScreen extends ConsumerWidget {
 
   const TransactionDetailScreen({super.key, required this.transaction});
 
-  /// Same subtle tint as [TransactionItem] list cards (7% toward type accent).
-  Color _txCardSurface(BuildContext context, RcTransaction tx) {
-    final scheme = Theme.of(context).colorScheme;
-    final accent = transactionTypeAccentColor(
-      tx.type,
-      context,
-      transaction: tx,
-    );
-    return Color.lerp(scheme.surface, accent, 0.07) ?? scheme.surface;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(transactionDetailProvider(transaction));
@@ -264,8 +256,6 @@ class TransactionDetailScreen extends ConsumerWidget {
         children: [
           Card(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            color: _txCardSurface(context, transaction),
-            surfaceTintColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -338,7 +328,10 @@ class TransactionDetailScreen extends ConsumerWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.only(
+        top: 4,
+        bottom: 24 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         _buildTransactionSummary(
           context,
@@ -406,11 +399,9 @@ class TransactionDetailScreen extends ConsumerWidget {
     String? customIconUrl,
   }) {
     final type = tx.type;
-    final baseHeaderRevenueStyle = context.textTheme.headlineSmall?.copyWith(
-      fontWeight: FontWeight.bold,
-    );
+    final baseHeaderRevenueStyle = AppText.amount(context, size: 32);
     final headerRevenueStyle = tx.tileShowRefundRevenueStrikethrough
-        ? baseHeaderRevenueStyle?.copyWith(
+        ? baseHeaderRevenueStyle.copyWith(
             decoration: TextDecoration.lineThrough,
             decorationColor: context.colorScheme.onSurfaceVariant,
           )
@@ -421,8 +412,8 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     Widget avatar = TransactionLeadingAvatar(
       imageUrl: customIconUrl,
-      size: 48,
-      borderRadius: 12,
+      size: 56,
+      borderRadius: 14,
       tintColor: color,
       fallback: Icon(
         hasCustomIcon ? _typeIcon(type) : Icons.edit_outlined,
@@ -450,57 +441,84 @@ class TransactionDetailScreen extends ConsumerWidget {
       );
     }
 
+    final scheme = context.colorScheme;
+    final appTitle = appName?.trim();
+    final productTitle = productIdentifierDisplayTitle(tx.productIdentifier);
+    final purchased = DateTime.tryParse(tx.purchaseDate ?? '')?.toLocal();
+    final muted = context.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: _txCardSurface(context, tx),
-      surfaceTintColor: Colors.transparent,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 avatar,
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 8,
-                        runSpacing: 6,
-                        children: [
-                          Text(
-                            productIdentifierDisplayTitle(tx.productIdentifier),
-                            style: context.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          TransactionTypeBadge(transaction: tx),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
                       Text(
-                        tx.productIdentifier ?? '',
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
+                        appTitle != null && appTitle.isNotEmpty
+                            ? appTitle
+                            : productTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
                         ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          if (appTitle != null && appTitle.isNotEmpty)
+                            productTitle,
+                          ?tx.productIdentifier,
+                        ].join('  ·  '),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: muted,
                       ),
                     ],
                   ),
                 ),
-                if (tx.tileDisplayRevenue != null)
-                  DualCurrencyExactText(
-                    amount: tx.tileDisplayRevenue!,
-                    commissionStore: tx.storeForCommission,
-                    style: headerRevenueStyle,
-                    textAlign: TextAlign.end,
-                  ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 18),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: tx.tileDisplayRevenue != null
+                      ? DualCurrencyExactText(
+                          amount: tx.tileDisplayRevenue!,
+                          commissionStore: tx.storeForCommission,
+                          style: headerRevenueStyle,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(width: 12),
+                TransactionTypeBadge(transaction: tx),
+              ],
+            ),
+            if (purchased != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('EEE, MMM d, y · h:mm a').format(purchased),
+                style: muted,
+              ),
+            ],
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 if (tx.store != null)
                   _buildChip(
@@ -519,9 +537,9 @@ class TransactionDetailScreen extends ConsumerWidget {
                 if (tx.isSandbox == true)
                   _buildChip(
                     context,
-                    null,
+                    Icons.science_outlined,
                     'Sandbox',
-                    color: context.colorScheme.tertiary,
+                    color: context.appColors.warning,
                   ),
               ],
             ),
@@ -539,30 +557,36 @@ class TransactionDetailScreen extends ConsumerWidget {
     int maxLines = 1,
     Color? iconTint,
   }) {
-    final accent = color ?? Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Container(
-        padding: TransactionPillStyle.padding,
-        decoration: TransactionPillStyle.decoration(accent),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 14, color: iconTint ?? accent),
-              const SizedBox(width: 6),
-            ],
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
-              child: Text(
-                label,
-                style: TransactionPillStyle.textStyle(accent),
-                maxLines: maxLines,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+    final scheme = context.colorScheme;
+    final fg = color ?? scheme.onSurface;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color != null
+            ? color.withValues(alpha: 0.14)
+            : scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: iconTint ?? fg),
+            const SizedBox(width: 6),
           ],
-        ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 200),
+            child: Text(
+              label,
+              style: context.textTheme.labelMedium?.copyWith(
+                color: fg,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: maxLines,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -574,8 +598,6 @@ class TransactionDetailScreen extends ConsumerWidget {
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: _txCardSurface(context, tx),
-      surfaceTintColor: Colors.transparent,
       child: Column(
         children: [
           _InfoRow(
@@ -594,14 +616,14 @@ class TransactionDetailScreen extends ConsumerWidget {
           const _Divider(),
           _InfoRow(
             icon: Icons.payments_outlined,
-            label: 'Total Spent',
+            label: 'Total spent',
             usdAmount: detail.dollarsSpent,
             applyBlendedCommission: true,
           ),
           const _Divider(),
           _InfoRow(
             icon: Icons.visibility_outlined,
-            label: 'Last Seen',
+            label: 'Last seen',
             value: _relativeTime(detail.lastSeen),
           ),
           const _Divider(),
@@ -614,7 +636,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             const _Divider(),
             _InfoRow(
               icon: Icons.flag_outlined,
-              label: 'Country / Locale',
+              label: 'Country and locale',
               value:
                   '${regionDisplayNameEnglish(detail.lastSeenCountry)} ${detail.lastSeenLocale ?? ""}'
                       .trim(),
@@ -642,7 +664,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             const _Divider(),
             _InfoRow(
               icon: Icons.code_outlined,
-              label: 'SDK Version',
+              label: 'SDK version',
               value: detail.lastSeenSdkVersion,
             ),
           ],
@@ -658,16 +680,16 @@ class TransactionDetailScreen extends ConsumerWidget {
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: _txCardSurface(context, tx),
-      surfaceTintColor: Colors.transparent,
       child: Column(
         children: statuses.map((s) {
           final isActive = s.isAutoRenewing == true;
-          final color = isActive ? Colors.green : Colors.orange;
+          final color = isActive
+              ? context.appColors.positive
+              : context.appColors.warning;
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
                 child: Row(
                   children: [
                     Container(
@@ -687,17 +709,16 @@ class TransactionDetailScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    Text(
-                      isActive ? 'Active' : 'Inactive',
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: color,
-                      ),
+                    StatusLabel(
+                      text: isActive ? 'Active' : 'Inactive',
+                      color: color,
+                      pill: true,
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.fromLTRB(32, 0, 16, 0),
                 child: Row(
                   children: [
                     Expanded(
@@ -713,7 +734,7 @@ class TransactionDetailScreen extends ConsumerWidget {
               ),
               if (s.expiresDate != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  padding: const EdgeInsets.fromLTRB(32, 4, 16, 14),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -788,7 +809,7 @@ class TransactionDetailScreen extends ConsumerWidget {
           icon: Icons.undo,
           label: 'Refunds',
           value: '$refundCount',
-          color: Colors.red,
+          color: context.appColors.negative,
         ),
       );
     }
@@ -826,8 +847,6 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: _txCardSurface(context, tx),
-      surfaceTintColor: Colors.transparent,
       child: Column(
         children: [
           for (int i = 0; i < insights.length; i++) ...[
@@ -853,8 +872,6 @@ class TransactionDetailScreen extends ConsumerWidget {
   ) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: _txCardSurface(context, tx),
-      surfaceTintColor: Colors.transparent,
       child: Column(
         children: [
           for (int i = 0; i < attributes.length; i++) ...[
@@ -921,7 +938,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     }
 
     return _ExpandableHistoryListCard(
-      cardColor: _txCardSurface(context, tx),
+      cardColor: Theme.of(context).colorScheme.surfaceContainerLow,
       transaction: tx,
       items: items,
     );
@@ -1098,7 +1115,7 @@ class _ExpandableHistoryListCardState
       surfaceTintColor: Colors.transparent,
       clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(8, 16, 16, 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1133,25 +1150,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Text(
-              title.toUpperCase(),
-              style: context.textTheme.labelMedium?.copyWith(
-                color: context.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          ?trailing,
-        ],
-      ),
-    );
+    return SectionHeader(title: title, trailing: trailing);
   }
 }
 
@@ -1177,8 +1176,9 @@ class _InfoRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final valueStyle = context.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
       color: color,
+      fontFeatures: AppText.tabular,
     );
     final Widget valueWidget = usdAmount != null
         ? DualCurrencyExactText(
@@ -1202,7 +1202,7 @@ class _InfoRow extends ConsumerWidget {
             }
           : null,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         child: Row(
           children: [
             Icon(
@@ -1210,16 +1210,21 @@ class _InfoRow extends ConsumerWidget {
               size: 18,
               color: color ?? context.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: context.textTheme.bodySmall?.copyWith(
+                style: context.textTheme.bodyMedium?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
-            Flexible(child: valueWidget),
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: valueWidget,
+              ),
+            ),
             if (copyable && value != null) ...[
               const SizedBox(width: 4),
               Icon(
@@ -1240,12 +1245,7 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      indent: 38,
-      endIndent: 12,
-      color: context.colorScheme.outlineVariant.withValues(alpha: 0.5),
-    );
+    return const Divider(indent: 46);
   }
 }
 
@@ -1310,7 +1310,8 @@ class _HistoryTimelineEntry extends ConsumerWidget {
       height: dotSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Color.lerp(scheme.surface, accent, 0.18) ?? scheme.surface,
+        color: Color.lerp(scheme.surfaceContainerLow, accent, 0.18) ??
+            scheme.surfaceContainerLow,
         border: Border.all(color: accent, width: 2),
       ),
     );

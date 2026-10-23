@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/auto_app_icons_store.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/app_card.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:revenuecat/widgets/share_row.dart';
+import 'package:revenuecat/widgets/split_bar.dart';
 
 Future<void> _showRevenueInsightsSheet({
   required BuildContext context,
@@ -22,7 +24,6 @@ Future<void> _showRevenueInsightsSheet({
     useSafeArea: true,
     showDragHandle: true,
     builder: (sheetContext) {
-      final theme = Theme.of(sheetContext);
       final height = MediaQuery.sizeOf(sheetContext).height * 0.88;
       return SizedBox(
         height: height,
@@ -30,17 +31,17 @@ Future<void> _showRevenueInsightsSheet({
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               child: Text(
-                'Revenue insights',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+                'Revenue breakdown',
+                style: sheetContext.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 child: RealtimeRevenueInsightsList(
                   transactions: transactions,
                   compactRevenueAmounts: compactRevenueAmounts,
@@ -56,18 +57,19 @@ Future<void> _showRevenueInsightsSheet({
   );
 }
 
-/// Revenue breakdown for a transaction list: progress rows for share of total
-/// (Transactions day view and Revenue tab).
+/// Revenue breakdown for a transaction list (stores, new vs renewals, top
+/// apps, top countries). On the Transactions day view it is a compact
+/// "Breakdown" card that opens the full list in a sheet.
 class RealtimeRevenueInsightsList extends ConsumerWidget {
   final List<RcTransaction> transactions;
 
-  /// When true (Transactions day view), shows a tappable row that opens a bottom sheet.
+  /// When true (Transactions day view), shows a compact card that opens a bottom sheet.
   final bool asModalEntry;
 
-  /// Outer [Card] margin; use [EdgeInsets.zero] when embedding in a sheet.
+  /// Outer margin; use [EdgeInsets.zero] when embedding in a sheet.
   final EdgeInsetsGeometry cardMargin;
 
-  /// When false, omits the all-caps "REVENUE INSIGHTS" line (e.g. sheet has its own title).
+  /// When false, omits the card title (e.g. sheet has its own title).
   final bool showInsightsHeader;
 
   /// When false (e.g. Revenue tab), revenue amounts use full grouping ($5,001.00)
@@ -85,19 +87,16 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
 
     if (transactions.isEmpty) {
-      return Card(
+      return AppCard(
         margin: cardMargin,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            'No transactions for insights',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+        child: Text(
+          'No transactions to break down yet.',
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
           ),
         ),
       );
@@ -105,256 +104,126 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
 
     final commission = ref.watch(commissionSettingsProvider);
     final data = computeRevenueInsights(transactions, commission);
-    final appIconOverrides = ref.watch(resolvedAppIconsProvider);
-
-    final headerStyle = context.textTheme.labelMedium?.copyWith(
-      color: scheme.primary,
-      fontWeight: FontWeight.w800,
-      letterSpacing: 0.6,
-    );
-
-    final useCompactRevenue = compactRevenueAmounts;
-    final insightsBody = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-          _InsightsSection(
-            title: 'Platform',
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 2,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                indent: 14,
-                endIndent: 14,
-                color: scheme.outlineVariant.withValues(alpha: 0.35),
-              ),
-              itemBuilder: (context, i) {
-                if (i == 0) {
-                  return _InsightProgressRow(
-                    label: 'Apple',
-                    pct: data.applePct,
-                    revenue: data.appleRevenue,
-                    barColor: Color.lerp(
-                      StoreBrandIconColors.appleBlue,
-                      scheme.surface,
-                      0.35,
-                    )!,
-                    leading: _InsightLeadingIconTile(
-                      icon: Icons.apple,
-                      iconColor: StoreBrandIconColors.appleBlue,
-                    ),
-                    compactRevenueAmounts: useCompactRevenue,
-                  ).appListItemEntrance(i);
-                }
-                return _InsightProgressRow(
-                  label: 'Google Play',
-                  pct: data.googlePct,
-                  revenue: data.googleRevenue,
-                  barColor: Color.lerp(
-                    StoreBrandIconColors.androidGreen,
-                    scheme.surface,
-                    0.4,
-                  )!,
-                  leading: _InsightLeadingIconTile(
-                    icon: Icons.android,
-                    iconColor: StoreBrandIconColors.androidGreen,
-                  ),
-                  compactRevenueAmounts: useCompactRevenue,
-                ).appListItemEntrance(i);
-              },
-            ),
-          ),
-          _InsightsSection(
-            title: 'New vs renewals',
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 2,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                indent: 14,
-                endIndent: 14,
-                color: scheme.outlineVariant.withValues(alpha: 0.35),
-              ),
-              itemBuilder: (context, i) {
-                if (i == 0) {
-                  final accent = transactionTypeAccentColor(
-                    RcTransactionType.newSubscription,
-                    context,
-                  );
-                  return _InsightProgressRow(
-                    label: 'New',
-                    pct: data.newPct,
-                    revenue: data.newRevenue,
-                    barColor: accent,
-                    leading: _InsightLeadingIconTile(
-                      icon: Icons.add_circle_outline,
-                      iconColor: accent,
-                    ),
-                    compactRevenueAmounts: useCompactRevenue,
-                  ).appListItemEntrance(2 + i);
-                }
-                final accent = transactionTypeAccentColor(
-                  RcTransactionType.renewal,
-                  context,
-                );
-                return _InsightProgressRow(
-                  label: 'Renewals',
-                  pct: data.renewalPct,
-                  revenue: data.renewalRevenue,
-                  barColor: accent,
-                  leading: _InsightLeadingIconTile(
-                    icon: Icons.autorenew,
-                    iconColor: accent,
-                  ),
-                  compactRevenueAmounts: useCompactRevenue,
-                ).appListItemEntrance(2 + i);
-              },
-            ),
-          ),
-          _InsightsSection(
-            title: 'Top apps',
-            child: data.topApps.isEmpty
-                ? _emptySectionHint(context, 'No app revenue')
-                : ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: data.topApps.length,
-                    separatorBuilder: (_, _) => Divider(
-                      height: 1,
-                      indent: 14,
-                      endIndent: 14,
-                      color: scheme.outlineVariant.withValues(alpha: 0.35),
-                    ),
-                    itemBuilder: (context, i) {
-                      final e = data.topApps[i];
-                      final url = e.appId != null
-                          ? appIconOverrides[e.appId]
-                          : null;
-                      return _InsightProgressRow(
-                        label: e.label,
-                        pct: e.pct,
-                        revenue: e.revenue,
-                        barColor: scheme.primary,
-                        leading: TransactionLeadingAvatar(
-                          imageUrl: url,
-                          size: 36,
-                          borderRadius: 8,
-                          tintColor: scheme.onSurfaceVariant,
-                          fallback: Icon(
-                            Icons.apps_outlined,
-                            size: 18,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                        compactRevenueAmounts: useCompactRevenue,
-                      ).appListItemEntrance(4 + i);
-                    },
-                  ),
-          ),
-          _InsightsSection(
-            title: 'Top countries',
-            child: data.topCountries.isEmpty
-                ? _emptySectionHint(context, 'No country data')
-                : ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: data.topCountries.length,
-                    separatorBuilder: (_, _) => Divider(
-                      height: 1,
-                      indent: 14,
-                      endIndent: 14,
-                      color: scheme.outlineVariant.withValues(alpha: 0.35),
-                    ),
-                    itemBuilder: (context, i) {
-                      final e = data.topCountries[i];
-                      return _InsightProgressRow(
-                        label: e.name,
-                        pct: e.pct,
-                        revenue: e.revenue,
-                        barColor: scheme.tertiary,
-                        leading: _InsightLeadingCountryEmoji(
-                          countryKey: e.countryKey,
-                        ),
-                        compactRevenueAmounts: useCompactRevenue,
-                      ).appListItemEntrance(4 + data.topApps.length + i);
-                    },
-                  ),
-          ),
-          const SizedBox(height: 8),
-      ],
-    );
+    final appIcons = ref.watch(resolvedAppIconsProvider);
 
     if (asModalEntry) {
-      final previewApps = data.topApps.take(6).toList();
-      final previewCountries = data.topCountries.take(6).toList();
-      return Card(
+      return _CollapsedBreakdownCard(
+        data: data,
+        appIcons: appIcons,
         margin: cardMargin,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => _showRevenueInsightsSheet(
-            context: context,
-            transactions: transactions,
-            compactRevenueAmounts: useCompactRevenue,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'REVENUE INSIGHTS',
-                        style: headerStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _CollapsedStoreShareRow(
-                            scheme: scheme,
-                            applePct: data.applePct,
-                            googlePct: data.googlePct,
-                          ),
-                          const SizedBox(width: 2),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                if (previewApps.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  _CollapsedTopAppsIconRow(
-                    apps: previewApps,
-                    appIconOverrides: appIconOverrides,
-                    scheme: scheme,
-                  ),
-                ],
-                if (previewCountries.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  _CollapsedTopCountriesFlagRow(countries: previewCountries),
-                ],
-              ],
-            ),
-          ),
+        onTap: () => _showRevenueInsightsSheet(
+          context: context,
+          transactions: transactions,
+          compactRevenueAmounts: compactRevenueAmounts,
         ),
       );
     }
+
+    Widget amount(double revenue) => compactRevenueAmounts
+        ? DualCurrencyCompactText(amount: revenue, textAlign: TextAlign.end)
+        : DualCurrencyExactText(
+            amount: revenue,
+            applyCommissionAdjustment: false,
+            textAlign: TextAlign.end,
+          );
+
+    var rowIndex = 0;
+    Widget enter(Widget w) => w.appListItemEntrance(rowIndex++);
+
+    final sections = <Widget>[
+      _InsightsSection(
+        title: 'Stores',
+        rows: [
+          enter(
+            ShareRow(
+              label: 'App Store',
+              pct: data.applePct,
+              amount: amount(data.appleRevenue),
+              barColor: colors.apple,
+              leading: _LeadingIconTile(icon: Icons.apple, color: colors.apple),
+            ),
+          ),
+          enter(
+            ShareRow(
+              label: 'Google Play',
+              pct: data.googlePct,
+              amount: amount(data.googleRevenue),
+              barColor: colors.google,
+              leading: _LeadingIconTile(
+                icon: Icons.android,
+                color: colors.google,
+              ),
+            ),
+          ),
+        ],
+      ),
+      _InsightsSection(
+        title: 'New vs renewals',
+        rows: [
+          enter(
+            ShareRow(
+              label: 'New',
+              pct: data.newPct,
+              amount: amount(data.newRevenue),
+              barColor: colors.purchase,
+              leading: _LeadingIconTile(
+                icon: Icons.add_circle_outline,
+                color: colors.purchase,
+              ),
+            ),
+          ),
+          enter(
+            ShareRow(
+              label: 'Renewals',
+              pct: data.renewalPct,
+              amount: amount(data.renewalRevenue),
+              barColor: colors.renewal,
+              leading: _LeadingIconTile(
+                icon: Icons.autorenew,
+                color: colors.renewal,
+              ),
+            ),
+          ),
+        ],
+      ),
+      _InsightsSection(
+        title: 'Top apps',
+        emptyText: 'No app revenue',
+        rows: [
+          for (final e in data.topApps)
+            enter(
+              ShareRow(
+                label: e.label,
+                pct: e.pct,
+                amount: amount(e.revenue),
+                barColor: scheme.primary,
+                leading: _AppIcon(
+                  url: e.appId != null ? appIcons[e.appId] : null,
+                  size: 36,
+                ),
+              ),
+            ),
+        ],
+      ),
+      _InsightsSection(
+        title: 'Top countries',
+        emptyText: 'No country data',
+        rows: [
+          for (final e in data.topCountries)
+            enter(
+              ShareRow(
+                label: e.name,
+                pct: e.pct,
+                amount: amount(e.revenue),
+                barColor: scheme.onSurfaceVariant,
+                leading: _LeadingEmojiTile(
+                  glyph: countryInsightLeadingEmoji(e.countryKey),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ];
 
     return Card(
       margin: cardMargin,
@@ -364,93 +233,145 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         children: [
           if (showInsightsHeader)
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Text(
-                'REVENUE INSIGHTS',
-                style: headerStyle,
+                'Revenue breakdown',
+                style: context.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
             ),
-          insightsBody,
+          for (var i = 0; i < sections.length; i++) ...[
+            if (i > 0) const Divider(),
+            sections[i],
+          ],
+          const SizedBox(height: 4),
         ],
-      ),
-    );
-  }
-
-  static Widget _emptySectionHint(BuildContext context, String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-      child: Text(
-        text,
-        style: context.textTheme.bodySmall?.copyWith(
-          color: context.colorScheme.onSurfaceVariant,
-        ),
       ),
     );
   }
 }
 
-/// Collapsed preview: ~2× smaller than 26px insight avatars.
-const double _kCollapsedInsightAppIconSize = 13;
-const double _kCollapsedInsightEmojiFont = 11;
-
-/// Top apps on the collapsed card: ~½-size icons with revenue % beside each.
-class _CollapsedTopAppsIconRow extends StatelessWidget {
-  static const double _radius = 3;
-
-  final List<RevenueInsightAppLine> apps;
-  final Map<String, String> appIconOverrides;
-  final ColorScheme scheme;
-
-  const _CollapsedTopAppsIconRow({
-    required this.apps,
-    required this.appIconOverrides,
-    required this.scheme,
+/// Compact breakdown on the Transactions day view.
+class _CollapsedBreakdownCard extends StatelessWidget {
+  const _CollapsedBreakdownCard({
+    required this.data,
+    required this.appIcons,
+    required this.margin,
+    required this.onTap,
   });
 
-  static TextStyle? _pctStyle(TextTheme tt, ColorScheme scheme) =>
-      tt.labelSmall?.copyWith(
-        fontSize: 9,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurfaceVariant,
-        height: 1.05,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      );
+  final RevenueInsightsSnapshot data;
+  final Map<String, String> appIcons;
+  final EdgeInsetsGeometry margin;
+  final VoidCallback onTap;
+
+  static const _previewCount = 3;
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final pctStyle = _pctStyle(tt, scheme);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final labelStyle = context.textTheme.labelMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    final valueStyle = context.textTheme.labelMedium?.copyWith(
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w700,
+      fontFeatures: AppText.tabular,
+    );
+    final apps = data.topApps.take(_previewCount).toList();
+    final countries = data.topCountries.take(_previewCount).toList();
+
+    return AppCard(
+      margin: margin,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (var i = 0; i < apps.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                TransactionLeadingAvatar(
-                  imageUrl: apps[i].appId != null
-                      ? appIconOverrides[apps[i].appId]
-                      : null,
-                  size: _kCollapsedInsightAppIconSize,
-                  borderRadius: _radius,
-                  tintColor: scheme.onSurfaceVariant,
-                  fallback: Icon(
-                    Icons.apps_outlined,
-                    size: 8,
-                    color: scheme.onSurfaceVariant,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Breakdown',
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '${apps[i].pct.toStringAsFixed(1)}%',
-                  style: pctStyle,
-                  maxLines: 1,
-                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
+                semanticLabel: 'Open breakdown',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SplitBar(
+            height: 6,
+            segments: [
+              SplitSegment(
+                value: data.applePct,
+                color: colors.apple,
+                label: 'App Store',
+              ),
+              SplitSegment(
+                value: data.googlePct,
+                color: colors.google,
+                label: 'Google Play',
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.apple, size: 15, color: colors.apple),
+              const SizedBox(width: 4),
+              Text('App Store ', style: labelStyle),
+              Text('${data.applePct.toStringAsFixed(1)}%', style: valueStyle),
+              const Spacer(),
+              Text('Google Play ', style: labelStyle),
+              Text('${data.googlePct.toStringAsFixed(1)}%', style: valueStyle),
+              const SizedBox(width: 4),
+              Icon(Icons.android, size: 15, color: colors.google),
+            ],
+          ),
+          if (apps.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _PreviewLine(
+              title: 'Top apps',
+              more: data.topApps.length - apps.length,
+              items: [
+                for (final a in apps)
+                  _PreviewItem(
+                    leading: _AppIcon(
+                      url: a.appId != null ? appIcons[a.appId] : null,
+                      size: 18,
+                    ),
+                    label: a.label,
+                    pct: a.pct,
+                  ),
+              ],
+            ),
+          ],
+          if (countries.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _PreviewLine(
+              title: 'Top countries',
+              more: data.topCountries.length - countries.length,
+              items: [
+                for (final c in countries)
+                  _PreviewItem(
+                    leading: Text(
+                      countryInsightLeadingEmoji(c.countryKey),
+                      style: const TextStyle(fontSize: 14, height: 1.1),
+                    ),
+                    label: c.countryKey.length == 2 ? c.countryKey : c.name,
+                    pct: c.pct,
+                  ),
               ],
             ),
           ],
@@ -460,304 +381,193 @@ class _CollapsedTopAppsIconRow extends StatelessWidget {
   }
 }
 
-/// Top countries on the collapsed card: ~½-size emoji with revenue % beside each.
-class _CollapsedTopCountriesFlagRow extends StatelessWidget {
-  final List<RevenueInsightCountryLine> countries;
-
-  const _CollapsedTopCountriesFlagRow({required this.countries});
-
-  static TextStyle? _pctStyle(TextTheme tt, ColorScheme scheme) =>
-      tt.labelSmall?.copyWith(
-        fontSize: 9,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurfaceVariant,
-        height: 1.05,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final pctStyle = _pctStyle(tt, scheme);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          for (var i = 0; i < countries.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  countryInsightLeadingEmoji(countries[i].countryKey),
-                  style: const TextStyle(
-                    fontSize: _kCollapsedInsightEmojiFont,
-                    height: 1.05,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${countries[i].pct.toStringAsFixed(1)}%',
-                  style: pctStyle,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Apple / Google revenue share on the collapsed insights card (subtle tint, right-aligned with chevron).
-class _CollapsedStoreShareRow extends StatelessWidget {
-  final ColorScheme scheme;
-  final double applePct;
-  final double googlePct;
-
-  const _CollapsedStoreShareRow({
-    required this.scheme,
-    required this.applePct,
-    required this.googlePct,
+class _PreviewItem {
+  const _PreviewItem({
+    required this.leading,
+    required this.label,
+    required this.pct,
   });
 
-  /// Portion of pure brand color (rest blends toward [ColorScheme.onSurface]).
-  static const double _brandStrength = 0.58;
+  final Widget leading;
+  final String label;
+  final double pct;
+}
 
-  Color _softApple() => Color.lerp(
-        StoreBrandIconColors.appleBlue,
-        scheme.onSurface,
-        1.0 - _brandStrength,
-      )!;
+class _PreviewLine extends StatelessWidget {
+  const _PreviewLine({
+    required this.title,
+    required this.items,
+    required this.more,
+  });
 
-  Color _softGoogle() => Color.lerp(
-        StoreBrandIconColors.androidGreen,
-        scheme.onSurface,
-        1.0 - _brandStrength,
-      )!;
-
-  TextStyle _pctStyle(Color c) => TextStyle(
-        color: c,
-        fontWeight: FontWeight.w700,
-        fontSize: 13,
-        height: 1.1,
-        letterSpacing: -0.15,
-      );
+  final String title;
+  final List<_PreviewItem> items;
+  final int more;
 
   @override
   Widget build(BuildContext context) {
-    final apple = _softApple();
-    final google = _softGoogle();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    final scheme = context.colorScheme;
+    final small = context.textTheme.labelMedium;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.apple, size: 21, color: apple),
-        const SizedBox(width: 3),
-        Text('${applePct.toStringAsFixed(1)}%', style: _pctStyle(apple)),
-        const SizedBox(width: 10),
-        Icon(Icons.android, size: 19, color: google),
-        const SizedBox(width: 3),
-        Text('${googlePct.toStringAsFixed(1)}%', style: _pctStyle(google)),
+        Text(
+          title,
+          style: small?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 14,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            for (final item in items)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  item.leading,
+                  const SizedBox(width: 6),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 96),
+                    child: Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: small?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${item.pct.toStringAsFixed(0)}%',
+                    style: small?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: AppText.tabular,
+                    ),
+                  ),
+                ],
+              ),
+            if (more > 0)
+              Text(
+                '+$more more',
+                style: small?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+          ],
+        ),
       ],
     );
   }
 }
 
 class _InsightsSection extends StatelessWidget {
-  final String title;
-  final Widget child;
-
   const _InsightsSection({
     required this.title,
-    required this.child,
+    required this.rows,
+    this.emptyText,
   });
+
+  final String title;
+  final List<Widget> rows;
+  final String? emptyText;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = context.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 2),
           child: Text(
-            title.toUpperCase(),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
+            title,
+            style: context.textTheme.labelLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        child,
+        if (rows.isEmpty && emptyText != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Text(
+              emptyText!,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          ...rows,
       ],
     );
   }
 }
 
-/// Same footprint and fill as [TransactionLeadingAvatar] fallback tiles (36×8 radius).
-class _InsightLeadingIconTile extends StatelessWidget {
+class _LeadingIconTile extends StatelessWidget {
+  const _LeadingIconTile({required this.icon, required this.color});
+
   final IconData icon;
-  final Color iconColor;
-
-  const _InsightLeadingIconTile({
-    required this.icon,
-    required this.iconColor,
-  });
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: scheme.onSurfaceVariant.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.icon),
       ),
       alignment: Alignment.center,
-      child: Icon(icon, size: 20, color: iconColor),
+      child: Icon(icon, size: 20, color: color),
     );
   }
 }
 
-/// Flag / region emoji in the same 36×8 tile as app icons.
-class _InsightLeadingCountryEmoji extends StatelessWidget {
-  final String countryKey;
+class _LeadingEmojiTile extends StatelessWidget {
+  const _LeadingEmojiTile({required this.glyph});
 
-  const _InsightLeadingCountryEmoji({required this.countryKey});
+  final String glyph;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final glyph = countryInsightLeadingEmoji(countryKey);
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
-        color: scheme.onSurfaceVariant.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        color: context.colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadius.icon),
       ),
       alignment: Alignment.center,
-      child: Text(
-        glyph,
-        style: const TextStyle(fontSize: 20, height: 1.05),
-      ),
+      child: Text(glyph, style: const TextStyle(fontSize: 19, height: 1.05)),
     );
   }
 }
 
-class _InsightProgressRow extends ConsumerWidget {
-  final String label;
-  final double pct;
-  final double revenue;
-  final Color barColor;
-  final Widget leading;
-  final bool compactRevenueAmounts;
+class _AppIcon extends StatelessWidget {
+  const _AppIcon({required this.url, required this.size});
 
-  const _InsightProgressRow({
-    required this.label,
-    required this.pct,
-    required this.revenue,
-    required this.barColor,
-    required this.leading,
-    required this.compactRevenueAmounts,
-  });
+  final String? url;
+  final double size;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final v = (pct / 100.0).clamp(0.0, 1.0);
-    final titleStyle = context.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      color: scheme.onSurface,
-    );
-    final captionStyle = context.textTheme.labelSmall?.copyWith(
-      color: scheme.onSurfaceVariant,
-      fontWeight: FontWeight.w500,
-    );
-    final amountStyle = context.textTheme.bodySmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: scheme.onSurface,
-    );
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 36,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: leading,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: titleStyle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: compactRevenueAmounts
-                            ? DualCurrencyCompactText(
-                                amount: revenue,
-                                style: amountStyle,
-                                textAlign: TextAlign.end,
-                              )
-                            : FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerRight,
-                                child: DualCurrencyExactText(
-                                  amount: revenue,
-                                  applyCommissionAdjustment: false,
-                                  style: amountStyle,
-                                  textAlign: TextAlign.end,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${pct.toStringAsFixed(1)}% of total revenue',
-                  style: captionStyle,
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: v,
-                    minHeight: 8,
-                    backgroundColor:
-                        scheme.surfaceContainerHighest.withValues(alpha: 0.55),
-                    valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return TransactionLeadingAvatar(
+      imageUrl: url,
+      size: size,
+      borderRadius: size * 0.24,
+      tintColor: scheme.onSurfaceVariant,
+      fallback: Icon(
+        Icons.apps_outlined,
+        size: size * 0.55,
+        color: scheme.onSurfaceVariant,
       ),
     );
   }

@@ -55,7 +55,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Revenue'), findsOneWidget);
-    expect(find.text('This month · local'), findsOneWidget);
+    expect(find.text('This month so far'), findsOneWidget);
     expect(find.textContaining('\$0.00'), findsWidgets);
   });
 

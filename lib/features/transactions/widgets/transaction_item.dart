@@ -11,14 +11,18 @@ import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/auto_app_icons_store.dart';
 import 'package:revenuecat/services/utilities_service.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:revenuecat/widgets/status_label.dart';
 
+/// Leading inset of the hairline between rows (avatar + gaps).
+const double kTransactionRowDividerIndent = 64;
+
+/// One transaction row. Place it inside a grouped card
+/// ([GroupedSliverList] / [GroupedCard]); it draws no background of its own.
 class TransactionItem extends ConsumerWidget {
   final RcTransaction transaction;
   final VoidCallback? onTap;
-
-  /// When true, skips the outer [Card] (for rows inside a grouped day [Card]).
-  final bool inSectionCard;
 
   /// Earliest loaded [RcTransaction.purchaseDate] per subscriber (fallback when API omits created-at).
   final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
@@ -30,13 +34,13 @@ class TransactionItem extends ConsumerWidget {
     super.key,
     required this.transaction,
     this.onTap,
-    this.inSectionCard = false,
     this.subscriberEarliestPurchaseLocalDayById = const {},
     this.subscriberEarliestPurchaseLocalInstantById = const {},
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
     final sid = transaction.subscriberId?.trim();
     final tenureSubtitle = formatSubscriberTenureSubtitle(
       subscriberCreatedAtIso: transaction.subscriberCreatedAt,
@@ -49,41 +53,63 @@ class TransactionItem extends ConsumerWidget {
     );
 
     final type = transaction.type;
-    final color =
-        transactionTypeAccentColorForTransactionsList(transaction, context);
-    final icon = _typeIcon(type);
-    final storeIcon = _storeIcon(transaction.store);
+    final statusColor = transactionStatusColor(transaction, context);
     final appId = transaction.app?.id;
-    final iconUrl =
-        appId != null ? ref.watch(resolvedAppIconsProvider)[appId] : null;
+    final iconUrl = appId != null
+        ? ref.watch(resolvedAppIconsProvider)[appId]
+        : null;
 
-    final baseRevenueStyle = context.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.bold,
+    final appName = transaction.app?.name?.trim();
+    final hasAppName = appName != null && appName.isNotEmpty;
+    final product = productIdentifierDisplayTitle(
+      transaction.productIdentifier,
     );
-    final revenueStyle = transaction.tileShowRefundRevenueStrikethrough
-        ? baseRevenueStyle?.copyWith(
-            decoration: TextDecoration.lineThrough,
-            decorationColor: context.colorScheme.onSurfaceVariant,
-          )
-        : baseRevenueStyle;
+    final title = hasAppName ? appName : product;
+    final cc = transaction.subscriberCountryCode;
+    final country = cc == null
+        ? null
+        : '${_countryFlag(cc)} ${regionDisplayNameEnglish(cc)}';
+    final subtitle = [if (hasAppName) product, ?country].join('  ·  ');
+    final meta = [
+      ?tenureSubtitle,
+      if (transaction.purchaseDate != null)
+        formatTransactionListTime(transaction.purchaseDate),
+    ].join('  ·  ');
 
-    final body = InkWell(
-      onTap: () {
-        UtilitiesService.hapticLight();
-        onTap?.call();
-      },
-      borderRadius: inSectionCard
-          ? BorderRadius.zero
-          : BorderRadius.circular(16),
+    final revenue = transaction.tileDisplayRevenue;
+    final isZero = revenue != null && revenue.abs() < 0.005;
+    final revenueStyle = context.textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w700,
+      fontSize: 15,
+      fontFeatures: AppText.tabular,
+      color: isZero ? scheme.onSurfaceVariant : scheme.onSurface,
+      decoration: transaction.tileShowRefundRevenueStrikethrough
+          ? TextDecoration.lineThrough
+          : null,
+      decorationColor: scheme.onSurfaceVariant,
+    );
+    final mutedStyle = context.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      height: 1.3,
+    );
+
+    return InkWell(
+      onTap: onTap == null
+          ? null
+          : () {
+              UtilitiesService.hapticLight();
+              onTap!.call();
+            },
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TransactionLeadingAvatar(
               imageUrl: iconUrl,
-              tintColor: color,
-              fallback: Icon(icon, color: color, size: 20),
-              platformIcon: storeIcon,
+              tintColor: statusColor,
+              fallback: Icon(_typeIcon(type), color: statusColor, size: 20),
+              platformIcon: _storeIcon(transaction.store),
               platformIconColor: storeBrandIconTint(transaction.store),
             ),
             const SizedBox(width: 12),
@@ -92,121 +118,65 @@ class TransactionItem extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
-                          productIdentifierDisplayTitle(
-                            transaction.productIdentifier,
-                          ),
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 2,
+                          title,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            height: 1.25,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      TransactionTypeBadge(
-                        transaction: transaction,
-                        useHeaderPillStyle: true,
-                      ),
-                      if (transaction.tileDisplayRevenue != null) ...[
+                      if (revenue != null) ...[
                         const SizedBox(width: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 1),
-                          child: DualCurrencyExactText(
-                            amount: transaction.tileDisplayRevenue!,
-                            commissionStore: transaction.storeForCommission,
-                            style: revenueStyle,
-                            textAlign: TextAlign.end,
-                          ),
+                        DualCurrencyExactText(
+                          amount: revenue,
+                          commissionStore: transaction.storeForCommission,
+                          style: revenueStyle,
+                          textAlign: TextAlign.end,
                         ),
                       ],
                     ],
                   ),
-                  if (tenureSubtitle != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      tenureSubtitle,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                        height: 1.25,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 2),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: Row(
-                          children: [
-                            if (transaction.app?.name != null) ...[
-                              Flexible(
-                                child: Text(
-                                  transaction.app!.name!,
-                                  style: context.textTheme.bodySmall?.copyWith(
-                                    color: context.colorScheme.onSurfaceVariant,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            if (transaction.subscriberCountryCode != null)
-                              Flexible(
-                                child: Text(
-                                  '${_countryFlag(transaction.subscriberCountryCode!)} ${regionDisplayNameEnglish(transaction.subscriberCountryCode)}',
-                                  style: context.textTheme.bodySmall?.copyWith(
-                                    color: context.colorScheme.onSurfaceVariant,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                          ],
+                        child: Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: mutedStyle,
                         ),
                       ),
-                      if (transaction.purchaseDate != null)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text(
-                            formatTransactionListTime(transaction.purchaseDate),
-                            style: context.textTheme.bodySmall?.copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
-                            textAlign: TextAlign.end,
-                          ),
-                        ),
+                      const SizedBox(width: 8),
+                      StatusLabel(
+                        text: transactionStatusLabel(transaction),
+                        color: statusColor,
+                      ),
                     ],
                   ),
+                  if (meta.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: mutedStyle?.copyWith(fontSize: 12),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
       ),
-    );
-
-    if (inSectionCard) {
-      return Material(
-        color: Colors.transparent,
-        child: body,
-      );
-    }
-
-    final scheme = context.colorScheme;
-    final tileTint = Color.lerp(scheme.surface, color, 0.07) ?? scheme.surface;
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: tileTint,
-      surfaceTintColor: Colors.transparent,
-      child: body,
     );
   }
 
@@ -246,8 +216,6 @@ class TransactionItem extends ConsumerWidget {
   String _countryFlag(String code) {
     if (code.length != 2) return code;
     final upper = code.toUpperCase();
-    return String.fromCharCodes(
-      upper.codeUnits.map((c) => c + 127397),
-    );
+    return String.fromCharCodes(upper.codeUnits.map((c) => c + 127397));
   }
 }

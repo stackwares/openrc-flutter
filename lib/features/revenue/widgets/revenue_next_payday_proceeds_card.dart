@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
 import 'package:revenuecat/core/utils/store_payday_schedule.dart';
 import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/app_card.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:revenuecat/widgets/share_row.dart';
+import 'package:revenuecat/widgets/status_label.dart';
 
 class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
   final List<RcTransaction> allLoadedTransactions;
@@ -29,6 +32,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
     );
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final colors = context.appColors;
     final now = DateTime.now();
 
     final total = est.appleNetUsd + est.googleNetUsd;
@@ -51,118 +55,90 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           )
         : null;
 
-    return Card(
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      height: 1.3,
+    );
+
+    return AppCard(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 2),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.payments_outlined, color: scheme.primary, size: 20),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'NEXT PAYOUT ESTIMATES',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.55,
+                    'Next payouts',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
                 DualCurrencyExactText(
                   amount: total,
                   applyCommissionAdjustment: false,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.25,
-                    color: scheme.onSurface,
-                  ),
+                  style: AppText.amount(context, size: 17),
                   textAlign: TextAlign.right,
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
             child: Text(
               commission.adjustmentEnabled
-                  ? 'Net after your store-fee settings · share of combined next-window total'
-                  : 'Share of combined next-window total',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.25,
-                fontWeight: FontWeight.w500,
-              ),
+                  ? 'Estimated, after your store fees'
+                  : 'Estimated from loaded transactions',
+              style: muted,
             ),
           ),
           _NextPayoutPlatformRow(
             icon: Icons.apple,
-            iconColor: StoreBrandIconColors.appleBlue,
+            iconColor: colors.apple,
             storeLabel: 'App Store',
             paymentDate: est.applePayday?.paymentDate,
             accrualLine: appleAccrual,
             netUsd: est.appleNetUsd,
             pct: applePct,
-            barColor: Color.lerp(
-              StoreBrandIconColors.appleBlue,
-              scheme.surface,
-              0.35,
-            )!,
             now: now,
           ).appListItemEntrance(0),
-          Divider(
-            height: 1,
-            indent: 14,
-            endIndent: 14,
-            color: scheme.outlineVariant.withValues(alpha: 0.35),
-          ),
+          const Divider(indent: 64),
           _NextPayoutPlatformRow(
             icon: Icons.android,
-            iconColor: StoreBrandIconColors.androidGreen,
+            iconColor: colors.google,
             storeLabel: 'Google Play',
             paymentDate: est.googlePayday?.paymentDate,
             accrualLine: googleAccrual,
             netUsd: est.googleNetUsd,
             pct: googlePct,
-            barColor: Color.lerp(
-              StoreBrandIconColors.androidGreen,
-              scheme.surface,
-              0.4,
-            )!,
             now: now,
           ).appListItemEntrance(1),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
             child: Text(
-              '$loadedTransactionCount loaded transaction'
-              '${loadedTransactionCount == 1 ? '' : 's'} · gaps in history may lower totals',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
-                height: 1.25,
-              ),
+              'Based on $loadedTransactionCount loaded transaction'
+              '${loadedTransactionCount == 1 ? '' : 's'}. Gaps in history can lower these totals.',
+              style: muted?.copyWith(fontSize: 12),
             ),
           ),
         ],
       ),
-    ).appCardEntrance();
+    );
   }
 }
 
 String _accrualRangeShort(DateTime start, DateTime end) {
   final a = DateFormat.MMMd().format(start);
   final b = DateFormat.MMMd().format(end);
-  return 'Accrual $a–$b';
+  return 'Earnings $a–$b';
 }
 
-class _NextPayoutPlatformRow extends ConsumerWidget {
+class _NextPayoutPlatformRow extends StatelessWidget {
   const _NextPayoutPlatformRow({
     required this.icon,
     required this.iconColor,
@@ -171,7 +147,6 @@ class _NextPayoutPlatformRow extends ConsumerWidget {
     required this.accrualLine,
     required this.netUsd,
     required this.pct,
-    required this.barColor,
     required this.now,
   });
 
@@ -182,182 +157,67 @@ class _NextPayoutPlatformRow extends ConsumerWidget {
   final String? accrualLine;
   final double netUsd;
   final double pct;
-  final Color barColor;
   final DateTime now;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final titleStyle = context.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      color: scheme.onSurface,
-    );
-    final captionStyle = context.textTheme.labelSmall?.copyWith(
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final caption = context.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
-      fontWeight: FontWeight.w500,
+      height: 1.3,
     );
-    final amountStyle = context.textTheme.bodySmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      color: scheme.onSurface,
-    );
-    final v = (pct / 100.0).clamp(0.0, 1.0);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 36,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: _LeadingIconTile(icon: icon, iconColor: iconColor),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        storeLabel,
-                        style: titleStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    DualCurrencyExactText(
-                      amount: netUsd,
-                      applyCommissionAdjustment: false,
-                      style: amountStyle,
-                      textAlign: TextAlign.end,
-                    ),
-                  ],
+    return ShareRow(
+      label: storeLabel,
+      pct: pct,
+      barColor: iconColor,
+      amount: DualCurrencyExactText(
+        amount: netUsd,
+        applyCommissionAdjustment: false,
+        textAlign: TextAlign.end,
+      ),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(AppRadius.icon),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, size: 20, color: iconColor),
+      ),
+      details: [
+        const SizedBox(height: 4),
+        if (paymentDate != null)
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  'Pays ${formatPaydayAbbrev(paymentDate!)}',
+                  style: caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                if (paymentDate != null)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Payout ${formatPaydayAbbrev(paymentDate!)}',
-                          style: captionStyle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _DaysToGoBadge(
-                        label: paydayDaysToGoLabel(paymentDate!, now),
-                        scheme: scheme,
-                        textStyle: theme.textTheme.labelSmall,
-                      ),
-                    ],
-                  )
-                else
-                  Text(
-                    'Schedule unavailable',
-                    style: captionStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (accrualLine != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    accrualLine!,
-                    style: captionStyle?.copyWith(
-                      fontSize: (captionStyle.fontSize ?? 12) * 0.95,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 6),
-                Text(
-                  '${pct.toStringAsFixed(1)}% of next-payout total',
-                  style: captionStyle,
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: v,
-                    minHeight: 8,
-                    backgroundColor: scheme.surfaceContainerHighest.withValues(
-                      alpha: 0.55,
-                    ),
-                    valueColor: AlwaysStoppedAnimation<Color>(barColor),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              StatusLabel(
+                text: paydayDaysToGoLabel(paymentDate!, now),
+                color: scheme.primary,
+                pill: true,
+              ),
+            ],
+          )
+        else
+          Text('Schedule unavailable', style: caption),
+        if (accrualLine != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            accrualLine!,
+            style: caption?.copyWith(fontSize: 12),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DaysToGoBadge extends StatelessWidget {
-  const _DaysToGoBadge({
-    required this.label,
-    required this.scheme,
-    required this.textStyle,
-  });
-
-  final String label;
-  final ColorScheme scheme;
-  final TextStyle? textStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.38)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        child: Text(
-          label,
-          style: textStyle?.copyWith(
-            color: scheme.primary,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
-            height: 1.1,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LeadingIconTile extends StatelessWidget {
-  const _LeadingIconTile({required this.icon, required this.iconColor});
-
-  final IconData icon;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: scheme.onSurfaceVariant.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      alignment: Alignment.center,
-      child: Icon(icon, size: 20, color: iconColor),
+      ],
     );
   }
 }

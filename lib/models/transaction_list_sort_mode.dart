@@ -13,6 +13,14 @@ extension TransactionListSortModeX on TransactionListSortMode {
     TransactionListSortMode.revenueHighToLow => 'Amount · high to low',
     TransactionListSortMode.revenueLowToHigh => 'Amount · low to high',
   };
+
+  /// Short label for the list header button.
+  String get shortLabel => switch (this) {
+    TransactionListSortMode.purchaseNewestFirst => 'Newest',
+    TransactionListSortMode.purchaseOldestFirst => 'Oldest',
+    TransactionListSortMode.revenueHighToLow => 'Highest',
+    TransactionListSortMode.revenueLowToHigh => 'Lowest',
+  };
 }
 
 TransactionListSortMode transactionListSortModeFromStorage(String? raw) {

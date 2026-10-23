@@ -18,13 +18,13 @@ const _mainShellTabs = <FloatingTabDestination>[
   ),
   FloatingTabDestination(
     label: 'Revenue',
-    icon: Icons.payments_outlined,
-    selectedIcon: Icons.payments_rounded,
+    icon: Icons.account_balance_wallet_outlined,
+    selectedIcon: Icons.account_balance_wallet_rounded,
   ),
   FloatingTabDestination(
     label: 'Charts',
-    icon: Icons.dashboard_outlined,
-    selectedIcon: Icons.dashboard_rounded,
+    icon: Icons.insights_outlined,
+    selectedIcon: Icons.insights_rounded,
   ),
 ];
 

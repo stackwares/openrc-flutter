@@ -1,0 +1,152 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:revenuecat/core/extensions/context_extensions.dart';
+
+/// Top bar for the three main tabs: a bold title, an optional muted subtitle,
+/// and round icon actions.
+class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
+  const ShellHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.leading,
+    this.actions = const [],
+    this.bottom,
+  });
+
+  final String title;
+  final String? subtitle;
+
+  /// Shown right after the title (e.g. day navigation).
+  final Widget? leading;
+  final List<Widget> actions;
+  final PreferredSizeWidget? bottom;
+
+  static const double toolbarHeight = 68;
+
+  /// Phones refresh by pulling; desktop has no pull gesture.
+  static bool get showsRefreshButton =>
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.linux;
+
+  @override
+  Size get preferredSize =>
+      Size.fromHeight(toolbarHeight + (bottom?.preferredSize.height ?? 0));
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: toolbarHeight,
+      titleSpacing: 20,
+      title: Row(
+        children: [
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 24,
+                    letterSpacing: -0.4,
+                    height: 1.15,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                      height: 1.25,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (leading != null) ...[const SizedBox(width: 8), leading!],
+        ],
+      ),
+      actions: [...actions, const SizedBox(width: 12)],
+      bottom: bottom,
+    );
+  }
+}
+
+/// 36px round icon button used in [ShellHeader].
+class HeaderIconButton extends StatelessWidget {
+  const HeaderIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.badge = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  /// Small accent dot (e.g. filters are active).
+  final bool badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final dark = scheme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            tooltip: tooltip,
+            onPressed: onPressed,
+            icon: Icon(icon, size: 20),
+            style: IconButton.styleFrom(
+              fixedSize: const Size(36, 36),
+              minimumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+              backgroundColor: dark
+                  ? scheme.surfaceContainer
+                  : scheme.surfaceContainerLowest,
+              foregroundColor: scheme.onSurface,
+              disabledBackgroundColor:
+                  (dark
+                          ? scheme.surfaceContainer
+                          : scheme.surfaceContainerLowest)
+                      .withValues(alpha: 0.5),
+              side: BorderSide(color: context.appColors.hairline),
+            ),
+          ),
+          if (badge)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: IgnorePointer(
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surface, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

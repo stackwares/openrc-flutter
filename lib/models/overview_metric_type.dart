@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:revenuecat/theme/app_colors.dart';
 
 enum OverviewMetricValueType { live, total, last }
 
@@ -11,27 +12,27 @@ enum OverviewMetricType {
   ),
   subscriptions(
     icon: Icons.repeat_rounded,
-    label: 'SUBSCRIPTIONS',
+    label: 'Subscriptions',
     valueType: OverviewMetricValueType.live,
   ),
   trials(
     icon: Icons.access_time_rounded,
-    label: 'TRIALS',
+    label: 'Trials',
     valueType: OverviewMetricValueType.live,
   ),
   revenue(
     icon: Icons.attach_money_rounded,
-    label: 'REVENUE',
+    label: 'Revenue',
     valueType: OverviewMetricValueType.total,
   ),
   users(
     icon: Icons.people_rounded,
-    label: 'USERS',
+    label: 'Users',
     valueType: OverviewMetricValueType.total,
   ),
   newUsers(
     icon: Icons.person_add_rounded,
-    label: 'NEW USERS',
+    label: 'New users',
     valueType: OverviewMetricValueType.total,
   ),
   arr(
@@ -41,22 +42,22 @@ enum OverviewMetricType {
   ),
   proceeds(
     icon: Icons.attach_money_rounded,
-    label: 'PROCEEDS',
+    label: 'Proceeds',
     valueType: OverviewMetricValueType.total,
   ),
   churnRate(
     icon: Icons.people_outline_rounded,
-    label: 'CHURN RATE',
+    label: 'Churn rate',
     valueType: OverviewMetricValueType.last,
   ),
   subsLost(
     icon: Icons.people_outline_rounded,
-    label: 'SUBS. LOST',
+    label: 'Subs lost',
     valueType: OverviewMetricValueType.last,
   ),
   transactions(
     icon: Icons.swap_horiz_rounded,
-    label: 'TRANSACTIONS',
+    label: 'Transactions',
     valueType: OverviewMetricValueType.total,
   );
 
@@ -177,31 +178,33 @@ enum OverviewMetricType {
   }
 
   Color color(ColorScheme colorScheme) {
+    final c = AppColors.forBrightness(colorScheme.brightness);
     switch (this) {
       case OverviewMetricType.mrr:
-        return colorScheme.primary;
-      case OverviewMetricType.subscriptions:
-        return Colors.blue;
-      case OverviewMetricType.trials:
-        return Colors.orange;
-      case OverviewMetricType.revenue:
-        return Colors.green;
-      case OverviewMetricType.users:
-        return Colors.purple;
-      case OverviewMetricType.newUsers:
-        return Colors.teal;
       case OverviewMetricType.arr:
         return colorScheme.primary;
-      case OverviewMetricType.proceeds:
-        return Colors.green;
-      case OverviewMetricType.churnRate:
-        return Colors.red;
-      case OverviewMetricType.subsLost:
-        return Colors.red;
+      case OverviewMetricType.subscriptions:
       case OverviewMetricType.transactions:
-        return Colors.blue;
+        return c.purchase;
+      case OverviewMetricType.trials:
+        return c.trial;
+      case OverviewMetricType.revenue:
+      case OverviewMetricType.proceeds:
+        return c.positive;
+      case OverviewMetricType.users:
+        return c.oneTimePurchase;
+      case OverviewMetricType.newUsers:
+        return c.conversion;
+      case OverviewMetricType.churnRate:
+      case OverviewMetricType.subsLost:
+        return c.negative;
     }
   }
+
+  /// Higher values are good news (false for churn and lost subscriptions).
+  bool get higherIsBetter =>
+      this != OverviewMetricType.churnRate &&
+      this != OverviewMetricType.subsLost;
 }
 
 /// Thousands separators for overview counts (e.g. 50000 → 50,000).

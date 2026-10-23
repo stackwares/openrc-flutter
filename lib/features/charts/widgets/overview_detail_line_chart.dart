@@ -80,7 +80,7 @@ class OverviewDetailLineChart extends StatelessWidget {
                       radius: 5,
                       color: lineColor,
                       strokeWidth: 2,
-                      strokeColor: scheme.surface,
+                      strokeColor: scheme.surfaceContainerLow,
                     ),
                   ),
                 );
@@ -158,7 +158,6 @@ class OverviewDetailLineChart extends StatelessWidget {
             show: true,
             border: Border(
               bottom: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-              left: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
             ),
           ),
           minX: 0,
@@ -181,7 +180,7 @@ class OverviewDetailLineChart extends StatelessWidget {
                     radius: isSel ? 5 : 0,
                     color: lineColor,
                     strokeWidth: 2,
-                    strokeColor: scheme.surface,
+                    strokeColor: scheme.surfaceContainerLow,
                   );
                 },
               ),
@@ -191,7 +190,7 @@ class OverviewDetailLineChart extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    lineColor.withValues(alpha: 0.35),
+                    lineColor.withValues(alpha: 0.22),
                     lineColor.withValues(alpha: 0.02),
                   ],
                 ),

@@ -48,7 +48,7 @@ void main() {
       HomeState.initial().copyWith(isLoading: true),
     );
     expect(find.text('MRR'), findsOneWidget);
-    expect(find.text('REVENUE'), findsOneWidget);
+    expect(find.text('Revenue'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
 

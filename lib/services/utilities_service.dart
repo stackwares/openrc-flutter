@@ -26,7 +26,10 @@ ThemeMode _defaultThemeMode() {
 
 final FlexScheme _defaultColorScheme = _resolveDefaultColorScheme();
 
-FlexScheme _resolveDefaultColorScheme() => FlexScheme.red;
+/// Calm default accent; red stays free to mean refunds and declines.
+FlexScheme get defaultAppColorScheme => _defaultColorScheme;
+
+FlexScheme _resolveDefaultColorScheme() => FlexScheme.indigoM3;
 
 class UtilitiesService {
   static const String _themeModeKey = 'theme_mode';

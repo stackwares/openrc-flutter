@@ -1,4 +1,3 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,7 +36,7 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
     final effectiveColorScheme = defaultTargetPlatform == TargetPlatform.macOS
-        ? FlexScheme.red
+        ? defaultAppColorScheme
         : colorScheme;
 
     return MaterialApp(

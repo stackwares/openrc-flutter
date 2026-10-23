@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/features/charts/home_notifier.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/features/charts/widgets/overview_detail_line_chart.dart';
+import 'package:revenuecat/features/charts/widgets/overview_item_card.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/app_card.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
 
 class OverviewMetricDetailScreen extends ConsumerStatefulWidget {
@@ -65,67 +67,48 @@ class _OverviewMetricDetailScreenState
         ? ''
         : DateFormat.yMMMEd().format(selectedDay);
 
+    final value = notifier.getValue(widget.metric);
+    final delta = overviewRangeDelta(widget.metric, points, filled: true);
+    final valueStyle = AppText.amount(context, size: 34);
+    final selectedStyle = AppText.amount(context, size: 22);
+    final muted = context.textTheme.bodySmall?.copyWith(
+      color: context.colorScheme.onSurfaceVariant,
+    );
+
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(widget.metric.label),
-            Text(
-              rangeLabel,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: context.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: Text(widget.metric.label)),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16,
+          4,
           16,
-          16,
-          24 + mainShellFloatingTabBarScrollPadding(context),
+          24 + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
-          Text(
-            'Summary',
-            style: context.textTheme.labelMedium?.copyWith(
-              color: context.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
+          Text(rangeLabel, style: muted),
+          const SizedBox(height: 6),
           if (state.isLoading && state.overview == null)
-            const LinearProgressIndicator()
-          else if (widget.metric.isCurrency &&
-              notifier.getValue(widget.metric) is num)
-            DualCurrencyCompactText(
-              amount: (notifier.getValue(widget.metric) as num).toDouble(),
-              style: context.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: LinearProgressIndicator(),
             )
+          else if (widget.metric.isCurrency && value is num)
+            DualCurrencyCompactText(amount: value.toDouble(), style: valueStyle)
           else
-            Text(
-              widget.metric.formatValue(notifier.getValue(widget.metric)),
-              style: context.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            Text(widget.metric.formatValue(value), style: valueStyle),
+          if (delta != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                delta,
+                const SizedBox(width: 6),
+                Text('over this range', style: muted),
+              ],
             ),
-          const SizedBox(height: 28),
-          Text(
-            'Daily trend',
-            style: context.textTheme.labelMedium?.copyWith(
-              color: context.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 20),
           if (points.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+            AppCard(
               child: Text(
                 'No daily series for this metric in this range.',
                 style: context.textTheme.bodyMedium?.copyWith(
@@ -133,65 +116,40 @@ class _OverviewMetricDetailScreenState
                 ),
               ),
             )
-          else ...[
-            OverviewDetailLineChart(
-              dataPoints: points,
-              lineColor: color,
-              metric: widget.metric,
-              rangeStart: state.chartRangeStart,
-              selectedIndex: safeIdx,
-              onIndexChanged: (i) {
-                setState(() => _selectedIndex = i);
-              },
-            ),
-            const SizedBox(height: 20),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          else
+            AppCard(
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(dateStr, style: muted),
+                  const SizedBox(height: 2),
+                  if (widget.metric.isCurrency && selectedPoint?.value != null)
+                    DualCurrencyCompactText(
+                      amount: selectedPoint!.value!,
+                      style: selectedStyle,
+                    )
+                  else
                     Text(
-                      'Selected day',
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
+                      widget.metric.formatValue(selectedPoint?.value),
+                      style: selectedStyle,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dateStr,
-                      style: context.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Value',
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    if (widget.metric.isCurrency &&
-                        selectedPoint?.value != null)
-                      DualCurrencyCompactText(
-                        amount: selectedPoint!.value!,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    else
-                      Text(
-                        widget.metric.formatValue(selectedPoint?.value),
-                        style: context.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
+                  const SizedBox(height: 16),
+                  OverviewDetailLineChart(
+                    dataPoints: points,
+                    lineColor: color,
+                    metric: widget.metric,
+                    rangeStart: state.chartRangeStart,
+                    selectedIndex: safeIdx,
+                    onIndexChanged: (i) {
+                      setState(() => _selectedIndex = i);
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Drag across the chart to see each day.', style: muted),
+                ],
               ),
             ),
-          ],
         ],
       ),
     );

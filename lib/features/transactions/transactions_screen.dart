@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:revenuecat/core/utils/currency_format.dart';
 import 'package:revenuecat/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -15,6 +16,9 @@ import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
 import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
+import 'package:revenuecat/features/transactions/widgets/active_filters_row.dart';
+import 'package:revenuecat/features/transactions/widgets/day_revenue_strip.dart';
+import 'package:revenuecat/features/transactions/widgets/transaction_list_sort_menu.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:revenuecat/services/auto_app_icons_store.dart';
@@ -30,8 +34,13 @@ import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
 import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
 import 'package:revenuecat/features/transactions/widgets/day_summary_card.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/app_card.dart';
+import 'package:revenuecat/widgets/delta_badge.dart';
 import 'package:revenuecat/widgets/dual_currency_text.dart';
-import 'package:skeletonizer/skeletonizer.dart';
+import 'package:revenuecat/widgets/grouped_list.dart';
+import 'package:revenuecat/widgets/section_header.dart';
+import 'package:revenuecat/widgets/shell_header.dart';
 
 class TransactionsState {
   /// Local calendar day being viewed (`yyyy-MM-dd`).
@@ -466,8 +475,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     final commission = _ref.read(commissionSettingsProvider);
     final currency = _ref.read(displayCurrencyProvider);
     final ratesAsync = _ref.read(usdExchangeRatesProvider);
-    final rates = ratesAsync is AsyncData<Map<String, double>> ? ratesAsync.value : <String, double>{};
-    unawaited(WidgetDataChannel.pushWidgetData(state, commission, currency, rates));
+    final rates = ratesAsync is AsyncData<Map<String, double>>
+        ? ratesAsync.value
+        : <String, double>{};
+    unawaited(
+      WidgetDataChannel.pushWidgetData(state, commission, currency, rates),
+    );
   }
 }
 
@@ -487,7 +500,9 @@ final transactionsAppIncludeFilterProvider = StateProvider<Set<String>?>(
 
 /// Shared country filter: `null` or empty = all regions. Otherwise subscriber
 /// country must be in the set, or match `'__'` for unknown / missing country.
-final transactionsCountryFilterProvider = StateProvider<Set<String>?>((ref) => null);
+final transactionsCountryFilterProvider = StateProvider<Set<String>?>(
+  (ref) => null,
+);
 
 /// Shared store platform filter (`null` or empty = all).
 final transactionsPlatformFilterProvider =
@@ -503,7 +518,7 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Set<TransactionDaySectionFilter> _sectionFilters = {};
 
-  /// Expandable "Future transactions" (today only); collapsed by default.
+  /// Expandable "Scheduled" section (today only); collapsed by default.
   bool _futureTransactionsExpanded = false;
 
   @override
@@ -514,63 +529,65 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final platformFilter = ref.watch(transactionsPlatformFilterProvider);
     final accountProjects =
         ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
-    final dateLabel = _dayHeaderDateLabel(state.selectedDayKey);
-    final dayTxs = state.grouped[state.selectedDayKey] ?? [];
+    final selectedKey = state.selectedDayKey;
+    final dayTxs = state.grouped[selectedKey] ?? [];
     final dayFilterSource = <String, List<RcTransaction>>{
-      if (dayTxs.isNotEmpty) state.selectedDayKey: dayTxs,
+      if (dayTxs.isNotEmpty) selectedKey: dayTxs,
     };
-    final canOpenTransactionFilter = !state.isLoading &&
-        collectAppFilterOptionsWithProjects(dayFilterSource, accountProjects)
-            .isNotEmpty;
-    final countryFilterActive =
-        countryFilter != null && countryFilter.isNotEmpty;
-    final platformFilterActive =
-        platformFilter != null && platformFilter.isNotEmpty;
+    final canOpenTransactionFilter =
+        !state.isLoading &&
+        collectAppFilterOptionsWithProjects(
+          dayFilterSource,
+          accountProjects,
+        ).isNotEmpty;
     final filtersActive =
         appIncludeFilter != null ||
-        countryFilterActive ||
-        platformFilterActive ||
+        (countryFilter != null && countryFilter.isNotEmpty) ||
+        (platformFilter != null && platformFilter.isNotEmpty) ||
         _sectionFilters.isNotEmpty;
 
+    final todayKey = localTodayDayKey();
+    final prevKey = _previousCalendarDayKey(selectedKey);
+    final nextKey = _nextCalendarDayKey(selectedKey);
+    final canGoNext = selectedKey.compareTo(todayKey) < 0 && nextKey != null;
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        centerTitle: false,
-        title: Text(
-          dateLabel,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.start,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-            height: 1.2,
-          ),
-        ),
+      appBar: ShellHeader(
+        title: _dayTitle(selectedKey),
+        subtitle: _daySubtitle(selectedKey),
         actions: [
-          if (filtersActive)
-            IconButton(
-              icon: const Icon(Icons.filter_alt_off_outlined),
-              tooltip: 'Clear filters',
-              onPressed: _clearTransactionFilters,
-            ),
-          IconButton(
-            icon: Icon(
-              Icons.filter_list,
-              color: filtersActive ? context.colorScheme.primary : null,
-            ),
+          HeaderIconButton(
+            icon: Icons.chevron_left_rounded,
+            tooltip: 'Previous day',
+            onPressed: state.isLoading || prevKey == null
+                ? null
+                : () => _goToDay(prevKey),
+          ),
+          HeaderIconButton(
+            icon: Icons.chevron_right_rounded,
+            tooltip: 'Next day',
+            onPressed: state.isLoading || !canGoNext
+                ? null
+                : () => _goToDay(nextKey),
+          ),
+          const SizedBox(width: 6),
+          HeaderIconButton(
+            icon: Icons.tune_rounded,
             tooltip: 'Filter transactions',
+            badge: filtersActive,
             onPressed: !canOpenTransactionFilter
                 ? null
                 : () => _showAppFilterSheet(context, state),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: state.isLoading
-                ? null
-                : () => ref.read(transactionsProvider.notifier).fetchInitial(),
-          ),
+          if (ShellHeader.showsRefreshButton)
+            HeaderIconButton(
+              icon: Icons.refresh_rounded,
+              tooltip: 'Refresh',
+              onPressed: state.isLoading
+                  ? null
+                  : () =>
+                        ref.read(transactionsProvider.notifier).fetchInitial(),
+            ),
           const SettingsAppBarAction(),
         ],
       ),
@@ -583,6 +600,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     ref.read(transactionsCountryFilterProvider.notifier).state = null;
     ref.read(transactionsPlatformFilterProvider.notifier).state = null;
     setState(() => _sectionFilters = {});
+  }
+
+  void _toggleSectionFilter(TransactionDaySectionFilter filter) {
+    setState(() {
+      final next = Set<TransactionDaySectionFilter>.from(_sectionFilters);
+      if (!next.remove(filter)) next.add(filter);
+      _sectionFilters = next;
+    });
   }
 
   Widget _buildDayTab(BuildContext context, TransactionsState state) {
@@ -601,7 +626,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     if (state.error != null && state.grouped.isEmpty && !state.isLoading) {
       return AppStateMessage.error(
-        title: 'Couldn\u2019t load transactions',
+        title: 'Couldn’t load transactions',
         message: state.error!,
         onRetry: () => ref.read(transactionsProvider.notifier).fetchInitial(),
       );
@@ -616,15 +641,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final allForDay = groupedForList[selectedKey] ?? [];
 
     final listFiltersActive =
-        appIncludeFilter != null ||
-        countryFilterActive ||
-        platformFilterActive;
+        appIncludeFilter != null || countryFilterActive || platformFilterActive;
 
-    final allForDayForMetrics = allForDay
-        .where(
-          (tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters),
-        )
+    List<RcTransaction> sectionFiltered(List<RcTransaction> txs) => txs
+        .where((tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters))
         .toList();
+
+    final allForDayForMetrics = sectionFiltered(allForDay);
 
     final todayKey = localTodayDayKey();
     final viewingToday = selectedKey == todayKey;
@@ -633,20 +656,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         .toList();
     sortMutableTransactionList(transactions, listSort);
 
-    final theme = Theme.of(context);
     final prevKey = _previousCalendarDayKey(selectedKey);
-    final canGoNext = selectedKey.compareTo(todayKey) < 0;
     final headerDaily = netRevenueSum(allForDayForMetrics, commission);
     final previousDayForSummary = prevKey != null
         ? (groupedForList[prevKey] ?? <RcTransaction>[])
         : null;
-    final previousDayForMetrics = previousDayForSummary
-        ?.where(
-          (tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters),
-        )
-        .toList();
-    final headerPrevTotal = previousDayForMetrics != null
-        ? netRevenueSum(previousDayForMetrics, commission)
+    final previousDayLoaded =
+        prevKey != null && _isDayFullyLoaded(prevKey, state);
+    final headerPrevTotal = previousDayForSummary != null && previousDayLoaded
+        ? netRevenueSum(sectionFiltered(previousDayForSummary), commission)
         : null;
 
     final allTxForTenure = state.grouped.values.expand((e) => e);
@@ -665,8 +683,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final filtersHideResults =
         transactions.isEmpty &&
         (listFiltersActive || _sectionFilters.isNotEmpty);
+    final dayLoaded = _isDayFullyLoaded(selectedKey, state);
+
+    final stripDays = _stripDays(
+      selectedKey: selectedKey,
+      state: state,
+      totalFor: (key) => netRevenueSum(
+        sectionFiltered(groupedForList[key] ?? const []),
+        commission,
+      ),
+    );
 
     final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
+
+    void openTransaction(RcTransaction tx) {
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) => TransactionDetailScreen(transaction: tx),
+        ),
+      );
+    }
 
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
@@ -683,148 +719,91 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Card(
-                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                    clipBehavior: Clip.antiAlias,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                tooltip: 'Previous day',
-                                onPressed: state.isLoading || prevKey == null
-                                    ? null
-                                    : () => _goToDay(prevKey),
-                                icon: const Icon(Icons.chevron_left_rounded),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Revenue',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.1,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    DualCurrencyExactText(
-                                      amount: headerDaily,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.headlineSmall?.copyWith(
-                                        fontSize:
-                                            (theme.textTheme.headlineSmall?.fontSize ??
-                                                24) *
-                                            1.2,
-                                        fontWeight: FontWeight.w800,
-                                        color: theme.colorScheme.onSurface,
-                                        letterSpacing: -0.65,
-                                        height: 1.1,
-                                      ),
-                                    ).appValueReveal(
-                                      key: ValueKey(
-                                        'rev_${selectedKey}_${_sectionFilters.map((e) => e.name).join(',')}',
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    if (headerPrevTotal != null)
-                                      Center(
-                                        child: _PrevDayRevenueRow(
-                                          previousTotal: headerPrevTotal,
-                                          currentTotal: headerDaily,
-                                        ),
-                                      )
-                                    else
-                                      Text(
-                                        'Previous day: —',
-                                        textAlign: TextAlign.center,
-                                        style: theme.textTheme.labelMedium?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: 'Next day',
-                                onPressed: state.isLoading || !canGoNext
-                                    ? null
-                                    : () {
-                                        final n = _nextCalendarDayKey(selectedKey);
-                                        if (n != null) _goToDay(n);
-                                      },
-                                icon: const Icon(Icons.chevron_right_rounded),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          DayTypeCountSummary(
-                            transactions: allForDay,
-                            previousDayTransactions: previousDayForSummary,
-                            selectedFilters: _sectionFilters,
-                            onFilterCellTap: (filter) {
-                              setState(() {
-                                final next = Set<TransactionDaySectionFilter>.from(
-                                  _sectionFilters,
-                                );
-                                if (next.contains(filter)) {
-                                  next.remove(filter);
-                                } else {
-                                  next.add(filter);
-                                }
-                                _sectionFilters = next;
-                              });
-                            },
-                            onClearFilter: null,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ).appCardEntrance(),
-                  if (!filtersHideResults)
-                    RealtimeRevenueInsightsList(
-                      transactions: allForDayForMetrics,
-                      asModalEntry: true,
-                    ).appCardEntrance(delay: const Duration(milliseconds: 80)),
-                  if (futureTxs.isNotEmpty)
-                    _FutureTransactionsSection(
-                      transactions: futureTxs,
-                      expanded: _futureTransactionsExpanded,
-                      onExpandedChanged: (v) {
-                        setState(() => _futureTransactionsExpanded = v);
-                      },
-                      subscriberEarliestPurchaseLocalDayById:
-                          subscriberEarliestPurchaseDay,
-                      subscriberEarliestPurchaseLocalInstantById:
-                          subscriberEarliestPurchaseInstant,
-                      onOpenTransaction: (tx) {
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute<void>(
-                            builder: (context) =>
-                                TransactionDetailScreen(transaction: tx),
-                          ),
-                        );
-                      },
-                    ).appCardEntrance(delay: const Duration(milliseconds: 120)),
-                ],
+            if (listFiltersActive || _sectionFilters.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ActiveFiltersRow(
+                  appCount: appIncludeFilter?.length,
+                  countryCodes: countryFilter,
+                  platforms: platformFilter,
+                  sectionFilters: _sectionFilters,
+                  onOpenFilters: () => _showAppFilterSheet(context, state),
+                  onClearApps: () =>
+                      ref
+                              .read(
+                                transactionsAppIncludeFilterProvider.notifier,
+                              )
+                              .state =
+                          null,
+                  onClearCountries: () =>
+                      ref
+                              .read(transactionsCountryFilterProvider.notifier)
+                              .state =
+                          null,
+                  onClearPlatforms: () =>
+                      ref
+                              .read(transactionsPlatformFilterProvider.notifier)
+                              .state =
+                          null,
+                  onRemoveSection: _toggleSectionFilter,
+                  onClearAll: _clearTransactionFilters,
+                ),
+              ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: _DayHeroCard(
+                  label: commission.adjustmentEnabled
+                      ? 'Net revenue'
+                      : 'Revenue',
+                  total: headerDaily,
+                  previousTotal: headerPrevTotal,
+                  valueKey:
+                      'rev_${selectedKey}_${_sectionFilters.map((e) => e.name).join(',')}',
+                  strip: DayRevenueStrip(
+                    days: stripDays,
+                    selectedDayKey: selectedKey,
+                    formatAmount: _formatAmountForSemantics,
+                    onDaySelected: state.isLoading ? null : _goToDay,
+                  ),
+                ).appCardEntrance(),
               ),
             ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: DayTypeCountSummary(
+                  transactions: allForDay,
+                  previousDayTransactions: previousDayLoaded
+                      ? previousDayForSummary
+                      : null,
+                  selectedFilters: _sectionFilters,
+                  onFilterCellTap: _toggleSectionFilter,
+                ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+              ),
+            ),
+            if (!filtersHideResults && allForDayForMetrics.isNotEmpty)
+              SliverToBoxAdapter(
+                child: RealtimeRevenueInsightsList(
+                  transactions: allForDayForMetrics,
+                  asModalEntry: true,
+                  cardMargin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+              ),
+            if (futureTxs.isNotEmpty)
+              SliverToBoxAdapter(
+                child: _FutureTransactionsSection(
+                  transactions: futureTxs,
+                  expanded: _futureTransactionsExpanded,
+                  onExpandedChanged: (v) {
+                    setState(() => _futureTransactionsExpanded = v);
+                  },
+                  subscriberEarliestPurchaseLocalDayById:
+                      subscriberEarliestPurchaseDay,
+                  subscriberEarliestPurchaseLocalInstantById:
+                      subscriberEarliestPurchaseInstant,
+                  onOpenTransaction: openTransaction,
+                ).appCardEntrance(delay: const Duration(milliseconds: 120)),
+              ),
             if (filtersHideResults)
               SliverToBoxAdapter(
                 child: AppStateMessage(
@@ -838,71 +817,112 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   shrinkWrap: true,
                 ),
               )
-            else
-              SliverList.builder(
-              itemCount: transactions.length,
-              itemBuilder: (context, index) {
-                final tx = transactions[index];
-                return TransactionItem(
-                  key: ValueKey(rcTransactionDedupKey(tx) ?? '$index'),
-                  transaction: tx,
-                  subscriberEarliestPurchaseLocalDayById:
-                      subscriberEarliestPurchaseDay,
-                  subscriberEarliestPurchaseLocalInstantById:
-                      subscriberEarliestPurchaseInstant,
-                  inSectionCard: false,
-                  onTap: () {
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (context) =>
-                            TransactionDetailScreen(transaction: tx),
-                      ),
-                    );
-                  },
-                ).appListItemEntrance(index);
-              },
-            ),
-            if (state.hasMore && state.isLoadingMore)
+            else ...[
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Skeletonizer(
-                    child: Column(
-                      children: List.generate(
-                        3,
-                        (i) => Padding(
-                          padding: EdgeInsets.only(bottom: i < 2 ? 12 : 0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Bone.circle(size: 44),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Bone.text(fontSize: 14),
-                                    const SizedBox(height: 6),
-                                    Bone.text(fontSize: 12, width: 140),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                child: SectionHeader(
+                  title: 'Transactions',
+                  count: transactions.isEmpty ? null : '${transactions.length}',
+                  trailing: transactions.length > 1
+                      ? const TransactionListSortMenuButton(showLabel: true)
+                      : null,
+                ),
+              ),
+              if (transactions.isEmpty &&
+                  state.grouped.isNotEmpty &&
+                  (dayLoaded || !state.isLoadingMore))
+                SliverToBoxAdapter(
+                  child: AppCard(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      dayLoaded
+                          ? (viewingToday
+                                ? 'No transactions yet today.'
+                                : 'No transactions on this day.')
+                          : 'Scroll down to load this day.',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
+                )
+              else if (transactions.isNotEmpty)
+                GroupedSliverList(
+                  itemCount: transactions.length,
+                  dividerIndent: kTransactionRowDividerIndent,
+                  itemBuilder: (context, index) {
+                    final tx = transactions[index];
+                    return TransactionItem(
+                      key: ValueKey(rcTransactionDedupKey(tx) ?? '$index'),
+                      transaction: tx,
+                      subscriberEarliestPurchaseLocalDayById:
+                          subscriberEarliestPurchaseDay,
+                      subscriberEarliestPurchaseLocalInstantById:
+                          subscriberEarliestPurchaseInstant,
+                      onTap: () => openTransaction(tx),
+                    ).appListItemEntrance(index);
+                  },
                 ),
-              ),
+            ],
+            if (state.hasMore && state.isLoadingMore)
+              const SliverToBoxAdapter(child: TransactionRowsSkeleton(rows: 3)),
             if (!filtersHideResults)
-              SliverPadding(
-                padding: EdgeInsets.only(bottom: bottomPadding),
-              ),
+              SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
           ],
         ),
       ),
     );
+  }
+
+  /// A day is complete once an older page has been merged (or there are no
+  /// more pages); the oldest loaded day may still be partial.
+  bool _isDayFullyLoaded(String dayKey, TransactionsState state) {
+    if (!state.hasMore) return true;
+    String? oldest;
+    for (final k in state.grouped.keys) {
+      if (!isIsoCalendarDayKey(k)) continue;
+      if (oldest == null || k.compareTo(oldest) < 0) oldest = k;
+    }
+    return oldest != null && dayKey.compareTo(oldest) > 0;
+  }
+
+  List<DayRevenueStripDay> _stripDays({
+    required String selectedKey,
+    required TransactionsState state,
+    required double Function(String dayKey) totalFor,
+  }) {
+    final DateTime selected;
+    try {
+      selected = DateFormat('yyyy-MM-dd').parse(selectedKey);
+    } catch (_) {
+      return const [];
+    }
+    return [
+      for (var i = 6; i >= 0; i--)
+        () {
+          final date = DateTime(
+            selected.year,
+            selected.month,
+            selected.day - i,
+          );
+          final key = DateFormat('yyyy-MM-dd').format(date);
+          return DayRevenueStripDay(
+            dayKey: key,
+            date: date,
+            total: _isDayFullyLoaded(key, state) || key == selectedKey
+                ? totalFor(key)
+                : null,
+          );
+        }(),
+    ];
+  }
+
+  String _formatAmountForSemantics(double usd) {
+    final currency = ref.read(displayCurrencyProvider);
+    if (currency == 'USD') return formatExactUsd(usd);
+    final rates = ref.read(usdExchangeRatesProvider).asData?.value;
+    final r = rates?[currency.toLowerCase()];
+    if (r == null || r == 0) return formatExactUsd(usd);
+    return formatExactForeign(usd * r, currency);
   }
 
   void _goToDay(String dayKey) {
@@ -912,10 +932,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     ref.read(transactionsProvider.notifier).setSelectedDayKey(dayKey);
   }
 
-  String _dayHeaderDateLabel(String dayKey) {
+  String _dayTitle(String dayKey) {
+    if (dayKey == localTodayDayKey()) return 'Today';
+    if (dayKey == _previousCalendarDayKey(localTodayDayKey())) {
+      return 'Yesterday';
+    }
     try {
       final date = DateFormat('yyyy-MM-dd').parse(dayKey);
-      return DateFormat('EEE, MMM d, yyyy').format(date);
+      final sameYear = date.year == DateTime.now().year;
+      return DateFormat(sameYear ? 'EEE, MMM d' : 'MMM d, y').format(date);
+    } catch (_) {
+      return dayKey;
+    }
+  }
+
+  String _daySubtitle(String dayKey) {
+    try {
+      final date = DateFormat('yyyy-MM-dd').parse(dayKey);
+      return DateFormat('EEEE, MMMM d, y').format(date);
     } catch (_) {
       return dayKey;
     }
@@ -957,7 +991,9 @@ String? _previousCalendarDayKey(String dayKey) {
   if (!isIsoCalendarDayKey(dayKey)) return null;
   try {
     final d = DateFormat('yyyy-MM-dd').parse(dayKey);
-    return DateFormat('yyyy-MM-dd').format(d.subtract(const Duration(days: 1)));
+    return DateFormat(
+      'yyyy-MM-dd',
+    ).format(DateTime(d.year, d.month, d.day - 1));
   } catch (_) {
     return null;
   }
@@ -967,9 +1003,83 @@ String? _nextCalendarDayKey(String dayKey) {
   if (!isIsoCalendarDayKey(dayKey)) return null;
   try {
     final d = DateFormat('yyyy-MM-dd').parse(dayKey);
-    return DateFormat('yyyy-MM-dd').format(d.add(const Duration(days: 1)));
+    return DateFormat(
+      'yyyy-MM-dd',
+    ).format(DateTime(d.year, d.month, d.day + 1));
   } catch (_) {
     return null;
+  }
+}
+
+/// Day total, change vs the previous day, and the 7-day strip.
+class _DayHeroCard extends StatelessWidget {
+  const _DayHeroCard({
+    required this.label,
+    required this.total,
+    required this.previousTotal,
+    required this.valueKey,
+    required this.strip,
+  });
+
+  final String label;
+  final double total;
+
+  /// Null when the previous day isn't loaded yet.
+  final double? previousTotal;
+  final String valueKey;
+  final Widget strip;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final muted = context.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w500,
+      fontFeatures: AppText.tabular,
+    );
+    final prev = previousTotal;
+    return AppCard(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: context.textTheme.labelLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          DualCurrencyExactText(
+            amount: total,
+            style: AppText.amount(context, size: 34),
+          ).appValueReveal(key: ValueKey(valueKey)),
+          const SizedBox(height: 8),
+          if (prev == null)
+            Text('Previous day not loaded yet', style: muted)
+          else
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                if (prev.abs() > 1e-6)
+                  DeltaBadge.percent(current: total, previous: prev),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('vs yesterday  ', style: muted),
+                    DualCurrencyExactText(amount: prev, style: muted),
+                  ],
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+          strip,
+        ],
+      ),
+    );
   }
 }
 
@@ -992,132 +1102,74 @@ class _FutureTransactionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final scheme = context.colorScheme;
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => onExpandedChanged(!expanded),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 6, 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          InkWell(
+            onTap: () => onExpandedChanged(!expanded),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.schedule_rounded,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        text: 'Scheduled',
                         children: [
-                          Text(
-                            'FUTURE TRANSACTIONS',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: scheme.primary,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${transactions.length} scheduled after now',
-                            style: theme.textTheme.bodySmall?.copyWith(
+                          TextSpan(
+                            text: '  ${transactions.length} later today',
+                            style: TextStyle(
                               color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: AnimatedRotation(
-                        turns: expanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        child: Icon(
-                          Icons.expand_more_rounded,
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  AnimatedRotation(
+                    turns: expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    child: Icon(
+                      Icons.expand_more_rounded,
+                      color: scheme.onSurfaceVariant,
+                      semanticLabel: expanded ? 'Collapse' : 'Expand',
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          if (expanded) ...[
-            Divider(
-              height: 1,
-              color: scheme.outlineVariant.withValues(alpha: 0.35),
-            ),
-            for (final tx in transactions)
+          if (expanded)
+            for (final tx in transactions) ...[
+              const Divider(indent: kTransactionRowDividerIndent),
               TransactionItem(
                 transaction: tx,
                 subscriberEarliestPurchaseLocalDayById:
                     subscriberEarliestPurchaseLocalDayById,
                 subscriberEarliestPurchaseLocalInstantById:
                     subscriberEarliestPurchaseLocalInstantById,
-                inSectionCard: true,
                 onTap: () => onOpenTransaction(tx),
               ),
-          ],
+            ],
         ],
       ),
     );
   }
 }
-
-class _PrevDayRevenueRow extends StatelessWidget {
-  final double previousTotal;
-  final double currentTotal;
-
-  const _PrevDayRevenueRow({
-    required this.previousTotal,
-    required this.currentTotal,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    const eps = 1e-6;
-    final diff = currentTotal - previousTotal;
-    final IconData icon;
-    final Color accent;
-    if (diff > eps) {
-      icon = Icons.arrow_upward_rounded;
-      accent = theme.brightness == Brightness.dark
-          ? const Color(0xFF81C784)
-          : const Color(0xFF2E7D32);
-    } else if (diff < -eps) {
-      icon = Icons.arrow_downward_rounded;
-      accent = theme.colorScheme.error;
-    } else {
-      icon = Icons.horizontal_rule_rounded;
-      accent = theme.colorScheme.onSurfaceVariant;
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: accent),
-        const SizedBox(width: 6),
-        DualCurrencyExactText(
-          amount: previousTotal,
-          textAlign: TextAlign.end,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-

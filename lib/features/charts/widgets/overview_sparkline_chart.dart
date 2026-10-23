@@ -5,11 +5,13 @@ import 'package:revenuecat/models/rc_chart_response.dart';
 class OverviewSparklineChart extends StatelessWidget {
   final List<RcChartDataPoint> dataPoints;
   final Color lineColor;
+  final double height;
 
   const OverviewSparklineChart({
     super.key,
     required this.dataPoints,
     required this.lineColor,
+    this.height = 40,
   });
 
   @override
@@ -19,7 +21,7 @@ class OverviewSparklineChart extends StatelessWidget {
     if (dataPoints.length == 1) {
       final spot = FlSpot(0, dataPoints.first.value ?? 0);
       return SizedBox(
-        height: 40,
+        height: height,
         child: LineChart(
           LineChartData(
             lineTouchData: const LineTouchData(enabled: false),
@@ -67,7 +69,7 @@ class OverviewSparklineChart extends StatelessWidget {
 
     return RepaintBoundary(
       child: SizedBox(
-        height: 40,
+        height: height,
         child: LineChart(
           LineChartData(
             lineTouchData: const LineTouchData(enabled: false),
@@ -93,7 +95,7 @@ class OverviewSparklineChart extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      lineColor.withValues(alpha: 0.4),
+                      lineColor.withValues(alpha: 0.22),
                       lineColor.withValues(alpha: 0.0),
                     ],
                   ),

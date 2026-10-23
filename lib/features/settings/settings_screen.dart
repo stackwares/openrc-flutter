@@ -2,12 +2,17 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/utils/currency_format.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
 import 'package:revenuecat/services/display_currency_store.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/utilities_service.dart';
+import 'package:revenuecat/widgets/grouped_list.dart';
 import 'package:revenuecat/widgets/search_field_decoration.dart';
+import 'package:revenuecat/widgets/section_header.dart';
+import 'package:revenuecat/widgets/shell_header.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -163,363 +168,307 @@ class SettingsScreen extends ConsumerWidget {
     final schemeColors = colorScheme.colors(Theme.of(context).brightness);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final valueStyle = tt.bodyMedium?.copyWith(color: scheme.onSurfaceVariant);
+
+    String pct(double v) => '${v.toStringAsFixed(1)}%';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          16,
-          8,
-          16,
-          16 + MediaQuery.paddingOf(context).bottom,
+          0,
+          4,
+          0,
+          24 + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const _GroupLabel('Preferences'),
+          GroupedCard(
+            dividerIndent: 56,
             children: [
-              Text(
-                'Preferences',
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.25,
+              _SettingsRow(
+                icon: Icons.currency_exchange_rounded,
+                title: 'Display currency',
+                value: Text(
+                  '${selectedOption?.flagEmoji ?? ''} $sym $selected'.trim(),
+                  style: valueStyle,
                 ),
+                onTap: () => _showCurrencyBottomSheet(context),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Currency, appearance, and how revenue is shown.',
-                style: tt.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ).appCardEntrance(),
-          _SettingsCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _SettingsCardHeader(
-                  icon: Icons.currency_exchange_rounded,
-                  title: 'Display currency',
-                ),
-                const SizedBox(height: 12),
-                Material(
-                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    onTap: () => _showCurrencyBottomSheet(context),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
+              _SettingsRow(
+                icon: Icons.palette_outlined,
+                title: 'Color scheme',
+                value: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SchemeSwatch(
+                      primary: schemeColors.primary,
+                      secondary: schemeColors.secondary,
+                      tertiary: schemeColors.tertiary,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        colorScheme.data.name,
+                        style: valueStyle,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: Row(
-                        children: [
-                          Text(
-                            selectedOption?.flagEmoji ?? '🏳️',
-                            style: const TextStyle(fontSize: 28, height: 1),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              '$sym $selected',
-                              style: tt.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.expand_more_rounded,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ).appCardEntrance(delay: const Duration(milliseconds: 50)),
-          const SizedBox(height: 12),
-          _SettingsCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _SettingsCardHeader(
-                  icon: Icons.palette_outlined,
-                  title: 'Appearance',
-                ),
-                const SizedBox(height: 12),
-                SegmentedButton<ThemeMode>(
-                  style: SegmentedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(
-                      value: ThemeMode.system,
-                      label: Text('System'),
-                      icon: Icon(Icons.brightness_auto_outlined, size: 18),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      label: Text('Light'),
-                      icon: Icon(Icons.light_mode_outlined, size: 18),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      label: Text('Dark'),
-                      icon: Icon(Icons.dark_mode_outlined, size: 18),
                     ),
                   ],
-                  selected: {themeMode},
-                  onSelectionChanged: (next) {
-                    if (next.isEmpty) return;
-                    _setThemeMode(ref, next.single);
-                  },
                 ),
-                const SizedBox(height: 12),
-                Material(
-                  color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(12),
-                  child: InkWell(
-                    onTap: () => _showColorSchemeSheet(context),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        children: [
-                          _SchemeSwatch(
-                            primary: schemeColors.primary,
-                            secondary: schemeColors.secondary,
-                            tertiary: schemeColors.tertiary,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Color scheme',
-                                  style: tt.labelMedium?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  colorScheme.data.name,
-                                  style: tt.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.expand_more_rounded,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
+                onTap: () => _showColorSchemeSheet(context),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.contrast_rounded,
+                          size: 22,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 18),
+                        Text('Appearance', style: tt.bodyLarge),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    SegmentedButton<ThemeMode>(
+                      style: SegmentedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(
+                          value: ThemeMode.system,
+                          label: Text('System'),
+                          icon: Icon(Icons.brightness_auto_outlined, size: 18),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.light,
+                          label: Text('Light'),
+                          icon: Icon(Icons.light_mode_outlined, size: 18),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.dark,
+                          label: Text('Dark'),
+                          icon: Icon(Icons.dark_mode_outlined, size: 18),
+                        ),
+                      ],
+                      selected: {themeMode},
+                      onSelectionChanged: (next) {
+                        if (next.isEmpty) return;
+                        _setThemeMode(ref, next.single);
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ).appCardEntrance(delay: const Duration(milliseconds: 100)),
-          const SizedBox(height: 12),
-          _SettingsCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _SettingsCardHeader(
-                  icon: Icons.percent_rounded,
-                  title: 'Store commission',
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Optional net revenue after platform fees.',
-                  style: tt.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Commission Rate'),
+              ),
+            ],
+          ).appCardEntrance(),
+          const _GroupLabel('Store fees'),
+          GroupedCard(
+            dividerIndent: 56,
+            children: [
+              _SettingsRow(
+                icon: Icons.percent_rounded,
+                title: 'Subtract store fees',
+                subtitle: 'Show revenue after App Store and Google Play fees',
+                value: Switch(
                   value: commission.adjustmentEnabled,
                   onChanged: (v) => ref
                       .read(commissionSettingsProvider.notifier)
                       .setAdjustmentEnabled(v),
                 ),
-                if (commission.adjustmentEnabled) ...[
-                  const Divider(height: 24),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.apple),
-                    title: const Text('App Store fee'),
-                    subtitle: Text(
-                      '${commission.appleCommissionPercent.toStringAsFixed(1)}%',
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    trailing: Icon(Icons.edit_outlined, color: scheme.primary),
-                    onTap: () =>
-                        _editCommissionPercent(context, ref, isApple: true),
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.android),
-                    title: const Text('Google Play fee'),
-                    subtitle: Text(
-                      '${commission.googleCommissionPercent.toStringAsFixed(1)}%',
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    trailing: Icon(Icons.edit_outlined, color: scheme.primary),
-                    onTap: () =>
-                        _editCommissionPercent(context, ref, isApple: false),
-                  ),
-                ],
-              ],
-            ),
-          ).appCardEntrance(delay: const Duration(milliseconds: 150)),
-          const SizedBox(height: 24),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Account',
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.25,
-                ),
+                onTap: () => ref
+                    .read(commissionSettingsProvider.notifier)
+                    .setAdjustmentEnabled(!commission.adjustmentEnabled),
+                showChevron: false,
               ),
-              const SizedBox(height: 12),
-              _SettingsCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: scheme.primaryContainer.withValues(
-                          alpha: 0.65,
-                        ),
-                        foregroundColor: scheme.onPrimaryContainer,
-                        child: const Icon(Icons.person_outline, size: 22),
-                      ),
-                      title: const Text('Email'),
-                      subtitle: Text(
-                        me?.email ?? '—',
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 28),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        Icons.fingerprint_rounded,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      title: const Text('Distinct ID'),
-                      subtitle: SelectableText(
-                        me?.distinctId ?? '—',
-                        style: TextStyle(
-                          color: scheme.onSurfaceVariant,
-                          fontSize: 13,
-                          height: 1.35,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: scheme.error,
-                          side: BorderSide(
-                            color: scheme.error.withValues(alpha: 0.45),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: () => _confirmSignOut(context, ref),
-                        icon: Icon(Icons.logout_rounded, color: scheme.error),
-                        label: const Text('Log out'),
-                      ),
-                    ),
-                  ],
+              if (commission.adjustmentEnabled) ...[
+                _SettingsRow(
+                  icon: Icons.apple,
+                  title: 'App Store fee',
+                  value: Text(
+                    pct(commission.appleCommissionPercent),
+                    style: valueStyle,
+                  ),
+                  onTap: () =>
+                      _editCommissionPercent(context, ref, isApple: true),
                 ),
+                _SettingsRow(
+                  icon: Icons.android,
+                  title: 'Google Play fee',
+                  value: Text(
+                    pct(commission.googleCommissionPercent),
+                    style: valueStyle,
+                  ),
+                  onTap: () =>
+                      _editCommissionPercent(context, ref, isApple: false),
+                ),
+              ],
+            ],
+          ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+          const _GroupLabel('Account'),
+          GroupedCard(
+            dividerIndent: 56,
+            children: [
+              _SettingsRow(
+                icon: Icons.person_outline_rounded,
+                title: 'Email',
+                subtitle: me?.email ?? '\u2014',
+                showChevron: false,
+              ),
+              _SettingsRow(
+                icon: Icons.fingerprint_rounded,
+                title: 'Distinct ID',
+                subtitleWidget: SelectableText(
+                  me?.distinctId ?? '\u2014',
+                  style: tt.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+                showChevron: false,
+              ),
+              _SettingsRow(
+                icon: Icons.logout_rounded,
+                title: 'Log out',
+                destructive: true,
+                showChevron: false,
+                onTap: () => _confirmSignOut(context, ref),
               ),
             ],
-          ).appCardEntrance(delay: const Duration(milliseconds: 200)),
+          ).appCardEntrance(delay: const Duration(milliseconds: 120)),
+          const SizedBox(height: 20),
+          const _VersionFooter(),
         ],
       ),
     );
   }
 }
 
-class _SettingsCard extends StatelessWidget {
-  const _SettingsCard({required this.child});
+/// Small muted heading above a settings group.
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel(this.text);
 
-  final Widget child;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      elevation: 0,
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        child: child,
-      ),
+    return SectionHeader(
+      title: text,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
     );
   }
 }
 
-class _SettingsCardHeader extends StatelessWidget {
-  const _SettingsCardHeader({required this.icon, required this.title});
+/// One row in a settings group: icon, title (+ subtitle), trailing value.
+class _SettingsRow extends StatelessWidget {
+  const _SettingsRow({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.subtitleWidget,
+    this.value,
+    this.onTap,
+    this.showChevron = true,
+    this.destructive = false,
+  });
 
   final IconData icon;
   final String title;
+  final String? subtitle;
+  final Widget? subtitleWidget;
+  final Widget? value;
+  final VoidCallback? onTap;
+  final bool showChevron;
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Icon(icon, size: 22, color: scheme.primary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            title,
-            style: tt.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.15,
-            ),
+    final color = destructive ? context.appColors.negative : null;
+    final sub =
+        subtitleWidget ??
+        (subtitle == null
+            ? null
+            : Text(
+                subtitle!,
+                style: tt.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.3,
+                ),
+              ));
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 52),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 12, 10),
+          child: Row(
+            children: [
+              Icon(icon, size: 22, color: color ?? scheme.onSurfaceVariant),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: tt.bodyLarge?.copyWith(
+                        color: color,
+                        fontWeight: destructive ? FontWeight.w600 : null,
+                      ),
+                    ),
+                    if (sub != null) ...[const SizedBox(height: 2), sub],
+                  ],
+                ),
+              ),
+              if (value != null) ...[
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 190),
+                  child: value!,
+                ),
+              ],
+              if (showChevron && onTap != null) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ],
           ),
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _VersionFooter extends StatelessWidget {
+  const _VersionFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        if (info == null) return const SizedBox(height: 20);
+        return Text(
+          'Version ${info.version} (${info.buildNumber})',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        );
+      },
     );
   }
 }
@@ -697,7 +646,7 @@ class _SwatchDot extends StatelessWidget {
         color: color,
         shape: BoxShape.circle,
         border: Border.all(
-          color: Theme.of(context).colorScheme.surface,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           width: 1.5,
         ),
       ),
@@ -835,9 +784,9 @@ class SettingsAppBarAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
+    return HeaderIconButton(
       tooltip: 'Settings',
-      icon: const Icon(Icons.settings_outlined),
+      icon: Icons.settings_outlined,
       onPressed: () => SettingsScreen.open(context),
     );
   }

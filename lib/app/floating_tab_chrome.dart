@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 
 /// Floating bottom tab bar, ported from baeble-flutter's `FloatingTabChrome`.
 ///
-/// A stadium-shaped Material pill. Each destination shows its icon and label;
-/// the selected tab grows a NavigationBar-style indicator behind the icon.
-/// Colors come from the theme's [NavigationBarTheme], falling back to the
-/// color scheme, so it follows revenuecat's FlexColorScheme theme.
+/// A slim stadium-shaped pill on a neutral surface with a hairline border.
+/// Each destination shows its icon and label; the selected tab sits on an
+/// accent-tinted indicator pill.
 class FloatingTabChrome extends StatelessWidget {
   const FloatingTabChrome({
     super.key,
@@ -19,10 +18,10 @@ class FloatingTabChrome extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
 
-  static const double barHeight = 80;
+  static const double barHeight = 64;
 
   /// Same slot for every destination so the pill wraps with even spacing.
-  static const double tabSlotWidth = 108;
+  static const double tabSlotWidth = 100;
 
   /// Matches Baeble: tab-switch duration and curve.
   static const Duration motionDuration = Duration(milliseconds: 250);
@@ -31,12 +30,13 @@ class FloatingTabChrome extends StatelessWidget {
   /// Bottom inset tab screens reserve so the bar never covers the last item:
   /// bar height, a small gap, and the system safe area.
   static double bottomInset(BuildContext context) =>
-      barHeight + 8 + MediaQuery.paddingOf(context).bottom;
+      barHeight + 16 + MediaQuery.paddingOf(context).bottom;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
+      minimum: const EdgeInsets.only(bottom: 8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Center(
@@ -77,36 +77,53 @@ class _FloatingPillBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final navTheme = NavigationBarTheme.of(context);
+    final dark = scheme.brightness == Brightness.dark;
+    final background = dark
+        ? scheme.surfaceContainer
+        : scheme.surfaceContainerLowest;
 
-    return Material(
-      color: navTheme.backgroundColor ?? scheme.surfaceContainer,
-      elevation: navTheme.elevation ?? 3.0,
-      shadowColor: navTheme.shadowColor,
-      surfaceTintColor: navTheme.surfaceTintColor,
-      shape: const StadiumBorder(),
-      child: Semantics(
-        container: true,
-        explicitChildNodes: true,
-        child: Container(
-          height: FloatingTabChrome.barHeight,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 0; i < destinations.length; i++)
-                SizedBox(
-                  width: FloatingTabChrome.tabSlotWidth,
-                  child: _FloatingTabButton(
-                    spec: destinations[i],
-                    selected: i == currentIndex,
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      onDestinationSelected(i);
-                    },
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: const StadiumBorder(),
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: dark ? 0.45 : 0.10),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: background.withValues(alpha: 0.96),
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: dark ? 1 : 0.9),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Semantics(
+          container: true,
+          explicitChildNodes: true,
+          child: Container(
+            height: FloatingTabChrome.barHeight,
+            padding: const EdgeInsets.all(6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < destinations.length; i++)
+                  SizedBox(
+                    width: FloatingTabChrome.tabSlotWidth,
+                    child: _FloatingTabButton(
+                      spec: destinations[i],
+                      selected: i == currentIndex,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onDestinationSelected(i);
+                      },
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -128,16 +145,7 @@ class _FloatingTabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final navTheme = NavigationBarTheme.of(context);
-
-    final iconColor = selected
-        ? (navTheme.iconTheme?.resolve({WidgetState.selected})?.color ??
-              scheme.onSecondaryContainer)
-        : (navTheme.iconTheme?.resolve({})?.color ?? scheme.onSurfaceVariant);
-    // Baeble falls back to onSecondary; secondaryContainer is the M3 indicator
-    // color and keeps contrast with onSecondaryContainer in revenuecat's theme.
-    final indicatorColor = navTheme.indicatorColor ?? scheme.secondaryContainer;
-    final indicatorShape = navTheme.indicatorShape ?? const StadiumBorder();
+    final color = selected ? scheme.primary : scheme.onSurfaceVariant;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : FloatingTabChrome.motionDuration;
@@ -148,59 +156,43 @@ class _FloatingTabButton extends StatelessWidget {
         button: true,
         selected: selected,
         label: spec.label,
-        child: SizedBox(
-          width: double.infinity,
+        child: AnimatedContainer(
+          duration: duration,
+          curve: FloatingTabChrome.motionCurve,
+          decoration: ShapeDecoration(
+            shape: const StadiumBorder(),
+            color: selected
+                ? scheme.primary.withValues(alpha: 0.16)
+                : Colors.transparent,
+          ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: selected ? null : onTap,
               customBorder: const StadiumBorder(),
-              overlayColor: navTheme.overlayColor,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedContainer(
-                      duration: duration,
-                      curve: FloatingTabChrome.motionCurve,
-                      width: 52,
-                      height: 32,
-                      decoration: ShapeDecoration(
-                        shape: indicatorShape,
-                        color: selected ? indicatorColor : Colors.transparent,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          selected ? spec.selectedIcon : spec.icon,
-                          size: 22,
-                          color: iconColor,
-                          semanticLabel: spec.label,
-                        ),
-                      ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    selected ? spec.selectedIcon : spec.icon,
+                    size: 22,
+                    color: color,
+                    semanticLabel: spec.label,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    spec.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: color,
+                      fontSize: 11,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      height: 1.1,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      spec.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style:
-                          (navTheme.labelTextStyle?.resolve({
-                                    if (selected) WidgetState.selected,
-                                  }) ??
-                                  Theme.of(context).textTheme.labelSmall)
-                              ?.copyWith(
-                                color: iconColor,
-                                fontSize: 11,
-                                fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
-                                height: 1.1,
-                              ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

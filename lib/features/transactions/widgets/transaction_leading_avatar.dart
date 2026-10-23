@@ -48,6 +48,15 @@ class TransactionLeadingAvatar extends StatelessWidget {
         width: size,
         height: size,
         color: tintColor.withValues(alpha: 0.15),
+        // Keeps white icons from melting into white cards.
+        foregroundDecoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.onSurface.withValues(
+              alpha: 0.08,
+            ),
+          ),
+        ),
         child: CachedNetworkImage(
           imageUrl: url,
           fit: BoxFit.cover,
@@ -80,6 +89,7 @@ class TransactionLeadingAvatar extends StatelessWidget {
 
     final scheme = Theme.of(context).colorScheme;
     final tint = platformIconColor ?? scheme.onSurfaceVariant;
+    final badgeSize = (size * 0.42).clamp(14.0, 22.0);
 
     return SizedBox(
       width: size,
@@ -89,22 +99,18 @@ class TransactionLeadingAvatar extends StatelessWidget {
         children: [
           Positioned.fill(child: body),
           Positioned(
-            right: -3,
-            bottom: -3,
-            child: Material(
-              elevation: 1.5,
-              shadowColor: Colors.black.withValues(alpha: 0.22),
-              color: scheme.surfaceContainerHigh,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-                side: BorderSide(
-                  color: scheme.outlineVariant.withValues(alpha: 0.55),
-                ),
+            right: -4,
+            bottom: -4,
+            child: Container(
+              width: badgeSize,
+              height: badgeSize,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(badgeSize * 0.32),
+                border: Border.all(color: scheme.surfaceContainerLow, width: 2),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: Icon(icon, size: 12, color: tint),
-              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: badgeSize * 0.62, color: tint),
             ),
           ),
         ],

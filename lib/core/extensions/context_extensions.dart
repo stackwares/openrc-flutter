@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:revenuecat/theme/app_colors.dart';
 
 extension BuildContextX on BuildContext {
   ThemeData get theme => Theme.of(this);
@@ -10,6 +11,7 @@ extension BuildContextX on BuildContext {
   double get screenHeight => screenSize.height;
   EdgeInsets get padding => mediaQuery.padding;
   bool get isDark => theme.brightness == Brightness.dark;
+  AppColors get appColors => AppColors.of(this);
 
   void showSnackBar(
     String message, {

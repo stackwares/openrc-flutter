@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
+import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:revenuecat/widgets/delta_badge.dart';
+import 'package:revenuecat/widgets/split_bar.dart';
 
 /// e.g. `After 15% store commission` or `After 15% / 12% store commission` when rates differ.
 String afterStoreCommissionTitle(CommissionSettings commission) {
@@ -79,34 +81,18 @@ DayTxnCounts aggregateDayCounts(List<RcTransaction> transactions) {
   );
 }
 
-RcTransactionType sectionFilterAccentType(TransactionDaySectionFilter f) {
-  switch (f) {
-    case TransactionDaySectionFilter.trial:
-      return RcTransactionType.trial;
-    case TransactionDaySectionFilter.conversion:
-      return RcTransactionType.conversion;
-    case TransactionDaySectionFilter.renewal:
-      return RcTransactionType.renewal;
-    case TransactionDaySectionFilter.subscription:
-      return RcTransactionType.newSubscription;
-    case TransactionDaySectionFilter.refunded:
-      return RcTransactionType.refund;
-    case TransactionDaySectionFilter.cancelled:
-      return RcTransactionType.renewal;
-  }
-}
-
 Color daySummaryPillAccent(
   BuildContext context,
   TransactionDaySectionFilter filter,
 ) {
+  final colors = context.appColors;
   return switch (filter) {
-    TransactionDaySectionFilter.refunded => transactionTypeAccentColor(
-      RcTransactionType.refund,
-      context,
-    ),
-    TransactionDaySectionFilter.cancelled => Colors.deepOrange,
-    _ => transactionTypeAccentColor(sectionFilterAccentType(filter), context),
+    TransactionDaySectionFilter.trial => colors.trial,
+    TransactionDaySectionFilter.conversion => colors.conversion,
+    TransactionDaySectionFilter.renewal => colors.renewal,
+    TransactionDaySectionFilter.subscription => colors.purchase,
+    TransactionDaySectionFilter.refunded => colors.refund,
+    TransactionDaySectionFilter.cancelled => colors.cancelled,
   };
 }
 
@@ -116,103 +102,41 @@ bool sectionCountHigherIsBetter(TransactionDaySectionFilter filter) {
 }
 
 Color daySummaryPlatformDistColor(
+  BuildContext context,
   TransactionDaySummaryPlatform p,
-  ColorScheme scheme,
 ) {
+  final colors = context.appColors;
   return switch (p) {
-    TransactionDaySummaryPlatform.apple => StoreBrandIconColors.appleBlue,
-    TransactionDaySummaryPlatform.google => StoreBrandIconColors.androidGreen,
-    TransactionDaySummaryPlatform.web => scheme.tertiary,
-    TransactionDaySummaryPlatform.other => scheme.outline,
+    TransactionDaySummaryPlatform.apple => colors.apple,
+    TransactionDaySummaryPlatform.google => colors.google,
+    TransactionDaySummaryPlatform.web => colors.web,
+    TransactionDaySummaryPlatform.other => colors.otherStore,
   };
 }
 
-IconData daySummaryPlatformDistIcon(TransactionDaySummaryPlatform p) {
+String daySummaryPlatformLabel(TransactionDaySummaryPlatform p) {
   return switch (p) {
-    TransactionDaySummaryPlatform.apple => Icons.apple,
-    TransactionDaySummaryPlatform.google => Icons.android_rounded,
-    TransactionDaySummaryPlatform.web => Icons.language_rounded,
-    TransactionDaySummaryPlatform.other => Icons.storefront_outlined,
+    TransactionDaySummaryPlatform.apple => 'App Store',
+    TransactionDaySummaryPlatform.google => 'Google Play',
+    TransactionDaySummaryPlatform.web => 'Web',
+    TransactionDaySummaryPlatform.other => 'Other',
   };
 }
 
-/// Share per platform: store icon + colorized % (fixed order; omitted when count is 0).
-class DaySummaryPlatformShare extends StatelessWidget {
-  const DaySummaryPlatformShare({super.key, required this.platformCounts});
-
-  final Map<TransactionDaySummaryPlatform, int> platformCounts;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final total = TransactionDaySummaryPlatform.values.fold<int>(
-      0,
-      (s, p) => s + (platformCounts[p] ?? 0),
-    );
-    if (total <= 0) return const SizedBox.shrink();
-
-    final dotStyle = tt.labelSmall?.copyWith(
-      color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
-      fontSize: 10,
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-    );
-    final basePctStyle = tt.labelSmall?.copyWith(
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-      height: 1.2,
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-
-    final children = <Widget>[];
-    for (final p in TransactionDaySummaryPlatform.values) {
-      final count = platformCounts[p] ?? 0;
-      if (count <= 0) continue;
-      if (children.isNotEmpty) {
-        children.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text('\u00b7', style: dotStyle),
-          ),
-        );
-      }
-      final pct = ((count * 100) / total).round().clamp(0, 100);
-      final tint = daySummaryPlatformDistColor(p, scheme);
-      children.add(
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(daySummaryPlatformDistIcon(p), size: 12, color: tint),
-            const SizedBox(width: 3),
-            Text('$pct%', style: basePctStyle?.copyWith(color: tint)),
-          ],
-        ),
-      );
-    }
-
-    if (children.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 0,
-        runSpacing: 2,
-        children: children,
-      ),
-    );
-  }
+/// Short tile label (fits a third of a phone width).
+String daySummaryTileLabel(TransactionDaySectionFilter filter) {
+  return switch (filter) {
+    TransactionDaySectionFilter.cancelled => 'Cancelled',
+    _ => transactionDaySectionGridLabel(filter),
+  };
 }
 
+/// Six category tiles (two rows of three). Tapping a tile reports its filter.
 class DayTypeCountSummary extends StatelessWidget {
   final List<RcTransaction> transactions;
   final List<RcTransaction>? previousDayTransactions;
   final Set<TransactionDaySectionFilter> selectedFilters;
   final void Function(TransactionDaySectionFilter filter) onFilterCellTap;
-  final VoidCallback? onClearFilter;
   final bool enableFilterTaps;
 
   const DayTypeCountSummary({
@@ -221,125 +145,56 @@ class DayTypeCountSummary extends StatelessWidget {
     required this.previousDayTransactions,
     required this.selectedFilters,
     required this.onFilterCellTap,
-    required this.onClearFilter,
     this.enableFilterTaps = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final n = aggregateDayCounts(transactions);
     final p = previousDayTransactions != null
         ? aggregateDayCounts(previousDayTransactions!)
         : null;
     final platformBySection = platformCountsByDaySection(transactions);
+
+    int countFor(DayTxnCounts c, TransactionDaySectionFilter f) => switch (f) {
+      TransactionDaySectionFilter.trial => c.trials,
+      TransactionDaySectionFilter.conversion => c.conversions,
+      TransactionDaySectionFilter.renewal => c.renewals,
+      TransactionDaySectionFilter.subscription => c.purchases,
+      TransactionDaySectionFilter.refunded => c.refunds,
+      TransactionDaySectionFilter.cancelled => c.cancelled,
+    };
+
+    Widget cell(TransactionDaySectionFilter f) => DaySummaryStatCell(
+      label: daySummaryTileLabel(f),
+      count: countFor(n, f),
+      previousCount: p == null ? null : countFor(p, f),
+      filter: f,
+      selected: selectedFilters.contains(f),
+      allowTap: enableFilterTaps,
+      onTap: onFilterCellTap,
+      platformCounts: platformBySection[f]!,
+    );
+
+    Widget row(List<TransactionDaySectionFilter> filters) => IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < filters.length; i++) ...[
+            if (i > 0) const SizedBox(width: AppSpace.xs),
+            Expanded(child: cell(filters[i])),
+          ],
+        ],
+      ),
+    );
+
+    const f = TransactionDaySectionFilter.values;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        GridView.count(
-          padding: EdgeInsets.zero,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1.05,
-          children: [
-            DaySummaryStatCell(
-              label: 'Trials',
-              count: n.trials,
-              previousCount: p?.trials,
-              filter: TransactionDaySectionFilter.trial,
-              selected: selectedFilters.contains(
-                TransactionDaySectionFilter.trial,
-              ),
-              allowTap: enableFilterTaps,
-              onTap: onFilterCellTap,
-              platformCounts:
-                  platformBySection[TransactionDaySectionFilter.trial]!,
-            ),
-            DaySummaryStatCell(
-              label: 'Conversions',
-              count: n.conversions,
-              previousCount: p?.conversions,
-              filter: TransactionDaySectionFilter.conversion,
-              selected: selectedFilters.contains(
-                TransactionDaySectionFilter.conversion,
-              ),
-              allowTap: enableFilterTaps,
-              onTap: onFilterCellTap,
-              platformCounts:
-                  platformBySection[TransactionDaySectionFilter.conversion]!,
-            ),
-            DaySummaryStatCell(
-              label: 'Renewals',
-              count: n.renewals,
-              previousCount: p?.renewals,
-              filter: TransactionDaySectionFilter.renewal,
-              selected: selectedFilters.contains(
-                TransactionDaySectionFilter.renewal,
-              ),
-              allowTap: enableFilterTaps,
-              onTap: onFilterCellTap,
-              platformCounts:
-                  platformBySection[TransactionDaySectionFilter.renewal]!,
-            ),
-            DaySummaryStatCell(
-              label: 'Purchases',
-              count: n.purchases,
-              previousCount: p?.purchases,
-              filter: TransactionDaySectionFilter.subscription,
-              selected: selectedFilters.contains(
-                TransactionDaySectionFilter.subscription,
-              ),
-              allowTap: enableFilterTaps,
-              onTap: onFilterCellTap,
-              platformCounts:
-                  platformBySection[TransactionDaySectionFilter.subscription]!,
-            ),
-            DaySummaryStatCell(
-              label: 'Refunds',
-              count: n.refunds,
-              previousCount: p?.refunds,
-              filter: TransactionDaySectionFilter.refunded,
-              selected: selectedFilters.contains(
-                TransactionDaySectionFilter.refunded,
-              ),
-              allowTap: enableFilterTaps,
-              onTap: onFilterCellTap,
-              platformCounts:
-                  platformBySection[TransactionDaySectionFilter.refunded]!,
-            ),
-            DaySummaryStatCell(
-              label: 'Cancellations',
-              count: n.cancelled,
-              previousCount: p?.cancelled,
-              filter: TransactionDaySectionFilter.cancelled,
-              selected: selectedFilters.contains(
-                TransactionDaySectionFilter.cancelled,
-              ),
-              allowTap: enableFilterTaps,
-              onTap: onFilterCellTap,
-              platformCounts:
-                  platformBySection[TransactionDaySectionFilter.cancelled]!,
-            ),
-          ],
-        ),
-        if (onClearFilter != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Divider(
-              height: 1,
-              color: scheme.outlineVariant.withValues(alpha: 0.45),
-            ),
-          ),
-          Center(
-            child: TextButton(
-              onPressed: onClearFilter,
-              child: const Text('Clear filter'),
-            ),
-          ),
-        ],
+        row(f.sublist(0, 3)),
+        const SizedBox(height: AppSpace.xs),
+        row(f.sublist(3, 6)),
       ],
     );
   }
@@ -369,134 +224,114 @@ class DaySummaryStatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
     final accent = daySummaryPillAccent(context, filter);
-    final baseCard = scheme.surfaceContainerHighest.withValues(alpha: 0.38);
-    final fill = Color.alphaBlend(
-      accent.withValues(alpha: selected ? 0.2 : 0.1),
-      baseCard,
-    );
-    final borderColor = selected
-        ? accent.withValues(alpha: 0.72)
-        : Color.alphaBlend(
-            accent.withValues(alpha: 0.28),
-            scheme.outlineVariant.withValues(alpha: 0.45),
-          );
+    final base = scheme.surfaceContainerLow;
+    final fill = selected
+        ? Color.alphaBlend(scheme.primary.withValues(alpha: 0.12), base)
+        : base;
     final prev = previousCount;
-    final higherIsBetter = sectionCountHigherIsBetter(filter);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: allowTap ? () => onTap(filter) : null,
-        borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor, width: selected ? 1.5 : 1),
-            color: fill,
+    final delta = prev == null
+        ? null
+        : DeltaBadge.count(
+            current: count,
+            previous: prev,
+            higherIsBetter: sectionCountHigherIsBetter(filter),
+          );
+    final segments = [
+      for (final p in TransactionDaySummaryPlatform.values)
+        if ((platformCounts[p] ?? 0) > 0)
+          SplitSegment(
+            value: platformCounts[p]!.toDouble(),
+            color: daySummaryPlatformDistColor(context, p),
+            label: daySummaryPlatformLabel(p),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: tt.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                  height: 1.15,
-                ),
+    ];
+    final radius = BorderRadius.circular(AppRadius.tile);
+
+    return Semantics(
+      button: allowTap,
+      selected: selected,
+      label: [
+        '$label $count',
+        if (delta != null) delta.semanticsLabel,
+      ].join(', '),
+      excludeSemantics: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: allowTap ? () => onTap(filter) : null,
+          borderRadius: radius,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              color: fill,
+              border: Border.all(
+                color: selected ? scheme.primary : colors.hairline,
+                width: selected ? 1.5 : 1,
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$count',
-                    textAlign: TextAlign.center,
-                    style: tt.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.6,
-                      height: 1,
-                      color: selected ? accent : scheme.onSurface,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                  if (prev != null) ...[
                     const SizedBox(width: 6),
-                    DayCountTrendRow(
-                      current: count,
-                      previous: prev,
-                      higherIsBetter: higherIsBetter,
+                    Expanded(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.labelMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
-                ],
-              ),
-              DaySummaryPlatformShare(platformCounts: platformCounts),
-            ],
+                ),
+                const SizedBox(height: 6),
+                // Wraps the delta under the count when text is large.
+                Wrap(
+                  spacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  children: [
+                    Text(
+                      '$count',
+                      style: AppText.amount(
+                        context,
+                        size: 22,
+                        color: count == 0
+                            ? scheme.onSurfaceVariant
+                            : scheme.onSurface,
+                      ),
+                    ),
+                    ?delta,
+                  ],
+                ),
+                const Spacer(),
+                const SizedBox(height: 8),
+                if (segments.isNotEmpty)
+                  SplitBar(segments: segments, height: 3)
+                else
+                  const SizedBox(height: 3),
+              ],
+            ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class DayCountTrendRow extends StatelessWidget {
-  final int current;
-  final int previous;
-  final bool higherIsBetter;
-
-  const DayCountTrendRow({
-    super.key,
-    required this.current,
-    required this.previous,
-    required this.higherIsBetter,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final delta = current - previous;
-    final IconData icon;
-    final Color accent;
-    if (delta == 0) {
-      icon = Icons.horizontal_rule_rounded;
-      accent = theme.colorScheme.onSurfaceVariant;
-    } else {
-      final up = delta > 0;
-      icon = up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded;
-      final improved = higherIsBetter ? up : !up;
-      accent = improved
-          ? (theme.brightness == Brightness.dark
-                ? const Color(0xFF81C784)
-                : const Color(0xFF2E7D32))
-          : theme.colorScheme.error;
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, size: 14, color: accent),
-        const SizedBox(width: 4),
-        Text(
-          '$previous',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
     );
   }
 }

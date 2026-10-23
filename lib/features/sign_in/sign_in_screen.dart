@@ -133,32 +133,37 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 32),
-                  _buildEmailField(isLoading),
-                  const SizedBox(height: 16),
-                  _buildPasswordField(isLoading),
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    _buildErrorMessage(context),
-                  ],
-                  const SizedBox(height: 24),
-                  _buildSignInButton(context, isLoading),
-                  if (status == SignInStatus.requires2Fa) ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: isLoading ? null : _openOtpSheet,
-                      child: const Text('Enter verification code'),
-                    ),
-                  ],
-                ],
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Form(
+                key: _formKey,
+                child: AutofillGroup(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeader(context),
+                      const SizedBox(height: 36),
+                      _buildEmailField(isLoading),
+                      const SizedBox(height: 12),
+                      _buildPasswordField(isLoading),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        _buildErrorMessage(context),
+                      ],
+                      const SizedBox(height: 24),
+                      _buildSignInButton(context, isLoading),
+                      if (status == SignInStatus.requires2Fa) ...[
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: isLoading ? null : _openOtpSheet,
+                          child: const Text('Enter verification code'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -168,26 +173,37 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final scheme = context.colorScheme;
     return Column(
       children: [
-        Icon(
-          Icons.account_balance_wallet_rounded,
-          size: 64,
-          color: context.colorScheme.primary,
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: scheme.primary.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Icon(
+            Icons.account_balance_wallet_rounded,
+            size: 36,
+            color: scheme.primary,
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         Text(
           AppConstants.appName,
           style: context.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          'Sign in to your RevenueCat account',
+          'Sign in with your RevenueCat account to see sales as they happen.',
           style: context.textTheme.bodyMedium?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
+            color: scheme.onSurfaceVariant,
+            height: 1.4,
           ),
           textAlign: TextAlign.center,
         ),
@@ -201,10 +217,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       keyboardType: TextInputType.emailAddress,
       autocorrect: false,
       enabled: !isLoading,
-      decoration: InputDecoration(
+      textInputAction: TextInputAction.next,
+      autofillHints: const [AutofillHints.email, AutofillHints.username],
+      decoration: const InputDecoration(
         labelText: 'Email',
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        prefixIcon: Icon(Icons.email_outlined),
       ),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -223,6 +240,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       controller: _passwordController,
       obscureText: _obscurePassword,
       enabled: !isLoading,
+      textInputAction: TextInputAction.done,
+      autofillHints: const [AutofillHints.password],
+      onFieldSubmitted: (_) {
+        if (!isLoading) _handleSignIn();
+      },
       decoration: InputDecoration(
         labelText: 'Password',
         prefixIcon: const Icon(Icons.lock_outlined),
@@ -230,10 +252,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
           ),
+          tooltip: _obscurePassword ? 'Show password' : 'Hide password',
           onPressed: () =>
               setState(() => _obscurePassword = !_obscurePassword),
         ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -379,22 +401,22 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: context.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
+        color: context.appColors.negative.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
           Icon(
             Icons.error_outline,
-            color: context.colorScheme.onErrorContainer,
+            color: context.appColors.negative,
             size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               _errorMessage!,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: context.colorScheme.onErrorContainer,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.appColors.negative,
               ),
             ),
           ),
