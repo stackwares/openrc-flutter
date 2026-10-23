@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:revenuecat/core/utils/api_error_message.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
 import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
@@ -262,6 +263,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         request,
         requestContext: 'transactions:initial',
       );
+      if (!mounted || gen != _backfillGeneration) return;
       final raw = response.transactions ?? [];
       final grouped = <String, List<RcTransaction>>{};
       _mergeRawIntoGrouped(grouped, raw);
@@ -286,6 +288,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         unawaited(backfillIncompleteCalendarDays(gen, true));
       }
     } on DioException catch (e) {
+      if (!mounted || gen != _backfillGeneration) return;
       _handleAuthError(e);
       state = state.copyWith(
         isLoading: false,
@@ -295,6 +298,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         realtimeLoadComplete: false,
       );
     } catch (e) {
+      if (!mounted || gen != _backfillGeneration) return;
       state = state.copyWith(
         isLoading: false,
         isLoadingMore: false,
@@ -316,6 +320,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
     state = state.copyWith(isLoadingMore: true);
     final prevCursor = state.lastPurchaseMs!;
+    // A refresh started while this page was in flight; its cursor is stale.
+    final gen = _backfillGeneration;
+    bool stale() => !mounted || gen != _backfillGeneration;
     try {
       final api = _ref.read(rcApiServiceProvider);
       final request = RcTransactionsRequest(
@@ -326,6 +333,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         request,
         requestContext: requestContext,
       );
+      if (stale()) return false;
       final raw = response.transactions ?? [];
       final existingGrouped = Map<String, List<RcTransaction>>.from(
         state.grouped,
@@ -348,10 +356,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       );
       return true;
     } on DioException catch (e) {
+      if (stale()) return false;
       _handleAuthError(e);
       state = state.copyWith(isLoadingMore: false);
       return false;
     } catch (_) {
+      if (stale()) return false;
       state = state.copyWith(isLoadingMore: false);
       return false;
     }
@@ -426,7 +436,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   String? _extractErrorMessage(DioException e) {
     final rcError = _ref.read(rcApiServiceProvider).parseError(e);
-    return rcError?.message ?? 'Request failed';
+    return friendlyApiErrorMessage(e, serverMessage: rcError?.message);
   }
 
   Map<String, double> _calculateDailyTotals(
