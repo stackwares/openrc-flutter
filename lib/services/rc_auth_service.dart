@@ -19,7 +19,12 @@ final _log = Logger('RcAuthService');
 
 final rcAuthServiceProvider = Provider<RcAuthService>((ref) {
   final api = ref.read(rcApiServiceProvider);
-  return RcAuthService(api, ref);
+  final service = RcAuthService(api, ref);
+  api.onUnauthorized = () {
+    _log.warning('Auth token rejected by API (401), signing out');
+    unawaited(service.signOut());
+  };
+  return service;
 });
 
 final isSignedInProvider = StateProvider<bool>((ref) => false);
@@ -60,7 +65,9 @@ class RcAuthService {
           final me = await _api.me();
           _ref.read(rcMeProvider.notifier).state = me;
           unawaited(_syncRevenueCatToFirestore(me));
-        } catch (_) {}
+        } catch (e) {
+          _log.info('Profile fetch after sign in failed: $e');
+        }
 
         return response;
       }
@@ -76,7 +83,13 @@ class RcAuthService {
     }
   }
 
-  Future<void> signOut() async {
+  Future<void>? _signOutInFlight;
+
+  /// Idempotent: concurrent callers (e.g. several 401s) share one sign-out.
+  Future<void> signOut() => _signOutInFlight ??=
+      _signOut().whenComplete(() => _signOutInFlight = null);
+
+  Future<void> _signOut() async {
     try {
       await _api.logout();
     } catch (e) {
@@ -89,8 +102,16 @@ class RcAuthService {
       _log.warning('Firebase sign out failed: $e');
     }
 
-    await WidgetDataChannel.clearWidgetData();
-    await _clearToken();
+    try {
+      await WidgetDataChannel.clearWidgetData();
+    } catch (e) {
+      _log.warning('Clearing widget data failed: $e');
+    }
+    try {
+      await _clearToken();
+    } catch (e) {
+      _log.warning('Clearing stored token failed: $e');
+    }
     _api.clearAuthToken();
     _ref.read(isSignedInProvider.notifier).state = false;
     _ref.read(rcMeProvider.notifier).state = null;
@@ -130,12 +151,17 @@ class RcAuthService {
         unawaited(_syncRevenueCatToFirestore(me));
       } on DioException catch (e) {
         final rcError = _api.parseError(e);
-        if (rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
+        if (e.response?.statusCode == 401 ||
+            rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
             rcError?.code == AppConstants.rcErrorExpiredAuthToken) {
           _log.warning('Stored token invalid/expired, signing out');
           await signOut();
           return false;
         }
+        // Offline or server error: keep the session, screens retry later.
+        _log.info('Profile fetch failed during restore: ${e.type.name}');
+      } catch (e) {
+        _log.warning('Profile parse failed during restore: $e');
       }
 
       _log.info('Session restored');
