@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:revenuecat/widgets/animated_number.dart';
+import 'package:revenuecat/widgets/animated_reveal.dart';
 import 'package:revenuecat/widgets/pressable_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -79,5 +80,24 @@ void main() {
     await tester.pump();
     expect(scale(), 1);
     await gesture.up();
+  });
+
+  testWidgets('reveals open and close under reduced motion without errors', (
+    tester,
+  ) async {
+    Future<void> show(bool visible) => tester.pumpWidget(
+      host(
+        AnimatedReveal(visible: visible, child: const Text('Details')),
+        reduceMotion: true,
+      ),
+    );
+    await show(false);
+    await show(true);
+    await tester.pump();
+    expect(find.text('Details'), findsOneWidget);
+    await show(false);
+    await tester.pump();
+    expect(find.text('Details'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 }

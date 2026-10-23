@@ -14,6 +14,7 @@ import 'package:revenuecat/services/firestore_service.dart';
 import 'package:revenuecat/services/push_registration_service.dart';
 import 'package:revenuecat/services/rc_api_service.dart';
 import 'package:revenuecat/services/widget_data_channel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final _log = Logger('RcAuthService');
 
@@ -22,7 +23,7 @@ final rcAuthServiceProvider = Provider<RcAuthService>((ref) {
   final service = RcAuthService(api, ref);
   api.onUnauthorized = () {
     _log.warning('Auth token rejected by API (401), signing out');
-    unawaited(service.signOut());
+    unawaited(service.signOut(reason: SignOutReason.sessionExpired));
   };
   return service;
 });
@@ -30,12 +31,39 @@ final rcAuthServiceProvider = Provider<RcAuthService>((ref) {
 final isSignedInProvider = StateProvider<bool>((ref) => false);
 final rcMeProvider = StateProvider<RcMeResponse?>((ref) => null);
 
+/// Why the app signed out on its own; the sign-in screen explains it.
+enum SignOutReason { sessionExpired }
+
+/// Set when the app signs out without being asked (e.g. an expired token);
+/// cleared on the next successful sign-in.
+final signOutReasonProvider = StateProvider<SignOutReason?>((ref) => null);
+
 class RcAuthService {
   final RcApiService _api;
   final Ref _ref;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   RcAuthService(this._api, this._ref);
+
+  static const _lastEmailKey = 'last_sign_in_email';
+
+  /// Email of the last account that signed in on this device, to prefill.
+  static Future<String?> lastSignInEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString(_lastEmailKey)?.trim();
+      return email == null || email.isEmpty ? null : email;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> _rememberEmail(String email) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_lastEmailKey, email.trim());
+    } catch (_) {}
+  }
 
   Future<RcLoginResponse?> signIn({
     required String email,
@@ -56,7 +84,9 @@ class RcAuthService {
           response.authenticationTokenExpiration,
         );
         _api.setAuthToken(response.authenticationToken!);
+        _ref.read(signOutReasonProvider.notifier).state = null;
         _ref.read(isSignedInProvider.notifier).state = true;
+        unawaited(_rememberEmail(email));
         _log.info('Signed in as ${response.email}');
 
         await PushRegistrationService.instance.ensureFirebaseAuthForFirestore();
@@ -85,10 +115,17 @@ class RcAuthService {
   }
 
   Future<void>? _signOutInFlight;
+  SignOutReason? _pendingReason;
 
   /// Idempotent: concurrent callers (e.g. several 401s) share one sign-out.
-  Future<void> signOut() => _signOutInFlight ??=
-      _signOut().whenComplete(() => _signOutInFlight = null);
+  /// Pass [reason] when the app signs out on its own, so the sign-in screen
+  /// can say why.
+  Future<void> signOut({SignOutReason? reason}) {
+    _pendingReason ??= reason;
+    return _signOutInFlight ??= _signOut().whenComplete(
+      () => _signOutInFlight = null,
+    );
+  }
 
   Future<void> _signOut() async {
     await Future.wait([
@@ -119,6 +156,8 @@ class RcAuthService {
       _log.warning('Clearing stored token failed: $e');
     }
     _api.clearAuthToken();
+    _ref.read(signOutReasonProvider.notifier).state = _pendingReason;
+    _pendingReason = null;
     _ref.read(isSignedInProvider.notifier).state = false;
     _ref.read(rcMeProvider.notifier).state = null;
     _log.info('Signed out');
@@ -157,6 +196,8 @@ class RcAuthService {
           if (now >= expiresAt) {
             _log.info('Auth token expired');
             await _clearToken();
+            _ref.read(signOutReasonProvider.notifier).state =
+                SignOutReason.sessionExpired;
             return false;
           }
         }
@@ -175,7 +216,7 @@ class RcAuthService {
             rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
             rcError?.code == AppConstants.rcErrorExpiredAuthToken) {
           _log.warning('Stored token invalid/expired, signing out');
-          await signOut();
+          await signOut(reason: SignOutReason.sessionExpired);
           return false;
         }
         // Offline or server error: keep the session, screens retry later.

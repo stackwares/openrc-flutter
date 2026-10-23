@@ -73,7 +73,35 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
         );
       },
       routes: {SettingsScreen.routeName: (_) => const SettingsScreen()},
-      home: signedIn ? const MainShell() : const SignInScreen(),
+      home: _AuthGate(signedIn: signedIn),
+    );
+  }
+}
+
+/// Cross-fades between sign-in and the app instead of an instant swap.
+class _AuthGate extends StatelessWidget {
+  const _AuthGate({required this.signedIn});
+
+  final bool signedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 450),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.98, end: 1).animate(animation),
+          child: child,
+        ),
+      ),
+      child: signedIn
+          ? const MainShell(key: ValueKey('signed-in'))
+          : const SignInScreen(key: ValueKey('signed-out')),
     );
   }
 }

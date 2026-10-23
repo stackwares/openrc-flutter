@@ -101,7 +101,9 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
       final rcError = _ref.read(rcApiServiceProvider).parseError(e);
       if (rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
           rcError?.code == AppConstants.rcErrorExpiredAuthToken) {
-        _ref.read(rcAuthServiceProvider).signOut();
+        _ref
+            .read(rcAuthServiceProvider)
+            .signOut(reason: SignOutReason.sessionExpired);
       }
       state = state.copyWith(
         isLoading: false,
@@ -1120,11 +1122,7 @@ class _ExpandableHistoryListCardState
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 16, 16, 12),
-        // "Show all" grows the card open instead of jumping.
-        child: AnimatedSize(
-          duration: AppMotion.of(context, const Duration(milliseconds: 280)),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
+        child: _GrowOpen(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1148,6 +1146,25 @@ class _ExpandableHistoryListCardState
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Show all" grows the card open instead of jumping. AnimatedSize with a
+/// zero duration throws during layout, so reduced motion skips it.
+class _GrowOpen extends StatelessWidget {
+  const _GrowOpen({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return child;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: child,
     );
   }
 }

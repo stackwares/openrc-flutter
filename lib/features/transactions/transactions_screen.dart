@@ -524,7 +524,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     final rcError = _ref.read(rcApiServiceProvider).parseError(e);
     if (rcError?.code == AppConstants.rcErrorInvalidAuthToken ||
         rcError?.code == AppConstants.rcErrorExpiredAuthToken) {
-      _ref.read(rcAuthServiceProvider).signOut();
+      _ref
+          .read(rcAuthServiceProvider)
+          .signOut(reason: SignOutReason.sessionExpired);
     }
   }
 

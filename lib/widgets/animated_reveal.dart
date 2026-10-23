@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
 
 /// Grows open and fades in [child] when [visible], and closes when not.
 class AnimatedReveal extends StatelessWidget {
@@ -10,7 +9,12 @@ class AnimatedReveal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final duration = AppMotion.of(context, const Duration(milliseconds: 260));
+    // AnimatedSize with a zero duration throws during layout, so reduced
+    // motion swaps instantly without it.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return visible ? child : const SizedBox(width: double.infinity);
+    }
+    const duration = Duration(milliseconds: 260);
     return AnimatedSize(
       duration: duration,
       curve: Curves.easeOutCubic,
