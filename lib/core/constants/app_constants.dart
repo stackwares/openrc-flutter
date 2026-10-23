@@ -14,6 +14,10 @@ abstract class AppConstants {
     defaultValue: 'https://openrc-relay.stackwares.workers.dev',
   );
 
+  /// Runs on made-up data with no account or network, for store screenshots
+  /// and review (`--dart-define=OPENRC_DEMO=true`). Off in every normal build.
+  static const bool demoMode = bool.fromEnvironment('OPENRC_DEMO');
+
   static String get _rcApiOrigin =>
       kIsWeb ? relayUrl : 'https://api.revenuecat.com';
   static String get rcApiBaseUrl => '$_rcApiOrigin/v1/developers';

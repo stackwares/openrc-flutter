@@ -13,6 +13,7 @@ import 'package:openrc/models/rc_project.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/models/rc_transaction_detail.dart';
 import 'package:openrc/models/rc_transaction_detail_activity.dart';
+import 'package:openrc/services/demo/demo_adapter.dart';
 
 /// [Options.extra] key: short label for debug logging (e.g. `transactions:scroll`).
 const kRcApiRequestContextExtraKey = 'rc_api_request_context';
@@ -65,6 +66,12 @@ void _rcApiLogError(DioException e) {
 enum RcEndpoint { login, logout, me, projects, overview, transactions }
 
 final rcApiServiceProvider = Provider<RcApiService>((ref) {
+  if (AppConstants.demoMode) {
+    return RcApiService(
+      dio: Dio()..httpClientAdapter = DemoAdapter(),
+      internalDio: Dio()..httpClientAdapter = DemoAdapter(),
+    );
+  }
   return RcApiService();
 });
 

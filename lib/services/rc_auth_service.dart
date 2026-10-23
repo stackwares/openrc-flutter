@@ -163,6 +163,12 @@ class RcAuthService {
   }
 
   Future<bool> restoreSession() async {
+    if (AppConstants.demoMode) {
+      _api.setAuthToken('demo-token');
+      _ref.read(isSignedInProvider.notifier).state = true;
+      _ref.read(rcMeProvider.notifier).state = await _api.me();
+      return true;
+    }
     try {
       final token = await _secureStorage.read(key: AppConstants.prefAuthToken);
       final expiresAtStr = await _secureStorage.read(
