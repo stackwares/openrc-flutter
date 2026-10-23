@@ -11,6 +11,7 @@ import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/utils/api_error_message.dart';
 import 'package:revenuecat/core/shell_insets.dart';
 import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
+import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
 import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
 import 'package:revenuecat/features/transactions/transactions_common.dart';
@@ -537,9 +538,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         centerTitle: false,
         title: Text(
           dateLabel,
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+            height: 1.2,
+          ),
         ),
         actions: [
           if (filtersActive)
@@ -565,6 +571,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 ? null
                 : () => ref.read(transactionsProvider.notifier).fetchInitial(),
           ),
+          const SettingsAppBarAction(),
         ],
       ),
       body: _buildDayTab(context, state),
@@ -601,7 +608,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     final selectedKey = state.selectedDayKey;
-    final rawDayTxs = state.grouped[selectedKey] ?? [];
     final groupedForList = filteredGroupedByTransactionMeta(
       filteredGroupedByApps(state.grouped, appIncludeFilter),
       countryCodes: countryFilter,
@@ -613,16 +619,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         appIncludeFilter != null ||
         countryFilterActive ||
         platformFilterActive;
-    if (listFiltersActive && rawDayTxs.isNotEmpty && allForDay.isEmpty) {
-      return AppStateMessage(
-        icon: Icons.filter_list_off_outlined,
-        title: 'No transactions match your filters',
-        message: 'Try another app, country or store, or clear the filters.',
-        actionLabel: 'Clear filters',
-        actionIcon: Icons.filter_alt_off_outlined,
-        onAction: _clearTransactionFilters,
-      );
-    }
 
     final allForDayForMetrics = allForDay
         .where(
@@ -665,6 +661,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             sectionFilters: _sectionFilters,
           )
         : <RcTransaction>[];
+
+    final filtersHideResults =
+        transactions.isEmpty &&
+        (listFiltersActive || _sectionFilters.isNotEmpty);
 
     final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
 
@@ -797,10 +797,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       ),
                     ),
                   ).appCardEntrance(),
-                  RealtimeRevenueInsightsList(
-                    transactions: allForDayForMetrics,
-                    asModalEntry: true,
-                  ).appCardEntrance(delay: const Duration(milliseconds: 80)),
+                  if (!filtersHideResults)
+                    RealtimeRevenueInsightsList(
+                      transactions: allForDayForMetrics,
+                      asModalEntry: true,
+                    ).appCardEntrance(delay: const Duration(milliseconds: 80)),
                   if (futureTxs.isNotEmpty)
                     _FutureTransactionsSection(
                       transactions: futureTxs,
@@ -824,7 +825,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 ],
               ),
             ),
-            SliverList.builder(
+            if (filtersHideResults)
+              SliverToBoxAdapter(
+                child: AppStateMessage(
+                  icon: Icons.filter_list_off_outlined,
+                  title: 'No transactions match your filters',
+                  message: 'Try another day, or clear the filters.',
+                  actionLabel: 'Clear filters',
+                  actionIcon: Icons.filter_alt_off_outlined,
+                  onAction: _clearTransactionFilters,
+                  bottomPadding: bottomPadding,
+                  shrinkWrap: true,
+                ),
+              )
+            else
+              SliverList.builder(
               itemCount: transactions.length,
               itemBuilder: (context, index) {
                 final tx = transactions[index];
@@ -880,9 +895,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   ),
                 ),
               ),
-            SliverPadding(
-              padding: EdgeInsets.only(bottom: bottomPadding),
-            ),
+            if (!filtersHideResults)
+              SliverPadding(
+                padding: EdgeInsets.only(bottom: bottomPadding),
+              ),
           ],
         ),
       ),

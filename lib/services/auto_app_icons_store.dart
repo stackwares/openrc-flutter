@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:logging/logging.dart';
+import 'package:revenuecat/core/constants/app_constants.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/app_icon_lookup.dart';
 import 'package:revenuecat/services/app_icon_overrides_store.dart';
@@ -53,7 +55,11 @@ class _CacheEntry {
   }
 }
 
-final appIconLookupProvider = Provider<AppIconLookup>((ref) => AppIconLookup());
+final appIconLookupProvider = Provider<AppIconLookup>((ref) {
+  return AppIconLookup(
+    proxyBaseUrl: kIsWeb ? AppConstants.appIconLookupUrl : null,
+  );
+});
 
 /// Icons found automatically from the App Store / Google Play, keyed by
 /// RevenueCat app id. Results (including misses) are cached on device.

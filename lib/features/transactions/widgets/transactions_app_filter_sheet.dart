@@ -8,6 +8,7 @@ import 'package:revenuecat/features/transactions/widgets/transaction_leading_ava
 import 'package:revenuecat/models/rc_project.dart';
 import 'package:revenuecat/models/rc_transaction.dart';
 import 'package:revenuecat/services/auto_app_icons_store.dart';
+import 'package:revenuecat/widgets/search_field_decoration.dart';
 
 typedef TransactionsFilterSheetOnApply =
     void Function(
@@ -30,20 +31,6 @@ Set<String> _normalizedCountrySelection(Set<String>? raw) {
     if (allowed.contains(u)) out.add(u);
   }
   return out;
-}
-
-InputDecoration _filterSheetSearchDecoration(ColorScheme scheme, String hint) {
-  return InputDecoration(
-    hintText: hint,
-    prefixIcon: const Icon(Icons.search_rounded, size: 22),
-    filled: true,
-    fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.42),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide.none,
-    ),
-    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-  );
 }
 
 /// Bottom sheet to filter transactions by app, store platform, and country.
@@ -418,10 +405,7 @@ class _TransactionsAppFilterModalState
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: TextField(
                 onChanged: (v) => setState(() => _appSearchQuery = v),
-                decoration: _filterSheetSearchDecoration(
-                  scheme,
-                  'Search apps',
-                ),
+                decoration: searchFieldDecoration(scheme, 'Search apps'),
               ),
             ),
             Expanded(
@@ -495,10 +479,7 @@ class _TransactionsAppFilterModalState
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: TextField(
                 onChanged: (v) => setState(() => _countrySearchQuery = v),
-                decoration: _filterSheetSearchDecoration(
-                  scheme,
-                  'Search countries',
-                ),
+                decoration: searchFieldDecoration(scheme, 'Search countries'),
               ),
             ),
             Expanded(

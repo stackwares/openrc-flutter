@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/extensions/context_extensions.dart';
 import 'package:revenuecat/core/shell_insets.dart';
+import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/revenue/revenue_section_screen.dart';
 import 'package:revenuecat/features/revenue/widgets/revenue_next_payday_proceeds_card.dart';
 import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
@@ -135,6 +136,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
                 ? null
                 : () => ref.read(transactionsProvider.notifier).fetchInitial(),
           ),
+          const SettingsAppBarAction(),
         ],
       ),
       body: Builder(

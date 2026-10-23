@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:revenuecat/app/floating_tab_chrome.dart';
 import 'package:revenuecat/features/charts/home_screen.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/revenue/revenue_screen.dart';
 import 'package:revenuecat/features/transactions/transactions_screen.dart';
 
 /// Selected tab index for [MainShell]
-/// (`0` = transactions, `1` = revenue, `2` = charts, `3` = settings).
+/// (`0` = transactions, `1` = revenue, `2` = charts).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 const _mainShellTabs = <FloatingTabDestination>[
@@ -27,11 +26,6 @@ const _mainShellTabs = <FloatingTabDestination>[
     icon: Icons.dashboard_outlined,
     selectedIcon: Icons.dashboard_rounded,
   ),
-  FloatingTabDestination(
-    label: 'Settings',
-    icon: Icons.settings_outlined,
-    selectedIcon: Icons.settings_rounded,
-  ),
 ];
 
 class MainShell extends ConsumerStatefulWidget {
@@ -46,7 +40,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     TransactionsScreen(),
     RealtimeTransactionsScreen(),
     HomeScreen(),
-    SettingsScreen(),
   ];
 
   @override

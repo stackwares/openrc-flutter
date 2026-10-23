@@ -14,6 +14,7 @@ class AppStateMessage extends StatelessWidget {
     this.onAction,
     this.isError = false,
     this.bottomPadding = 0,
+    this.shrinkWrap = false,
   });
 
   /// Standard "couldn't load" state with a Retry button.
@@ -27,7 +28,8 @@ class AppStateMessage extends StatelessWidget {
        actionLabel = 'Try again',
        actionIcon = Icons.refresh,
        onAction = onRetry,
-       isError = true;
+       isError = true,
+       shrinkWrap = false;
 
   final IconData icon;
   final String title;
@@ -38,12 +40,67 @@ class AppStateMessage extends StatelessWidget {
   final bool isError;
   final double bottomPadding;
 
+  /// Sizes to the message instead of filling the parent. Use this inside a
+  /// sliver, where a [LayoutBuilder] cannot report intrinsic height.
+  final bool shrinkWrap;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final accent = isError ? scheme.error : scheme.onSurfaceVariant;
     final label = actionLabel;
+    final body = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 360),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 34, color: accent),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            if (message != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            if (label != null && onAction != null) ...[
+              const SizedBox(height: 24),
+              FilledButton.tonalIcon(
+                onPressed: onAction,
+                icon: Icon(actionIcon ?? Icons.arrow_forward, size: 18),
+                label: Text(label),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    if (shrinkWrap) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: Center(child: body),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
@@ -58,57 +115,7 @@ class AppStateMessage extends StatelessWidget {
                   )
                 : 0,
           ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 24,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon, size: 34, color: accent),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: text.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (message != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        message!,
-                        textAlign: TextAlign.center,
-                        style: text.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (label != null && onAction != null) ...[
-                      const SizedBox(height: 24),
-                      FilledButton.tonalIcon(
-                        onPressed: onAction,
-                        icon: Icon(actionIcon ?? Icons.arrow_forward, size: 18),
-                        label: Text(label),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
+          child: Center(child: body),
         ),
       ),
     );

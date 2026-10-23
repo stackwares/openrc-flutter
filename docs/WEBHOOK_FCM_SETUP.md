@@ -31,7 +31,7 @@ RC_WEBHOOK_BEARER=your-long-random-secret
 
 For Firebase **params**, this file is loaded when you deploy from the `functions` directory. Use the **same** value in the RevenueCat dashboard when you set the webhook’s **Authorization** header (e.g. `Bearer your-long-random-secret`).
 
-If `RC_WEBHOOK_BEARER` is empty, the function **does not** enforce auth (development only).
+If `RC_WEBHOOK_BEARER` is empty, the function **rejects every request**. The RevenueCat v2 API cannot set that Authorization header; it has to be pasted in the webhook’s dashboard settings.
 
 ## 3. Deploy Cloud Functions
 
@@ -60,6 +60,10 @@ Optional (if not using `us-central1`):
 ```
 
 The **callable** `registerFcmToken` must be deployed in the same region as `FIREBASE_FUNCTIONS_REGION`.
+
+The app registers a Firebase **installation id** (`FirebaseMessaging.register` / `onRegistered`), not the deprecated FCM registration token. The relay sends to that id with the Admin SDK `token` field. Installations saved before this change keep working until a send fails and the stale id is removed.
+
+`lookupAppIcon` is a public HTTPS function the **web** app uses for App Store and Play icons. Phone builds still look the stores up directly.
 
 ## 5. RevenueCat dashboard: Authorization header
 

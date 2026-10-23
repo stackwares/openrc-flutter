@@ -9,6 +9,7 @@ void main() {
     final taps = <int>[];
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: InkRipple.splashFactory),
         home: Scaffold(
           body: FloatingTabChrome(
             currentIndex: 0,
@@ -29,6 +30,8 @@ void main() {
         ),
       ),
     );
+    expect(find.text('A'), findsOneWidget);
+    expect(find.text('B'), findsOneWidget);
     await tester.tap(find.byIcon(Icons.star_outline));
     await tester.tap(find.byIcon(Icons.home));
     expect(taps, [1]);

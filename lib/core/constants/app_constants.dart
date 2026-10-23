@@ -25,4 +25,9 @@ abstract class AppConstants {
     'FIREBASE_FUNCTIONS_REGION',
     defaultValue: 'us-central1',
   );
+
+  /// HTTPS function that looks up App Store / Play icons for the web app.
+  /// Phone builds talk to the stores directly; browsers are blocked.
+  static const String appIconLookupUrl =
+      'https://us-central1-stackwares-landing.cloudfunctions.net/lookupAppIcon';
 }

@@ -69,16 +69,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _otpController = TextEditingController();
   bool _obscurePassword = true;
-  bool _show2FA = false;
+  bool _otpSheetOpen = false;
   String? _errorMessage;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
@@ -97,7 +95,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await ref.read(signInProvider.notifier).signIn(
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            otpCode: _show2FA ? _otpController.text.trim() : null,
           );
     } on DioException catch (e) {
       final rcError = ref.read(rcApiServiceProvider).parseError(e);
@@ -122,10 +119,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final isLoading = status == SignInStatus.loading;
 
     ref.listen<SignInStatus>(signInProvider, (prev, next) {
-      if (next == SignInStatus.requires2Fa && !_show2FA) {
-        setState(() {
-          _show2FA = true;
-          _errorMessage = 'Verification code required.';
+      if (next == SignInStatus.requires2Fa &&
+          prev != SignInStatus.requires2Fa) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _openOtpSheet();
         });
       } else if (next == SignInStatus.success) {
         context.go('/');
@@ -148,16 +145,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   _buildEmailField(isLoading),
                   const SizedBox(height: 16),
                   _buildPasswordField(isLoading),
-                  if (_show2FA) ...[
-                    const SizedBox(height: 16),
-                    _buildOtpField(isLoading),
-                  ],
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),
                     _buildErrorMessage(context),
                   ],
                   const SizedBox(height: 24),
                   _buildSignInButton(context, isLoading),
+                  if (status == SignInStatus.requires2Fa) ...[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: isLoading ? null : _openOtpSheet,
+                      child: const Text('Enter verification code'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -247,23 +247,132 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     );
   }
 
-  Widget _buildOtpField(bool isLoading) {
-    return TextFormField(
-      controller: _otpController,
-      keyboardType: TextInputType.number,
-      enabled: !isLoading,
-      decoration: InputDecoration(
-        labelText: 'Verification Code',
-        prefixIcon: const Icon(Icons.pin_outlined),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      validator: (value) {
-        if (_show2FA && (value == null || value.trim().isEmpty)) {
-          return 'Verification code is required';
-        }
-        return null;
-      },
-    );
+  Future<void> _openOtpSheet() async {
+    if (_otpSheetOpen || !mounted) return;
+    _otpSheetOpen = true;
+    final codeController = TextEditingController();
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        showDragHandle: true,
+        builder: (sheetContext) {
+          var submitting = false;
+          String? sheetError;
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              Future<void> submit() async {
+                final code = codeController.text.trim();
+                if (code.isEmpty) {
+                  setSheetState(() => sheetError = 'Enter the verification code.');
+                  return;
+                }
+                setSheetState(() {
+                  submitting = true;
+                  sheetError = null;
+                });
+                try {
+                  await ref.read(signInProvider.notifier).signIn(
+                    email: _emailController.text.trim(),
+                    password: _passwordController.text,
+                    otpCode: code,
+                  );
+                  if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                } on DioException catch (e) {
+                  final rcError = ref.read(rcApiServiceProvider).parseError(e);
+                  final message = switch (rcError?.code) {
+                    AppConstants.rcErrorInvalidOtp => 'Invalid verification code.',
+                    AppConstants.rcErrorTooManyRequests =>
+                      'Too many requests. Please try again later.',
+                    _ => rcError?.message ?? 'Sign in failed.',
+                  };
+                  if (context.mounted) {
+                    setSheetState(() {
+                      submitting = false;
+                      sheetError = message;
+                    });
+                  }
+                } catch (_) {
+                  if (context.mounted) {
+                    setSheetState(() {
+                      submitting = false;
+                      sheetError = 'An unexpected error occurred.';
+                    });
+                  }
+                }
+              }
+
+              final bottom = MediaQuery.viewInsetsOf(context).bottom;
+              return Padding(
+                padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottom),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Verification code',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Enter the code sent to ${_emailController.text.trim()}.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: codeController,
+                      autofocus: true,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.done,
+                      enabled: !submitting,
+                      onSubmitted: (_) => submit(),
+                      decoration: InputDecoration(
+                        labelText: 'Code',
+                        prefixIcon: const Icon(Icons.pin_outlined),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
+                    if (sheetError != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        sheetError!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: submitting ? null : submit,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: submitting
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Verify'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      codeController.dispose();
+      _otpSheetOpen = false;
+    }
   }
 
   Widget _buildErrorMessage(BuildContext context) {
@@ -299,7 +408,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       onPressed: isLoading ? null : _handleSignIn,
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Skeletonizer(
         enabled: isLoading,

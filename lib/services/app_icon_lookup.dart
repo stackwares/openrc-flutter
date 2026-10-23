@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:revenuecat/core/constants/app_constants.dart';
 
 final _log = Logger('AppIconLookup');
 
@@ -32,28 +33,65 @@ bool isLookupableBundleId(String? id) {
 /// bundle ID) or Google Play (store listing `og:image`, by package name).
 ///
 /// Network failures return null; callers fall back to the default avatar.
-/// On web both stores block cross-origin requests, so lookups are skipped.
+/// On web both stores block cross-origin requests, so lookups go through
+/// [proxyBaseUrl] (the `lookupAppIcon` Cloud Function) instead.
 class AppIconLookup {
-  AppIconLookup({Dio? dio, bool? enabled})
+  AppIconLookup({Dio? dio, bool? enabled, this.proxyBaseUrl})
       : _dio = dio ??
             Dio(BaseOptions(
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 15),
             )),
-        _enabled = enabled ?? !kIsWeb;
+        _enabled = enabled ?? (proxyBaseUrl == null && !kIsWeb);
 
   final Dio _dio;
   final bool _enabled;
 
+  /// When set, [find] asks this HTTPS endpoint instead of the stores.
+  /// The web app passes [AppConstants.appIconLookupUrl].
+  final String? proxyBaseUrl;
+
   Future<String?> find(String bundleId, AppIconStoreHint hint) async {
-    if (!_enabled || !isLookupableBundleId(bundleId)) return null;
+    if (!isLookupableBundleId(bundleId)) return null;
     final id = bundleId.trim();
+    final proxy = proxyBaseUrl;
+    if (proxy != null) return _fromProxy(proxy, id, hint);
+    if (!_enabled) return null;
     final order = hint == AppIconStoreHint.google
         ? [_fromGooglePlay, _fromAppStore]
         : [_fromAppStore, _fromGooglePlay];
     for (final source in order) {
       final url = await source(id);
       if (url != null) return url;
+    }
+    return null;
+  }
+
+  Future<String?> _fromProxy(
+    String base,
+    String bundleId,
+    AppIconStoreHint hint,
+  ) async {
+    try {
+      final res = await _dio.get<String>(
+        base,
+        queryParameters: {
+          'bundleId': bundleId,
+          'hint': switch (hint) {
+            AppIconStoreHint.apple => 'apple',
+            AppIconStoreHint.google => 'google',
+            AppIconStoreHint.unknown => 'unknown',
+          },
+        },
+        options: Options(responseType: ResponseType.plain),
+      );
+      if (res.statusCode != 200) return null;
+      final data = jsonDecode(res.data ?? '');
+      if (data is! Map) return null;
+      final url = data['url'];
+      if (url is String && url.startsWith('https://')) return url;
+    } catch (e) {
+      _log.fine('Icon proxy failed for $bundleId: $e');
     }
     return null;
   }

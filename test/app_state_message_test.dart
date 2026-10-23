@@ -7,6 +7,7 @@ void main() {
     var retries = 0;
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: InkRipple.splashFactory),
         home: Scaffold(
           body: AppStateMessage.error(
             message: 'No internet connection.',
@@ -23,6 +24,7 @@ void main() {
   testWidgets('works inside RefreshIndicator', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(splashFactory: InkRipple.splashFactory),
         home: Scaffold(
           body: RefreshIndicator(
             onRefresh: () async {},

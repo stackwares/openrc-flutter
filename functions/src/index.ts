@@ -144,6 +144,9 @@ export const revenueCatWebhook = onRequest(
         },
       };
 
+      // `token` is an installation id from register()/onRegistered.
+      // Older FCM registration tokens stored before that migration still send
+      // through the same field until a failed delivery removes them.
       const batch = tokens.map((token) =>
         getMessaging().send({
           ...messageBase,
@@ -184,10 +187,14 @@ export const revenueCatWebhook = onRequest(
 interface RegisterTokenData {
   token?: string;
   platform?: string;
+  /** When true, delete this installation id instead of storing it. */
+  remove?: boolean;
 }
 
 /**
- * Requires Firebase Auth (anonymous is fine). Stores FCM token under pushUsers/{uid}.
+ * Requires Firebase Auth (anonymous is fine).
+ * Stores the FCM installation id under pushUsers/{uid}, or deletes it when
+ * `remove` is true (onUnregistered).
  */
 export const registerFcmToken = onCall(
   {region: "us-central1"},
@@ -201,20 +208,29 @@ export const registerFcmToken = onCall(
     if (!token || token.length > 4096) {
       throw new HttpsError("invalid-argument", "token is required");
     }
-    const platform = ["android", "iOS", "macOS"].includes(data.platform ?? "") ?
-      (data.platform as string) : "unknown";
-
-    await db
+    const ref = db
       .collection("pushUsers")
       .doc(uid)
       .collection("tokens")
-      .doc(tokenDocId(token))
-      .set({
-        token,
-        platform,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+      .doc(tokenDocId(token));
+
+    if (data.remove === true) {
+      await ref.delete();
+      return {ok: true};
+    }
+
+    const platform = ["android", "iOS", "macOS"].includes(data.platform ?? "") ?
+      (data.platform as string) : "unknown";
+
+    await ref.set({
+      token,
+      platform,
+      kind: "fid",
+      updatedAt: FieldValue.serverTimestamp(),
+    });
 
     return {ok: true};
   },
 );
+
+export {lookupAppIcon} from "./appIconLookup";

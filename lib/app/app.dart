@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/app/main_shell.dart';
+import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/sign_in/sign_in_screen.dart';
 import 'package:revenuecat/services/rc_auth_service.dart';
 import 'package:revenuecat/services/utilities_service.dart';
 import 'package:revenuecat/theme/app_theme.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class RevenueCatApp extends ConsumerStatefulWidget {
   const RevenueCatApp({super.key});
@@ -45,6 +47,13 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
       darkTheme: AppTheme.dark(effectiveColorScheme),
       themeMode: themeMode,
       color: AppTheme.light(effectiveColorScheme).scaffoldBackgroundColor,
+      builder: (context, child) {
+        return SkeletonizerConfig(
+          data: AppTheme.skeletonizer(Theme.of(context).colorScheme),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+      routes: {SettingsScreen.routeName: (_) => const SettingsScreen()},
       home: signedIn ? const MainShell() : const SignInScreen(),
     );
   }

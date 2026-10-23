@@ -3,6 +3,7 @@ import 'package:revenuecat/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:revenuecat/core/animations/app_motion.dart';
 import 'package:revenuecat/core/shell_insets.dart';
+import 'package:revenuecat/features/settings/settings_screen.dart';
 import 'package:revenuecat/features/charts/home_notifier.dart';
 import 'package:revenuecat/features/charts/overview_metric_detail_screen.dart';
 import 'package:revenuecat/features/charts/widgets/home_chart_date_range_sheet.dart';
@@ -49,6 +50,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           rangeLabel,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+            height: 1.2,
+          ),
         ),
         bottom: state.isLoading
             ? PreferredSize(
@@ -71,6 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onPressed:
                 state.isLoading ? null : () => notifier.fetchData(),
           ),
+          const SettingsAppBarAction(),
         ],
       ),
       body: RefreshIndicator(

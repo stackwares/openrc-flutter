@@ -1,8 +1,3 @@
-// FCM token APIs are deprecated in firebase_messaging 17 in favour of FID
-// registration, but the webhook relay (functions/) still sends to FCM tokens.
-// Keep tokens until the backend migrates to FID-based sends.
-// ignore_for_file: deprecated_member_use
-
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -14,12 +9,17 @@ import 'package:revenuecat/core/constants/app_constants.dart';
 
 final _log = Logger('PushRegistration');
 
-/// Firebase anonymous auth + FCM token registration with [registerFcmToken] callable.
+/// Firebase anonymous auth plus FCM registration with the
+/// [registerFcmToken] callable.
+///
+/// firebase_messaging 17 registers an installation id (FID) via [FirebaseMessaging.register]
+/// and [FirebaseMessaging.onRegistered]. The webhook relay sends to that id.
 class PushRegistrationService {
   PushRegistrationService._();
   static final PushRegistrationService instance = PushRegistrationService._();
 
-  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<String>? _registeredSub;
+  StreamSubscription<String>? _unregisteredSub;
 
   FirebaseFunctions get _functions => FirebaseFunctions.instanceFor(
         region: AppConstants.firebaseFunctionsRegion,
@@ -43,7 +43,7 @@ class PushRegistrationService {
     }
   }
 
-  /// Ensures an anonymous Firebase user exists and registers the FCM token.
+  /// Ensures an anonymous Firebase user exists and registers this install's FID.
   Future<void> initialize() async {
     if (kIsWeb) return;
 
@@ -69,53 +69,64 @@ class PushRegistrationService {
       _log.warning('Notification permission: $e\n$st');
     }
 
-    // Listen for token refresh before first fetch so we never miss a new token.
-    _tokenRefreshSub ??= FirebaseMessaging.instance.onTokenRefresh.listen(
+    // Listen before register() so the FID emitted by this call is not missed.
+    _registeredSub ??= messaging.onRegistered.listen(
       registerFcmToken,
       onError: (Object e, StackTrace st) =>
-          _log.warning('onTokenRefresh error: $e\n$st'),
+          _log.warning('onRegistered error: $e\n$st'),
+    );
+    _unregisteredSub ??= messaging.onUnregistered.listen(
+      _unregisterFid,
+      onError: (Object e, StackTrace st) =>
+          _log.warning('onUnregistered error: $e\n$st'),
     );
 
-    await _fetchAndRegisterToken(messaging);
+    await _registerInstallation(messaging);
   }
 
-  Future<void> _fetchAndRegisterToken(FirebaseMessaging messaging) async {
+  Future<void> _registerInstallation(FirebaseMessaging messaging) async {
     try {
       await _waitForApnsToken(messaging);
-      final token = await messaging.getToken();
-      if (token != null) {
-        await registerFcmToken(token);
-      }
+      await messaging.register();
     } on FirebaseException catch (e) {
       if (e.code == 'apns-token-not-set') {
-        _log.info('APNS token not ready yet; will register via onTokenRefresh');
+        _log.info('APNS token not ready yet; will register via onRegistered');
         return;
       }
-      _log.warning('FCM getToken: $e\n${e.stackTrace}');
+      _log.warning('FCM register: $e\n${e.stackTrace}');
     } catch (e, st) {
-      _log.warning('FCM getToken: $e\n$st');
+      _log.warning('FCM register: $e\n$st');
     }
   }
 
-  Future<void> registerFcmToken(String token) async {
+  Future<void> registerFcmToken(String fid) async {
+    await _callTokenEndpoint(fid, remove: false);
+  }
+
+  Future<void> _unregisterFid(String fid) async {
+    await _callTokenEndpoint(fid, remove: true);
+  }
+
+  Future<void> _callTokenEndpoint(String fid, {required bool remove}) async {
     if (kIsWeb) return;
     if (FirebaseAuth.instance.currentUser == null) {
-      _log.warning('registerFcmToken skipped: no Firebase user');
+      _log.warning('FCM registration skipped: no Firebase user');
       return;
     }
     try {
       final callable = _functions.httpsCallable('registerFcmToken');
       await callable.call(<String, dynamic>{
-        'token': token,
+        'token': fid,
         'platform': defaultTargetPlatform.name,
+        'remove': remove,
       });
-      _log.fine('FCM token registered');
+      _log.fine(remove ? 'FCM installation removed' : 'FCM installation registered');
     } catch (e, st) {
       _log.warning('registerFcmToken callable failed: $e\n$st');
     }
   }
 
-  /// iOS requires the APNS token before FCM can generate a token.
+  /// iOS requires the APNS token before FCM can register the installation.
   /// Polls `getAPNSToken()` up to ~5 seconds since it arrives asynchronously.
   Future<void> _waitForApnsToken(FirebaseMessaging messaging) async {
     if (defaultTargetPlatform != TargetPlatform.iOS) return;
@@ -126,12 +137,12 @@ class PushRegistrationService {
     _log.warning('APNS token not available after 5s, proceeding anyway');
   }
 
-  /// Signs out and creates a new anonymous user.
+  /// Signs out and creates a new anonymous user, then registers that user's FID.
   Future<User?> rotatePushUser() async {
     if (kIsWeb) return null;
     await FirebaseAuth.instance.signOut();
     final cred = await FirebaseAuth.instance.signInAnonymously();
-    await _fetchAndRegisterToken(FirebaseMessaging.instance);
+    await _registerInstallation(FirebaseMessaging.instance);
     return cred.user;
   }
 }

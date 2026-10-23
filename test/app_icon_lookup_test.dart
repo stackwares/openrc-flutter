@@ -98,6 +98,20 @@ void main() {
       );
     });
 
+    test('web proxy returns the function url and skips the stores', () async {
+      const icon = 'https://is1.mzstatic.com/a/512x512bb.jpg';
+      final adapter = _RouteAdapter({
+        'example.test': (200, '{"url":"$icon"}'),
+        'itunes.apple.com': (200, _itunes),
+      });
+      final l = AppIconLookup(
+        dio: Dio()..httpClientAdapter = adapter,
+        proxyBaseUrl: 'https://example.test/lookupAppIcon',
+      );
+      expect(await l.find('com.a.b', AppIconStoreHint.apple), icon);
+      expect(adapter.hits, ['example.test']);
+    });
+
     test('disabled lookup (web) never hits the network', () async {
       final adapter = _RouteAdapter({});
       final l = AppIconLookup(
