@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:revenuecat/core/constants/app_constants.dart';
+import 'package:revenuecat/core/utils/api_error_message.dart';
 import 'package:revenuecat/core/utils/store_commission.dart';
 import 'package:revenuecat/models/overview_metric_type.dart';
 import 'package:revenuecat/models/rc_chart_response.dart';
@@ -112,7 +113,14 @@ class HomeNotifier extends StateNotifier<HomeState> {
     fetchData();
   }
 
+  /// Incremented per [fetchData]; responses from older calls are dropped so a
+  /// slow request for a previous date range can't overwrite newer data.
+  int _fetchGeneration = 0;
+
+  bool _isCurrent(int generation) => mounted && generation == _fetchGeneration;
+
   Future<void> fetchData() async {
+    final generation = ++_fetchGeneration;
     state = state.copyWith(isLoading: true, error: null);
     try {
       final api = _ref.read(rcApiServiceProvider);
@@ -129,12 +137,14 @@ class HomeNotifier extends StateNotifier<HomeState> {
         chartsMap[entry.key] = entry.value;
       }
 
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         overview: overviewResp,
         charts: chartsMap,
         isLoading: false,
       );
     } on DioException catch (e, st) {
+      if (!_isCurrent(generation)) return;
       _handleAuthError(e);
       final msg = _extractErrorMessage(e);
       _homeLog.severe(
@@ -149,6 +159,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
       );
     } catch (e, st) {
       _homeLog.severe('Home load failed (unexpected)', e, st);
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load overview',
@@ -277,7 +288,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   String? _extractErrorMessage(DioException e) {
     final rcError = _ref.read(rcApiServiceProvider).parseError(e);
-    return rcError?.message ?? 'Request failed';
+    return friendlyApiErrorMessage(e, serverMessage: rcError?.message);
   }
 }
 
