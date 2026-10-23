@@ -3,6 +3,8 @@
 // Keep tokens until the backend migrates to FID-based sends.
 // ignore_for_file: deprecated_member_use
 
+import 'dart:async';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -16,6 +18,8 @@ final _log = Logger('PushRegistration');
 class PushRegistrationService {
   PushRegistrationService._();
   static final PushRegistrationService instance = PushRegistrationService._();
+
+  StreamSubscription<String>? _tokenRefreshSub;
 
   FirebaseFunctions get _functions => FirebaseFunctions.instanceFor(
         region: AppConstants.firebaseFunctionsRegion,
@@ -66,7 +70,7 @@ class PushRegistrationService {
     }
 
     // Listen for token refresh before first fetch so we never miss a new token.
-    FirebaseMessaging.instance.onTokenRefresh.listen(
+    _tokenRefreshSub ??= FirebaseMessaging.instance.onTokenRefresh.listen(
       registerFcmToken,
       onError: (Object e, StackTrace st) =>
           _log.warning('onTokenRefresh error: $e\n$st'),
@@ -127,12 +131,7 @@ class PushRegistrationService {
     if (kIsWeb) return null;
     await FirebaseAuth.instance.signOut();
     final cred = await FirebaseAuth.instance.signInAnonymously();
-    final messaging = FirebaseMessaging.instance;
-    await _waitForApnsToken(messaging);
-    final token = await messaging.getToken();
-    if (token != null) {
-      await registerFcmToken(token);
-    }
+    await _fetchAndRegisterToken(FirebaseMessaging.instance);
     return cred.user;
   }
 }
