@@ -1,0 +1,19 @@
+{
+  "privacyPolicyUrl": "https://github.com/stackwares/openrc-flutter/blob/main/PRIVACY.md",
+  "supportEmail": "dev@stackwares.com",
+  "ads": "no",
+  "appAccess": "restricted",
+  "reviewerInstructions": "OpenRC requires a RevenueCat dashboard account. Sign in on the first screen with the test email and password entered in Play Console (App content → App access). After sign-in, all main tabs (Transactions, Revenue, Charts) and Settings are available. Optional analytics can be disabled under Settings → Privacy → Share anonymous usage. If credentials fail, contact dev@stackwares.com.",
+  "targetAudience": ["18+"],
+  "contentRatingStatus": "complete",
+  "dataSafetyStatus": "complete",
+  "category": "Business",
+  "initialCountries": ["all"],
+  "policyDeclarationsReviewed": true,
+  "declarations": {
+    "financial-features": "not-applicable",
+    "health": "not-applicable",
+    "news": "not-applicable"
+  },
+  "sensitivePermissionsReviewed": true
+}
