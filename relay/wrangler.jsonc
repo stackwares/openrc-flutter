@@ -14,6 +14,6 @@
   "vars": {
     // Origins the web app is served from, comma-separated. "https://*.host"
     // also allows preview deployments; "http://localhost:*" allows any port.
-    "ALLOWED_ORIGINS": "https://openrc.pages.dev,https://*.openrc.pages.dev"
+    "ALLOWED_ORIGINS": "https://openrc-app.pages.dev,https://*.openrc-app.pages.dev"
   }
 }

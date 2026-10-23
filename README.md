@@ -52,7 +52,7 @@ your RevenueCat account and works out the answers on your device:
 | iPhone and iPad | App Store: coming soon |
 | Android | Google Play: coming soon |
 | Mac | Mac App Store: coming soon |
-| Web | [openrc.pages.dev](https://openrc.pages.dev) (coming soon) |
+| Web | [openrc-app.pages.dev](https://openrc-app.pages.dev) |
 
 Or [build it yourself](#build-from-source) in a few minutes.
 

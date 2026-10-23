@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { isAllowedOrigin } from "../src/cors";
 import worker from "../src/index";
 
-const APP = "https://openrc.pages.dev";
+const APP = "https://openrc-app.pages.dev";
 
 // Requests as the Worker receives them, with Cloudflare's incoming metadata.
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
@@ -11,7 +11,7 @@ const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 // The production list, whatever a local .dev.vars says.
 const testEnv: Env = {
   ...env,
-  ALLOWED_ORIGINS: "https://openrc.pages.dev,https://*.openrc.pages.dev",
+  ALLOWED_ORIGINS: "https://openrc-app.pages.dev,https://*.openrc-app.pages.dev",
 };
 
 function call(
@@ -32,22 +32,22 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("origins", () => {
   it("allows the app, its previews and configured local ports", () => {
-    const list = "https://openrc.pages.dev,https://*.openrc.pages.dev,http://localhost:*";
-    expect(isAllowedOrigin("https://openrc.pages.dev", list)).toBe(true);
-    expect(isAllowedOrigin("https://feature-x.openrc.pages.dev", list)).toBe(true);
+    const list = "https://openrc-app.pages.dev,https://*.openrc-app.pages.dev,http://localhost:*";
+    expect(isAllowedOrigin("https://openrc-app.pages.dev", list)).toBe(true);
+    expect(isAllowedOrigin("https://feature-x.openrc-app.pages.dev", list)).toBe(true);
     expect(isAllowedOrigin("http://localhost:61234", list)).toBe(true);
   });
 
   it("refuses lookalikes, other schemes and non-origins", () => {
-    const list = "https://openrc.pages.dev,https://*.openrc.pages.dev";
+    const list = "https://openrc-app.pages.dev,https://*.openrc-app.pages.dev";
     for (const origin of [
       null,
       "null",
-      "https://openrc.pages.dev.evil.com",
-      "https://evilopenrc.pages.dev",
-      "http://openrc.pages.dev",
-      "https://openrc.pages.dev:8443",
-      "https://openrc.pages.dev/path",
+      "https://openrc-app.pages.dev.evil.com",
+      "https://evilopenrc-app.pages.dev",
+      "http://openrc-app.pages.dev",
+      "https://openrc-app.pages.dev:8443",
+      "https://openrc-app.pages.dev/path",
       "http://localhost:3000",
     ]) {
       expect(isAllowedOrigin(origin, list), String(origin)).toBe(false);
