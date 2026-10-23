@@ -26,28 +26,7 @@ ThemeMode _defaultThemeMode() {
 
 final FlexScheme _defaultColorScheme = _resolveDefaultColorScheme();
 
-FlexScheme _resolveDefaultColorScheme() {
-  if (defaultTargetPlatform == TargetPlatform.macOS) {
-    for (final scheme in FlexScheme.values) {
-      if (scheme.name == 'greyLaw') {
-        return scheme;
-      }
-    }
-    return FlexScheme.indigo;
-  }
-
-  for (final scheme in FlexScheme.values) {
-    if (scheme.name == 'blackWhite') {
-      return scheme;
-    }
-  }
-  for (final scheme in FlexScheme.values) {
-    if (scheme.name == 'greyLaw') {
-      return scheme;
-    }
-  }
-  return FlexScheme.indigo;
-}
+FlexScheme _resolveDefaultColorScheme() => FlexScheme.red;
 
 class UtilitiesService {
   static const String _themeModeKey = 'theme_mode';

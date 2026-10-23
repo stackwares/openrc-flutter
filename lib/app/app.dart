@@ -35,7 +35,7 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
     final effectiveColorScheme = defaultTargetPlatform == TargetPlatform.macOS
-        ? FlexScheme.greyLaw
+        ? FlexScheme.red
         : colorScheme;
 
     return MaterialApp(
