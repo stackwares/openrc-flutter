@@ -1,0 +1,3 @@
+# Copy to .dev.vars for `npm run dev`: lets `flutter run -d chrome` call the
+# local relay from any localhost port.
+ALLOWED_ORIGINS=http://localhost:*,http://127.0.0.1:*

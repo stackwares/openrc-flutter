@@ -1,8 +1,8 @@
-import 'package:revenuecat/core/utils/store_commission.dart';
-import 'package:revenuecat/core/utils/store_payday_schedule.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:openrc/core/utils/store_commission.dart';
+import 'package:openrc/core/utils/store_payday_schedule.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
 
 /// Estimated net proceeds from loaded transactions that fall in each
 /// platform’s **next** payout accrual window, always after the configured

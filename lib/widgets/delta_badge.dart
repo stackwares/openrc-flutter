@@ -1,6 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
 
 enum DeltaDirection { up, down, flat }
 
@@ -24,9 +25,10 @@ class DeltaBadge extends StatelessWidget {
     required int previous,
     bool higherIsBetter = true,
     bool filled = false,
-    String comparison = 'yesterday',
+    String? comparison,
   }) {
     final diff = current - previous;
+    final compared = comparison ?? 'common.yesterday'.tr();
     final direction = diff > 0
         ? DeltaDirection.up
         : diff < 0
@@ -35,12 +37,18 @@ class DeltaBadge extends StatelessWidget {
     final label = switch (direction) {
       DeltaDirection.up => '+$diff',
       DeltaDirection.down => '−${diff.abs()}',
-      DeltaDirection.flat => 'same',
+      DeltaDirection.flat => 'common.same'.tr(),
     };
     final semantics = switch (direction) {
-      DeltaDirection.up => '$diff more than $comparison',
-      DeltaDirection.down => '${diff.abs()} fewer than $comparison',
-      DeltaDirection.flat => 'Same as $comparison',
+      DeltaDirection.up => 'common.countMoreThan'.tr(
+        namedArgs: {'count': '$diff', 'comparison': compared},
+      ),
+      DeltaDirection.down => 'common.countFewerThan'.tr(
+        namedArgs: {'count': '${diff.abs()}', 'comparison': compared},
+      ),
+      DeltaDirection.flat => 'common.sameAs'.tr(
+        namedArgs: {'comparison': compared},
+      ),
     };
     return DeltaBadge(
       key: key,
@@ -60,9 +68,10 @@ class DeltaBadge extends StatelessWidget {
     required double previous,
     bool higherIsBetter = true,
     bool filled = true,
-    String comparison = 'yesterday',
+    String? comparison,
   }) {
     final pct = (current - previous) / previous.abs() * 100;
+    final compared = comparison ?? 'common.yesterday'.tr();
     final rounded = pct.abs() >= 10
         ? pct.abs().round().toString()
         : pct.abs().toStringAsFixed(1);
@@ -71,11 +80,19 @@ class DeltaBadge extends StatelessWidget {
         : pct > 0
         ? DeltaDirection.up
         : DeltaDirection.down;
-    final label = direction == DeltaDirection.flat ? 'same' : '$rounded%';
+    final label = direction == DeltaDirection.flat
+        ? 'common.same'.tr()
+        : '$rounded%';
     final semantics = switch (direction) {
-      DeltaDirection.up => 'Up $rounded% from $comparison',
-      DeltaDirection.down => 'Down $rounded% from $comparison',
-      DeltaDirection.flat => 'Same as $comparison',
+      DeltaDirection.up => 'common.percentUpFrom'.tr(
+        namedArgs: {'value': rounded, 'comparison': compared},
+      ),
+      DeltaDirection.down => 'common.percentDownFrom'.tr(
+        namedArgs: {'value': rounded, 'comparison': compared},
+      ),
+      DeltaDirection.flat => 'common.sameAs'.tr(
+        namedArgs: {'comparison': compared},
+      ),
     };
     return DeltaBadge(
       key: key,

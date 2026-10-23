@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/pressable_scale.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/pressable_scale.dart';
 
 /// Neutral card with a hairline border; the base surface for every section.
 class AppCard extends StatelessWidget {

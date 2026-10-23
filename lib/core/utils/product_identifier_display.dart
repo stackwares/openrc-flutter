@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 /// Display titles derived from product ids shaped like:
 /// `{name...}.{entitlement}.{sub|iap}.{period}.{offer_flag}`
 /// where [name] may contain additional `.` segments.
@@ -7,9 +9,11 @@
 /// are stripped before interpreting the period.
 String productIdentifierDisplayTitle(
   String? identifier, {
-  String ifEmpty = 'Unknown',
+  String? ifEmpty,
 }) {
-  if (identifier == null || identifier.isEmpty) return ifEmpty;
+  if (identifier == null || identifier.isEmpty) {
+    return ifEmpty ?? 'products.unknown'.tr();
+  }
 
   final parts = identifier.split('.').where((p) => p.isNotEmpty).toList();
   if (parts.length >= 5) {
@@ -19,7 +23,11 @@ String productIdentifierDisplayTitle(
       final offerRaw = parts.last;
       final periodLabel = _periodToStrictLabel(periodRaw);
       final isOffer = _isOfferSegment(_stripBaseArtifacts(offerRaw));
-      return isOffer ? '$periodLabel Offer' : periodLabel;
+      return isOffer
+          ? 'products.offer'.tr(
+              namedArgs: {'period': _periodDisplayLabel(periodLabel)},
+            )
+          : _periodDisplayLabel(periodLabel);
     }
   }
 
@@ -130,9 +138,23 @@ String _periodToStrictLabel(String raw) {
   return 'Monthly';
 }
 
+/// Localized text for an English period label from [_periodToStrictLabel].
+String _periodDisplayLabel(String label) {
+  switch (label) {
+    case 'Weekly':
+      return 'products.weekly'.tr();
+    case 'Annual':
+      return 'products.annual'.tr();
+    case 'Lifetime':
+      return 'products.lifetime'.tr();
+    default:
+      return 'products.monthly'.tr();
+  }
+}
+
 String _fallbackTitle(String identifier) {
   final parts = identifier.split('.').where((p) => p.isNotEmpty).toList();
-  if (parts.isEmpty) return 'Unknown';
+  if (parts.isEmpty) return 'products.unknown'.tr();
 
   var idx = parts.length - 1;
   var seg = _stripBaseArtifacts(parts[idx]);
@@ -141,7 +163,7 @@ String _fallbackTitle(String identifier) {
     if (idx < 0) break;
     seg = _stripBaseArtifacts(parts[idx]);
   }
-  if (idx < 0) return 'Monthly';
+  if (idx < 0) return _periodDisplayLabel('Monthly');
 
-  return _periodToStrictLabel(parts[idx]);
+  return _periodDisplayLabel(_periodToStrictLabel(parts[idx]));
 }

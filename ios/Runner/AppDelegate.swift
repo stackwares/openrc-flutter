@@ -10,9 +10,9 @@ import WidgetKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    let registrar = self.registrar(forPlugin: "com.revenuecat.client.widgets")
+    let registrar = self.registrar(forPlugin: "com.openrc.app.widgets")
     let channel = FlutterMethodChannel(
-      name: "com.revenuecat.client/widgets",
+      name: "com.openrc.app/widgets",
       binaryMessenger: registrar!.messenger()
     )
     channel.setMethodCallHandler { (call, result) in
@@ -30,7 +30,7 @@ import WidgetKit
   }
 
   private func handleClearWidgetData(result: @escaping FlutterResult) {
-    let defaults = UserDefaults(suiteName: "group.com.revenuecat.client.widgets")
+    let defaults = UserDefaults(suiteName: "group.com.openrc.app.widgets")
     defaults?.removeObject(forKey: "widget_data_json")
     defaults?.removeObject(forKey: "widget_currency_code")
     defaults?.synchronize()
@@ -55,7 +55,7 @@ import WidgetKit
         return
       }
 
-      let defaults = UserDefaults(suiteName: "group.com.revenuecat.client.widgets")
+      let defaults = UserDefaults(suiteName: "group.com.openrc.app.widgets")
       defaults?.set(jsonString, forKey: "widget_data_json")
 
       // Store currency code separately so widgets can read it independently

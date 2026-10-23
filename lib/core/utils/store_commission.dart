@@ -1,4 +1,4 @@
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:openrc/services/commission_settings_store.dart';
 
 enum StoreCommissionPlatform { apple, google, other }
 

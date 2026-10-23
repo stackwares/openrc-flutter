@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// RevenueCat's own sign-in page; it has the "Forgot password" link and
@@ -14,17 +16,16 @@ Future<void> openRevenueCatSignIn(BuildContext context) async {
     mode: LaunchMode.externalApplication,
   );
   if (!ok && context.mounted) {
-    context.showSnackBar('Couldn’t open app.revenuecat.com');
+    context.showSnackBar(
+      'signIn.couldNotOpenSite'.tr(namedArgs: {'url': 'app.revenuecat.com'}),
+    );
   }
 }
 
 /// Answers for the usual reasons a sign-in fails.
 Future<void> showSignInHelpSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+  return showAdaptiveSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
     builder: (_) => const _SignInHelpSheet(),
   );
 }
@@ -47,45 +48,37 @@ class _SignInHelpSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Trouble signing in?',
+            'signIn.troubleSigningIn'.tr(),
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
-          const _HelpItem(
+          _HelpItem(
             icon: Icons.key_rounded,
-            title: 'Forgot your password',
-            body:
-                'Reset it with “Forgot password” on RevenueCat’s '
-                'sign-in page, then come back and sign in here.',
+            title: 'signIn.helpForgotPasswordTitle'.tr(),
+            body: 'signIn.helpForgotPasswordBody'.tr(),
           ),
-          const _HelpItem(
+          _HelpItem(
             icon: Icons.shield_outlined,
-            title: 'Two-factor authentication',
-            body:
-                'After your password, you’ll be asked for the 6-digit '
-                'code from your authenticator app. Lost access to it? Sign in '
-                'on RevenueCat’s website with one of your recovery codes.',
+            title: 'signIn.twoFactorTitle'.tr(),
+            body: 'signIn.helpTwoFactorBody'.tr(),
           ),
-          const _HelpItem(
+          _HelpItem(
             icon: Icons.domain_rounded,
-            title: 'Single sign-on',
-            body:
-                'If your organization requires single sign-on, sign in '
-                'through it on RevenueCat’s website. This app signs in '
-                'with an email and password only.',
+            title: 'signIn.helpSsoTitle'.tr(),
+            body: 'signIn.helpSsoBody'.tr(),
           ),
-          const _HelpItem(
+          _HelpItem(
             icon: Icons.lock_outline_rounded,
-            title: 'Your password stays private',
-            body:
-                'It goes straight to RevenueCat and is never saved. Your '
-                'session is kept in this device’s secure storage.',
+            title: 'signIn.helpPrivateTitle'.tr(),
+            body: 'signIn.helpPrivateBody'.tr(),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () => openRevenueCatSignIn(context),
             icon: const Icon(Icons.open_in_new_rounded, size: 18),
-            label: const Text('Open app.revenuecat.com'),
+            label: Text(
+              'signIn.openSite'.tr(namedArgs: {'url': 'app.revenuecat.com'}),
+            ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),

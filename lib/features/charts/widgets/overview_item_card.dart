@@ -1,14 +1,15 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/charts/widgets/overview_sparkline_chart.dart';
-import 'package:revenuecat/models/overview_metric_type.dart';
-import 'package:revenuecat/models/rc_chart_response.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/delta_badge.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/charts/widgets/overview_sparkline_chart.dart';
+import 'package:openrc/models/overview_metric_type.dart';
+import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/delta_badge.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
 
 /// Change across the chart range for "live" metrics (MRR, subscriptions, …);
 /// null for totals, where first→last of a daily series means nothing.
@@ -25,7 +26,7 @@ DeltaBadge? overviewRangeDelta(
     previous: values.first,
     higherIsBetter: metric.higherIsBetter,
     filled: filled,
-    comparison: 'the start of this range',
+    comparison: 'charts.compareStart'.tr(),
   );
 }
 
@@ -163,7 +164,7 @@ class OverviewItemCard extends ConsumerWidget {
                       delta,
                       const SizedBox(width: 6),
                       Text(
-                        'over this range',
+                        'charts.overThisRange'.tr(),
                         style: context.textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),

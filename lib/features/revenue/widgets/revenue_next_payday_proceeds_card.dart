@@ -1,17 +1,20 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/utils/store_payday_schedule.dart';
-import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
-import 'package:revenuecat/widgets/share_row.dart';
-import 'package:revenuecat/widgets/status_label.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/store_payday_schedule.dart';
+import 'package:openrc/features/revenue/payout_history.dart';
+import 'package:openrc/features/revenue/payout_history_screen.dart';
+import 'package:openrc/features/revenue/revenue_next_payday_proceeds.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
+import 'package:openrc/widgets/share_row.dart';
+import 'package:openrc/widgets/side_panel.dart';
+import 'package:openrc/widgets/status_label.dart';
 
 class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
   final List<RcTransaction> allLoadedTransactions;
@@ -72,7 +75,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Next payouts',
+                    'revenue.nextPayouts'.tr(),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -91,9 +94,12 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
             child: Text(
-              'Estimated after store fees of '
-              '${_pct(commission.appleCommissionPercent)} (App Store) and '
-              '${_pct(commission.googleCommissionPercent)} (Google Play)',
+              'revenue.estimatedAfterFees'.tr(
+                namedArgs: {
+                  'apple': _pct(commission.appleCommissionPercent),
+                  'google': _pct(commission.googleCommissionPercent),
+                },
+              ),
               style: muted,
             ),
           ),
@@ -122,11 +128,12 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
             child: Text(
-              'Based on $loadedTransactionCount loaded transaction'
-              '${loadedTransactionCount == 1 ? '' : 's'}. Gaps in history can lower these totals.',
+              'revenue.basedOnLoaded'.plural(loadedTransactionCount),
               style: muted?.copyWith(fontSize: 12),
             ),
           ),
+          const Divider(height: 1),
+          _PayoutHistoryLink(now: now).appListItemEntrance(2),
         ],
       ),
     );
@@ -137,10 +144,85 @@ String _pct(double v) => (v - v.roundToDouble()).abs() < 1e-9
     ? '${v.round()}%'
     : '${v.toStringAsFixed(1)}%';
 
-String _accrualRangeShort(DateTime start, DateTime end) {
-  final a = DateFormat.MMMd().format(start);
-  final b = DateFormat.MMMd().format(end);
-  return 'Earnings $a–$b';
+String _accrualRangeShort(DateTime start, DateTime end) =>
+    'revenue.earningsRange'.tr(
+      namedArgs: {'range': formatPaydayRange(start, end)},
+    );
+
+/// Opens the payouts each store has already made.
+class _PayoutHistoryLink extends StatelessWidget {
+  const _PayoutHistoryLink({required this.now});
+
+  final DateTime now;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    String lastPaid(PayoutStore store) {
+      final paid = paidPayouts(store, now);
+      return paid.isEmpty
+          ? '—'
+          : DateFormat.MMMd().format(paid.last.paymentDate);
+    }
+
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: () =>
+            openDetail(context, (context) => const PayoutHistoryScreen()),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.icon),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.history_rounded,
+                  size: 20,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'revenue.payouts.title'.tr(),
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'revenue.payouts.lastPaid'.tr(
+                        namedArgs: {
+                          'apple': lastPaid(PayoutStore.apple),
+                          'google': lastPaid(PayoutStore.google),
+                        },
+                      ),
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpace.xs),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _NextPayoutPlatformRow extends StatelessWidget {
@@ -201,8 +283,17 @@ class _NextPayoutPlatformRow extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  'Pays ${projected ? 'about ' : ''}'
-                  '${formatPaydayAbbrev(paymentDate!)}',
+                  projected
+                      ? 'revenue.paysAbout'.tr(
+                          namedArgs: {
+                            'date': formatPaydayAbbrev(paymentDate!),
+                          },
+                        )
+                      : 'revenue.pays'.tr(
+                          namedArgs: {
+                            'date': formatPaydayAbbrev(paymentDate!),
+                          },
+                        ),
                   style: caption,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -217,7 +308,7 @@ class _NextPayoutPlatformRow extends StatelessWidget {
             ],
           )
         else
-          Text('Schedule unavailable', style: caption),
+          Text('revenue.scheduleUnavailable'.tr(), style: caption),
         if (accrualLine != null) ...[
           const SizedBox(height: 2),
           Text(

@@ -1,28 +1,28 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/widgets/app_state_message.dart';
+import 'package:openrc/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
-import 'package:revenuecat/features/revenue/revenue_section_screen.dart';
-import 'package:revenuecat/features/revenue/widgets/revenue_next_payday_proceeds_card.dart';
-import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/transactions_screen.dart';
-import 'package:revenuecat/features/transactions/widgets/active_filters_row.dart';
-import 'package:revenuecat/features/transactions/widgets/day_summary_card.dart';
-import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
-import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/animated_number.dart';
-import 'package:revenuecat/widgets/animated_reveal.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/shell_header.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/shell_insets.dart';
+import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/features/revenue/revenue_section_screen.dart';
+import 'package:openrc/features/revenue/widgets/revenue_next_payday_proceeds_card.dart';
+import 'package:openrc/features/revenue/widgets/revenue_insights_list.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
+import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
+import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
+import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/animated_number.dart';
+import 'package:openrc/widgets/animated_reveal.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/shell_header.dart';
 
 /// Month-to-date Revenue tab totals (local calendar month). Shares [transactionsProvider] with [TransactionsScreen].
 class RealtimeTransactionsScreen extends ConsumerWidget {
@@ -95,19 +95,19 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: ShellHeader(
-        title: 'Revenue',
-        subtitle: DateFormat('MMMM y').format(DateTime.now()),
+        title: 'revenue.title'.tr(),
+        subtitle: DateFormat.yMMMM().format(DateTime.now()),
         actions: [
           HeaderIconButton(
             icon: Icons.tune_rounded,
-            tooltip: 'Filter transactions',
+            tooltip: 'revenue.filterTransactions'.tr(),
             badge: filtersActive,
             onPressed: canOpenRealtimeFilter ? openFilters : null,
           ),
           if (ShellHeader.showsRefreshButton)
             HeaderIconButton(
               icon: Icons.refresh_rounded,
-              tooltip: 'Refresh',
+              tooltip: 'revenue.refresh'.tr(),
               onPressed: state.isLoading
                   ? null
                   : () =>
@@ -126,102 +126,132 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
               state.grouped.isEmpty &&
               !state.isLoading) {
             return AppStateMessage.error(
-              title: 'Couldn’t load revenue',
+              title: 'revenue.couldntLoad'.tr(),
               message: state.error!,
               onRetry: () =>
                   ref.read(transactionsProvider.notifier).fetchInitial(),
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(transactionsProvider.notifier).fetchInitial(),
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: EdgeInsets.only(
-                bottom: mainShellFloatingTabBarScrollPadding(context),
+          // The month at a glance, and where its money will be paid.
+          final summary = <Widget>[
+            AnimatedReveal(
+              visible: filtersActive,
+              child: ActiveFiltersRow(
+                appCount: appIncludeFilter?.length,
+                countryCodes: countryFilter,
+                platforms: platformFilter,
+                onOpenFilters: openFilters,
+                onClearApps: () =>
+                    ref
+                            .read(transactionsAppIncludeFilterProvider.notifier)
+                            .state =
+                        null,
+                onClearCountries: () =>
+                    ref.read(transactionsCountryFilterProvider.notifier).state =
+                        null,
+                onClearPlatforms: () =>
+                    ref
+                            .read(transactionsPlatformFilterProvider.notifier)
+                            .state =
+                        null,
+                onClearAll: clearFilters,
               ),
-              children: [
-                AnimatedReveal(
-                  visible: filtersActive,
-                  child: ActiveFiltersRow(
-                    appCount: appIncludeFilter?.length,
-                    countryCodes: countryFilter,
-                    platforms: platformFilter,
-                    onOpenFilters: openFilters,
-                    onClearApps: () =>
-                        ref
-                                .read(
-                                  transactionsAppIncludeFilterProvider.notifier,
-                                )
-                                .state =
-                            null,
-                    onClearCountries: () =>
-                        ref
-                                .read(
-                                  transactionsCountryFilterProvider.notifier,
-                                )
-                                .state =
-                            null,
-                    onClearPlatforms: () =>
-                        ref
-                                .read(
-                                  transactionsPlatformFilterProvider.notifier,
-                                )
-                                .state =
-                            null,
-                    onClearAll: clearFilters,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: _MonthHeroCard(
-                    netTotal: netTotal,
-                    grossTotal: grossTotal,
-                    showGross: commission.adjustmentEnabled,
-                    loadComplete: state.realtimeLoadComplete,
-                  ).appCardEntrance(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: DayTypeCountSummary(
-                    transactions: txs,
-                    previousDayTransactions: null,
-                    selectedFilters: const <TransactionDaySectionFilter>{},
-                    onFilterCellTap: (f) {
-                      Navigator.of(context).push<void>(
-                        MaterialPageRoute<void>(
-                          builder: (ctx) => RealtimeSectionTransactionsScreen(
-                            windowTransactions: txs,
-                            filter: f,
-                          ),
-                        ),
-                      );
-                    },
-                  ).appCardEntrance(delay: const Duration(milliseconds: 60)),
-                ),
-                const SizedBox(height: 12),
-                RealtimeNextPaydayProceedsCard(
-                  allLoadedTransactions: allLoadedTxs,
-                  loadedTransactionCount: allLoadedTxs.length,
-                ).appCardEntrance(delay: const Duration(milliseconds: 100)),
-                RealtimeRevenueInsightsList(
-                  transactions: txs,
-                  compactRevenueAmounts: false,
-                ).appCardEntrance(delay: const Duration(milliseconds: 160)),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 4, 28, 16),
-                  child: Text(
-                    'Totals include every loaded transaction from this month. '
-                    'Pull down to reload.',
-                    textAlign: TextAlign.center,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: _MonthHeroCard(
+                netTotal: netTotal,
+                grossTotal: grossTotal,
+                showGross: commission.adjustmentEnabled,
+                loadComplete: state.realtimeLoadComplete,
+              ).appCardEntrance(),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: DayTypeCountSummary(
+                transactions: txs,
+                previousDayTransactions: null,
+                selectedFilters: const <TransactionDaySectionFilter>{},
+                onFilterCellTap: (f) {
+                  Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (ctx) => RealtimeSectionTransactionsScreen(
+                        windowTransactions: txs,
+                        filter: f,
+                      ),
+                    ),
+                  );
+                },
+              ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+            ),
+            const SizedBox(height: 12),
+            RealtimeNextPaydayProceedsCard(
+              allLoadedTransactions: allLoadedTxs,
+              loadedTransactionCount: allLoadedTxs.length,
+            ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+          ];
+
+          // Where it came from: stores, apps, countries, products.
+          final breakdown = <Widget>[
+            RealtimeRevenueInsightsList(
+              transactions: txs,
+              compactRevenueAmounts: false,
+            ).appCardEntrance(delay: const Duration(milliseconds: 160)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 4, 28, 16),
+              child: Text(
+                ShellHeader.showsRefreshButton
+                    ? 'revenue.totalsNoteRefresh'.tr()
+                    : 'revenue.totalsNotePullDown'.tr(),
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ];
+
+          Future<void> refresh() =>
+              ref.read(transactionsProvider.notifier).fetchInitial();
+          final bottom = mainShellFloatingTabBarScrollPadding(context);
+
+          Widget column(List<Widget> children, {double inset = 0}) =>
+              RefreshIndicator(
+                onRefresh: refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(inset, 0, inset, bottom),
+                  children: children,
+                ),
+              );
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              // Wide: the summary beside the breakdown, each scrolling.
+              if (width >= 900) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: (width * 0.45).clamp(380.0, 520.0),
+                      child: column(summary),
+                    ),
+                    Expanded(
+                      child: column([const SizedBox(height: 8), ...breakdown]),
+                    ),
+                  ],
+                );
+              }
+              return column(
+                [...summary, ...breakdown],
+                inset: AppBreakpoints.centeringInset(
+                  width,
+                  maxWidth: AppBreakpoints.readableWidth + 2 * AppSpace.gutter,
+                ),
+              );
+            },
           );
         },
       ),
@@ -257,7 +287,7 @@ class _MonthHeroCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'This month so far',
+            'revenue.thisMonthSoFar'.tr(),
             style: context.textTheme.labelLarge?.copyWith(
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
@@ -273,7 +303,7 @@ class _MonthHeroCard extends StatelessWidget {
             const SizedBox(height: 6),
             Row(
               children: [
-                Text('Before store fees  ', style: muted),
+                Text('revenue.beforeStoreFees'.tr(), style: muted),
                 AnimatedExactAmount(
                   amount: grossTotal,
                   applyCommissionAdjustment: false,
@@ -289,7 +319,7 @@ class _MonthHeroCard extends StatelessWidget {
               child: const LinearProgressIndicator(minHeight: 3),
             ),
             const SizedBox(height: 6),
-            Text('Loading older transactions…', style: muted),
+            Text('revenue.loadingOlder'.tr(), style: muted),
           ],
         ],
       ),

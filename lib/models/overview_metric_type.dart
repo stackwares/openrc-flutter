@@ -1,84 +1,88 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/theme/app_colors.dart';
+import 'package:openrc/theme/app_colors.dart';
 
 enum OverviewMetricValueType { live, total, last }
 
 enum OverviewMetricType {
   mrr(
     icon: Icons.autorenew_rounded,
-    label: 'MRR',
+    labelKey: 'charts.metric.mrr',
     valueType: OverviewMetricValueType.live,
   ),
   subscriptions(
     icon: Icons.repeat_rounded,
-    label: 'Subscriptions',
+    labelKey: 'charts.metric.subscriptions',
     valueType: OverviewMetricValueType.live,
   ),
   trials(
     icon: Icons.access_time_rounded,
-    label: 'Trials',
+    labelKey: 'charts.metric.trials',
     valueType: OverviewMetricValueType.live,
   ),
   revenue(
     icon: Icons.attach_money_rounded,
-    label: 'Revenue',
+    labelKey: 'charts.metric.revenue',
     valueType: OverviewMetricValueType.total,
   ),
   users(
     icon: Icons.people_rounded,
-    label: 'Users',
+    labelKey: 'charts.metric.users',
     valueType: OverviewMetricValueType.total,
   ),
   newUsers(
     icon: Icons.person_add_rounded,
-    label: 'New users',
+    labelKey: 'charts.metric.newUsers',
     valueType: OverviewMetricValueType.total,
   ),
   arr(
     icon: Icons.autorenew_rounded,
-    label: 'ARR',
+    labelKey: 'charts.metric.arr',
     valueType: OverviewMetricValueType.live,
   ),
   proceeds(
     icon: Icons.attach_money_rounded,
-    label: 'Proceeds',
+    labelKey: 'charts.metric.proceeds',
     valueType: OverviewMetricValueType.total,
   ),
   churnRate(
     icon: Icons.people_outline_rounded,
-    label: 'Churn rate',
+    labelKey: 'charts.metric.churnRate',
     valueType: OverviewMetricValueType.last,
   ),
   subsLost(
     icon: Icons.people_outline_rounded,
-    label: 'Subs lost',
+    labelKey: 'charts.metric.subsLost',
     valueType: OverviewMetricValueType.last,
   ),
   transactions(
     icon: Icons.swap_horiz_rounded,
-    label: 'Transactions',
+    labelKey: 'charts.metric.transactions',
     valueType: OverviewMetricValueType.total,
   );
 
   final IconData icon;
-  final String label;
+
+  /// Translation key for [label] (see `charts.metric.*` in `en.json`).
+  final String labelKey;
   final OverviewMetricValueType valueType;
 
   const OverviewMetricType({
     required this.icon,
-    required this.label,
+    required this.labelKey,
     required this.valueType,
   });
+
+  String get label => labelKey.tr();
 
   String get subtitle {
     switch (valueType) {
       case OverviewMetricValueType.live:
         return '';
       case OverviewMetricValueType.last:
-        return 'This month';
+        return 'charts.presets.thisMonth'.tr();
       case OverviewMetricValueType.total:
-        return 'Last 30 days';
+        return 'charts.presets.last30Days'.tr();
     }
   }
 

@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:revenuecat/features/transactions/transactions_screen.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
+import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/rc_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 int _ms(RcTransaction t) =>
@@ -26,14 +26,21 @@ class _FakeApi extends RcApiService {
   _FakeApi(this.history);
 
   final List<RcTransaction> history;
+  final requests = <RcTransactionsRequest>[];
   bool holdNextPage = false;
   Completer<void>? held;
+
+  /// Pages starting after this instant wait for [release]: today's pages
+  /// stall while older ones (day runs) go through.
+  int? holdFrom;
+  final release = Completer<void>();
 
   @override
   Future<RcTransactionsResponse> transactions(
     RcTransactionsRequest request, {
     String? requestContext,
   }) async {
+    requests.add(request);
     if (request.startFrom == null) {
       await Future<void>.delayed(const Duration(milliseconds: 1));
       final cutoff = DateTime.now()
@@ -43,7 +50,9 @@ class _FakeApi extends RcApiService {
         transactions: history.where((t) => _ms(t) > cutoff).toList(),
       );
     }
-    if (holdNextPage) {
+    if (holdFrom != null && request.startFrom! > holdFrom!) {
+      await release.future;
+    } else if (holdNextPage) {
       holdNextPage = false;
       held = Completer<void>();
       await held!.future;
@@ -122,6 +131,85 @@ void main() {
 
     final state = container.read(transactionsProvider);
     expect(state.isDayFullyLoaded(key), isTrue);
+  });
+
+  test('a day far back loads on its own, apart from today’s pages', () async {
+    final api = _FakeApi(
+      history,
+    )..holdFrom = now.subtract(const Duration(days: 30)).millisecondsSinceEpoch;
+    final container = containerFor(api);
+    final notifier = container.read(transactionsProvider.notifier);
+
+    await notifier.fetchInitial();
+    await _settle();
+
+    final day = now.subtract(const Duration(days: 99, hours: 1));
+    final key = DateFormat('yyyy-MM-dd').format(day);
+    notifier.setSelectedDayKey(key);
+    await _settle();
+
+    final state = container.read(transactionsProvider);
+    expect(state.isDayFullyLoaded(key), isTrue);
+    expect(state.dayView[key], isNotEmpty);
+    expect(
+      state.grouped.containsKey(key),
+      isFalse,
+      reason: 'month totals only ever see pages back from today',
+    );
+    final endOfDay =
+        DateTime(day.year, day.month, day.day + 1).millisecondsSinceEpoch - 1;
+    expect(api.requests.map((r) => r.startFrom), contains(endOfDay));
+
+    // The day before came with the same page; the day after starts a run.
+    String keyFor(int offset) => DateFormat(
+      'yyyy-MM-dd',
+    ).format(DateTime(day.year, day.month, day.day + offset));
+    final sent = api.requests.length;
+    notifier.setSelectedDayKey(keyFor(-1));
+    await _settle();
+    expect(
+      container.read(transactionsProvider).isDayFullyLoaded(keyFor(-1)),
+      isTrue,
+    );
+    expect(api.requests, hasLength(sent));
+
+    notifier.setSelectedDayKey(keyFor(1));
+    await _settle();
+    expect(
+      container.read(transactionsProvider).isDayFullyLoaded(keyFor(1)),
+      isTrue,
+    );
+
+    api.release.complete();
+    await _settle();
+  });
+
+  test('a day run covers its top down to its partial oldest day', () {
+    const run = TransactionsDayRun(
+      topDayKey: '2026-05-10',
+      cursor: 1,
+      oldestDayKey: '2026-05-03',
+    );
+    expect(run.covers('2026-05-10'), isTrue);
+    expect(run.covers('2026-05-04'), isTrue);
+    expect(run.covers('2026-05-03'), isFalse, reason: 'may be partial');
+    expect(run.covers('2026-05-11'), isFalse);
+    expect(run.reaches('2026-05-02'), isTrue);
+    expect(run.reaches('2026-04-20'), isFalse);
+    const finished = TransactionsDayRun(
+      topDayKey: '2026-05-10',
+      cursor: null,
+      oldestDayKey: '2026-05-03',
+    );
+    expect(finished.covers('2020-01-01'), isTrue);
+
+    const state = TransactionsState(
+      selectedDayKey: '2026-05-08',
+      grouped: {'2026-10-23': []},
+      dayRuns: [run],
+    );
+    expect(state.isDayFullyLoaded('2026-05-08'), isTrue);
+    expect(state.isDayFullyLoaded('2026-06-01'), isFalse);
   });
 
   test('a day is complete only once an older day has loaded', () {

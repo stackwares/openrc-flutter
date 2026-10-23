@@ -1,15 +1,16 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
-import 'package:revenuecat/features/transactions/transactions_screen.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/revenue/revenue_insights_compute.dart';
+import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
 
 /// Pushes serialized transaction/revenue data to the native iOS side for
 /// WidgetKit rendering via App Group UserDefaults.
 class WidgetDataChannel {
-  static const _channel = MethodChannel('com.revenuecat.client/widgets');
+  static const _channel = MethodChannel('com.openrc.app/widgets');
 
   WidgetDataChannel._();
 
@@ -260,7 +261,7 @@ class WidgetDataChannel {
 
     return {
       'mtdRevenue': mtdRevenue,
-      'mtdLabel': kRealtimeWindowSubtitle,
+      'mtdLabel': 'common.thisMonthLocal'.tr(),
       'todayRevenue': todayRevenue,
       'yesterdayRevenue': yesterdayRevenue,
       'last7DaysRevenue': last7Revenue,

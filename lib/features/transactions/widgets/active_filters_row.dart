@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/widgets/day_summary_card.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Chips for each active filter, each removable, plus "Clear all".
 class ActiveFiltersRow extends StatelessWidget {
@@ -33,11 +34,8 @@ class ActiveFiltersRow extends StatelessWidget {
   static String _platformName(TransactionPlatformFilter p) => switch (p) {
     TransactionPlatformFilter.apple => 'App Store',
     TransactionPlatformFilter.google => 'Google Play',
-    TransactionPlatformFilter.web => 'Web',
+    TransactionPlatformFilter.web => 'transactions.web'.tr(),
   };
-
-  static String _countLabel(String singular, String plural, int n) =>
-      '$n ${n == 1 ? singular : plural}';
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +44,7 @@ class ActiveFiltersRow extends StatelessWidget {
     final chips = <Widget>[
       if (appCount != null)
         _FilterChip(
-          label: _countLabel('app', 'apps', appCount!),
+          label: 'transactions.appCount'.plural(appCount!),
           onPressed: onOpenFilters,
           onDeleted: onClearApps,
         ),
@@ -54,9 +52,9 @@ class ActiveFiltersRow extends StatelessWidget {
         _FilterChip(
           label: countries.length == 1
               ? (countries.single == '__'
-                    ? 'Unknown country'
+                    ? 'transactions.unknownCountry'.tr()
                     : countries.single)
-              : _countLabel('country', 'countries', countries.length),
+              : 'transactions.countryCount'.plural(countries.length),
           onPressed: onOpenFilters,
           onDeleted: onClearCountries,
         ),
@@ -64,7 +62,7 @@ class ActiveFiltersRow extends StatelessWidget {
         _FilterChip(
           label: stores.length == 1
               ? _platformName(stores.single)
-              : _countLabel('store', 'stores', stores.length),
+              : 'transactions.storeCount'.plural(stores.length),
           onPressed: onOpenFilters,
           onDeleted: onClearPlatforms,
         ),
@@ -84,7 +82,7 @@ class ActiveFiltersRow extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
         children: [
           for (final c in chips) ...[c, const SizedBox(width: 8)],
-          TextButton(onPressed: onClearAll, child: const Text('Clear all')),
+          TextButton(onPressed: onClearAll, child: Text('transactions.clearAll'.tr())),
         ],
       ),
     );
@@ -122,7 +120,7 @@ class _FilterChip extends StatelessWidget {
       onPressed: onPressed,
       onDeleted: onDeleted,
       deleteIcon: const Icon(Icons.close_rounded, size: 16),
-      deleteButtonTooltipMessage: 'Remove filter',
+      deleteButtonTooltipMessage: 'transactions.removeFilter'.tr(),
       visualDensity: VisualDensity.compact,
       backgroundColor: Color.alphaBlend(
         scheme.primary.withValues(alpha: 0.12),

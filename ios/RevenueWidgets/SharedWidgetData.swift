@@ -4,7 +4,7 @@ import WidgetKit
 
 // MARK: - App Group
 
-let appGroupID = "group.com.revenuecat.client.widgets"
+let appGroupID = "group.com.openrc.app.widgets"
 let widgetDataKey = "widget_data_json"
 
 // MARK: - Codable models matching Flutter payload

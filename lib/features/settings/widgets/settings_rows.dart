@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/section_header.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/section_header.dart';
 
 /// Inset of row dividers: padding + icon tile + gap.
 const double kSettingsDividerIndent = 62;

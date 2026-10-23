@@ -1,4 +1,4 @@
-import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Local time for list rows. Past days: `8:54AM`. Today / future (scheduled):
 /// `Today · …`, `Tomorrow · …`, `In 2 days · …`, or short `In 45m` — aligned with
@@ -27,20 +27,31 @@ String _formatTransactionListTimeUpcomingStyle(DateTime local, DateTime now) {
   final time = _formatTime12(local);
   if (day.isAfter(today)) {
     final days = day.difference(today).inDays;
-    if (days == 1) return 'Tomorrow · $time';
-    if (days < 7) return 'In $days days · $time';
-    return '${DateFormat('MMM d').format(local)} · $time';
+    if (days == 1) return 'time.tomorrow'.tr(namedArgs: {'time': time});
+    if (days < 7) return 'time.inDays'.plural(days, namedArgs: {'time': time});
+    return 'time.dateAndTime'.tr(
+      namedArgs: {'date': DateFormat.MMMd().format(local), 'time': time},
+    );
   }
   if (local.isAfter(now)) {
     final until = local.difference(now);
-    if (until.inMinutes < 1) return 'Soon';
-    if (until.inMinutes < 60) return 'In ${until.inMinutes}m';
-    if (until.inHours < 24) return 'In ${until.inHours}h';
+    if (until.inMinutes < 1) return 'time.soon'.tr();
+    if (until.inMinutes < 60) {
+      return 'time.inMinutesShort'.tr(
+        namedArgs: {'count': '${until.inMinutes}'},
+      );
+    }
+    if (until.inHours < 24) {
+      return 'time.inHoursShort'.tr(namedArgs: {'count': '${until.inHours}'});
+    }
   }
-  return 'Today · $time';
+  return 'time.todayAt'.tr(namedArgs: {'time': time});
 }
 
 String _formatTime12(DateTime local) {
+  // Other languages use their own clock style (e.g. 17:39).
+  final locale = Intl.defaultLocale ?? 'en';
+  if (!locale.startsWith('en')) return DateFormat.jm().format(local);
   final h24 = local.hour;
   final h12 = h24 == 0 ? 12 : (h24 > 12 ? h24 - 12 : h24);
   final m = local.minute.toString().padLeft(2, '0');
@@ -62,17 +73,21 @@ String formatRelativeTimeShort(String? dateStr) {
   final hours = diff.inHours;
   final days = diff.inDays;
 
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return '${minutes}min ago';
-  if (hours < 24) return '${hours}h ago';
-  if (days < 30) return '${days}d ago';
+  if (minutes < 1) return 'time.justNow'.tr();
+  if (minutes < 60) {
+    return 'time.minutesAgo'.tr(namedArgs: {'count': '$minutes'});
+  }
+  if (hours < 24) return 'time.hoursAgo'.tr(namedArgs: {'count': '$hours'});
+  if (days < 30) return 'time.daysAgoShort'.tr(namedArgs: {'count': '$days'});
 
   var months = (now.year - dt.year) * 12 + now.month - dt.month;
   if (now.day < dt.day) months -= 1;
 
-  if (months < 1) return '${days}d ago';
-  if (months < 12) return '${months}mon ago';
-  return '${months ~/ 12}y ago';
+  if (months < 1) return 'time.daysAgoShort'.tr(namedArgs: {'count': '$days'});
+  if (months < 12) {
+    return 'time.monthsAgoShort'.tr(namedArgs: {'count': '$months'});
+  }
+  return 'time.yearsAgoShort'.tr(namedArgs: {'count': '${months ~/ 12}'});
 }
 
 /// Shown next to an entitlement expiry: future `in 3 days` / `in 2h`; past uses
@@ -89,13 +104,18 @@ String formatEntitlementExpiresInLabel(String? dateStr) {
     final expDay = DateTime(local.year, local.month, local.day);
     final calDays = expDay.difference(today).inDays;
     if (calDays >= 1) {
-      if (calDays == 1) return 'in 1 day';
-      return 'in $calDays days';
+      return 'time.expiresInDays'.plural(calDays);
     }
     final until = local.difference(now);
-    if (until.inHours >= 1) return 'in ${until.inHours}h';
-    if (until.inMinutes >= 1) return 'in ${until.inMinutes}m';
-    return 'soon';
+    if (until.inHours >= 1) {
+      return 'time.inHoursLower'.tr(namedArgs: {'count': '${until.inHours}'});
+    }
+    if (until.inMinutes >= 1) {
+      return 'time.inMinutesLower'.tr(
+        namedArgs: {'count': '${until.inMinutes}'},
+      );
+    }
+    return 'time.soonLower'.tr();
   }
   return formatRelativeTimeShort(dateStr);
 }

@@ -1,4 +1,4 @@
-# cloud_functions / Firebase iOS SDK require at least 15.0
+# Home screen widgets need iOS 15.
 platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.

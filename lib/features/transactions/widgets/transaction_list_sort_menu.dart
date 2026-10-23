@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/models/transaction_list_sort_mode.dart';
-import 'package:revenuecat/services/transaction_list_sort_store.dart';
+import 'package:openrc/models/transaction_list_sort_mode.dart';
+import 'package:openrc/services/transaction_list_sort_store.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TransactionListSortMenuButton extends ConsumerWidget {
   const TransactionListSortMenuButton({super.key, this.showLabel = false});
@@ -19,7 +20,7 @@ class TransactionListSortMenuButton extends ConsumerWidget {
       icon: showLabel
           ? null
           : Icon(Icons.sort_rounded, color: changed ? scheme.primary : null),
-      tooltip: 'Sort list',
+      tooltip: 'transactions.sortList'.tr(),
       onSelected: (mode) =>
           ref.read(transactionListSortProvider.notifier).setMode(mode),
       itemBuilder: (context) => [

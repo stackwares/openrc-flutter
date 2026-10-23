@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
 
 void main() {
   test('a failed rate download is retried until it succeeds', () async {

@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
+import 'package:openrc/services/rc_api_service.dart';
 
 /// Answers every request with [status] and [body] without touching the network.
 class _FakeAdapter implements HttpClientAdapter {

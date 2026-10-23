@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -56,11 +57,23 @@ class FloatingTabDestination {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.telemetryLabel,
   });
 
   final IconData icon;
   final IconData selectedIcon;
+
+  /// Translation key for the visible label. Use [displayLabel] to show it.
   final String label;
+
+  /// English name sent to telemetry. Falls back to [label] when null.
+  final String? telemetryLabel;
+
+  /// The localized label shown on screen.
+  String get displayLabel => label.tr();
+
+  /// The English name analytics receives, whatever the app locale.
+  String get telemetryName => telemetryLabel ?? label;
 }
 
 class _FloatingPillBar extends StatelessWidget {
@@ -109,13 +122,14 @@ class _FloatingPillBar extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             child: Stack(
               children: [
-                // One indicator that glides to the selected slot.
-                AnimatedPositioned(
+                // One indicator that glides to the selected slot, from the
+                // start edge so right-to-left languages line up too.
+                AnimatedPositionedDirectional(
                   duration: MediaQuery.disableAnimationsOf(context)
                       ? Duration.zero
                       : const Duration(milliseconds: 380),
                   curve: Curves.easeOutBack,
-                  left: currentIndex * FloatingTabChrome.tabSlotWidth,
+                  start: currentIndex * FloatingTabChrome.tabSlotWidth,
                   top: 0,
                   bottom: 0,
                   width: FloatingTabChrome.tabSlotWidth,
@@ -172,11 +186,11 @@ class _FloatingTabButton extends StatelessWidget {
         : FloatingTabChrome.motionDuration;
 
     return Tooltip(
-      message: spec.label,
+      message: spec.displayLabel,
       child: Semantics(
         button: true,
         selected: selected,
-        label: spec.label,
+        label: spec.displayLabel,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -197,12 +211,12 @@ class _FloatingTabButton extends StatelessWidget {
                       selected ? spec.selectedIcon : spec.icon,
                       size: 22,
                       color: tint,
-                      semanticLabel: spec.label,
+                      semanticLabel: spec.displayLabel,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    spec.label,
+                    spec.displayLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,

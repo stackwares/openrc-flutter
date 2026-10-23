@@ -13,6 +13,10 @@ final utilitiesServiceProvider = Provider<UtilitiesService>((ref) {
 final themeModeProvider = StateProvider<ThemeMode>(
   (ref) => _defaultThemeMode(),
 );
+/// Language chosen in Settings as a file stem (`pt-BR`); null follows the
+/// device.
+final appLanguageProvider = StateProvider<String?>((ref) => null);
+
 final colorSchemeProvider = StateProvider<FlexScheme>(
   (ref) => _defaultColorScheme,
 );
@@ -26,14 +30,14 @@ ThemeMode _defaultThemeMode() {
 
 final FlexScheme _defaultColorScheme = _resolveDefaultColorScheme();
 
-/// Calm default accent; red stays free to mean refunds and declines.
-FlexScheme get defaultAppColorScheme => _defaultColorScheme;
-
-FlexScheme _resolveDefaultColorScheme() => FlexScheme.indigoM3;
+/// Pink Sakura, the OpenRC brand accent; soft enough that red still reads
+/// as refunds and declines.
+FlexScheme _resolveDefaultColorScheme() => FlexScheme.sakura;
 
 class UtilitiesService {
   static const String _themeModeKey = 'theme_mode';
   static const String _colorSchemeKey = 'color_scheme';
+  static const String _languageKey = 'app_language';
 
   Future<ThemeMode> loadThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
@@ -70,6 +74,21 @@ class UtilitiesService {
   Future<void> saveColorScheme(FlexScheme scheme) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_colorSchemeKey, scheme.name);
+  }
+
+  Future<String?> loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_languageKey);
+  }
+
+  /// Saves the chosen language stem, or clears it to follow the device.
+  Future<void> saveLanguage(String? stem) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (stem == null) {
+      await prefs.remove(_languageKey);
+    } else {
+      await prefs.setString(_languageKey, stem);
+    }
   }
 
   static void hapticLight() => HapticFeedback.lightImpact();

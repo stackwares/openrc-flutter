@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/theme/app_colors.dart';
-import 'package:revenuecat/widgets/delta_badge.dart';
+import 'package:openrc/theme/app_colors.dart';
+import 'package:openrc/widgets/delta_badge.dart';
 
 void main() {
   Future<void> pump(WidgetTester tester, Widget child) {

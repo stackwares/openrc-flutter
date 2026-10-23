@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/app_card.dart';
+import 'package:openrc/core/shell_insets.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/app_card.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 /// First-load placeholder mirroring the Transactions / Revenue layout:

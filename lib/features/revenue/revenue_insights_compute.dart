@@ -1,7 +1,8 @@
-import 'package:revenuecat/core/utils/region_display_name.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/store_commission.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
 
 const _kRevenueInsightsTopN = 7;
 
@@ -23,7 +24,7 @@ class RevenueInsightCountryLine {
   /// Aggregation key: ISO country code or `'__'` for unknown.
   final String countryKey;
 
-  /// English name only (no flag); Revenue insights row title uses this.
+  /// Localized name only (no flag); Revenue insights row title uses this.
   final String name;
   final double pct;
   final double revenue;
@@ -108,14 +109,14 @@ String _txAppKey(RcTransaction tx) {
 
 String _txAppLabel(RcTransaction tx) {
   final a = tx.app;
-  if (a == null) return 'Unknown app';
+  if (a == null) return 'revenue.unknownApp'.tr();
   final name = a.name?.trim();
   if (name != null && name.isNotEmpty) return name;
   final bid = a.bundleId?.trim();
   if (bid != null && bid.isNotEmpty) return bid;
   final id = a.id?.trim();
   if (id != null && id.isNotEmpty) return id;
-  return 'Unknown app';
+  return 'revenue.unknownApp'.tr();
 }
 
 String _countryFlagEmoji(String code) {
@@ -231,7 +232,7 @@ RevenueInsightsSnapshot computeRevenueInsights(
     final e = countryEntries[i];
     if (e.value.abs() <= revEps) continue;
     final name = e.key == '__'
-        ? 'Unknown'
+        ? 'revenue.unknown'.tr()
         : regionDisplayNameForCompactBadge(e.key);
     final displayName = name.isNotEmpty ? name : e.key;
     topCountries.add(

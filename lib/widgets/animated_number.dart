@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
 
 /// A USD amount (shown in the display currency) that counts smoothly to each
 /// new value instead of jumping.

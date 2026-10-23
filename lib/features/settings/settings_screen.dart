@@ -1,35 +1,79 @@
+import 'dart:math' as math;
+
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/features/settings/widgets/accent_scheme_sheet.dart';
-import 'package:revenuecat/features/settings/widgets/account_header.dart';
-import 'package:revenuecat/features/settings/widgets/appearance_pickers.dart';
-import 'package:revenuecat/features/settings/widgets/currency_sheet.dart';
-import 'package:revenuecat/features/settings/widgets/settings_rows.dart';
-import 'package:revenuecat/features/settings/widgets/store_fee_sheet.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/services/display_currency_store.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/services/utilities_service.dart';
-import 'package:revenuecat/widgets/animated_reveal.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/grouped_list.dart';
-import 'package:revenuecat/widgets/shell_header.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/features/settings/widgets/accent_scheme_sheet.dart';
+import 'package:openrc/features/settings/widgets/account_header.dart';
+import 'package:openrc/features/settings/widgets/appearance_pickers.dart';
+import 'package:openrc/features/settings/widgets/currency_sheet.dart';
+import 'package:openrc/features/settings/widgets/language_sheet.dart';
+import 'package:openrc/features/settings/widgets/settings_rows.dart';
+import 'package:openrc/features/settings/widgets/store_fee_sheet.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/display_currency_store.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/services/telemetry.dart';
+import 'package:openrc/services/utilities_service.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/animated_reveal.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/app_logo.dart';
+import 'package:openrc/widgets/grouped_list.dart';
+import 'package:openrc/widgets/shell_header.dart';
 
 /// Example amount for the display-currency preview.
 const double _kCurrencyExample = 1234.56;
 
+const double _dialogMaxWidth = 600;
+const double _dialogMaxHeight = 820;
+
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.inDialog = false});
 
   static const routeName = '/settings';
 
+  /// Shown by [open] in a dialog rather than on its own route.
+  final bool inDialog;
+
+  /// Phones push Settings as a screen; larger windows show it in a dialog
+  /// over the app.
   static void open(BuildContext context) {
-    Navigator.of(context).pushNamed(routeName);
+    if (context.windowSize == WindowSize.compact) {
+      Navigator.of(context).pushNamed(routeName);
+      return;
+    }
+    showDialog<void>(
+      context: context,
+      // Named like the route, so telemetry still reports a Settings view.
+      routeSettings: const RouteSettings(name: routeName),
+      builder: (context) {
+        final size = MediaQuery.sizeOf(context);
+        return Dialog(
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            width: math.min(_dialogMaxWidth, size.width - 80),
+            height: math.min(_dialogMaxHeight, size.height * 0.9),
+            // The window's safe area (e.g. the macOS title bar) is the
+            // app's, not the dialog's.
+            child: MediaQuery.removePadding(
+              context: context,
+              removeLeft: true,
+              removeTop: true,
+              removeRight: true,
+              removeBottom: true,
+              child: const SettingsScreen(inDialog: true),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   static Future<void> _confirmSignOut(
@@ -37,34 +81,28 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     final email = ref.read(rcMeProvider)?.email?.trim();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAdaptiveForm<bool>(
       context: context,
-      builder: (dialogContext) {
-        final colors = dialogContext.appColors;
-        return AlertDialog(
-          title: const Text('Log out?'),
-          content: Text(
-            email == null || email.isEmpty
-                ? 'You’ll need to sign in again to see your revenue.'
-                : 'You’ll need to sign in again as $email to see your '
-                      'revenue.',
+      title: 'settings.logOutTitle'.tr(),
+      content: (_) => Text(
+        email == null || email.isEmpty
+            ? 'settings.logOutMessage'.tr()
+            : 'settings.logOutAs'.tr(namedArgs: {'email': email}),
+      ),
+      actions: (dialogContext) => [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text('settings.cancel'.tr()),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: dialogContext.appColors.negative,
+            foregroundColor: Colors.white,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.negative,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Log out'),
-            ),
-          ],
-        );
-      },
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text('settings.logOut'.tr()),
+        ),
+      ],
     );
     if (confirmed == true && context.mounted) {
       await ref.read(rcAuthServiceProvider).signOut();
@@ -104,7 +142,13 @@ class SettingsScreen extends ConsumerWidget {
   static Future<void> _copyDistinctId(BuildContext context, String id) async {
     UtilitiesService.hapticLight();
     await UtilitiesService().copyToClipboard(id);
-    if (context.mounted) context.showSnackBar('Distinct ID copied');
+    if (context.mounted) context.showSnackBar('settings.distinctIdCopied'.tr());
+  }
+
+  static Future<void> _setTelemetry(WidgetRef ref, bool enabled) async {
+    UtilitiesService.hapticSelection();
+    ref.read(telemetryEnabledProvider.notifier).state = enabled;
+    await Telemetry.setEnabled(enabled);
   }
 
   @override
@@ -115,6 +159,8 @@ class SettingsScreen extends ConsumerWidget {
     final me = ref.watch(rcMeProvider);
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
+    final telemetryEnabled = ref.watch(telemetryEnabledProvider);
+    final language = ref.watch(appLanguageProvider);
     final scheme = context.colorScheme;
     final tt = context.textTheme;
     final distinctId = me?.distinctId?.trim();
@@ -125,6 +171,9 @@ class SettingsScreen extends ConsumerWidget {
     final currencyExample = currency == 'USD'
         ? formatExactUsd(_kCurrencyExample)
         : formatExactForeign(_kCurrencyExample, currency);
+    final currencySubtitle = 'settings.currencySubtitle'.tr(
+      namedArgs: {'name': currencyName, 'example': currencyExample},
+    );
 
     void toggleFees() {
       UtilitiesService.hapticSelection();
@@ -133,19 +182,42 @@ class SettingsScreen extends ConsumerWidget {
           .setAdjustmentEnabled(!commission.adjustmentEnabled);
     }
 
+    // The dialog is already a readable width; the window size says nothing
+    // about it.
+    final inset = inDialog
+        ? 0.0
+        : AppBreakpoints.centeringInset(
+            MediaQuery.sizeOf(context).width,
+            maxWidth: 640,
+          );
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: Text('settings.title'.tr()),
+        automaticallyImplyLeading: !inDialog,
+        actions: [
+          if (inDialog)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+        ],
+      ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          16,
+          16 + inset,
           4,
-          16,
+          16 + inset,
           32 + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
           const SettingsAccountHeader().appCardEntrance(),
 
-          const SettingsGroupLabel('Appearance'),
+          SettingsGroupLabel('settings.appearance'.tr()),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
@@ -167,7 +239,7 @@ class SettingsScreen extends ConsumerWidget {
                     child: Row(
                       children: [
                         Text(
-                          'Accent color',
+                          'settings.accentColor'.tr(),
                           style: tt.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
@@ -201,12 +273,46 @@ class SettingsScreen extends ConsumerWidget {
                   },
                   onMore: () => showAccentSchemeSheet(context),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                const Divider(),
+                InkWell(
+                  onTap: () => showLanguageSheet(context),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+                    child: Row(
+                      children: [
+                        Text(
+                          'settings.language'.tr(),
+                          style: tt.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            languageLabel(language),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: tt.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ).appCardEntrance(delay: const Duration(milliseconds: 40)),
 
-          const SettingsGroupLabel('Revenue'),
+          SettingsGroupLabel('settings.revenue'.tr()),
           Card(
             clipBehavior: Clip.antiAlias,
             child: Column(
@@ -219,19 +325,18 @@ class SettingsScreen extends ConsumerWidget {
                       style: const TextStyle(fontSize: 18, height: 1),
                     ),
                   ),
-                  title: 'Display currency',
-                  subtitle: '$currencyName · shown as $currencyExample',
+                  title: 'settings.displayCurrency'.tr(),
+                  subtitle: currencySubtitle,
                   trailing: Text(currency),
                   onTap: () => showDisplayCurrencySheet(context),
                 ),
                 const Divider(indent: kSettingsDividerIndent),
                 SettingsRow(
                   icon: Icons.percent_rounded,
-                  title: 'Subtract store fees',
+                  title: 'settings.subtractFees'.tr(),
                   subtitle: commission.adjustmentEnabled
-                      ? 'Revenue is shown after your store fees'
-                      : 'Revenue is shown before App Store and Google Play '
-                            'fees',
+                      ? 'settings.feesAfter'.tr()
+                      : 'settings.feesBefore'.tr(),
                   trailing: Switch(
                     value: commission.adjustmentEnabled,
                     onChanged: (_) => toggleFees(),
@@ -247,7 +352,7 @@ class SettingsScreen extends ConsumerWidget {
                       const Divider(indent: kSettingsDividerIndent),
                       SettingsRow(
                         icon: Icons.apple,
-                        title: 'App Store fee',
+                        title: 'settings.appStoreFee'.tr(),
                         subtitle: storeFeeExample(
                           commission.appleCommissionPercent,
                         ),
@@ -259,7 +364,7 @@ class SettingsScreen extends ConsumerWidget {
                       const Divider(indent: kSettingsDividerIndent),
                       SettingsRow(
                         icon: Icons.android,
-                        title: 'Google Play fee',
+                        title: 'settings.googlePlayFee'.tr(),
                         subtitle: storeFeeExample(
                           commission.googleCommissionPercent,
                         ),
@@ -275,16 +380,35 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ).appCardEntrance(delay: const Duration(milliseconds: 80)),
 
-          const SettingsGroupLabel('Account'),
+          // Only builds that report anything have something to turn off.
+          if (Telemetry.isAvailable) ...[
+            SettingsGroupLabel('settings.privacy'.tr()),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: SettingsRow(
+                icon: Icons.insights_rounded,
+                title: 'settings.shareUsage'.tr(),
+                subtitle: 'settings.shareUsageHint'.tr(),
+                trailing: Switch(
+                  value: telemetryEnabled,
+                  onChanged: (v) => _setTelemetry(ref, v),
+                ),
+                showChevron: false,
+                onTap: () => _setTelemetry(ref, !telemetryEnabled),
+              ),
+            ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+          ],
+
+          SettingsGroupLabel('settings.account'.tr()),
           GroupedCard(
             margin: EdgeInsets.zero,
             dividerIndent: kSettingsDividerIndent,
             children: [
               SettingsRow(
                 icon: Icons.fingerprint_rounded,
-                title: 'Distinct ID',
+                title: 'settings.distinctId'.tr(),
                 subtitle: distinctId == null || distinctId.isEmpty
-                    ? 'Not available'
+                    ? 'settings.notAvailable'.tr()
                     : distinctId,
                 trailing: distinctId == null || distinctId.isEmpty
                     ? null
@@ -294,14 +418,14 @@ class SettingsScreen extends ConsumerWidget {
                         color: scheme.onSurfaceVariant,
                       ),
                 showChevron: false,
-                semanticsLabel: 'Copy distinct ID',
+                semanticsLabel: 'settings.copyDistinctId'.tr(),
                 onTap: distinctId == null || distinctId.isEmpty
                     ? null
                     : () => _copyDistinctId(context, distinctId),
               ),
               SettingsRow(
                 icon: Icons.logout_rounded,
-                title: 'Log out',
+                title: 'settings.logOut'.tr(),
                 destructive: true,
                 showChevron: false,
                 onTap: () => _confirmSignOut(context, ref),
@@ -331,12 +455,8 @@ class _AboutFooter extends StatelessWidget {
         final info = snapshot.data;
         return Column(
           children: [
-            Icon(
-              Icons.account_balance_wallet_rounded,
-              size: 22,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-            const SizedBox(height: 6),
+            const AppLogo(size: 40),
+            const SizedBox(height: 8),
             Text(
               AppConstants.appName,
               style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700),
@@ -345,7 +465,12 @@ class _AboutFooter extends StatelessWidget {
             Text(
               info == null
                   ? ' '
-                  : 'Version ${info.version} (${info.buildNumber})',
+                  : 'settings.version'.tr(
+                      namedArgs: {
+                        'version': info.version,
+                        'build': info.buildNumber,
+                      },
+                    ),
               style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
@@ -355,14 +480,18 @@ class _AboutFooter extends StatelessWidget {
   }
 }
 
-/// App bar button that opens [SettingsScreen] on its own route.
+/// App bar button that opens [SettingsScreen] on its own route. Larger
+/// windows open it from the rail or the sidebar's account instead.
 class SettingsAppBarAction extends StatelessWidget {
   const SettingsAppBarAction({super.key});
 
   @override
   Widget build(BuildContext context) {
+    if (context.windowSize != WindowSize.compact) {
+      return const SizedBox.shrink();
+    }
     return HeaderIconButton(
-      tooltip: 'Settings',
+      tooltip: 'settings.title'.tr(),
       icon: Icons.settings_outlined,
       onPressed: () => SettingsScreen.open(context),
     );

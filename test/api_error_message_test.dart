@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/core/utils/api_error_message.dart';
+import 'package:openrc/core/utils/api_error_message.dart';
 
 DioException _err(DioExceptionType type, {int? status}) {
   final ro = RequestOptions(path: '/x');

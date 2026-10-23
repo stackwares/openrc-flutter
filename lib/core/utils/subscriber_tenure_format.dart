@@ -1,4 +1,5 @@
-import 'package:revenuecat/models/rc_transaction.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:openrc/models/rc_transaction.dart';
 
 /// Local calendar date from an ISO-8601 timestamp ([purchaseDate] / subscriber created).
 DateTime? purchaseLocalCalendarDayFromIso(String? iso) {
@@ -71,8 +72,7 @@ String? formatSubscriberTenureSubtitle({
       fallbackFirstPurchaseLocalInstant: fallbackFirstPurchaseLocalInstant,
     );
   }
-  if (days == 1) return 'Since 1 day ago';
-  return 'Since $days days ago';
+  return 'time.sinceDays'.plural(days);
 }
 
 bool _isDateOnlyIsoString(String iso) {
@@ -149,8 +149,10 @@ String _formatSinceSameCalendarDay({
   if (diff.isNegative) diff = Duration.zero;
 
   final secs = diff.inSeconds;
-  if (secs < 60) return '${secs}s ago';
+  if (secs < 60) return 'time.secondsAgo'.tr(namedArgs: {'count': '$secs'});
   final mins = diff.inMinutes;
-  if (mins < 60) return '${mins}m ago';
-  return '${diff.inHours}h ago';
+  if (mins < 60) {
+    return 'time.minutesAgoCompact'.tr(namedArgs: {'count': '$mins'});
+  }
+  return 'time.hoursAgo'.tr(namedArgs: {'count': '${diff.inHours}'});
 }

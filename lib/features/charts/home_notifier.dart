@@ -1,17 +1,17 @@
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/core/utils/api_error_message.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
-import 'package:revenuecat/models/overview_metric_type.dart';
-import 'package:revenuecat/models/rc_chart_response.dart';
-import 'package:revenuecat/models/rc_overview_response.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/core/utils/api_error_message.dart';
+import 'package:openrc/core/utils/store_commission.dart';
+import 'package:openrc/models/overview_metric_type.dart';
+import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/models/rc_overview_response.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/rc_api_service.dart';
+import 'package:openrc/services/rc_auth_service.dart';
 
 final _homeLog = Logger('HomeNotifier');
 
@@ -168,7 +168,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
       if (!_isCurrent(generation)) return;
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to load overview',
+        error: 'charts.errors.loadOverview'.tr(),
       );
     }
   }

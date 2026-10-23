@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/models/rc_chart_response.dart';
-import 'package:revenuecat/widgets/wipe_in.dart';
+import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/widgets/wipe_in.dart';
 
 class OverviewSparklineChart extends StatelessWidget {
   final List<RcChartDataPoint> dataPoints;

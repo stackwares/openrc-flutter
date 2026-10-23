@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class DayRevenueStripDay {
   const DayRevenueStripDay({
@@ -45,7 +45,7 @@ class DayRevenueStrip extends StatelessWidget {
         .fold<double>(0, (m, v) => v > m ? v : m);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final weekday = DateFormat('EEEEE');
-    final longDate = DateFormat('EEE, MMM d');
+    final longDate = DateFormat.MMMEd();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -56,8 +56,8 @@ class DayRevenueStrip extends StatelessWidget {
               button: onDaySelected != null,
               selected: d.dayKey == selectedDayKey,
               label: d.total == null
-                  ? '${longDate.format(d.date)}: not loaded yet'
-                  : '${longDate.format(d.date)}: ${formatAmount(d.total!)}',
+                  ? 'transactions.stripDayNotLoaded'.tr(namedArgs: {'date': longDate.format(d.date)})
+                  : 'transactions.stripDayAmount'.tr(namedArgs: {'date': longDate.format(d.date), 'amount': formatAmount(d.total!)}),
               excludeSemantics: true,
               child: InkWell(
                 key: ValueKey('day_strip_${d.dayKey}'),

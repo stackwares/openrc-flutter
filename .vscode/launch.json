@@ -17,6 +17,14 @@
             "flutterMode": "release"
         },
         {
+            // Start the relay first: cd relay && npm run dev
+            "name": "Web (local relay)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "chrome",
+            "args": ["--dart-define=OPENRC_RELAY_URL=http://127.0.0.1:8787"]
+        },
+        {
             "name": "ADB For Release",
             "request": "launch",
             "type": "node-terminal",
@@ -29,7 +37,7 @@
             "id": "androidPackageName",
             "type": "promptString",
             "description": "Android package name to launch",
-            "default": "com.revenuecat.client"
+            "default": "com.openrc.app"
         }
     ]
 }

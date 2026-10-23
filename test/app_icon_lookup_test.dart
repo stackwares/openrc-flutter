@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/services/app_icon_lookup.dart';
-import 'package:revenuecat/services/auto_app_icons_store.dart';
+import 'package:openrc/services/app_icon_lookup.dart';
+import 'package:openrc/services/auto_app_icons_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _RouteAdapter implements HttpClientAdapter {

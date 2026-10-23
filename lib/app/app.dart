@@ -1,25 +1,32 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/app/main_shell.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
-import 'package:revenuecat/features/sign_in/sign_in_screen.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/services/utilities_service.dart';
-import 'package:revenuecat/theme/app_theme.dart';
+import 'package:openrc/app/mac_menu_bar.dart';
+import 'package:openrc/app/main_shell.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/core/l10n/app_locales.dart';
+import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/features/sign_in/sign_in_screen.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/services/telemetry.dart';
+import 'package:openrc/services/utilities_service.dart';
+import 'package:openrc/theme/app_theme.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-class RevenueCatApp extends ConsumerStatefulWidget {
-  const RevenueCatApp({super.key});
+class OpenRcApp extends ConsumerStatefulWidget {
+  const OpenRcApp({super.key});
 
   @override
-  ConsumerState<RevenueCatApp> createState() => _RevenueCatAppState();
+  ConsumerState<OpenRcApp> createState() => _OpenRcAppState();
 }
 
-class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
+class _OpenRcAppState extends ConsumerState<OpenRcApp>
     with WidgetsBindingObserver {
   final _navigatorKey = GlobalKey<NavigatorState>();
+  final _telemetryObserver = TelemetryRouteObserver();
 
   @override
   void initState() {
@@ -54,29 +61,56 @@ class _RevenueCatAppState extends ConsumerState<RevenueCatApp>
     final signedIn = ref.watch(isSignedInProvider);
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
-    final effectiveColorScheme = defaultTargetPlatform == TargetPlatform.macOS
-        ? defaultAppColorScheme
-        : colorScheme;
 
-    return MaterialApp(
+    final l10n = EasyLocalization.of(context);
+
+    final app = MaterialApp(
       navigatorKey: _navigatorKey,
-      title: 'RevenueCat',
+      title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(effectiveColorScheme),
-      darkTheme: AppTheme.dark(effectiveColorScheme),
+      // English without an EasyLocalization ancestor (widget tests).
+      localizationsDelegates:
+          l10n?.delegates ?? GlobalMaterialLocalizations.delegates,
+      supportedLocales: l10n?.supportedLocales ?? const [AppLocales.fallback],
+      locale: l10n?.locale,
+      theme: AppTheme.light(colorScheme),
+      darkTheme: AppTheme.dark(colorScheme),
       themeMode: themeMode,
-      color: AppTheme.light(effectiveColorScheme).scaffoldBackgroundColor,
+      color: AppTheme.light(colorScheme).scaffoldBackgroundColor,
       builder: (context, child) {
-        return SkeletonizerConfig(
+        // Dates and month names follow the app's language.
+        Intl.defaultLocale = (l10n?.locale ?? AppLocales.fallback)
+            .toLanguageTag();
+        final content = SkeletonizerConfig(
           data: AppTheme.skeletonizer(Theme.of(context).colorScheme),
           child: child ?? const SizedBox.shrink(),
         );
+        if (!_hasTransparentTitleBar) return content;
+        // Keeps headers and the sidebar clear of the window controls.
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            padding: media.padding.copyWith(top: _macTitleBarHeight),
+            viewPadding: media.viewPadding.copyWith(top: _macTitleBarHeight),
+          ),
+          child: content,
+        );
       },
+      navigatorObservers: [_telemetryObserver],
       routes: {SettingsScreen.routeName: (_) => const SettingsScreen()},
       home: _AuthGate(signedIn: signedIn),
     );
+    if (!_hasTransparentTitleBar) return app;
+    return MacMenuBar(navigatorKey: _navigatorKey, child: app);
   }
 }
+
+/// The macOS window draws content under a transparent title bar
+/// (`MainFlutterWindow.swift`).
+bool get _hasTransparentTitleBar =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+
+const double _macTitleBarHeight = 28;
 
 /// Cross-fades between sign-in and the app instead of an instant swap.
 class _AuthGate extends StatelessWidget {

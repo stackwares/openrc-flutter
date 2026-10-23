@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand -->
+    <color name="ic_launcher_background">#F45A5E</color>
+    <color name="launch_background">#0D0E10</color>
+
     <!-- Widget colors mirrored from ios/RevenueWidgets/SharedWidgetData.swift -->
     <color name="widgetBackground">#12121F</color>
     <color name="widgetCardBackground">#1F1F2E</color>

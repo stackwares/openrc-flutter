@@ -1,25 +1,18 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/services/display_currency_store.dart';
-import 'package:revenuecat/widgets/search_field_decoration.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/services/display_currency_store.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/search_field_decoration.dart';
 
 /// Picks the currency amounts are shown in.
 Future<void> showDisplayCurrencySheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+  return showAdaptiveSheet<void>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (sheetContext) {
-      final view = MediaQuery.of(sheetContext);
-      final height = (view.size.height - view.viewInsets.bottom) * 0.8;
-      return Padding(
-        padding: EdgeInsets.only(bottom: view.viewInsets.bottom),
-        child: SizedBox(height: height, child: const _DisplayCurrencySheet()),
-      );
-    },
+    heightFactor: 0.8,
+    builder: (_) => const _DisplayCurrencySheet(),
   );
 }
 
@@ -62,13 +55,12 @@ class _DisplayCurrencySheetState extends ConsumerState<_DisplayCurrencySheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Display currency',
+                'settings.displayCurrency'.tr(),
                 style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
               Text(
-                'Amounts are converted from US dollars at current exchange '
-                'rates.',
+                'settings.currencySheetBody'.tr(),
                 style: tt.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                   height: 1.35,
@@ -78,7 +70,10 @@ class _DisplayCurrencySheetState extends ConsumerState<_DisplayCurrencySheet> {
               TextField(
                 onChanged: (value) => setState(() => _query = value),
                 textInputAction: TextInputAction.search,
-                decoration: searchFieldDecoration(scheme, 'Search currencies'),
+                decoration: searchFieldDecoration(
+                  scheme,
+                  'settings.searchCurrencies'.tr(),
+                ),
               ),
             ],
           ),
@@ -87,7 +82,7 @@ class _DisplayCurrencySheetState extends ConsumerState<_DisplayCurrencySheet> {
           child: options.isEmpty
               ? Center(
                   child: Text(
-                    'No currencies match that search.',
+                    'settings.noCurrencies'.tr(),
                     style: tt.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/animated_number.dart';
-import 'package:revenuecat/widgets/delta_badge.dart';
-import 'package:revenuecat/widgets/pressable_scale.dart';
-import 'package:revenuecat/widgets/split_bar.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/animated_number.dart';
+import 'package:openrc/widgets/delta_badge.dart';
+import 'package:openrc/widgets/pressable_scale.dart';
+import 'package:openrc/widgets/split_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// e.g. `After 15% store commission` or `After 15% / 12% store commission` when rates differ.
 String afterStoreCommissionTitle(CommissionSettings commission) {
@@ -21,7 +22,7 @@ String afterStoreCommissionTitle(CommissionSettings commission) {
   final a = commission.appleCommissionPercent;
   final g = commission.googleCommissionPercent;
   final pct = (a - g).abs() < 0.05 ? '${fmt(a)}%' : '${fmt(a)}% / ${fmt(g)}%';
-  return 'After $pct store commission';
+  return 'transactions.commissionAfter'.tr(namedArgs: {'pct': pct});
 }
 
 Color daySummaryPillAccent(
@@ -61,15 +62,15 @@ String daySummaryPlatformLabel(TransactionDaySummaryPlatform p) {
   return switch (p) {
     TransactionDaySummaryPlatform.apple => 'App Store',
     TransactionDaySummaryPlatform.google => 'Google Play',
-    TransactionDaySummaryPlatform.web => 'Web',
-    TransactionDaySummaryPlatform.other => 'Other',
+    TransactionDaySummaryPlatform.web => 'transactions.web'.tr(),
+    TransactionDaySummaryPlatform.other => 'transactions.other'.tr(),
   };
 }
 
 /// Short tile label (fits a third of a phone width).
 String daySummaryTileLabel(TransactionDaySectionFilter filter) {
   return switch (filter) {
-    TransactionDaySectionFilter.cancelled => 'Cancelled',
+    TransactionDaySectionFilter.cancelled => 'transactions.cancelled'.tr(),
     _ => transactionDaySectionGridLabel(filter),
   };
 }

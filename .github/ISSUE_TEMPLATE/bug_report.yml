@@ -1,0 +1,58 @@
+name: Bug report
+description: Something in OpenRC doesn't work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please leave out revenue figures, emails and tokens.
+        Security problems go through private reporting instead: see SECURITY.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Revenue
+        2. Switch the display currency to EUR
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - iPhone
+        - iPad
+        - Android phone
+        - Android tablet
+        - Mac
+        - Web
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown at the bottom of Settings, or the commit if you built from source.
+      placeholder: 1.0.0 (1)
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and browser version
+      placeholder: iOS 26.1, Android 16, macOS 26, Chrome 141…
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or recording
+      description: Blur or crop out anything private.

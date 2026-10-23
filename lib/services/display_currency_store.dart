@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -151,14 +152,21 @@ const List<DisplayCurrencyOption> kDisplayCurrencyOptions = [
 
 class DisplayCurrencyOption {
   final String code;
-  final String label;
+  final String englishLabel;
   final String flagEmoji;
 
   const DisplayCurrencyOption({
     required this.code,
-    required this.label,
+    required String label,
     required this.flagEmoji,
-  });
+  }) : englishLabel = label;
+
+  /// Currency name in the app's language (`currencies.<CODE>`).
+  String get label {
+    final key = 'currencies.$code';
+    final localized = key.tr();
+    return localized == key ? englishLabel : localized;
+  }
 }
 
 /// Resolves a [kDisplayCurrencyOptions] entry for [isoCode], or null if unknown.

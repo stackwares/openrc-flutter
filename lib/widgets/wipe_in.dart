@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
+import 'package:openrc/core/animations/app_motion.dart';
 
 /// Reveals its child left to right the first time it is built (charts, bars).
 /// Layout is unaffected; only the visible area grows.

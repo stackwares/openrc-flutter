@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_empty">Open the app to sync data</string>
-    <string name="app_name">RevenueCat</string>
+    <string name="app_name">OpenRC</string>
     <string name="widget_transactions_desc">Today\'s revenue and transaction summary</string>
     <string name="widget_insights_desc">Platform, New vs Renewals, Top Apps &amp; Countries</string>
     <string name="widget_revenue_desc">Month-to-date revenue dashboard</string>

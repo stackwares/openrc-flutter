@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/services/display_currency_store.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
+import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/core/utils/store_commission.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/display_currency_store.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
 
 /// Formats a **USD** amount using the user’s app-wide [displayCurrencyProvider].
 /// When currency is USD or rates are unavailable, shows USD.

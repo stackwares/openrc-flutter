@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/core/utils/store_payday_schedule.dart';
-import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:openrc/core/utils/store_payday_schedule.dart';
+import 'package:openrc/features/revenue/revenue_next_payday_proceeds.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
 
 RcTransaction _sale(String store, DateTime day) => RcTransaction(
   store: store,

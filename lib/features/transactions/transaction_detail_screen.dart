@@ -1,31 +1,32 @@
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/utils/api_error_message.dart';
-import 'package:revenuecat/widgets/app_state_message.dart';
+import 'package:openrc/core/utils/api_error_message.dart';
+import 'package:openrc/widgets/app_state_message.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
-import 'package:revenuecat/core/utils/product_identifier_display.dart';
-import 'package:revenuecat/core/utils/region_display_name.dart';
-import 'package:revenuecat/core/utils/relative_time_format.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/models/rc_transaction_detail.dart';
-import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
-import 'package:revenuecat/services/app_icon_overrides_store.dart';
-import 'package:revenuecat/services/auto_app_icons_store.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
-import 'package:revenuecat/widgets/section_header.dart';
-import 'package:revenuecat/widgets/status_label.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/core/theme/store_brand_icon_colors.dart';
+import 'package:openrc/core/utils/product_identifier_display.dart';
+import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/relative_time_format.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
+import 'package:openrc/features/transactions/widgets/transaction_type_badge.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction_detail.dart';
+import 'package:openrc/models/rc_transaction_detail_activity.dart';
+import 'package:openrc/services/app_icon_overrides_store.dart';
+import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/rc_api_service.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
+import 'package:openrc/widgets/section_header.dart';
+import 'package:openrc/widgets/status_label.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class TransactionDetailState {
@@ -136,8 +137,15 @@ String _transactionDetailAppBarTitle(RcTransaction transaction) {
   if (name != null && name.isNotEmpty) return name;
   return productIdentifierDisplayTitle(
     transaction.productIdentifier,
-    ifEmpty: 'Transaction',
+    ifEmpty: 'detail.transaction'.tr(),
   );
+}
+
+/// `name v1.2.3` when [version] is known, otherwise just [base].
+String _withVersion(String base, String? version) {
+  if (version == null) return base;
+  final v = 'detail.version'.tr(namedArgs: {'version': version});
+  return '$base $v';
 }
 
 Future<void> _showAppIconUrlDialog(
@@ -149,74 +157,74 @@ Future<void> _showAppIconUrlDialog(
 }) async {
   final controller = TextEditingController(text: currentUrl ?? '');
   try {
-    await showDialog<void>(
+    await showAdaptiveForm<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('App icon'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                appName != null
-                    ? 'Icons are fetched from the App Store or Google Play automatically. Enter an image URL to use a different icon for $appName.'
-                    : 'Icons are fetched from the App Store or Google Play automatically. Enter an image URL to use a different icon.',
-                style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-                ),
+      title: 'detail.appIcon'.tr(),
+      content: (dialogContext) => SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              appName != null
+                  ? 'detail.iconHintForApp'.tr(namedArgs: {'appName': appName})
+                  : 'detail.iconHint'.tr(),
+              style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
+                color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'https://…',
-                  isDense: true,
-                ),
-                keyboardType: TextInputType.url,
-                autocorrect: false,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'https://…',
+                isDense: true,
               ),
-            ],
-          ),
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              controller.clear();
-              await ref
-                  .read(appIconOverridesProvider.notifier)
-                  .setOverride(appId, null);
-              if (!context.mounted) return;
-              Navigator.pop(dialogContext);
-              context.showSnackBar('Using the store icon');
-            },
-            child: const Text('Clear'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final text = controller.text.trim();
-              if (text.isNotEmpty && !isValidHttpIconUrl(text)) {
-                context.showSnackBar('Enter a valid http or https URL');
-                return;
-              }
-              await ref
-                  .read(appIconOverridesProvider.notifier)
-                  .setOverride(appId, text.isEmpty ? null : text);
-              if (!context.mounted) return;
-              Navigator.pop(dialogContext);
-              context.showSnackBar(
-                text.isEmpty ? 'Using the store icon' : 'App icon saved',
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
+      actions: (dialogContext) => [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Text('detail.cancel'.tr()),
+        ),
+        TextButton(
+          onPressed: () async {
+            controller.clear();
+            await ref
+                .read(appIconOverridesProvider.notifier)
+                .setOverride(appId, null);
+            if (!context.mounted) return;
+            Navigator.pop(dialogContext);
+            context.showSnackBar('detail.usingStoreIcon'.tr());
+          },
+          child: Text('detail.clear'.tr()),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final text = controller.text.trim();
+            if (text.isNotEmpty && !isValidHttpIconUrl(text)) {
+              context.showSnackBar('detail.invalidIconUrl'.tr());
+              return;
+            }
+            await ref
+                .read(appIconOverridesProvider.notifier)
+                .setOverride(appId, text.isEmpty ? null : text);
+            if (!context.mounted) return;
+            Navigator.pop(dialogContext);
+            context.showSnackBar(
+              text.isEmpty
+                  ? 'detail.usingStoreIcon'.tr()
+                  : 'detail.iconSaved'.tr(),
+            );
+          },
+          child: Text('detail.save'.tr()),
+        ),
+      ],
     );
   } finally {
     controller.dispose();
@@ -248,7 +256,7 @@ class TransactionDetailScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: 'detail.refresh'.tr(),
             onPressed: state.isLoading
                 ? null
                 : () => ref
@@ -297,7 +305,7 @@ class TransactionDetailScreen extends ConsumerWidget {
 
   Widget _buildError(BuildContext context, WidgetRef ref, String error) {
     return AppStateMessage.error(
-      title: 'Couldn\u2019t load customer details',
+      title: 'detail.loadError'.tr(),
       message: error,
       onRetry: () =>
           ref.read(transactionDetailProvider(transaction).notifier).refresh(),
@@ -349,7 +357,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             (detail?.history?.isNotEmpty == true ||
                 activity?.events?.isNotEmpty == true)) ...[
           _SectionHeader(
-            title: 'History',
+            title: 'detail.history'.tr(),
             trailing: _buildHistoryHeaderTrailing(context, detail, activity),
           ),
           _buildHistory(
@@ -361,20 +369,20 @@ class TransactionDetailScreen extends ConsumerWidget {
         ],
         if (!state.isLoading && detail != null) ...[
           if (detail.subscriptionStatuses?.isNotEmpty == true) ...[
-            _SectionHeader(title: 'Entitlements'),
+            _SectionHeader(title: 'detail.entitlements'.tr()),
             _buildEntitlements(
               context,
               detail.subscriptionStatuses!,
               tx,
             ).appCardEntrance(delay: nextSectionDelay()),
           ],
-          _SectionHeader(title: 'Info'),
+          _SectionHeader(title: 'detail.info'.tr()),
           _buildInfoSection(
             context,
             detail,
             tx,
           ).appCardEntrance(delay: nextSectionDelay()),
-          _SectionHeader(title: 'Insights'),
+          _SectionHeader(title: 'detail.insights'.tr()),
           _buildInsights(
             context,
             detail,
@@ -382,7 +390,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             tx,
           ).appCardEntrance(delay: nextSectionDelay()),
           if (detail.subscriberAttributes?.isNotEmpty == true) ...[
-            _SectionHeader(title: 'Attributes'),
+            _SectionHeader(title: 'detail.attributes'.tr()),
             _buildAttributes(
               context,
               detail.subscriberAttributes!,
@@ -429,7 +437,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     if (heroTag != null) avatar = Hero(tag: heroTag!, child: avatar);
     if (appId != null) {
       avatar = Tooltip(
-        message: 'Set app icon',
+        message: 'detail.setAppIcon'.tr(),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -517,7 +525,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             if (purchased != null) ...[
               const SizedBox(height: 4),
               Text(
-                DateFormat('EEE, MMM d, y · h:mm a').format(purchased),
+                '${DateFormat.yMMMEd().format(purchased)} · ${DateFormat.jm().format(purchased)}',
                 style: muted,
               ),
             ],
@@ -544,7 +552,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                   _buildChip(
                     context,
                     Icons.science_outlined,
-                    'Sandbox',
+                    'detail.sandbox'.tr(),
                     color: context.appColors.warning,
                   ),
               ],
@@ -608,41 +616,41 @@ class TransactionDetailScreen extends ConsumerWidget {
         children: [
           _InfoRow(
             icon: Icons.fingerprint,
-            label: 'Subscriber ID',
+            label: 'detail.subscriberId'.tr(),
             value: tx.subscriberId,
             copyable: true,
           ),
           const _Divider(),
           _InfoRow(
             icon: Icons.receipt_long_outlined,
-            label: 'Store transaction ID',
+            label: 'detail.storeTransactionId'.tr(),
             value: tx.storeTransactionIdentifier,
             copyable: true,
           ),
           const _Divider(),
           _InfoRow(
             icon: Icons.payments_outlined,
-            label: 'Total spent',
+            label: 'detail.totalSpent'.tr(),
             usdAmount: detail.dollarsSpent,
             applyBlendedCommission: true,
           ),
           const _Divider(),
           _InfoRow(
             icon: Icons.visibility_outlined,
-            label: 'Last seen',
+            label: 'detail.lastSeen'.tr(),
             value: _relativeTime(detail.lastSeen),
           ),
           const _Divider(),
           _InfoRow(
             icon: Icons.calendar_today_outlined,
-            label: 'Created',
+            label: 'detail.created'.tr(),
             value: _relativeTime(detail.createdAt),
           ),
           if (detail.lastSeenCountry != null) ...[
             const _Divider(),
             _InfoRow(
               icon: Icons.flag_outlined,
-              label: 'Country and locale',
+              label: 'detail.countryAndLocale'.tr(),
               value:
                   '${regionDisplayNameEnglish(detail.lastSeenCountry)} ${detail.lastSeenLocale ?? ""}'
                       .trim(),
@@ -652,25 +660,29 @@ class TransactionDetailScreen extends ConsumerWidget {
             const _Divider(),
             _InfoRow(
               icon: Icons.apps_outlined,
-              label: 'App',
-              value:
-                  '${detail.app!.name}${detail.lastSeenAppVersion != null ? " v${detail.lastSeenAppVersion}" : ""}',
+              label: 'detail.app'.tr(),
+              value: _withVersion(
+                '${detail.app!.name}',
+                detail.lastSeenAppVersion,
+              ),
             ),
           ],
           if (detail.lastSeenPlatform != null) ...[
             const _Divider(),
             _InfoRow(
               icon: Icons.devices_outlined,
-              label: 'Platform',
-              value:
-                  '${detail.lastSeenPlatform}${detail.lastSeenPlatformVersion != null ? " v${detail.lastSeenPlatformVersion}" : ""}',
+              label: 'detail.platform'.tr(),
+              value: _withVersion(
+                '${detail.lastSeenPlatform}',
+                detail.lastSeenPlatformVersion,
+              ),
             ),
           ],
           if (detail.lastSeenSdkVersion != null) ...[
             const _Divider(),
             _InfoRow(
               icon: Icons.code_outlined,
-              label: 'SDK version',
+              label: 'detail.sdkVersion'.tr(),
               value: detail.lastSeenSdkVersion,
             ),
           ],
@@ -709,14 +721,16 @@ class TransactionDetailScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        s.entitlementIdentifier ?? 'Unknown',
+                        s.entitlementIdentifier ?? 'detail.unknown'.tr(),
                         style: context.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                     StatusLabel(
-                      text: isActive ? 'Active' : 'Inactive',
+                      text: isActive
+                          ? 'detail.active'.tr()
+                          : 'detail.inactive'.tr(),
                       color: color,
                       pill: true,
                     ),
@@ -746,7 +760,11 @@ class TransactionDetailScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Expires ${_formatDateTime(s.expiresDate!)}',
+                          'detail.expires'.tr(
+                            namedArgs: {
+                              'date': _formatDateTime(s.expiresDate!),
+                            },
+                          ),
                           style: context.textTheme.labelSmall?.copyWith(
                             color: context.colorScheme.onSurfaceVariant,
                           ),
@@ -786,8 +804,8 @@ class TransactionDetailScreen extends ConsumerWidget {
         insights.add(
           _InsightItem(
             icon: Icons.schedule_outlined,
-            label: 'First purchase',
-            value: '$days days ago',
+            label: 'detail.firstPurchase'.tr(),
+            value: 'detail.daysAgo'.plural(days),
           ),
         );
       }
@@ -797,7 +815,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       insights.add(
         _InsightItem(
           icon: Icons.attach_money,
-          label: 'Total spent',
+          label: 'detail.totalSpent'.tr(),
           usdAmount: detail.dollarsSpent!,
           applyBlendedCommission: true,
         ),
@@ -813,7 +831,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       insights.add(
         _InsightItem(
           icon: Icons.undo,
-          label: 'Refunds',
+          label: 'detail.refunds'.tr(),
           value: '$refundCount',
           color: context.appColors.negative,
         ),
@@ -833,7 +851,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       insights.add(
         _InsightItem(
           icon: Icons.swap_horiz,
-          label: 'Transfers',
+          label: 'detail.transfers'.tr(),
           value: '$transferCount',
         ),
       );
@@ -843,7 +861,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          'No insights available',
+          'detail.noInsights'.tr(),
           style: context.textTheme.bodyMedium?.copyWith(
             color: context.colorScheme.onSurfaceVariant,
           ),
@@ -884,7 +902,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             if (i > 0) const _Divider(),
             _InfoRow(
               icon: Icons.tag_outlined,
-              label: attributes[i].key ?? 'Unknown',
+              label: attributes[i].key ?? 'detail.unknown'.tr(),
               value: attributes[i].value,
               copyable: true,
             ),
@@ -935,7 +953,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          'No history available',
+          'detail.noHistory'.tr(),
           style: context.textTheme.bodyMedium?.copyWith(
             color: context.colorScheme.onSurfaceVariant,
           ),
@@ -993,7 +1011,7 @@ class TransactionDetailScreen extends ConsumerWidget {
   }
 
   String _relativeTime(String? dateStr) {
-    if (dateStr == null) return 'N/A';
+    if (dateStr == null) return 'detail.notAvailable'.tr();
     return formatRelativeTimeShort(dateStr);
   }
 
@@ -1054,7 +1072,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       }
       children.addAll([
         Text(
-          'Spent ',
+          'detail.spent'.tr(),
           style: context.textTheme.labelSmall?.copyWith(
             color: context.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w500,
@@ -1138,7 +1156,11 @@ class _ExpandableHistoryListCardState
                   child: TextButton(
                     onPressed: () => setState(() => _showAll = !_showAll),
                     child: Text(
-                      _showAll ? 'Show less' : 'Show all ($remaining more)',
+                      _showAll
+                          ? 'detail.showLess'.tr()
+                          : 'detail.showAll'.tr(
+                              namedArgs: {'count': '$remaining'},
+                            ),
                     ),
                   ),
                 ),
@@ -1215,7 +1237,7 @@ class _InfoRow extends ConsumerWidget {
             textAlign: TextAlign.end,
           )
         : Text(
-            value ?? 'N/A',
+            value ?? 'detail.notAvailable'.tr(),
             style: valueStyle,
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
@@ -1225,7 +1247,7 @@ class _InfoRow extends ConsumerWidget {
       onTap: copyable && value != null
           ? () {
               Clipboard.setData(ClipboardData(text: value!));
-              context.showSnackBar('Copied to clipboard');
+              context.showSnackBar('detail.copied'.tr());
             }
           : null,
       child: Padding(
@@ -1421,9 +1443,8 @@ class _HistoryTimelineEntry extends ConsumerWidget {
                         if (item.date != null) ...[
                           if (item.priceUsd != null) const SizedBox(height: 2),
                           Text(
-                            DateFormat(
-                              'MMM d, yyyy · h:mm a',
-                            ).format(item.date!.toLocal()),
+                            '${DateFormat.yMMMd().format(item.date!.toLocal())}'
+                            ' · ${DateFormat.jm().format(item.date!.toLocal())}',
                             style: context.textTheme.labelSmall?.copyWith(
                               color: scheme.onSurfaceVariant,
                               fontFeatures: const [
@@ -1444,7 +1465,30 @@ class _HistoryTimelineEntry extends ConsumerWidget {
     );
   }
 
+  /// Known RevenueCat event names get a translated label; anything else keeps
+  /// the generic `SOME_EVENT` -> `Some Event` formatting.
+  static const Map<String, String> _eventTypeKeys = {
+    'INITIAL_PURCHASE': 'detail.eventTypes.initialPurchase',
+    'RENEWAL': 'detail.eventTypes.renewal',
+    'RENEWED': 'detail.eventTypes.renewed',
+    'CANCELLATION': 'detail.eventTypes.cancellation',
+    'UNCANCELLATION': 'detail.eventTypes.uncancellation',
+    'NON_RENEWING_PURCHASE': 'detail.eventTypes.nonRenewingPurchase',
+    'EXPIRATION': 'detail.eventTypes.expiration',
+    'BILLING_ISSUE': 'detail.eventTypes.billingIssue',
+    'PRODUCT_CHANGE': 'detail.eventTypes.productChange',
+    'SUBSCRIPTION_PAUSED': 'detail.eventTypes.subscriptionPaused',
+    'TRANSFER': 'detail.eventTypes.transfer',
+    'REFUND': 'detail.eventTypes.refund',
+    'TEMPORARY_ENTITLEMENT_GRANT': 'detail.eventTypes.temporaryEntitlementGrant',
+    'SUBSCRIBER_ALIAS': 'detail.eventTypes.subscriberAlias',
+    'CONVERTED FROM A TRIAL': 'detail.eventTypes.convertedFromATrial',
+    'EVENT': 'detail.eventTypes.event',
+  };
+
   static String _formatEventType(String type) {
+    final key = _eventTypeKeys[type.toUpperCase()];
+    if (key != null) return key.tr();
     final words = type.split('_');
     return words
         .map((w) {

@@ -2,12 +2,12 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
-import 'package:revenuecat/theme/app_theme.dart';
+import 'package:openrc/features/revenue/widgets/revenue_insights_list.dart';
+import 'package:openrc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:openrc/features/revenue/revenue_insights_compute.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -43,6 +43,42 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Web'), findsOneWidget);
     expect(find.text('12.6%'), findsOneWidget);
+  });
+
+  testWidgets('sales without a country show as Unknown, not a code', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          theme: AppTheme.dark(
+            FlexScheme.indigoM3,
+          ).copyWith(splashFactory: InkRipple.splashFactory),
+          home: const Scaffold(
+            body: RealtimeRevenueInsightsList(
+              asModalEntry: true,
+              transactions: [
+                RcTransaction(store: 'App Store', revenue: 10),
+                RcTransaction(
+                  store: 'App Store',
+                  revenue: 10,
+                  subscriberCountryCode: 'DE',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unknown'), findsOneWidget);
+    expect(find.text('__'), findsNothing);
+    expect(find.text('DE'), findsOneWidget);
   });
 
   test('store shares include web revenue and add up to 100%', () {

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 /// User preference for ordering transaction rows (day list, Revenue section drill-in).
 enum TransactionListSortMode {
   purchaseNewestFirst,
@@ -8,18 +10,18 @@ enum TransactionListSortMode {
 
 extension TransactionListSortModeX on TransactionListSortMode {
   String get menuLabel => switch (this) {
-    TransactionListSortMode.purchaseNewestFirst => 'Purchase time · newest first',
-    TransactionListSortMode.purchaseOldestFirst => 'Purchase time · oldest first',
-    TransactionListSortMode.revenueHighToLow => 'Amount · high to low',
-    TransactionListSortMode.revenueLowToHigh => 'Amount · low to high',
+    TransactionListSortMode.purchaseNewestFirst => 'transactions.sortPurchaseNewest'.tr(),
+    TransactionListSortMode.purchaseOldestFirst => 'transactions.sortPurchaseOldest'.tr(),
+    TransactionListSortMode.revenueHighToLow => 'transactions.sortAmountHighToLow'.tr(),
+    TransactionListSortMode.revenueLowToHigh => 'transactions.sortAmountLowToHigh'.tr(),
   };
 
   /// Short label for the list header button.
   String get shortLabel => switch (this) {
-    TransactionListSortMode.purchaseNewestFirst => 'Newest',
-    TransactionListSortMode.purchaseOldestFirst => 'Oldest',
-    TransactionListSortMode.revenueHighToLow => 'Highest',
-    TransactionListSortMode.revenueLowToHigh => 'Lowest',
+    TransactionListSortMode.purchaseNewestFirst => 'transactions.sortNewest'.tr(),
+    TransactionListSortMode.purchaseOldestFirst => 'transactions.sortOldest'.tr(),
+    TransactionListSortMode.revenueHighToLow => 'transactions.sortHighest'.tr(),
+    TransactionListSortMode.revenueLowToHigh => 'transactions.sortLowest'.tr(),
   };
 }
 

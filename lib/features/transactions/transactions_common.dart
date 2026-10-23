@@ -1,9 +1,9 @@
-import 'package:intl/intl.dart';
-import 'package:revenuecat/core/utils/store_commission.dart';
-import 'package:revenuecat/models/rc_project.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/models/transaction_list_sort_mode.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
+import 'package:openrc/core/utils/store_commission.dart';
+import 'package:openrc/models/rc_project.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/transaction_list_sort_mode.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Background preload pages after the first fetch (Revenue tab progress).
 const int kRealtimeBackfillMaxPages = 100;
@@ -12,7 +12,7 @@ const int kRealtimeBackfillMaxPages = 100;
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
 
 /// Month-to-date label above the Revenue tab MTD total (local calendar month).
-const String kRealtimeWindowSubtitle = 'This month · local';
+String get kRealtimeWindowSubtitle => 'transactions.realtimeWindowSubtitle'.tr();
 
 final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
@@ -371,14 +371,14 @@ String appKeyForTransaction(RcTransaction tx) {
 
 String appLabelForTransaction(RcTransaction tx) {
   final a = tx.app;
-  if (a == null) return 'Unknown app';
+  if (a == null) return 'transactions.unknownApp'.tr();
   final name = a.name?.trim();
   if (name != null && name.isNotEmpty) return name;
   final bid = a.bundleId?.trim();
   if (bid != null && bid.isNotEmpty) return bid;
   final id = a.id?.trim();
   if (id != null && id.isNotEmpty) return id;
-  return 'Unknown app';
+  return 'transactions.unknownApp'.tr();
 }
 
 class AppFilterOption {
@@ -532,12 +532,12 @@ platformCountsByDaySection(List<RcTransaction> transactions) {
 /// Label text matching the summary grid cells.
 String transactionDaySectionGridLabel(TransactionDaySectionFilter filter) {
   return switch (filter) {
-    TransactionDaySectionFilter.trial => 'Trials',
-    TransactionDaySectionFilter.conversion => 'Conversions',
-    TransactionDaySectionFilter.renewal => 'Renewals',
-    TransactionDaySectionFilter.subscription => 'Purchases',
-    TransactionDaySectionFilter.refunded => 'Refunds',
-    TransactionDaySectionFilter.cancelled => 'Cancellations',
+    TransactionDaySectionFilter.trial => 'transactions.trials'.tr(),
+    TransactionDaySectionFilter.conversion => 'transactions.conversions'.tr(),
+    TransactionDaySectionFilter.renewal => 'transactions.renewals'.tr(),
+    TransactionDaySectionFilter.subscription => 'transactions.purchases'.tr(),
+    TransactionDaySectionFilter.refunded => 'transactions.refunds'.tr(),
+    TransactionDaySectionFilter.cancelled => 'transactions.cancellations'.tr(),
   };
 }
 

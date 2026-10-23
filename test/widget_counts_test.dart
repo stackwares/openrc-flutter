@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/services/widget_data_channel.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/widget_data_channel.dart';
 
 void main() {
   test('home screen widget counts match the app tiles', () {

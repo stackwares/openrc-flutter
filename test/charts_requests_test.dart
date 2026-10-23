@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/charts/home_notifier.dart';
-import 'package:revenuecat/models/overview_metric_type.dart';
-import 'package:revenuecat/models/rc_chart_response.dart';
-import 'package:revenuecat/models/rc_overview_response.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
+import 'package:openrc/features/charts/home_notifier.dart';
+import 'package:openrc/models/overview_metric_type.dart';
+import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/models/rc_overview_response.dart';
+import 'package:openrc/services/rc_api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _CountingApi extends RcApiService {
@@ -20,6 +20,7 @@ class _CountingApi extends RcApiService {
     String? startDate,
     String? endDate,
     String? revenueType,
+    Map<String, List<String>>? filters,
   }) async {
     requested.add('$name|${revenueType ?? ''}');
     return const RcChartResponse();

@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
 
 /// Top bar for the three main tabs: a bold title, an optional muted subtitle,
 /// and round icon actions.
@@ -13,10 +14,16 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.actions = const [],
     this.bottom,
+    this.onTitleTap,
+    this.titleTapTooltip,
   });
 
   final String title;
   final String? subtitle;
+
+  /// Makes the title a button (e.g. a date picker), marked with a chevron.
+  final VoidCallback? onTitleTap;
+  final String? titleTapTooltip;
 
   /// Shown right after the title (e.g. day navigation).
   final Widget? leading;
@@ -25,8 +32,9 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
 
   static const double toolbarHeight = 68;
 
-  /// Phones refresh by pulling; desktop has no pull gesture.
+  /// Phones refresh by pulling; desktop and the web (mouse) can't pull.
   static bool get showsRefreshButton =>
+      kIsWeb ||
       defaultTargetPlatform == TargetPlatform.macOS ||
       defaultTargetPlatform == TargetPlatform.windows ||
       defaultTargetPlatform == TargetPlatform.linux;
@@ -38,67 +46,98 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
+    final titleText = Text(
+      title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: context.textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w800,
+        fontSize: 24,
+        letterSpacing: -0.4,
+        height: 1.15,
+        color: scheme.onSurface,
+      ),
+    );
+    // Day / range changes slide the new title in.
+    Widget titleBlock = AnimatedSwitcher(
+      duration: AppMotion.of(context, const Duration(milliseconds: 240)),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.centerLeft,
+        children: [...previous, ?current],
+      ),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.25),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: Column(
+        key: ValueKey('$title|$subtitle'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (onTitleTap == null)
+            titleText
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(child: titleText),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 24,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+                height: 1.25,
+              ),
+            ),
+        ],
+      ),
+    );
+    final onTap = onTitleTap;
+    if (onTap != null) {
+      // Padded so the press highlight frames the text; the title spacing
+      // takes the padding back so it lines up with the other tabs.
+      titleBlock = InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.row),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: _titleTapInset,
+            vertical: 2,
+          ),
+          child: titleBlock,
+        ),
+      );
+      final tooltip = titleTapTooltip;
+      if (tooltip != null) {
+        titleBlock = Tooltip(message: tooltip, child: titleBlock);
+      }
+    }
     return AppBar(
       automaticallyImplyLeading: false,
       toolbarHeight: toolbarHeight,
-      titleSpacing: 20,
+      titleSpacing: onTitleTap == null ? 20 : 20 - _titleTapInset,
       title: Row(
         children: [
-          Flexible(
-            // Day / range changes slide the new title in.
-            child: AnimatedSwitcher(
-              duration: AppMotion.of(
-                context,
-                const Duration(milliseconds: 240),
-              ),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              layoutBuilder: (current, previous) => Stack(
-                alignment: Alignment.centerLeft,
-                children: [...previous, ?current],
-              ),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.25),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              ),
-              child: Column(
-                key: ValueKey('$title|$subtitle'),
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 24,
-                      letterSpacing: -0.4,
-                      height: 1.15,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  if (subtitle != null)
-                    Text(
-                      subtitle!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                        height: 1.25,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+          Flexible(child: titleBlock),
           if (leading != null) ...[const SizedBox(width: 8), leading!],
         ],
       ),
@@ -106,6 +145,8 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
       bottom: bottom,
     );
   }
+
+  static const double _titleTapInset = 6;
 }
 
 /// 36px round icon button used in [ShellHeader].

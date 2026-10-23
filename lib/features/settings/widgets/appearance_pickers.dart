@@ -1,9 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_theme.dart';
-import 'package:revenuecat/widgets/pressable_scale.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_theme.dart';
+import 'package:openrc/widgets/pressable_scale.dart';
 
 /// System / Light / Dark as three miniature previews of the app.
 class ThemeModePicker extends StatelessWidget {
@@ -35,7 +36,7 @@ class ThemeModePicker extends StatelessWidget {
       children: [
         tile(
           ThemeMode.system,
-          'System',
+          'settings.themeSystem'.tr(),
           Stack(
             fit: StackFit.expand,
             children: [
@@ -48,9 +49,13 @@ class ThemeModePicker extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        tile(ThemeMode.light, 'Light', _MiniApp(colors: light)),
+        tile(
+          ThemeMode.light,
+          'settings.themeLight'.tr(),
+          _MiniApp(colors: light),
+        ),
         const SizedBox(width: 10),
-        tile(ThemeMode.dark, 'Dark', _MiniApp(colors: dark)),
+        tile(ThemeMode.dark, 'settings.themeDark'.tr(), _MiniApp(colors: dark)),
       ],
     );
   }
@@ -76,7 +81,7 @@ class _ThemeModeTile extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '$label appearance',
+      label: 'settings.appearanceSemantics'.tr(namedArgs: {'label': label}),
       excludeSemantics: true,
       child: PressableScale(
         child: GestureDetector(
@@ -265,6 +270,7 @@ class _DiagonalHalfClipper extends CustomClipper<Path> {
 
 /// Accent palettes offered as one-tap swatches (the rest live in "More").
 const List<FlexScheme> kSuggestedAccentSchemes = [
+  FlexScheme.sakura,
   FlexScheme.indigoM3,
   FlexScheme.blueM3,
   FlexScheme.tealM3,
@@ -349,7 +355,7 @@ class _Swatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '$name accent',
+      label: 'settings.accentSemantics'.tr(namedArgs: {'name': name}),
       excludeSemantics: true,
       child: Tooltip(
         message: name,
@@ -396,10 +402,10 @@ class _MoreSwatch extends StatelessWidget {
     final scheme = context.colorScheme;
     return Semantics(
       button: true,
-      label: 'More accent colors',
+      label: 'settings.moreAccentColors'.tr(),
       excludeSemantics: true,
       child: Tooltip(
-        message: 'More colors',
+        message: 'settings.moreColors'.tr(),
         child: PressableScale(
           scale: 0.9,
           child: GestureDetector(

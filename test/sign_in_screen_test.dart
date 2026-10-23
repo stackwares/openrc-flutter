@@ -3,12 +3,12 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/features/sign_in/sign_in_screen.dart';
-import 'package:revenuecat/features/sign_in/widgets/code_input.dart';
-import 'package:revenuecat/models/rc_error_response.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/theme/app_theme.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/features/sign_in/sign_in_screen.dart';
+import 'package:openrc/features/sign_in/widgets/code_input.dart';
+import 'package:openrc/models/rc_error_response.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 DioException _rcError(int code) {
@@ -88,7 +88,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder field(String label) => find.widgetWithText(TextFormField, label);
+  Finder field(String label) => find.widgetWithText(TextField, label);
 
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -98,8 +98,13 @@ void main() {
     await pump(tester);
     await tester.tap(find.text('Sign in').last);
     await tester.pumpAndSettle();
-    expect(find.text('Enter your email'), findsOneWidget);
-    expect(find.text('Enter your password'), findsOneWidget);
+    expect(find.text('Enter your email and password.'), findsOneWidget);
+    expect(fake.calls, isEmpty);
+
+    await tester.enterText(field('Email'), 'ada@example');
+    await tester.tap(find.text('Sign in').last);
+    await tester.pumpAndSettle();
+    expect(find.text('That doesn\u2019t look like an email.'), findsOneWidget);
     expect(fake.calls, isEmpty);
   });
 
@@ -127,8 +132,14 @@ void main() {
     await tester.tap(find.text('Sign in').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Enter your 2FA code'), findsOneWidget);
-    expect(find.text('Signing in as ada@example.com'), findsOneWidget);
+    expect(find.text('Two-factor authentication'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('ada@example.com'),
+      ),
+      findsOneWidget,
+    );
 
     final codeField = find.descendant(
       of: find.byType(VerificationCodeInput),
@@ -146,18 +157,32 @@ void main() {
     expect(fake.state, SignInStatus.success);
   });
 
-  testWidgets('back from the code step returns to the password', (
-    tester,
-  ) async {
+  testWidgets('the code step is a bottom sheet on phones', (tester) async {
     await pump(tester);
     await tester.enterText(field('Email'), 'ada@example.com');
     await tester.enterText(field('Password'), 'test-password');
     await tester.tap(find.text('Sign in').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Back'));
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
+
+    // Dismissing it returns to the password, ready to try again.
+    await tester.tapAt(const Offset(215, 20));
     await tester.pumpAndSettle();
-    expect(find.text('Enter your 2FA code'), findsNothing);
+    expect(find.text('Two-factor authentication'), findsNothing);
     expect(field('Password'), findsOneWidget);
+    expect(fake.state, SignInStatus.idle);
+  });
+
+  testWidgets('the code step is a dialog on larger screens', (tester) async {
+    await pump(tester, size: const Size(1200, 800));
+    await tester.enterText(field('Email'), 'ada@example.com');
+    await tester.enterText(field('Password'), 'test-password');
+    await tester.tap(find.text('Sign in').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text('Two-factor authentication'), findsOneWidget);
   });
 
   testWidgets('after an expired session, the email is ready and it says why', (
@@ -169,16 +194,18 @@ void main() {
     await pump(tester, reason: SignOutReason.sessionExpired);
     expect(find.textContaining('Your session ended'), findsOneWidget);
     expect(
-      tester.widget<TextFormField>(field('Email')).controller!.text,
+      tester.widget<TextField>(field('Email')).controller!.text,
       'ada@example.com',
     );
   });
 
-  testWidgets('wide screens show the pitch beside the form', (tester) async {
+  testWidgets('wide screens keep one centered, narrow column', (tester) async {
     await pump(tester, size: const Size(1200, 800));
     expect(tester.takeException(), isNull);
-    expect(find.text('Every sale, as it happens.'), findsOneWidget);
-    expect(field('Email'), findsOneWidget);
+    expect(find.text('Sign in to OpenRC'), findsOneWidget);
+    final email = tester.getRect(field('Email'));
+    expect(email.width, lessThanOrEqualTo(380));
+    expect(email.center.dx, closeTo(600, 1));
   });
 
   test('error messages for the common failures', () {

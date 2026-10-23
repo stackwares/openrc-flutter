@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/widgets/animated_number.dart';
-import 'package:revenuecat/widgets/animated_reveal.dart';
-import 'package:revenuecat/widgets/pressable_scale.dart';
+import 'package:openrc/widgets/animated_number.dart';
+import 'package:openrc/widgets/animated_reveal.dart';
+import 'package:openrc/widgets/pressable_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

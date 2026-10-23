@@ -1,19 +1,22 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
-import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/widgets/active_filters_row.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_list_sort_menu.dart';
-import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/services/transaction_list_sort_store.dart';
-import 'package:revenuecat/widgets/animated_reveal.dart';
-import 'package:revenuecat/widgets/grouped_list.dart';
-import 'package:revenuecat/widgets/shell_header.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/utils/subscriber_tenure_format.dart';
+import 'package:openrc/features/transactions/transaction_detail_screen.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
+import 'package:openrc/features/transactions/widgets/transaction_item.dart';
+import 'package:openrc/features/transactions/widgets/transaction_list_sort_menu.dart';
+import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/services/transaction_list_sort_store.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/animated_reveal.dart';
+import 'package:openrc/widgets/grouped_list.dart';
+import 'package:openrc/widgets/shell_header.dart';
+import 'package:openrc/widgets/side_panel.dart';
 
 /// Lists transactions in the Revenue tab window for one [TransactionDaySectionFilter] category.
 class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
@@ -86,9 +89,9 @@ class _RealtimeSectionTransactionsScreenState
       final platformOn = _platformFilter != null && _platformFilter!.isNotEmpty;
       final filtersOn = _appIncludeFilter != null || countryOn || platformOn;
       if (appFiltered.isEmpty && filtersOn) {
-        return 'No transactions match your filters in this window.';
+        return 'revenue.noFilterMatches'.tr();
       }
-      return 'No transactions in this category for the loaded window.';
+      return 'revenue.noCategoryTransactions'.tr();
     }
 
     final filtersOn =
@@ -116,6 +119,10 @@ class _RealtimeSectionTransactionsScreenState
       );
     }
 
+    final inset = AppBreakpoints.centeringInset(
+      MediaQuery.sizeOf(context).width,
+      maxWidth: AppBreakpoints.readableWidth + 2 * AppSpace.gutter,
+    );
     return Scaffold(
       appBar: AppBar(
         title: Column(
@@ -124,7 +131,7 @@ class _RealtimeSectionTransactionsScreenState
           children: [
             Text(heading),
             Text(
-              'This month so far',
+              'revenue.thisMonthSoFar'.tr(),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
@@ -136,7 +143,7 @@ class _RealtimeSectionTransactionsScreenState
           const TransactionListSortMenuButton(),
           HeaderIconButton(
             icon: Icons.tune_rounded,
-            tooltip: 'Filter transactions',
+            tooltip: 'revenue.filterTransactions'.tr(),
             badge: filtersOn,
             onPressed: canFilterApps ? openFilters : null,
           ),
@@ -145,22 +152,26 @@ class _RealtimeSectionTransactionsScreenState
       ),
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(
-            child: AnimatedReveal(
-              visible: filtersOn,
-              child: ActiveFiltersRow(
-                appCount: _appIncludeFilter?.length,
-                countryCodes: _countryFilter,
-                platforms: _platformFilter,
-                onOpenFilters: openFilters,
-                onClearApps: () => setState(() => _appIncludeFilter = null),
-                onClearCountries: () => setState(() => _countryFilter = null),
-                onClearPlatforms: () => setState(() => _platformFilter = null),
-                onClearAll: () => setState(() {
-                  _appIncludeFilter = null;
-                  _countryFilter = null;
-                  _platformFilter = null;
-                }),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: inset),
+            sliver: SliverToBoxAdapter(
+              child: AnimatedReveal(
+                visible: filtersOn,
+                child: ActiveFiltersRow(
+                  appCount: _appIncludeFilter?.length,
+                  countryCodes: _countryFilter,
+                  platforms: _platformFilter,
+                  onOpenFilters: openFilters,
+                  onClearApps: () => setState(() => _appIncludeFilter = null),
+                  onClearCountries: () => setState(() => _countryFilter = null),
+                  onClearPlatforms: () =>
+                      setState(() => _platformFilter = null),
+                  onClearAll: () => setState(() {
+                    _appIncludeFilter = null;
+                    _countryFilter = null;
+                    _platformFilter = null;
+                  }),
+                ),
               ),
             ),
           ),
@@ -182,30 +193,31 @@ class _RealtimeSectionTransactionsScreenState
             )
           else ...[
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            GroupedSliverList(
-              itemCount: filtered.length,
-              dividerIndent: kTransactionRowDividerIndent,
-              itemBuilder: (context, i) {
-                final tx = filtered[i];
-                final key = rcTransactionDedupKey(tx);
-                final heroTag = key == null ? null : 'tx-section-$key';
-                return TransactionItem(
-                  transaction: tx,
-                  heroTag: heroTag,
-                  subscriberEarliestPurchaseLocalDayById: tenureMap,
-                  subscriberEarliestPurchaseLocalInstantById: tenureInstantMap,
-                  onTap: () {
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (context) => TransactionDetailScreen(
-                          transaction: tx,
-                          heroTag: heroTag,
-                        ),
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: inset),
+              sliver: GroupedSliverList(
+                itemCount: filtered.length,
+                dividerIndent: kTransactionRowDividerIndent,
+                itemBuilder: (context, i) {
+                  final tx = filtered[i];
+                  final key = rcTransactionDedupKey(tx);
+                  final heroTag = key == null ? null : 'tx-section-$key';
+                  return TransactionItem(
+                    transaction: tx,
+                    heroTag: heroTag,
+                    subscriberEarliestPurchaseLocalDayById: tenureMap,
+                    subscriberEarliestPurchaseLocalInstantById:
+                        tenureInstantMap,
+                    onTap: () => openDetail(
+                      context,
+                      (context) => TransactionDetailScreen(
+                        transaction: tx,
+                        heroTag: heroTag,
                       ),
-                    );
-                  },
-                ).appListItemEntrance(i);
-              },
+                    ),
+                  ).appListItemEntrance(i);
+                },
+              ),
             ),
             SliverPadding(
               padding: EdgeInsets.only(

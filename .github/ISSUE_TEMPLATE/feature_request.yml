@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest something OpenRC could do better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The question you want answered or the task you want to get done.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: How you picture it working. Sketches and examples welcome.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How do you do it today?

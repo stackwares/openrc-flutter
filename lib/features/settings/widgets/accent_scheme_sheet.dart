@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/services/utilities_service.dart';
-import 'package:revenuecat/widgets/search_field_decoration.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/services/utilities_service.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/search_field_decoration.dart';
 
 /// Saves and applies an accent palette.
 Future<void> setAccentScheme(WidgetRef ref, FlexScheme scheme) async {
@@ -13,19 +15,10 @@ Future<void> setAccentScheme(WidgetRef ref, FlexScheme scheme) async {
 
 /// Every built-in palette, searchable. The app recolors as you pick.
 Future<void> showAccentSchemeSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+  return showAdaptiveSheet<void>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    useSafeArea: true,
-    builder: (sheetContext) {
-      final view = MediaQuery.of(sheetContext);
-      final height = (view.size.height - view.viewInsets.bottom) * 0.8;
-      return Padding(
-        padding: EdgeInsets.only(bottom: view.viewInsets.bottom),
-        child: SizedBox(height: height, child: const _AccentSchemeSheet()),
-      );
-    },
+    heightFactor: 0.8,
+    builder: (_) => const _AccentSchemeSheet(),
   );
 }
 
@@ -73,13 +66,12 @@ class _AccentSchemeSheetState extends ConsumerState<_AccentSchemeSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Accent color',
+                'settings.accentColor'.tr(),
                 style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
               Text(
-                'Sets buttons, selection and highlights. Backgrounds stay '
-                'neutral so revenue colors keep their meaning.',
+                'settings.accentSheetBody'.tr(),
                 style: tt.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                   height: 1.35,
@@ -89,7 +81,10 @@ class _AccentSchemeSheetState extends ConsumerState<_AccentSchemeSheet> {
               TextField(
                 onChanged: (value) => setState(() => _query = value),
                 textInputAction: TextInputAction.search,
-                decoration: searchFieldDecoration(scheme, 'Search palettes'),
+                decoration: searchFieldDecoration(
+                  scheme,
+                  'settings.searchPalettes'.tr(),
+                ),
               ),
             ],
           ),
@@ -98,7 +93,7 @@ class _AccentSchemeSheetState extends ConsumerState<_AccentSchemeSheet> {
           child: options.isEmpty
               ? Center(
                   child: Text(
-                    'No palettes match that search.',
+                    'settings.noPalettes'.tr(),
                     style: tt.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),

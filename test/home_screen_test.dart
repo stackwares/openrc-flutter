@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/charts/home_notifier.dart';
-import 'package:revenuecat/features/charts/home_screen.dart';
-import 'package:revenuecat/models/rc_overview_response.dart';
+import 'package:openrc/features/charts/home_notifier.dart';
+import 'package:openrc/features/charts/home_screen.dart';
+import 'package:openrc/models/rc_overview_response.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FixedHome extends HomeNotifier {

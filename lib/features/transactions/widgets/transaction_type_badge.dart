@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/status_label.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/status_label.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Soft pill shared by small type / status labels.
 abstract final class TransactionPillStyle {
@@ -30,22 +31,22 @@ abstract final class TransactionPillStyle {
 
 /// Sentence-case state of one transaction (Trial, Converted, Refunded, …).
 String transactionStatusLabel(RcTransaction transaction) {
-  if (transaction.type == RcTransactionType.refund) return 'Refunded';
-  if (transaction.isCancelledSummaryBadge) return 'Cancelled';
+  if (transaction.type == RcTransactionType.refund) return 'transactions.refunded'.tr();
+  if (transaction.isCancelledSummaryBadge) return 'transactions.cancelled'.tr();
   switch (transaction.type) {
     case RcTransactionType.newSubscription:
     case RcTransactionType.oneTimePurchase:
-      return 'Purchased';
+      return 'transactions.purchased'.tr();
     case RcTransactionType.renewal:
-      return 'Renewed';
+      return 'transactions.renewed'.tr();
     case RcTransactionType.trial:
-      return 'Trial';
+      return 'transactions.trial'.tr();
     case RcTransactionType.conversion:
-      return 'Converted';
+      return 'transactions.converted'.tr();
     case RcTransactionType.refund:
-      return 'Refunded';
+      return 'transactions.refunded'.tr();
     case RcTransactionType.unknown:
-      return 'Other';
+      return 'transactions.other'.tr();
   }
 }
 

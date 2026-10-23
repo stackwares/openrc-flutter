@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/models/rc_project.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
+import 'package:openrc/models/rc_project.dart';
+import 'package:openrc/services/rc_api_service.dart';
+import 'package:openrc/services/rc_auth_service.dart';
 
 /// All RevenueCat dashboard projects for the signed-in account (`/me/projects`).
 ///

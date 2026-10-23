@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/widgets/wipe_in.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/widgets/wipe_in.dart';
 
 class SplitSegment {
   const SplitSegment({
@@ -64,11 +64,13 @@ class SplitBar extends StatelessWidget {
                               final width = s.value > 0
                                   ? usable * s.value / total
                                   : 0.0;
-                              final segment = AnimatedPositioned(
+                              // From the start edge, matching the legend
+                              // order in right-to-left languages.
+                              final segment = AnimatedPositionedDirectional(
                                 key: ValueKey(s.label),
                                 duration: duration,
                                 curve: Curves.easeOutCubic,
-                                left: left,
+                                start: left,
                                 top: 0,
                                 bottom: 0,
                                 width: width,

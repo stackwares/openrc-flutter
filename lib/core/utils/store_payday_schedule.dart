@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:intl/intl.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Apple App Store fiscal-month payout schedule (same data as [Kedi](https://github.com/sereisoglu/Kedi)).
 class AppStorePayday {
@@ -133,6 +133,19 @@ class GooglePlayPayday {
   final DateTime earningsEnd;
   final DateTime paymentDate;
 
+  /// The payout for one month of earnings; months past 12 roll into the
+  /// next year.
+  factory GooglePlayPayday.forEarningsMonth(int year, int month) {
+    final start = DateTime(year, month, 1);
+    return GooglePlayPayday(
+      earningsYear: start.year,
+      earningsMonth: start.month,
+      earningsStart: start,
+      earningsEnd: DateTime(start.year, start.month + 1, 0),
+      paymentDate: _paymentDateForPriorEarningsMonth(start.year, start.month),
+    );
+  }
+
   static List<GooglePlayPayday> _range({
     required int startYear,
     required int startMonth,
@@ -215,11 +228,11 @@ enum PaydayProximityState {
   past;
 
   String get title => switch (this) {
-        PaydayProximityState.today => 'Today',
-        PaydayProximityState.tomorrow => 'Tomorrow',
-        PaydayProximityState.upcoming => 'Upcoming',
-        PaydayProximityState.future => 'Future',
-        PaydayProximityState.past => 'Past',
+        PaydayProximityState.today => 'revenue.payday.today'.tr(),
+        PaydayProximityState.tomorrow => 'revenue.payday.tomorrow'.tr(),
+        PaydayProximityState.upcoming => 'revenue.payday.upcoming'.tr(),
+        PaydayProximityState.future => 'revenue.payday.future'.tr(),
+        PaydayProximityState.past => 'revenue.payday.past'.tr(),
       };
 
   String get emoji => switch (this) {
@@ -337,13 +350,19 @@ String formatPaydayAbbrev(DateTime d) => _abbrevDate.format(d);
 
 String formatPaydayMonthYear(DateTime d) => DateFormat.yMMMM().format(d);
 
+/// An earnings period, short: `Aug 2–Aug 29`.
+String formatPaydayRange(DateTime start, DateTime end) {
+  final f = DateFormat.MMMd();
+  return '${f.format(start)}–${f.format(end)}';
+}
+
 String paydayRelativeLine(DateTime paymentDate, DateTime now) {
-  if (_isSameCalendarDay(paymentDate, now)) return 'Today';
-  if (_isTomorrow(paymentDate, now)) return 'Tomorrow';
+  if (_isSameCalendarDay(paymentDate, now)) return 'revenue.payday.today'.tr();
+  if (_isTomorrow(paymentDate, now)) return 'revenue.payday.tomorrow'.tr();
   final t = DateTime(now.year, now.month, now.day);
   final p = DateTime(paymentDate.year, paymentDate.month, paymentDate.day);
   final days = p.difference(t).inDays;
-  if (days > 1) return 'in $days days';
+  if (days > 1) return 'revenue.payday.inDays'.plural(days);
   return formatPaydayAbbrev(paymentDate);
 }
 
@@ -357,8 +376,7 @@ int paydayCalendarDaysUntil(DateTime paymentDate, DateTime now) {
 /// Short label for countdown UIs (e.g. settings payout preview).
 String paydayDaysToGoLabel(DateTime paymentDate, DateTime now) {
   final d = paydayCalendarDaysUntil(paymentDate, now);
-  if (d < 0) return 'Past date';
-  if (d == 0) return 'Today';
-  if (d == 1) return '1 day to go';
-  return '$d days to go';
+  if (d < 0) return 'revenue.payday.pastDate'.tr();
+  if (d == 0) return 'revenue.payday.today'.tr();
+  return 'revenue.payday.daysToGo'.plural(d);
 }

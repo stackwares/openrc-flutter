@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/transactions/widgets/day_revenue_strip.dart';
-import 'package:revenuecat/theme/app_colors.dart';
+import 'package:openrc/features/transactions/widgets/day_revenue_strip.dart';
+import 'package:openrc/theme/app_colors.dart';
 
 void main() {
   final days = [

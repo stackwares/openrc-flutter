@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:revenuecat/models/transaction_list_sort_mode.dart';
+import 'package:openrc/models/transaction_list_sort_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final transactionListSortProvider =

@@ -1,9 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:revenuecat/models/overview_metric_type.dart';
-import 'package:revenuecat/models/rc_chart_response.dart';
-import 'package:revenuecat/services/utilities_service.dart';
+import 'package:openrc/models/overview_metric_type.dart';
+import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/services/utilities_service.dart';
 
 /// Larger interactive line chart for overview metric detail (daily buckets).
 class OverviewDetailLineChart extends StatelessWidget {

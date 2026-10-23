@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/app/floating_tab_chrome.dart';
+import 'package:openrc/app/floating_tab_chrome.dart';
 
 void main() {
   testWidgets('tapping a tab reports its index; selected tab is inert', (

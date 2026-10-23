@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+
 // English display names for ISO 3166-1 alpha-2 codes.
 // Data source: ISO-3166-Countries-with-Regional-Codes (lukes).
 //
@@ -29,7 +31,8 @@ String _regionNameAtMostTwoWords(String name) {
 }
 
 /// ISO alpha-2 codes, or free-form country strings from APIs, resolved to a short
-/// English label (at most two words) for display.
+/// label (at most two words) for display, in the app's language
+/// (`countries.<CODE>` in the translations; this English table otherwise).
 String regionDisplayNameEnglish(String? alpha2Code) {
   if (alpha2Code == null || alpha2Code.isEmpty) return '';
   final trimmed = alpha2Code.trim();
@@ -37,6 +40,9 @@ String regionDisplayNameEnglish(String? alpha2Code) {
       trimmed.length == 2 && RegExp(r'^[A-Za-z]{2}$').hasMatch(trimmed);
   if (isAlpha2) {
     final key = trimmed.toUpperCase();
+    final translationKey = 'countries.$key';
+    final localized = translationKey.tr();
+    if (localized != translationKey) return localized;
     final raw = _kIso3166Alpha2English[key] ?? key;
     return _regionNameAtMostTwoWords(_formalCountryDisplayBase(raw));
   }

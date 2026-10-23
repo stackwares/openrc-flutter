@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
-import 'package:revenuecat/models/rc_me_response.dart';
-import 'package:revenuecat/models/rc_project.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/services/utilities_service.dart';
-import 'package:revenuecat/theme/app_theme.dart';
+import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/models/rc_me_response.dart';
+import 'package:openrc/models/rc_project.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/services/utilities_service.dart';
+import 'package:openrc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     PackageInfo.setMockInitialValues(
-      appName: 'RevenueCat',
-      packageName: 'com.example.revenuecat',
+      appName: 'OpenRC',
+      packageName: 'com.openrc.app',
       version: '1.0.0',
       buildNumber: '1',
       buildSignature: '',
@@ -66,6 +66,8 @@ void main() {
     expect(find.text('US dollar · shown as \$1,234.56'), findsOneWidget);
     expect(find.text('abc123'), findsOneWidget);
     expect(find.text('Version 1.0.0 (1)'), findsOneWidget);
+    // Builds without a PostHog token send nothing, so there is no toggle.
+    expect(find.text('Share anonymous usage'), findsNothing);
   });
 
   testWidgets('store fee rows appear when fees are subtracted', (tester) async {
@@ -103,6 +105,30 @@ void main() {
 
     expect(find.text('12.5%'), findsOneWidget);
     expect(find.text('A \$9.99 sale counts as \$8.74'), findsOneWidget);
+  });
+
+  testWidgets('Language follows the device until one is picked', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(find.text('Language'), findsOneWidget);
+    // The theme picker has its own "System" option too.
+    expect(find.text('System'), findsNWidgets(2));
+
+    await tester.tap(find.text('Language'));
+    await tester.pumpAndSettle();
+    expect(find.text('Same as your device'), findsOneWidget);
+    for (final name in ['Deutsch', '日本語', 'العربية', 'Português (Brasil)']) {
+      expect(find.text(name), findsOneWidget);
+    }
+
+    await tester.tap(find.text('Deutsch'));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SettingsScreen)),
+    );
+    expect(container.read(appLanguageProvider), 'de');
+    expect(find.text('Deutsch'), findsOneWidget);
   });
 
   testWidgets('tapping a swatch switches the accent color', (tester) async {

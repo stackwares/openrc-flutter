@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/core/utils/store_payday_schedule.dart';
+import 'package:openrc/core/utils/store_payday_schedule.dart';
 
 void main() {
   test('the fiscal rules reproduce every published App Store row', () {

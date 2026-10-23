@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
 
 /// Six boxes for an authenticator code, backed by one hidden text field so
 /// typing, pasting ("123 456" works) and iOS code autofill all just work.
@@ -92,8 +93,10 @@ class _VerificationCodeInputState extends State<VerificationCodeInput> {
     );
 
     return Semantics(
-      label: 'Verification code',
-      value: '${code.length} of ${widget.length} digits entered',
+      label: 'signIn.verificationCode'.tr(),
+      value: 'signIn.codeProgress'.tr(
+        namedArgs: {'entered': '${code.length}', 'total': '${widget.length}'},
+      ),
       textField: true,
       child: Stack(
         alignment: Alignment.center,

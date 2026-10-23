@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/widgets/app_state_message.dart';
+import 'package:openrc/widgets/app_state_message.dart';
 
 void main() {
   testWidgets('error state shows message and retries', (tester) async {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/widgets/day_summary_card.dart';
-import 'package:revenuecat/theme/app_colors.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
+import 'package:openrc/theme/app_colors.dart';
 
 void main() {
   testWidgets('tiles fit a phone width at a large text size', (tester) async {

@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/models/rc_transaction_detail.dart';
-import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
+import 'package:openrc/features/transactions/transaction_detail_screen.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction_detail.dart';
+import 'package:openrc/models/rc_transaction_detail_activity.dart';
+import 'package:openrc/services/rc_api_service.dart';
 
 class _SlowDetailApi extends RcApiService {
   final gate = Completer<void>();

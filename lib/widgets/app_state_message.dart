@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Centered empty / error state with an optional action.
@@ -18,14 +19,15 @@ class AppStateMessage extends StatelessWidget {
   });
 
   /// Standard "couldn't load" state with a Retry button.
-  const AppStateMessage.error({
+  AppStateMessage.error({
     super.key,
     required String this.message,
     required VoidCallback onRetry,
-    this.title = 'Couldn\u2019t load data',
+    String? title,
     this.bottomPadding = 0,
-  }) : icon = Icons.cloud_off_outlined,
-       actionLabel = 'Try again',
+  }) : title = title ?? 'common.couldntLoadData'.tr(),
+       icon = Icons.cloud_off_outlined,
+       actionLabel = 'common.tryAgain'.tr(),
        actionIcon = Icons.refresh,
        onAction = onRetry,
        isError = true,

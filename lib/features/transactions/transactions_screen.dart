@@ -1,48 +1,50 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/widgets/app_state_message.dart';
+import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/utils/api_error_message.dart';
-import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
-import 'package:revenuecat/features/revenue/revenue_next_payday_proceeds.dart';
-import 'package:revenuecat/features/revenue/widgets/revenue_insights_list.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/widgets/active_filters_row.dart';
-import 'package:revenuecat/features/transactions/widgets/day_revenue_strip.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_list_sort_menu.dart';
-import 'package:revenuecat/features/transactions/widgets/transactions_app_filter_sheet.dart';
-import 'package:revenuecat/features/transactions/widgets/transactions_loading_skeleton.dart';
-import 'package:revenuecat/services/auto_app_icons_store.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/services/display_currency_store.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
-import 'package:revenuecat/services/widget_data_channel.dart';
-import 'package:revenuecat/services/transaction_list_sort_store.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/features/transactions/transaction_detail_screen.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_item.dart';
-import 'package:revenuecat/features/transactions/widgets/day_summary_card.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/animated_number.dart';
-import 'package:revenuecat/widgets/animated_reveal.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/delta_badge.dart';
-import 'package:revenuecat/widgets/grouped_list.dart';
-import 'package:revenuecat/widgets/section_header.dart';
-import 'package:revenuecat/widgets/shell_header.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/api_error_message.dart';
+import 'package:openrc/core/shell_insets.dart';
+import 'package:openrc/core/utils/subscriber_tenure_format.dart';
+import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/features/revenue/revenue_next_payday_proceeds.dart';
+import 'package:openrc/features/revenue/widgets/revenue_insights_list.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
+import 'package:openrc/features/transactions/widgets/day_revenue_strip.dart';
+import 'package:openrc/features/transactions/widgets/jump_to_day_sheet.dart';
+import 'package:openrc/features/transactions/widgets/transaction_list_sort_menu.dart';
+import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
+import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
+import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/display_currency_store.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/widget_data_channel.dart';
+import 'package:openrc/services/transaction_list_sort_store.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/rc_api_service.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/features/transactions/transaction_detail_screen.dart';
+import 'package:openrc/features/transactions/widgets/transaction_item.dart';
+import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/animated_number.dart';
+import 'package:openrc/widgets/animated_reveal.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/delta_badge.dart';
+import 'package:openrc/widgets/grouped_list.dart';
+import 'package:openrc/widgets/section_header.dart';
+import 'package:openrc/widgets/shell_header.dart';
+import 'package:openrc/widgets/side_panel.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class TransactionsState {
   /// Local calendar day being viewed (`yyyy-MM-dd`).
@@ -61,6 +63,16 @@ class TransactionsState {
   final int realtimeLoadStep;
   final bool realtimeLoadComplete;
 
+  /// Days loaded by [dayRuns], kept apart from [grouped] so month totals
+  /// and the backfill only ever see one unbroken run back from today.
+  final Map<String, List<RcTransaction>> jumpedDays;
+
+  /// Page runs started at a day picked far back in the calendar.
+  final List<TransactionsDayRun> dayRuns;
+
+  /// A [dayRuns] page is in flight.
+  final bool isLoadingDay;
+
   const TransactionsState({
     required this.selectedDayKey,
     this.grouped = const {},
@@ -73,6 +85,9 @@ class TransactionsState {
     this.error,
     this.realtimeLoadStep = 0,
     this.realtimeLoadComplete = false,
+    this.jumpedDays = const {},
+    this.dayRuns = const [],
+    this.isLoadingDay = false,
   });
 
   TransactionsState copyWith({
@@ -87,6 +102,9 @@ class TransactionsState {
     String? error,
     int? realtimeLoadStep,
     bool? realtimeLoadComplete,
+    Map<String, List<RcTransaction>>? jumpedDays,
+    List<TransactionsDayRun>? dayRuns,
+    bool? isLoadingDay,
   }) => TransactionsState(
     selectedDayKey: selectedDayKey ?? this.selectedDayKey,
     grouped: grouped ?? this.grouped,
@@ -99,18 +117,94 @@ class TransactionsState {
     error: error,
     realtimeLoadStep: realtimeLoadStep ?? this.realtimeLoadStep,
     realtimeLoadComplete: realtimeLoadComplete ?? this.realtimeLoadComplete,
+    jumpedDays: jumpedDays ?? this.jumpedDays,
+    dayRuns: dayRuns ?? this.dayRuns,
+    isLoadingDay: isLoadingDay ?? this.isLoadingDay,
   );
 
-  /// True once [dayKey] can't gain transactions from older pages: an older
-  /// day has been merged (pages go newest first), or there are no more pages.
-  bool isDayFullyLoaded(String dayKey) {
-    if (!hasMore) return true;
+  /// Oldest day the pages back from today have reached (maybe partial).
+  String? get oldestLoadedDayKey {
     String? oldest;
     for (final k in grouped.keys) {
       if (!isIsoCalendarDayKey(k)) continue;
       if (oldest == null || k.compareTo(oldest) < 0) oldest = k;
     }
+    return oldest;
+  }
+
+  /// True once [dayKey] can't gain transactions from older pages: an older
+  /// day has been merged (pages go newest first), or there are no more pages.
+  bool isDayFullyLoaded(String dayKey) {
+    if (!hasMore) return true;
+    final oldest = oldestLoadedDayKey;
+    if (oldest != null && dayKey.compareTo(oldest) > 0) return true;
+    return dayRuns.any((run) => run.covers(dayKey));
+  }
+
+  /// Every loaded day for the day view: [grouped] plus [jumpedDays].
+  Map<String, List<RcTransaction>> get dayView {
+    if (jumpedDays.isEmpty) return grouped;
+    final out = Map<String, List<RcTransaction>>.from(grouped);
+    for (final e in jumpedDays.entries) {
+      final days = out[e.key];
+      if (days == null) {
+        out[e.key] = e.value;
+      } else {
+        out[e.key] = List.of(days);
+        _mergeTransactionsDeduping(out[e.key]!, e.value);
+      }
+    }
+    return out;
+  }
+}
+
+/// Pages fetched back from the end of [topDayKey], for a day picked far
+/// beyond what the pages from today have reached.
+@immutable
+class TransactionsDayRun {
+  const TransactionsDayRun({
+    required this.topDayKey,
+    required this.cursor,
+    this.oldestDayKey,
+  });
+
+  /// Opens a run at the last millisecond of [dayKey] (local time).
+  factory TransactionsDayRun.endOf(String dayKey) {
+    final d = DateFormat('yyyy-MM-dd').parse(dayKey);
+    final end = DateTime(d.year, d.month, d.day + 1);
+    return TransactionsDayRun(
+      topDayKey: dayKey,
+      cursor: end.millisecondsSinceEpoch - 1,
+    );
+  }
+
+  final String topDayKey;
+
+  /// `start_from` for the next page; null once the oldest page is in.
+  final int? cursor;
+
+  /// Oldest day merged so far, maybe partial (pages go newest first).
+  final String? oldestDayKey;
+
+  bool get hasMore => cursor != null;
+
+  /// [dayKey] is complete in this run: at or below its top, and above its
+  /// partial oldest day (or the run reached the first transaction).
+  bool covers(String dayKey) {
+    if (dayKey.compareTo(topDayKey) > 0) return false;
+    if (!hasMore) return true;
+    final oldest = oldestDayKey;
     return oldest != null && dayKey.compareTo(oldest) > 0;
+  }
+
+  /// The next page of this run brings [dayKey] closer: it's the partial
+  /// oldest day or the one before it.
+  bool reaches(String dayKey) {
+    if (!hasMore || dayKey.compareTo(topDayKey) > 0) return false;
+    final oldest = oldestDayKey;
+    if (oldest == null) return true;
+    final before = _previousCalendarDayKey(oldest);
+    return before == null || dayKey.compareTo(before) >= 0;
   }
 }
 
@@ -263,11 +357,26 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     unawaited(_loadDay(dayKey));
   }
 
+  /// Loads [dayKey] if it isn't complete. Days at the edge of what's loaded
+  /// page back as usual; a day further back (picked in the calendar) gets
+  /// its own run of pages from its end, a request or two instead of every
+  /// page in between.
+  Future<void> _loadDay(String dayKey) async {
+    if (state.isDayFullyLoaded(dayKey)) return;
+    final oldest = state.oldestLoadedDayKey;
+    final edge = oldest == null ? null : _previousCalendarDayKey(oldest);
+    if (edge == null || dayKey.compareTo(edge) >= 0) {
+      await _loadDayFromToday(dayKey);
+    } else {
+      await _loadDayRun(dayKey);
+    }
+  }
+
   /// Fetches older pages until [dayKey] is complete, so stepping back shows
   /// real totals instead of an empty day. Bounded per call (a full backfill
   /// per tap used to fire up to [kRealtimeBackfillMaxPages] requests) and
   /// abandoned when the user moves to another day or a refresh starts.
-  Future<void> _loadDay(String dayKey) async {
+  Future<void> _loadDayFromToday(String dayKey) async {
     final gen = _backfillGeneration;
     for (var i = 0; i < _maxPagesPerDayJump; i++) {
       if (!mounted || gen != _backfillGeneration || state.isLoading) return;
@@ -291,6 +400,89 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     }
   }
 
+  /// Run pages in flight, so [TransactionsState.isLoadingDay] stays on
+  /// until the last one lands.
+  int _runPagesInFlight = 0;
+
+  /// Pages back from the end of [dayKey] (or from a run already heading
+  /// there) until it's complete, within the same bound as a day step.
+  Future<void> _loadDayRun(String dayKey) async {
+    final gen = _backfillGeneration;
+    var run =
+        state.dayRuns.where((r) => r.reaches(dayKey)).firstOrNull ??
+        TransactionsDayRun.endOf(dayKey);
+    for (var i = 0; i < _maxPagesPerDayJump; i++) {
+      if (!mounted || gen != _backfillGeneration || state.isLoading) return;
+      if (dayKey != state.selectedDayKey || state.isDayFullyLoaded(dayKey)) {
+        return;
+      }
+      final next = await _fetchRunPage(run, gen);
+      if (next == null) return;
+      run = next;
+    }
+  }
+
+  /// Fetches the next page of [run] into [TransactionsState.jumpedDays].
+  /// Returns the run after the page, or null if the page failed or a
+  /// refresh made it stale.
+  Future<TransactionsDayRun?> _fetchRunPage(
+    TransactionsDayRun run,
+    int gen,
+  ) async {
+    final cursor = run.cursor;
+    if (cursor == null) return null;
+    bool stale() => !mounted || gen != _backfillGeneration;
+    _runPagesInFlight++;
+    state = state.copyWith(isLoadingDay: true);
+    try {
+      final api = _ref.read(rcApiServiceProvider);
+      final response = await api.transactions(
+        RcTransactionsRequest(limit: _kediPaginationLimit, startFrom: cursor),
+        requestContext: 'transactions:day_run',
+      );
+      if (stale()) return null;
+      final raw = response.transactions ?? [];
+      final jumped = {
+        for (final e in state.jumpedDays.entries) e.key: List.of(e.value),
+      };
+      _mergeRawIntoGrouped(jumped, raw);
+      var oldest = run.oldestDayKey;
+      for (final k in _groupByDateStatic(raw).keys) {
+        if (!isIsoCalendarDayKey(k)) continue;
+        if (oldest == null || k.compareTo(oldest) < 0) oldest = k;
+      }
+      final next = TransactionsDayRun(
+        topDayKey: run.topDayKey,
+        cursor: raw.isEmpty
+            ? null
+            : _nextCursorFromResponse(raw, response.lastPurchaseMs),
+        oldestDayKey: oldest,
+      );
+      state = state.copyWith(
+        jumpedDays: jumped,
+        dayRuns: [
+          for (final r in state.dayRuns)
+            if (r.topDayKey != run.topDayKey) r,
+          next,
+        ],
+      );
+      _ensureAppIcons(raw);
+      return next;
+    } on DioException catch (e) {
+      if (stale()) return null;
+      _handleAuthError(e);
+      return null;
+    } catch (_) {
+      return null;
+    } finally {
+      // A refresh already reset the count for pages it made stale.
+      if (!stale()) {
+        _runPagesInFlight--;
+        state = state.copyWith(isLoadingDay: _runPagesInFlight > 0);
+      }
+    }
+  }
+
   /// Looks up App Store / Google Play icons for apps seen in [txs].
   void _ensureAppIcons(Iterable<RcTransaction> txs) {
     final apps = txs.map(AppIconIdentity.fromTransaction).nonNulls;
@@ -311,11 +503,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     state = state.copyWith(
       isLoading: true,
       isLoadingMore: false,
+      isLoadingDay: false,
       error: null,
       realtimeLoadStep: 0,
       realtimeLoadComplete: false,
     );
     _backfillGeneration++;
+    _runPagesInFlight = 0;
     final gen = _backfillGeneration;
     try {
       final api = _ref.read(rcApiServiceProvider);
@@ -339,6 +533,8 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       state = state.copyWith(
         grouped: grouped,
         dailyTotals: dailyTotals,
+        jumpedDays: const {},
+        dayRuns: const [],
         isLoading: false,
         isLoadingMore: false,
         hasMore: hasMorePages,
@@ -584,6 +780,13 @@ final transactionsCountryFilterProvider = StateProvider<Set<String>?>(
 final transactionsPlatformFilterProvider =
     StateProvider<Set<TransactionPlatformFilter>?>((ref) => null);
 
+/// Content width from which the summary and the list sit side by side.
+const double _twoColumnMinWidth = 900;
+
+/// A single column of cards, gutters included, never grows past this.
+const double _columnMaxWidth =
+    AppBreakpoints.readableWidth + 2 * AppSpace.gutter;
+
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
@@ -606,7 +809,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final accountProjects =
         ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
     final selectedKey = state.selectedDayKey;
-    final dayTxs = state.grouped[selectedKey] ?? [];
+    final dayTxs = state.dayView[selectedKey] ?? [];
     final dayFilterSource = <String, List<RcTransaction>>{
       if (dayTxs.isNotEmpty) selectedKey: dayTxs,
     };
@@ -631,17 +834,19 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       appBar: ShellHeader(
         title: _dayTitle(selectedKey),
         subtitle: _daySubtitle(selectedKey),
+        onTitleTap: () => _pickDay(selectedKey),
+        titleTapTooltip: 'transactions.jumpToDay'.tr(),
         actions: [
           HeaderIconButton(
             icon: Icons.chevron_left_rounded,
-            tooltip: 'Previous day',
+            tooltip: 'transactions.previousDay'.tr(),
             onPressed: state.isLoading || prevKey == null
                 ? null
                 : () => _goToDay(prevKey),
           ),
           HeaderIconButton(
             icon: Icons.chevron_right_rounded,
-            tooltip: 'Next day',
+            tooltip: 'transactions.nextDay'.tr(),
             onPressed: state.isLoading || !canGoNext
                 ? null
                 : () => _goToDay(nextKey),
@@ -649,7 +854,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           const SizedBox(width: 6),
           HeaderIconButton(
             icon: Icons.tune_rounded,
-            tooltip: 'Filter transactions',
+            tooltip: 'transactions.filterTransactions'.tr(),
             badge: filtersActive,
             onPressed: !canOpenTransactionFilter
                 ? null
@@ -658,7 +863,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           if (ShellHeader.showsRefreshButton)
             HeaderIconButton(
               icon: Icons.refresh_rounded,
-              tooltip: 'Refresh',
+              tooltip: 'transactions.refresh'.tr(),
               onPressed: state.isLoading
                   ? null
                   : () =>
@@ -702,15 +907,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     if (state.error != null && state.grouped.isEmpty && !state.isLoading) {
       return AppStateMessage.error(
-        title: 'Couldn’t load transactions',
+        title: 'transactions.loadError'.tr(),
         message: state.error!,
         onRetry: () => ref.read(transactionsProvider.notifier).fetchInitial(),
       );
     }
 
     final selectedKey = state.selectedDayKey;
+    final days = state.dayView;
     final groupedForList = filteredGroupedByTransactionMeta(
-      filteredGroupedByApps(state.grouped, appIncludeFilter),
+      filteredGroupedByApps(days, appIncludeFilter),
       countryCodes: countryFilter,
       platforms: platformFilter,
     );
@@ -750,7 +956,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ? netRevenueSum(sectionFiltered(previousDayForSummary), commission)
         : null;
 
-    final allTxForTenure = state.grouped.values.expand((e) => e);
+    final allTxForTenure = days.values.expand((e) => e);
     final subscriberEarliestPurchaseDay =
         earliestPurchaseLocalDayBySubscriberId(allTxForTenure);
     final subscriberEarliestPurchaseInstant =
@@ -778,15 +984,183 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
 
     void openTransaction(RcTransaction tx, {Object? heroTag}) {
-      Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(
-          builder: (context) =>
-              TransactionDetailScreen(transaction: tx, heroTag: heroTag),
-        ),
+      openDetail(
+        context,
+        (context) => TransactionDetailScreen(transaction: tx, heroTag: heroTag),
       );
     }
 
-    return NotificationListener<ScrollNotification>(
+    // The day at a glance: totals, counts, insights, scheduled rows.
+    final summarySlivers = <Widget>[
+      SliverToBoxAdapter(
+        child: AnimatedReveal(
+          visible: listFiltersActive || _sectionFilters.isNotEmpty,
+          child: ActiveFiltersRow(
+            appCount: appIncludeFilter?.length,
+            countryCodes: countryFilter,
+            platforms: platformFilter,
+            sectionFilters: _sectionFilters,
+            onOpenFilters: () => _showAppFilterSheet(context, state),
+            onClearApps: () =>
+                ref.read(transactionsAppIncludeFilterProvider.notifier).state =
+                    null,
+            onClearCountries: () =>
+                ref.read(transactionsCountryFilterProvider.notifier).state =
+                    null,
+            onClearPlatforms: () =>
+                ref.read(transactionsPlatformFilterProvider.notifier).state =
+                    null,
+            onRemoveSection: _toggleSectionFilter,
+            onClearAll: _clearTransactionFilters,
+          ),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        sliver: SliverToBoxAdapter(
+          child: _DayHeroCard(
+            label: commission.adjustmentEnabled
+                ? 'transactions.netRevenue'.tr()
+                : 'transactions.revenue'.tr(),
+            total: headerDaily,
+            previousTotal: headerPrevTotal,
+            loading: !dayLoaded,
+            strip: DayRevenueStrip(
+              days: stripDays,
+              selectedDayKey: selectedKey,
+              formatAmount: _formatAmountForSemantics,
+              onDaySelected: state.isLoading ? null : _goToDay,
+            ),
+          ).appCardEntrance(),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+        sliver: SliverToBoxAdapter(
+          // Bones, not zeros, while the day is still loading.
+          child: Skeletonizer(
+            enabled: !dayLoaded,
+            child: DayTypeCountSummary(
+              transactions: allForDay,
+              previousDayTransactions: previousDayLoaded
+                  ? previousDayForSummary
+                  : null,
+              selectedFilters: _sectionFilters,
+              onFilterCellTap: _toggleSectionFilter,
+            ),
+          ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+        ),
+      ),
+      if (dayLoaded && !filtersHideResults && allForDayForMetrics.isNotEmpty)
+        SliverToBoxAdapter(
+          child: RealtimeRevenueInsightsList(
+            transactions: allForDayForMetrics,
+            asModalEntry: true,
+            cardMargin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+        ),
+      if (futureTxs.isNotEmpty)
+        SliverToBoxAdapter(
+          child: _FutureTransactionsSection(
+            transactions: futureTxs,
+            expanded: _futureTransactionsExpanded,
+            onExpandedChanged: (v) {
+              setState(() => _futureTransactionsExpanded = v);
+            },
+            subscriberEarliestPurchaseLocalDayById:
+                subscriberEarliestPurchaseDay,
+            subscriberEarliestPurchaseLocalInstantById:
+                subscriberEarliestPurchaseInstant,
+            onOpenTransaction: openTransaction,
+          ).appCardEntrance(delay: const Duration(milliseconds: 120)),
+        ),
+    ];
+
+    // Every sale of the day.
+    final listSlivers = <Widget>[
+      if (filtersHideResults)
+        SliverToBoxAdapter(
+          child: AppStateMessage(
+            icon: Icons.filter_list_off_outlined,
+            title: 'transactions.noFilterMatches'.tr(),
+            message: 'transactions.noFilterMatchesMessage'.tr(),
+            actionLabel: 'transactions.clearFilters'.tr(),
+            actionIcon: Icons.filter_alt_off_outlined,
+            onAction: _clearTransactionFilters,
+            bottomPadding: bottomPadding,
+            shrinkWrap: true,
+          ),
+        )
+      else ...[
+        SliverToBoxAdapter(
+          child: SectionHeader(
+            title: 'transactions.title'.tr(),
+            count: transactions.isEmpty ? null : '${transactions.length}',
+            trailing: transactions.length > 1
+                ? const TransactionListSortMenuButton(showLabel: true)
+                : null,
+          ),
+        ),
+        if (transactions.isEmpty &&
+            state.grouped.isNotEmpty &&
+            (dayLoaded || !(state.isLoadingMore || state.isLoadingDay)))
+          SliverToBoxAdapter(
+            child: AppCard(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                dayLoaded
+                    ? (viewingToday
+                          ? 'transactions.noTransactionsToday'.tr()
+                          : 'transactions.noTransactionsOnDay'.tr())
+                    : 'transactions.dayNotFinished'.tr(),
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          )
+        else if (transactions.isNotEmpty)
+          GroupedSliverList(
+            itemCount: transactions.length,
+            dividerIndent: kTransactionRowDividerIndent,
+            itemBuilder: (context, index) {
+              final tx = transactions[index];
+              final key = rcTransactionDedupKey(tx);
+              final heroTag = key == null ? null : 'tx-$key';
+              return TransactionItem(
+                heroTag: heroTag,
+                key: ValueKey(rcTransactionDedupKey(tx) ?? '$index'),
+                transaction: tx,
+                subscriberEarliestPurchaseLocalDayById:
+                    subscriberEarliestPurchaseDay,
+                subscriberEarliestPurchaseLocalInstantById:
+                    subscriberEarliestPurchaseInstant,
+                onTap: () => openTransaction(tx, heroTag: heroTag),
+              ).appListItemEntrance(index);
+            },
+          ),
+      ],
+      if ((state.hasMore && state.isLoadingMore) || state.isLoadingDay)
+        const SliverToBoxAdapter(child: TransactionRowsSkeleton(rows: 3)),
+    ];
+
+    Future<void> refresh() =>
+        ref.read(transactionsProvider.notifier).fetchInitial();
+
+    Widget scrollView(List<Widget> slivers, {double inset = 0}) =>
+        CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: inset),
+              sliver: SliverMainAxisGroup(slivers: slivers),
+            ),
+            SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
+          ],
+        );
+
+    // Loads the next page as the list nears its end.
+    Widget pagesMore(Widget child) => NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
         if (scrollInfo.metrics.pixels >=
             scrollInfo.metrics.maxScrollExtent - 240) {
@@ -796,173 +1170,52 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         }
         return false;
       },
-      child: RefreshIndicator(
-        onRefresh: () => ref.read(transactionsProvider.notifier).fetchInitial(),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: AnimatedReveal(
-                visible: listFiltersActive || _sectionFilters.isNotEmpty,
-                child: ActiveFiltersRow(
-                  appCount: appIncludeFilter?.length,
-                  countryCodes: countryFilter,
-                  platforms: platformFilter,
-                  sectionFilters: _sectionFilters,
-                  onOpenFilters: () => _showAppFilterSheet(context, state),
-                  onClearApps: () =>
-                      ref
-                              .read(
-                                transactionsAppIncludeFilterProvider.notifier,
-                              )
-                              .state =
-                          null,
-                  onClearCountries: () =>
-                      ref
-                              .read(transactionsCountryFilterProvider.notifier)
-                              .state =
-                          null,
-                  onClearPlatforms: () =>
-                      ref
-                              .read(transactionsPlatformFilterProvider.notifier)
-                              .state =
-                          null,
-                  onRemoveSection: _toggleSectionFilter,
-                  onClearAll: _clearTransactionFilters,
+      child: child,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        // Wide: the summary and the list side by side, each scrolling.
+        if (width >= _twoColumnMinWidth) {
+          final summaryWidth = (width * 0.4).clamp(360.0, 440.0);
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: summaryWidth,
+                child: RefreshIndicator(
+                  onRefresh: refresh,
+                  child: scrollView(summarySlivers),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              sliver: SliverToBoxAdapter(
-                child: _DayHeroCard(
-                  label: commission.adjustmentEnabled
-                      ? 'Net revenue'
-                      : 'Revenue',
-                  total: headerDaily,
-                  previousTotal: headerPrevTotal,
-                  loading: !dayLoaded,
-                  strip: DayRevenueStrip(
-                    days: stripDays,
-                    selectedDayKey: selectedKey,
-                    formatAmount: _formatAmountForSemantics,
-                    onDaySelected: state.isLoading ? null : _goToDay,
+              Expanded(
+                child: pagesMore(
+                  RefreshIndicator(
+                    onRefresh: refresh,
+                    child: scrollView([
+                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                      ...listSlivers,
+                    ]),
                   ),
-                ).appCardEntrance(),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              sliver: SliverToBoxAdapter(
-                // Bones, not zeros, while the day is still loading.
-                child: Skeletonizer(
-                  enabled: !dayLoaded,
-                  child: DayTypeCountSummary(
-                    transactions: allForDay,
-                    previousDayTransactions: previousDayLoaded
-                        ? previousDayForSummary
-                        : null,
-                    selectedFilters: _sectionFilters,
-                    onFilterCellTap: _toggleSectionFilter,
-                  ),
-                ).appCardEntrance(delay: const Duration(milliseconds: 60)),
-              ),
-            ),
-            if (dayLoaded &&
-                !filtersHideResults &&
-                allForDayForMetrics.isNotEmpty)
-              SliverToBoxAdapter(
-                child: RealtimeRevenueInsightsList(
-                  transactions: allForDayForMetrics,
-                  asModalEntry: true,
-                  cardMargin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                ).appCardEntrance(delay: const Duration(milliseconds: 100)),
-              ),
-            if (futureTxs.isNotEmpty)
-              SliverToBoxAdapter(
-                child: _FutureTransactionsSection(
-                  transactions: futureTxs,
-                  expanded: _futureTransactionsExpanded,
-                  onExpandedChanged: (v) {
-                    setState(() => _futureTransactionsExpanded = v);
-                  },
-                  subscriberEarliestPurchaseLocalDayById:
-                      subscriberEarliestPurchaseDay,
-                  subscriberEarliestPurchaseLocalInstantById:
-                      subscriberEarliestPurchaseInstant,
-                  onOpenTransaction: openTransaction,
-                ).appCardEntrance(delay: const Duration(milliseconds: 120)),
-              ),
-            if (filtersHideResults)
-              SliverToBoxAdapter(
-                child: AppStateMessage(
-                  icon: Icons.filter_list_off_outlined,
-                  title: 'No transactions match your filters',
-                  message: 'Try another day, or clear the filters.',
-                  actionLabel: 'Clear filters',
-                  actionIcon: Icons.filter_alt_off_outlined,
-                  onAction: _clearTransactionFilters,
-                  bottomPadding: bottomPadding,
-                  shrinkWrap: true,
-                ),
-              )
-            else ...[
-              SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Transactions',
-                  count: transactions.isEmpty ? null : '${transactions.length}',
-                  trailing: transactions.length > 1
-                      ? const TransactionListSortMenuButton(showLabel: true)
-                      : null,
                 ),
               ),
-              if (transactions.isEmpty &&
-                  state.grouped.isNotEmpty &&
-                  (dayLoaded || !state.isLoadingMore))
-                SliverToBoxAdapter(
-                  child: AppCard(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      dayLoaded
-                          ? (viewingToday
-                                ? 'No transactions yet today.'
-                                : 'No transactions on this day.')
-                          : 'This day didn\u2019t finish loading. Pull down '
-                                'to try again.',
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                )
-              else if (transactions.isNotEmpty)
-                GroupedSliverList(
-                  itemCount: transactions.length,
-                  dividerIndent: kTransactionRowDividerIndent,
-                  itemBuilder: (context, index) {
-                    final tx = transactions[index];
-                    final key = rcTransactionDedupKey(tx);
-                    final heroTag = key == null ? null : 'tx-$key';
-                    return TransactionItem(
-                      heroTag: heroTag,
-                      key: ValueKey(rcTransactionDedupKey(tx) ?? '$index'),
-                      transaction: tx,
-                      subscriberEarliestPurchaseLocalDayById:
-                          subscriberEarliestPurchaseDay,
-                      subscriberEarliestPurchaseLocalInstantById:
-                          subscriberEarliestPurchaseInstant,
-                      onTap: () => openTransaction(tx, heroTag: heroTag),
-                    ).appListItemEntrance(index);
-                  },
-                ),
             ],
-            if (state.hasMore && state.isLoadingMore)
-              const SliverToBoxAdapter(child: TransactionRowsSkeleton(rows: 3)),
-            if (!filtersHideResults)
-              SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
-          ],
-        ),
-      ),
+          );
+        }
+        return pagesMore(
+          RefreshIndicator(
+            onRefresh: refresh,
+            child: scrollView(
+              [...summarySlivers, ...listSlivers],
+              inset: AppBreakpoints.centeringInset(
+                width,
+                maxWidth: _columnMaxWidth,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1004,6 +1257,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return formatExactForeign(usd * r, currency);
   }
 
+  /// Opens the calendar and goes to the picked day.
+  Future<void> _pickDay(String selectedKey) async {
+    final picked = await showJumpToDaySheet(
+      context,
+      selectedDay: DateFormat('yyyy-MM-dd').parse(selectedKey),
+    );
+    if (picked == null || !mounted) return;
+    _goToDay(DateFormat('yyyy-MM-dd').format(picked));
+  }
+
   void _goToDay(String dayKey) {
     setState(() {
       _futureTransactionsExpanded = false;
@@ -1012,14 +1275,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   String _dayTitle(String dayKey) {
-    if (dayKey == localTodayDayKey()) return 'Today';
+    if (dayKey == localTodayDayKey()) return 'transactions.today'.tr();
     if (dayKey == _previousCalendarDayKey(localTodayDayKey())) {
-      return 'Yesterday';
+      return 'transactions.yesterday'.tr();
     }
     try {
       final date = DateFormat('yyyy-MM-dd').parse(dayKey);
       final sameYear = date.year == DateTime.now().year;
-      return DateFormat(sameYear ? 'EEE, MMM d' : 'MMM d, y').format(date);
+      return (sameYear ? DateFormat.MMMEd() : DateFormat.yMMMd()).format(date);
     } catch (_) {
       return dayKey;
     }
@@ -1028,7 +1291,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   String _daySubtitle(String dayKey) {
     try {
       final date = DateFormat('yyyy-MM-dd').parse(dayKey);
-      return DateFormat('EEEE, MMMM d, y').format(date);
+      return DateFormat.yMMMMEEEEd().format(date);
     } catch (_) {
       return dayKey;
     }
@@ -1038,7 +1301,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     BuildContext context,
     TransactionsState state,
   ) async {
-    final dayTxs = state.grouped[state.selectedDayKey] ?? [];
+    final dayTxs = state.dayView[state.selectedDayKey] ?? [];
     final filterSource = <String, List<RcTransaction>>{
       if (dayTxs.isNotEmpty) state.selectedDayKey: dayTxs,
     };
@@ -1063,6 +1326,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         setState(() => _sectionFilters = {});
       },
     );
+  }
+}
+
+/// Moves the Transactions day back ([delta] < 0) or forward, never past
+/// today. For keyboard shortcuts; the header buttons follow the same rules.
+void stepTransactionsDay(WidgetRef ref, int delta) {
+  final state = ref.read(transactionsProvider);
+  if (state.isLoading) return;
+  final key = state.selectedDayKey;
+  if (delta > 0 && key.compareTo(localTodayDayKey()) >= 0) return;
+  final target = delta < 0
+      ? _previousCalendarDayKey(key)
+      : _nextCalendarDayKey(key);
+  if (target != null) {
+    ref.read(transactionsProvider.notifier).setSelectedDayKey(target);
   }
 }
 
@@ -1168,9 +1446,9 @@ class _DayHeroCard extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           if (loading)
-            Text('Loading this day\u2026', style: muted)
+            Text('transactions.loadingThisDay'.tr(), style: muted)
           else if (prev == null)
-            Text('Previous day not loaded yet', style: muted)
+            Text('transactions.previousDayNotLoaded'.tr(), style: muted)
           else
             Wrap(
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -1181,7 +1459,7 @@ class _DayHeroCard extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('vs yesterday  ', style: muted),
+                    Text('${'transactions.vsYesterday'.tr()}  ', style: muted),
                     AnimatedExactAmount(amount: prev, style: muted),
                   ],
                 ),
@@ -1242,10 +1520,10 @@ class _FutureTransactionsSection extends StatelessWidget {
                   Expanded(
                     child: Text.rich(
                       TextSpan(
-                        text: 'Scheduled',
+                        text: 'transactions.scheduled'.tr(),
                         children: [
                           TextSpan(
-                            text: '  ${transactions.length} later today',
+                            text: '  ${'transactions.laterToday'.tr(namedArgs: {'count': '${transactions.length}'})}',
                             style: TextStyle(
                               color: scheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
@@ -1266,7 +1544,9 @@ class _FutureTransactionsSection extends StatelessWidget {
                     child: Icon(
                       Icons.expand_more_rounded,
                       color: scheme.onSurfaceVariant,
-                      semanticLabel: expanded ? 'Collapse' : 'Expand',
+                      semanticLabel: expanded
+                          ? 'transactions.collapse'.tr()
+                          : 'transactions.expand'.tr(),
                     ),
                   ),
                 ],

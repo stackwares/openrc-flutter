@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:revenuecat/app/app.dart';
-import 'package:revenuecat/features/charts/home_notifier.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
-import 'package:revenuecat/features/sign_in/sign_in_screen.dart';
-import 'package:revenuecat/features/transactions/transactions_screen.dart';
-import 'package:revenuecat/models/rc_me_response.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
+import 'package:openrc/app/app.dart';
+import 'package:openrc/app/main_shell.dart';
+import 'package:openrc/features/charts/home_notifier.dart';
+import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/features/sign_in/sign_in_screen.dart';
+import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/rc_me_response.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/services/rc_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _IdleTransactions extends TransactionsNotifier {
@@ -37,16 +38,16 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     PackageInfo.setMockInitialValues(
-      appName: 'RevenueCat',
-      packageName: 'com.example.revenuecat',
+      appName: 'OpenRC',
+      packageName: 'com.openrc.app',
       version: '1.0.0',
       buildNumber: '1',
       buildSignature: '',
     );
   });
 
-  testWidgets('signing out closes Settings and shows sign-in', (tester) async {
-    tester.view.physicalSize = const Size(430, 932);
+  Future<void> pumpAt(WidgetTester tester, Size size) async {
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
@@ -62,10 +63,22 @@ void main() {
           rcAccountProjectsProvider.overrideWith((ref) async => const []),
           usdExchangeRatesProvider.overrideWith((ref) async => const {}),
         ],
-        child: const RevenueCatApp(),
+        child: const OpenRcApp(),
       ),
     );
     await tester.pumpAndSettle();
+  }
+
+  Future<void> signOut(WidgetTester tester) async {
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SettingsScreen)),
+    );
+    container.read(isSignedInProvider.notifier).state = false;
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('signing out closes Settings and shows sign-in', (tester) async {
+    await pumpAt(tester, const Size(430, 932));
 
     tester
         .state<NavigatorState>(find.byType(Navigator).first)
@@ -73,12 +86,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SettingsScreen), findsOneWidget);
 
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(SettingsScreen)),
-    );
-    container.read(isSignedInProvider.notifier).state = false;
-    await tester.pumpAndSettle();
+    await signOut(tester);
 
+    expect(find.byType(SettingsScreen), findsNothing);
+    expect(find.byType(SignInScreen), findsOneWidget);
+  });
+
+  testWidgets('signing out closes the Settings dialog on wide windows', (
+    tester,
+  ) async {
+    await pumpAt(tester, const Size(1280, 800));
+
+    SettingsScreen.open(tester.element(find.byType(MainShell)));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+
+    await signOut(tester);
+
+    expect(find.byType(Dialog), findsNothing);
     expect(find.byType(SettingsScreen), findsNothing);
     expect(find.byType(SignInScreen), findsOneWidget);
   });

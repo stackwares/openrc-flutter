@@ -21,7 +21,7 @@ final usdExchangeRatesFetcherProvider =
 /// currency per **1 USD** (same basis as RevenueCat amounts in this app).
 ///
 /// A failed download is an error, not an empty result, so Riverpod retries it
-/// with backoff (and [RevenueCatApp] retries again when the app resumes).
+/// with backoff (and [OpenRcApp] retries again when the app resumes).
 /// Amounts show in USD until rates arrive.
 final usdExchangeRatesProvider = FutureProvider<Map<String, double>>((
   ref,

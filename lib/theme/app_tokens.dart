@@ -48,3 +48,38 @@ abstract final class AppText {
     );
   }
 }
+
+/// Window size classes, after Material 3: phone, tablet, desktop.
+enum WindowSize { compact, medium, expanded }
+
+abstract final class AppBreakpoints {
+  /// Tablets and narrow desktop windows: navigation rail.
+  static const double medium = 600;
+
+  /// Wide windows: sidebar and side-by-side columns.
+  static const double expanded = 1024;
+
+  /// Widest a single column of cards grows before it centers.
+  static const double readableWidth = 720;
+
+  static WindowSize of(double width) => width >= expanded
+      ? WindowSize.expanded
+      : width >= medium
+      ? WindowSize.medium
+      : WindowSize.compact;
+
+  /// Side inset that centers a column of [maxWidth] in [available] width.
+  static double centeringInset(
+    double available, {
+    double maxWidth = readableWidth,
+  }) => available > maxWidth ? (available - maxWidth) / 2 : 0;
+}
+
+extension WindowSizeContext on BuildContext {
+  /// Size class of the whole window, not of the pane this widget is in.
+  WindowSize get windowSize => AppBreakpoints.of(MediaQuery.sizeOf(this).width);
+}
+
+/// A phone, by its shorter side; tablets and desktops are wider either way.
+bool isPhoneSized(Size logicalSize) =>
+    logicalSize.shortestSide < AppBreakpoints.medium;

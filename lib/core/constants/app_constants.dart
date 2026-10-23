@@ -1,9 +1,24 @@
-abstract class AppConstants {
-  static const String appName = 'RevenueCat';
+import 'package:flutter/foundation.dart';
 
-  static const String rcApiBaseUrl = 'https://api.revenuecat.com/v1/developers';
-  static const String rcApiInternalBaseUrl =
-      'https://api.revenuecat.com/internal/v1/developers';
+abstract class AppConstants {
+  static const String appName = 'OpenRC';
+
+  static const String repoUrl = 'https://github.com/stackwares/openrc';
+  static const String newIssueUrl = '$repoUrl/issues/new/choose';
+
+  /// The OpenRC relay (`relay/`). RevenueCat's API answers browsers only
+  /// from its own dashboard, so the web app reaches it through this. Point
+  /// `--dart-define=OPENRC_RELAY_URL=...` at your own deployment.
+  static const String relayUrl = String.fromEnvironment(
+    'OPENRC_RELAY_URL',
+    defaultValue: 'https://openrc-relay.stackwares.workers.dev',
+  );
+
+  static String get _rcApiOrigin =>
+      kIsWeb ? relayUrl : 'https://api.revenuecat.com';
+  static String get rcApiBaseUrl => '$_rcApiOrigin/v1/developers';
+  static String get rcApiInternalBaseUrl =>
+      '$_rcApiOrigin/internal/v1/developers';
 
   static const String supportEmail = 'support@revenuecat.com';
 
@@ -20,14 +35,7 @@ abstract class AppConstants {
 
   static const String headerXRequestedWith = 'XMLHttpRequest';
 
-  /// Region for [registerFcmToken] and relay deployment (default `us-central1`).
-  static const String firebaseFunctionsRegion = String.fromEnvironment(
-    'FIREBASE_FUNCTIONS_REGION',
-    defaultValue: 'us-central1',
-  );
-
-  /// HTTPS function that looks up App Store / Play icons for the web app.
-  /// Phone builds talk to the stores directly; browsers are blocked.
-  static const String appIconLookupUrl =
-      'https://us-central1-stackwares-landing.cloudfunctions.net/lookupAppIcon';
+  /// Looks up App Store / Google Play icons for the web app. Native builds
+  /// ask the stores directly; browsers are blocked by CORS.
+  static String get appIconLookupUrl => '$relayUrl/icon';
 }

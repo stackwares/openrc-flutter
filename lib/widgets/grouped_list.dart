@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
 
 /// Rows inside one rounded card with inset hairline dividers (non-lazy).
 class GroupedCard extends StatelessWidget {

@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "openrc-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    // Query strings can carry search terms; keep them out of logs and traces.
+    "redact_query_string": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  "vars": {
+    // Origins the web app is served from, comma-separated. "https://*.host"
+    // also allows preview deployments; "http://localhost:*" allows any port.
+    "ALLOWED_ORIGINS": "https://openrc.pages.dev,https://*.openrc.pages.dev"
+  }
+}

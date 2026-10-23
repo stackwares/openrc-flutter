@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:revenuecat/theme/app_colors.dart';
+import 'package:openrc/theme/app_colors.dart';
 
 extension BuildContextX on BuildContext {
   ThemeData get theme => Theme.of(this);

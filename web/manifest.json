@@ -1,12 +1,14 @@
 {
-    "name": "revenuecat",
-    "short_name": "revenuecat",
+    "name": "OpenRC",
+    "short_name": "OpenRC",
+    "id": "/",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0D0E10",
+    "theme_color": "#0D0E10",
+    "description": "An open-source RevenueCat dashboard: every sale as it happens, this month's revenue, upcoming payouts and charts.",
+    "orientation": "any",
+    "categories": ["business", "finance", "productivity"],
     "prefer_related_applications": false,
     "icons": [
         {

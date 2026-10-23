@@ -1,7 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/theme/app_colors.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:openrc/theme/app_colors.dart';
+import 'package:openrc/theme/app_tokens.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 const _subThemes = FlexSubThemesData(

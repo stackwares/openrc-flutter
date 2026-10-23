@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/utils/currency_format.dart';
-import 'package:revenuecat/features/settings/widgets/settings_rows.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/animated_reveal.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/features/settings/widgets/settings_rows.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/animated_reveal.dart';
 
 /// Example sale used to show what a fee means in money.
 const double kStoreFeeExampleSale = 9.99;
@@ -14,9 +16,12 @@ String formatFeePercent(double v) => (v - v.roundToDouble()).abs() < 1e-9
     : '${v.toStringAsFixed(1)}%';
 
 /// "A $9.99 sale counts as $8.49" for a fee of [percent].
-String storeFeeExample(double percent) =>
-    'A ${formatExactUsd(kStoreFeeExampleSale)} sale counts as '
-    '${formatExactUsd(kStoreFeeExampleSale * (1 - percent / 100))}';
+String storeFeeExample(double percent) => 'settings.storeFeeExample'.tr(
+  namedArgs: {
+    'sale': formatExactUsd(kStoreFeeExampleSale),
+    'counted': formatExactUsd(kStoreFeeExampleSale * (1 - percent / 100)),
+  },
+);
 
 /// Edits one store's fee. Returns the new percent, or null when dismissed.
 Future<double?> showStoreFeeSheet(
@@ -26,11 +31,8 @@ Future<double?> showStoreFeeSheet(
   required IconData icon,
   required double current,
 }) {
-  return showModalBottomSheet<double>(
+  return showAdaptiveSheet<double>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
     builder: (_) => _StoreFeeSheet(
       store: store,
       company: company,
@@ -121,7 +123,7 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
   void _save() {
     final v = _value;
     if (v == null) {
-      setState(() => _error = 'Enter a fee between 0 and 100.');
+      setState(() => _error = 'settings.feeRangeError'.tr());
       return;
     }
     Navigator.of(context).pop(v);
@@ -149,7 +151,9 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '${widget.store} fee',
+                  'settings.storeFeeTitle'.tr(
+                    namedArgs: {'store': widget.store},
+                  ),
                   style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
@@ -157,9 +161,12 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            'The share ${widget.company} keeps from each ${widget.store} '
-            'sale. Most developers pay 15% or 30%, depending on their '
-            'program.',
+            'settings.storeFeeBody'.tr(
+              namedArgs: {
+                'company': widget.company,
+                'store': widget.store,
+              },
+            ),
             style: tt.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
               height: 1.4,
@@ -168,10 +175,13 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
           const SizedBox(height: 20),
           SegmentedButton<_FeeChoice>(
             showSelectedIcon: false,
-            segments: const [
+            segments: [
               ButtonSegment(value: _FeeChoice.fifteen, label: Text('15%')),
               ButtonSegment(value: _FeeChoice.thirty, label: Text('30%')),
-              ButtonSegment(value: _FeeChoice.custom, label: Text('Custom')),
+              ButtonSegment(
+                value: _FeeChoice.custom,
+                label: Text('settings.custom'.tr()),
+              ),
             ],
             selected: {_choice},
             onSelectionChanged: (s) => _choose(s.single),
@@ -191,7 +201,7 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
                 onChanged: (_) => setState(() => _error = null),
                 onSubmitted: (_) => _save(),
                 decoration: InputDecoration(
-                  labelText: 'Fee',
+                  labelText: 'settings.feeLabel'.tr(),
                   suffixText: '%',
                   errorText: _error,
                 ),
@@ -216,7 +226,7 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
                 Expanded(
                   child: Text(
                     value == null
-                        ? 'Enter a fee to see what a sale counts as'
+                        ? 'settings.feePreviewEmpty'.tr()
                         : storeFeeExample(value),
                     style: tt.bodyMedium?.copyWith(
                       fontFeatures: AppText.tabular,
@@ -232,7 +242,7 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('Save'),
+            child: Text('settings.save'.tr()),
           ),
         ],
       ),

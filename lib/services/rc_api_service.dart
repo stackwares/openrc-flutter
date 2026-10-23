@@ -2,17 +2,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/models/rc_chart_response.dart';
-import 'package:revenuecat/models/rc_error_response.dart';
-import 'package:revenuecat/models/rc_login_request.dart';
-import 'package:revenuecat/models/rc_login_response.dart';
-import 'package:revenuecat/models/rc_me_response.dart';
-import 'package:revenuecat/models/rc_overview_response.dart';
-import 'package:revenuecat/models/rc_project.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/models/rc_transaction_detail.dart';
-import 'package:revenuecat/models/rc_transaction_detail_activity.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/models/rc_error_response.dart';
+import 'package:openrc/models/rc_login_request.dart';
+import 'package:openrc/models/rc_login_response.dart';
+import 'package:openrc/models/rc_me_response.dart';
+import 'package:openrc/models/rc_overview_response.dart';
+import 'package:openrc/models/rc_project.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction_detail.dart';
+import 'package:openrc/models/rc_transaction_detail_activity.dart';
 
 /// [Options.extra] key: short label for debug logging (e.g. `transactions:scroll`).
 const kRcApiRequestContextExtraKey = 'rc_api_request_context';
@@ -250,12 +250,18 @@ class RcApiService {
   }
 
   /// Chart series under `charts_v2` (public `/v1/developers` base). [resolution] is the API enum int (0 = day per Kedi).
+  /// [filters] narrows the series by dimension, e.g. `{'store': ['app_store']}`.
+  /// This API takes each dimension as its own parameter with values joined
+  /// by commas (`store=app_store,mac_app_store`); a repeated parameter keeps
+  /// only its first value, and the JSON `filters` of the v2 REST API is
+  /// ignored.
   Future<RcChartResponse> charts({
     required String name,
     int resolution = 0,
     String? startDate,
     String? endDate,
     String? revenueType,
+    Map<String, List<String>>? filters,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/me/charts_v2/$name',
@@ -264,6 +270,8 @@ class RcApiService {
         'start_date': ?startDate,
         'end_date': ?endDate,
         'revenue_type': ?revenueType,
+        if (filters != null)
+          for (final e in filters.entries) e.key: e.value.join(','),
       },
     );
     return RcChartResponse.fromJson(requireBody(response));

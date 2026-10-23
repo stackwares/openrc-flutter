@@ -1,4 +1,4 @@
-import 'package:revenuecat/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction.dart';
 
 class RcSubscriberAttribute {
   final String? key;

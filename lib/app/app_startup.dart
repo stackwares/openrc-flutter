@@ -1,9 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:revenuecat/services/push_registration_service.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/services/utilities_service.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/services/utilities_service.dart';
 
 final _log = Logger('AppStartup');
 
@@ -15,12 +13,6 @@ class AppStartup {
   Future<void> initialize() async {
     _log.info('App startup initialization started');
 
-    if (!kIsWeb &&
-        (defaultTargetPlatform == TargetPlatform.android ||
-            defaultTargetPlatform == TargetPlatform.iOS)) {
-      await PushRegistrationService.instance.ensureFirebaseAuthForFirestore();
-    }
-
     final themeMode = await container
         .read(utilitiesServiceProvider)
         .loadThemeMode();
@@ -29,6 +21,9 @@ class AppStartup {
         .read(utilitiesServiceProvider)
         .loadColorScheme();
     container.read(colorSchemeProvider.notifier).state = colorScheme;
+    container.read(appLanguageProvider.notifier).state = await container
+        .read(utilitiesServiceProvider)
+        .loadLanguage();
 
     final hasSession = await container.read(rcAuthServiceProvider).restoreSession();
     _log.info('Session restored: $hasSession');

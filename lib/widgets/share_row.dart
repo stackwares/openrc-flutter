@@ -1,7 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/theme/app_tokens.dart';
 
 /// One part of a whole: leading mark, label, amount, and a share bar with %.
 class ShareRow extends StatelessWidget {
@@ -79,7 +80,9 @@ class ShareRow extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Semantics(
-                        label: '${pct.toStringAsFixed(1)}% of total',
+                        label: 'common.percentOfTotal'.tr(
+                          namedArgs: {'value': pct.toStringAsFixed(1)},
+                        ),
                         excludeSemantics: true,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(3),

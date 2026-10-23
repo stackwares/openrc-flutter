@@ -1,15 +1,15 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/charts/home_notifier.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/features/charts/widgets/overview_detail_line_chart.dart';
-import 'package:revenuecat/features/charts/widgets/overview_item_card.dart';
-import 'package:revenuecat/models/overview_metric_type.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/charts/home_notifier.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/features/charts/widgets/overview_detail_line_chart.dart';
+import 'package:openrc/features/charts/widgets/overview_item_card.dart';
+import 'package:openrc/models/overview_metric_type.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
 
 class OverviewMetricDetailScreen extends ConsumerStatefulWidget {
   final OverviewMetricType metric;
@@ -75,13 +75,18 @@ class _OverviewMetricDetailScreenState
       color: context.colorScheme.onSurfaceVariant,
     );
 
+    // Charts get room to breathe, but not the whole of a wide window.
+    final inset = AppBreakpoints.centeringInset(
+      MediaQuery.sizeOf(context).width,
+      maxWidth: 992,
+    );
     return Scaffold(
       appBar: AppBar(title: Text(widget.metric.label)),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          16,
+          16 + inset,
           4,
-          16,
+          16 + inset,
           24 + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
@@ -102,7 +107,7 @@ class _OverviewMetricDetailScreenState
               children: [
                 delta,
                 const SizedBox(width: 6),
-                Text('over this range', style: muted),
+                Text('charts.overThisRange'.tr(), style: muted),
               ],
             ),
           ],
@@ -110,7 +115,7 @@ class _OverviewMetricDetailScreenState
           if (points.isEmpty)
             AppCard(
               child: Text(
-                'No daily series for this metric in this range.',
+                'charts.noSeries'.tr(),
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
                 ),
@@ -146,7 +151,7 @@ class _OverviewMetricDetailScreenState
                     },
                   ),
                   const SizedBox(height: 4),
-                  Text('Drag across the chart to see each day.', style: muted),
+                  Text('charts.dragHint'.tr(), style: muted),
                 ],
               ),
             ),

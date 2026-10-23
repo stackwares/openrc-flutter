@@ -5,10 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:logging/logging.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/app_icon_lookup.dart';
-import 'package:revenuecat/services/app_icon_overrides_store.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/app_icon_lookup.dart';
+import 'package:openrc/services/app_icon_overrides_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _log = Logger('AutoAppIcons');

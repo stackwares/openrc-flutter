@@ -44,5 +44,12 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase Functions local secrets
-functions/.env
+# Local secrets and per-developer build settings
+.env
+.env.*
+!.env.example
+dart_defines/*.json
+!dart_defines/*.example.json
+
+# Wrangler local state
+.wrangler/

@@ -1,19 +1,18 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
-import 'package:revenuecat/models/rc_login_request.dart';
-import 'package:revenuecat/models/rc_login_response.dart';
-import 'package:revenuecat/models/rc_me_response.dart';
-import 'package:revenuecat/services/firestore_service.dart';
-import 'package:revenuecat/services/push_registration_service.dart';
-import 'package:revenuecat/services/rc_api_service.dart';
-import 'package:revenuecat/services/widget_data_channel.dart';
+import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/models/rc_login_request.dart';
+import 'package:openrc/models/rc_login_response.dart';
+import 'package:openrc/models/rc_me_response.dart';
+import 'package:openrc/services/payout_history_cache.dart';
+import 'package:openrc/services/rc_api_service.dart';
+import 'package:openrc/services/telemetry.dart';
+import 'package:openrc/services/widget_data_channel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _log = Logger('RcAuthService');
@@ -41,7 +40,11 @@ final signOutReasonProvider = StateProvider<SignOutReason?>((ref) => null);
 class RcAuthService {
   final RcApiService _api;
   final Ref _ref;
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  // On macOS the login keychain needs no keychain-sharing entitlement, so
+  // builds signed without a development team (from source) keep the session.
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+  );
 
   RcAuthService(this._api, this._ref);
 
@@ -88,14 +91,11 @@ class RcAuthService {
         _ref.read(isSignedInProvider.notifier).state = true;
         unawaited(_rememberEmail(email));
         _log.info('Signed in as ${response.email}');
-
-        await PushRegistrationService.instance.ensureFirebaseAuthForFirestore();
-        unawaited(PushRegistrationService.instance.registerForSignedInUser());
+        Telemetry.event('signed_in', {'two_factor': otpCode != null});
 
         try {
           final me = await _api.me();
           _ref.read(rcMeProvider.notifier).state = me;
-          unawaited(_syncRevenueCatToFirestore(me));
         } catch (e) {
           _log.info('Profile fetch after sign in failed: $e');
         }
@@ -128,21 +128,10 @@ class RcAuthService {
   }
 
   Future<void> _signOut() async {
-    await Future.wait([
-      () async {
-        try {
-          await _api.logout();
-        } catch (e) {
-          _log.warning('Logout API call failed: $e');
-        }
-      }(),
-      _detachDeviceFromAccount(),
-    ]);
-
     try {
-      await FirebaseAuth.instance.signOut();
+      await _api.logout();
     } catch (e) {
-      _log.warning('Firebase sign out failed: $e');
+      _log.warning('Logout API call failed: $e');
     }
 
     try {
@@ -151,30 +140,26 @@ class RcAuthService {
       _log.warning('Clearing widget data failed: $e');
     }
     try {
+      await PayoutHistoryCache.clear();
+    } catch (e) {
+      _log.warning('Clearing saved payouts failed: $e');
+    }
+    try {
       await _clearToken();
     } catch (e) {
       _log.warning('Clearing stored token failed: $e');
     }
     _api.clearAuthToken();
+    Telemetry.event('signed_out', {
+      'reason': _pendingReason == SignOutReason.sessionExpired
+          ? 'session_expired'
+          : 'user',
+    });
     _ref.read(signOutReasonProvider.notifier).state = _pendingReason;
     _pendingReason = null;
     _ref.read(isSignedInProvider.notifier).state = false;
     _ref.read(rcMeProvider.notifier).state = null;
     _log.info('Signed out');
-  }
-
-  /// Before leaving Firebase: stop this device's sale pushes for the account
-  /// and remove the RevenueCat identity saved for it. Bounded so a slow
-  /// network never holds up sign-out.
-  Future<void> _detachDeviceFromAccount() async {
-    try {
-      await Future.wait([
-        PushRegistrationService.instance.unregisterForSignOut(),
-        _ref.read(firestoreServiceProvider).clearRevenueCatProfile(),
-      ]).timeout(const Duration(seconds: 5));
-    } catch (e) {
-      _log.warning('Detaching device from account failed: $e');
-    }
   }
 
   Future<bool> restoreSession() async {
@@ -209,7 +194,6 @@ class RcAuthService {
       try {
         final me = await _api.me();
         _ref.read(rcMeProvider.notifier).state = me;
-        unawaited(_syncRevenueCatToFirestore(me));
       } on DioException catch (e) {
         final rcError = _api.parseError(e);
         if (e.response?.statusCode == 401 ||
@@ -252,17 +236,5 @@ class RcAuthService {
   Future<void> _clearToken() async {
     await _secureStorage.delete(key: AppConstants.prefAuthToken);
     await _secureStorage.delete(key: AppConstants.prefAuthTokenExpiresAt);
-  }
-
-  Future<void> _syncRevenueCatToFirestore(RcMeResponse me) async {
-    try {
-      await _ref.read(firestoreServiceProvider).syncRevenueCatProfile(
-            email: me.email,
-            distinctId: me.distinctId,
-            name: me.name,
-          );
-    } catch (e, st) {
-      _log.fine('Firestore RC sync skipped: $e\n$st');
-    }
   }
 }

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
-import 'package:revenuecat/core/constants/app_constants.dart';
+import 'package:openrc/core/constants/app_constants.dart';
 
 final _log = Logger('AppIconLookup');
 

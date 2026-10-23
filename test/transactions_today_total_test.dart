@@ -2,12 +2,12 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/transactions/transactions_common.dart';
-import 'package:revenuecat/features/transactions/transactions_screen.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/exchange_rate_provider.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/theme/app_theme.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Fixed extends TransactionsNotifier {

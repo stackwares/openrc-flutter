@@ -18,7 +18,15 @@ class RcChartResponse {
   final Map<String, dynamic>? summary;
   final String? lastComputedAt;
 
-  const RcChartResponse({this.values, this.summary, this.lastComputedAt});
+  /// Query parameters the API ignored, by kind, e.g. `{filters: [store]}`.
+  final Map<String, dynamic>? unsupportedParams;
+
+  const RcChartResponse({
+    this.values,
+    this.summary,
+    this.lastComputedAt,
+    this.unsupportedParams,
+  });
 
   factory RcChartResponse.fromJson(Map<String, dynamic> json) => RcChartResponse(
         values: (json['values'] as List<dynamic>?)
@@ -27,7 +35,14 @@ class RcChartResponse {
             .toList(),
         summary: json['summary'] as Map<String, dynamic>?,
         lastComputedAt: json['last_computed_at'] as String?,
+        unsupportedParams: json['unsupported_params'] as Map<String, dynamic>?,
       );
+
+  /// Names of the query parameters the API ignored.
+  List<String> get ignoredParams => [
+        for (final v in unsupportedParams?.values ?? const [])
+          if (v is List) ...v.whereType<String>(),
+      ];
 
   double? getSummaryValue(String category, String key) {
     final cat = summary?[category];

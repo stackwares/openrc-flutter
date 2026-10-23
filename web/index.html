@@ -1,46 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
+    Replaced by the `--base-href` given to `flutter build web`. It must start
+    and end with "/".
   -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>OpenRC: your RevenueCat revenue, on every device</title>
+  <meta name="description" content="An open-source RevenueCat dashboard. Every sale as it happens, this month's revenue, upcoming payouts and charts, on the web, iPhone, iPad, Android and Mac.">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0D0E10" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Link previews -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="OpenRC">
+  <meta property="og:title" content="OpenRC: your RevenueCat revenue, on every device">
+  <meta property="og:description" content="Every sale as it happens, this month's revenue, upcoming payouts and charts. Open source.">
+  <meta property="og:image" content="https://openrc.pages.dev/icons/Icon-512.png">
+  <meta name="twitter:card" content="summary">
+
+  <!-- Home screen -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="revenuecat">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OpenRC">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>revenuecat</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    :root { color-scheme: dark light; --bg: #0D0E10; --fg: #9A9DA6; }
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #F4F5F7; --fg: #5C606B; }
+    }
+    html, body { margin: 0; height: 100%; background: var(--bg); }
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      font: 600 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--fg); transition: opacity 240ms ease-out;
+    }
+    #splash img { width: 96px; height: 96px; animation: breathe 1.6s ease-in-out infinite; }
+    #splash.done { opacity: 0; pointer-events: none; }
+    @keyframes breathe { 50% { transform: scale(0.94); opacity: 0.8; } }
+    @media (prefers-reduced-motion: reduce) { #splash img { animation: none; } }
+  </style>
+
+  <!--
+    PostHog loader stub (https://posthog.com/docs/libraries/js). It does not
+    start anything: the app calls posthog.init only in builds that pass a
+    POSTHOG_PROJECT_TOKEN, and only while the user allows it.
+  -->
+  <script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  </script>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <div id="splash" aria-label="Loading OpenRC" role="status">
+    <img src="icons/Icon-192.png" alt="">
+    <span>OpenRC</span>
+  </div>
+  <noscript>OpenRC needs JavaScript to run.</noscript>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      splash.classList.add('done');
+      setTimeout(function () { splash.remove(); }, 300);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

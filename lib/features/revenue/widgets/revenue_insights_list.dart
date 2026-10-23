@@ -1,57 +1,53 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/revenue/revenue_insights_compute.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/auto_app_icons_store.dart';
-import 'package:revenuecat/services/commission_settings_store.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/app_card.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
-import 'package:revenuecat/widgets/share_row.dart';
-import 'package:revenuecat/widgets/split_bar.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/revenue/revenue_insights_compute.dart';
+import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
+import 'package:openrc/widgets/share_row.dart';
+import 'package:openrc/widgets/split_bar.dart';
 
 Future<void> _showRevenueInsightsSheet({
   required BuildContext context,
   required List<RcTransaction> transactions,
   required bool compactRevenueAmounts,
 }) {
-  return showModalBottomSheet<void>(
+  return showAdaptiveSheet<void>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    showDragHandle: true,
+    heightFactor: 0.88,
     builder: (sheetContext) {
-      final height = MediaQuery.sizeOf(sheetContext).height * 0.88;
-      return SizedBox(
-        height: height,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Text(
-                'Revenue breakdown',
-                style: sheetContext.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+            child: Text(
+              'revenue.revenueBreakdown'.tr(),
+              style: sheetContext.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                child: RealtimeRevenueInsightsList(
-                  transactions: transactions,
-                  compactRevenueAmounts: compactRevenueAmounts,
-                  showInsightsHeader: false,
-                  cardMargin: EdgeInsets.zero,
-                ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: RealtimeRevenueInsightsList(
+                transactions: transactions,
+                compactRevenueAmounts: compactRevenueAmounts,
+                showInsightsHeader: false,
+                cardMargin: EdgeInsets.zero,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     },
   );
@@ -94,7 +90,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
       return AppCard(
         margin: cardMargin,
         child: Text(
-          'No transactions to break down yet.',
+          'revenue.noTransactionsToBreakDown'.tr(),
           style: context.textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -132,7 +128,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
 
     final sections = <Widget>[
       _InsightsSection(
-        title: 'Stores',
+        title: 'revenue.stores'.tr(),
         rows: [
           enter(
             ShareRow(
@@ -158,7 +154,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
           if (data.otherStoresRevenue.abs() > 1e-9)
             enter(
               ShareRow(
-                label: 'Web and other stores',
+                label: 'revenue.webAndOtherStores'.tr(),
                 pct: data.otherStoresPct,
                 amount: amount(data.otherStoresRevenue),
                 barColor: colors.web,
@@ -171,11 +167,11 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         ],
       ),
       _InsightsSection(
-        title: 'New vs renewals',
+        title: 'revenue.newVsRenewals'.tr(),
         rows: [
           enter(
             ShareRow(
-              label: 'New',
+              label: 'revenue.new'.tr(),
               pct: data.newPct,
               amount: amount(data.newRevenue),
               barColor: colors.purchase,
@@ -187,7 +183,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
           ),
           enter(
             ShareRow(
-              label: 'Renewals',
+              label: 'revenue.renewals'.tr(),
               pct: data.renewalPct,
               amount: amount(data.renewalRevenue),
               barColor: colors.renewal,
@@ -200,8 +196,8 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         ],
       ),
       _InsightsSection(
-        title: 'Top apps',
-        emptyText: 'No app revenue',
+        title: 'revenue.topApps'.tr(),
+        emptyText: 'revenue.noAppRevenue'.tr(),
         rows: [
           for (final e in data.topApps)
             enter(
@@ -219,8 +215,8 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         ],
       ),
       _InsightsSection(
-        title: 'Top countries',
-        emptyText: 'No country data',
+        title: 'revenue.topCountries'.tr(),
+        emptyText: 'revenue.noCountryData'.tr(),
         rows: [
           for (final e in data.topCountries)
             enter(
@@ -248,7 +244,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Text(
-                'Revenue breakdown',
+                'revenue.revenueBreakdown'.tr(),
                 style: context.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
@@ -308,7 +304,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Breakdown',
+                  'revenue.breakdown'.tr(),
                   style: context.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
@@ -318,7 +314,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 color: scheme.onSurfaceVariant,
-                semanticLabel: 'Open breakdown',
+                semanticLabel: 'revenue.openBreakdown'.tr(),
               ),
             ],
           ),
@@ -339,7 +335,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
               SplitSegment(
                 value: data.otherStoresPct,
                 color: colors.web,
-                label: 'Web and other stores',
+                label: 'revenue.webAndOtherStores'.tr(),
               ),
             ],
           ),
@@ -364,7 +360,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
                   child: _StoreShareLabel(
                     icon: Icons.language_rounded,
                     color: colors.web,
-                    name: 'Web',
+                    name: 'revenue.web'.tr(),
                     pct: data.otherStoresPct,
                     labelStyle: labelStyle,
                     valueStyle: valueStyle,
@@ -390,7 +386,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
           if (apps.isNotEmpty) ...[
             const SizedBox(height: 14),
             _PreviewLine(
-              title: 'Top apps',
+              title: 'revenue.topApps'.tr(),
               more: data.topApps.length - apps.length,
               items: [
                 for (final a in apps)
@@ -408,7 +404,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
           if (countries.isNotEmpty) ...[
             const SizedBox(height: 10),
             _PreviewLine(
-              title: 'Top countries',
+              title: 'revenue.topCountries'.tr(),
               more: data.topCountries.length - countries.length,
               items: [
                 for (final c in countries)
@@ -417,7 +413,10 @@ class _CollapsedBreakdownCard extends StatelessWidget {
                       countryInsightLeadingEmoji(c.countryKey),
                       style: const TextStyle(fontSize: 14, height: 1.1),
                     ),
-                    label: c.countryKey.length == 2 ? c.countryKey : c.name,
+                    // ISO codes read short; the unknown bucket ('__') by name.
+                    label: c.countryKey.length == 2 && c.countryKey != '__'
+                        ? c.countryKey
+                        : c.name,
                     pct: c.pct,
                   ),
               ],
@@ -548,7 +547,7 @@ class _PreviewLine extends StatelessWidget {
               ),
             if (more > 0)
               Text(
-                '+$more more',
+                'revenue.moreCount'.tr(namedArgs: {'count': '$more'}),
                 style: small?.copyWith(color: scheme.onSurfaceVariant),
               ),
           ],

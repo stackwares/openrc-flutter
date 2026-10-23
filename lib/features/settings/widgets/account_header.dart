@@ -1,11 +1,12 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
-import 'package:revenuecat/models/rc_project.dart';
-import 'package:revenuecat/services/rc_account_projects_provider.dart';
-import 'package:revenuecat/services/rc_auth_service.dart';
-import 'package:revenuecat/widgets/app_card.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
+import 'package:openrc/models/rc_project.dart';
+import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/services/rc_auth_service.dart';
+import 'package:openrc/widgets/app_card.dart';
 
 /// Who is signed in: initials avatar, name / email, plan and projects.
 class SettingsAccountHeader extends ConsumerWidget {
@@ -27,7 +28,9 @@ class SettingsAccountHeader extends ConsumerWidget {
   static String? planLabel(String? plan) {
     final p = plan?.trim().replaceAll('_', ' ') ?? '';
     if (p.isEmpty) return null;
-    return '${p[0].toUpperCase()}${p.substring(1)} plan';
+    return 'settings.planLabel'.tr(
+      namedArgs: {'plan': '${p[0].toUpperCase()}${p.substring(1)}'},
+    );
   }
 
   @override
@@ -40,8 +43,10 @@ class SettingsAccountHeader extends ConsumerWidget {
     final name = me?.name?.trim();
     final email = me?.email?.trim();
     final hasName = name != null && name.isNotEmpty;
-    final title = hasName ? name : (email ?? 'RevenueCat account');
-    final subtitle = hasName ? email : 'Signed in to RevenueCat';
+    final title = hasName
+        ? name
+        : (email ?? 'settings.revenueCatAccount'.tr());
+    final subtitle = hasName ? email : 'settings.signedInToRevenueCat'.tr();
     final initials = initialsFor(name, email);
     final plan = planLabel(me?.currentPlan);
 
@@ -105,9 +110,9 @@ class SettingsAccountHeader extends ConsumerWidget {
                       if (projects.isNotEmpty)
                         _Pill(
                           leading: _ProjectIcons(projects: projects),
-                          label:
-                              '${projects.length} project'
-                              '${projects.length == 1 ? '' : 's'}',
+                          label: 'settings.projectCount'.plural(
+                            projects.length,
+                          ),
                         ),
                     ],
                   ),

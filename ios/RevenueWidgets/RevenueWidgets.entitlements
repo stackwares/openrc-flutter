@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.revenuecat.client.widgets</string>
+		<string>group.com.openrc.app.widgets</string>
 	</array>
 </dict>
 </plist>

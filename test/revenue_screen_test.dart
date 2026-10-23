@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revenuecat/features/revenue/revenue_screen.dart';
-import 'package:revenuecat/features/transactions/transactions_screen.dart';
+import 'package:openrc/features/revenue/revenue_screen.dart';
+import 'package:openrc/features/transactions/transactions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FixedTransactions extends TransactionsNotifier {

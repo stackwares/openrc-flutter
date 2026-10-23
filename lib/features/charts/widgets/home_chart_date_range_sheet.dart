@@ -1,5 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:openrc/widgets/adaptive_modal.dart';
 
 class _PresetRanges {
   static DateTime _todayLocal() {
@@ -79,11 +80,8 @@ class HomeChartDateRangeSheet extends StatelessWidget {
     required DateTime chartRangeStart,
     required DateTime chartRangeEnd,
   }) {
-    return showModalBottomSheet<DateTimeRange>(
+    return showAdaptiveSheet<DateTimeRange>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
       builder: (context) => HomeChartDateRangeSheet(
         chartRangeStart: chartRangeStart,
         chartRangeEnd: chartRangeEnd,
@@ -123,32 +121,32 @@ class HomeChartDateRangeSheet extends StatelessWidget {
       IconData icon,
     })>[
       (
-        title: 'Last 7 days',
-        hint: 'Through today',
+        title: 'charts.presets.last7Days'.tr(),
+        hint: 'charts.presets.throughToday'.tr(),
         range: _PresetRanges.last7Days(),
         icon: Icons.view_week_outlined,
       ),
       (
-        title: 'Last 30 days',
-        hint: 'Through today · default',
+        title: 'charts.presets.last30Days'.tr(),
+        hint: 'charts.presets.throughTodayDefault'.tr(),
         range: _PresetRanges.last30Days(),
         icon: Icons.calendar_month_outlined,
       ),
       (
-        title: 'This week',
-        hint: 'Start of week through today',
+        title: 'charts.presets.thisWeek'.tr(),
+        hint: 'charts.presets.startOfWeekThroughToday'.tr(),
         range: _PresetRanges.thisWeek(weekStarts),
         icon: Icons.today_outlined,
       ),
       (
-        title: 'This month',
-        hint: 'Month to date',
+        title: 'charts.presets.thisMonth'.tr(),
+        hint: 'charts.presets.monthToDate'.tr(),
         range: _PresetRanges.thisMonth(),
         icon: Icons.calendar_view_month_outlined,
       ),
       (
-        title: 'This year',
-        hint: 'Year to date',
+        title: 'charts.presets.thisYear'.tr(),
+        hint: 'charts.presets.yearToDate'.tr(),
         range: _PresetRanges.thisYear(),
         icon: Icons.event_note_outlined,
       ),
@@ -163,7 +161,7 @@ class HomeChartDateRangeSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 4, 24, 8),
               child: Text(
-                'Chart date range',
+                'charts.dateRange.title'.tr(),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -184,7 +182,7 @@ class HomeChartDateRangeSheet extends StatelessWidget {
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.edit_calendar_outlined),
-              title: const Text('Custom range'),
+              title: Text('charts.dateRange.custom'.tr()),
               subtitle: Text(
                 _formatRange(
                   DateTimeRange(
@@ -202,7 +200,7 @@ class HomeChartDateRangeSheet extends StatelessWidget {
                   ),
                   firstDate: DateTime(2019, 1, 1),
                   lastDate: DateTime.now(),
-                  helpText: 'Charts & period metrics',
+                  helpText: 'charts.dateRange.helpText'.tr(),
                 );
                 if (picked != null && context.mounted) {
                   Navigator.pop(context, picked);

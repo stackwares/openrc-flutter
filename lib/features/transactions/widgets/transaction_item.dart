@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/theme/store_brand_icon_colors.dart';
-import 'package:revenuecat/core/utils/region_display_name.dart';
-import 'package:revenuecat/core/utils/subscriber_tenure_format.dart';
-import 'package:revenuecat/core/utils/relative_time_format.dart';
-import 'package:revenuecat/core/utils/product_identifier_display.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_leading_avatar.dart';
-import 'package:revenuecat/features/transactions/widgets/transaction_type_badge.dart';
-import 'package:revenuecat/models/rc_transaction.dart';
-import 'package:revenuecat/services/auto_app_icons_store.dart';
-import 'package:revenuecat/services/utilities_service.dart';
-import 'package:revenuecat/theme/app_tokens.dart';
-import 'package:revenuecat/widgets/dual_currency_text.dart';
-import 'package:revenuecat/widgets/status_label.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/theme/store_brand_icon_colors.dart';
+import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/subscriber_tenure_format.dart';
+import 'package:openrc/core/utils/relative_time_format.dart';
+import 'package:openrc/core/utils/product_identifier_display.dart';
+import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
+import 'package:openrc/features/transactions/widgets/transaction_type_badge.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/utilities_service.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/dual_currency_text.dart';
+import 'package:openrc/widgets/status_label.dart';
 
 /// Leading inset of the hairline between rows (avatar + gaps).
 const double kTransactionRowDividerIndent = 64;

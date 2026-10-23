@@ -1,26 +1,28 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:revenuecat/widgets/app_state_message.dart';
+import 'package:openrc/widgets/app_state_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:revenuecat/core/animations/app_motion.dart';
-import 'package:revenuecat/core/extensions/context_extensions.dart';
-import 'package:revenuecat/core/shell_insets.dart';
-import 'package:revenuecat/features/settings/settings_screen.dart';
-import 'package:revenuecat/features/charts/home_notifier.dart';
-import 'package:revenuecat/features/charts/overview_metric_detail_screen.dart';
-import 'package:revenuecat/features/charts/widgets/home_chart_date_range_sheet.dart';
-import 'package:revenuecat/features/charts/widgets/overview_item_card.dart';
-import 'package:revenuecat/models/overview_metric_type.dart';
-import 'package:revenuecat/widgets/pressable_scale.dart';
-import 'package:revenuecat/widgets/shell_header.dart';
+import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/shell_insets.dart';
+import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/features/charts/home_notifier.dart';
+import 'package:openrc/features/charts/overview_metric_detail_screen.dart';
+import 'package:openrc/features/charts/widgets/home_chart_date_range_sheet.dart';
+import 'package:openrc/features/charts/widgets/overview_item_card.dart';
+import 'package:openrc/models/overview_metric_type.dart';
+import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/pressable_scale.dart';
+import 'package:openrc/widgets/shell_header.dart';
 
 /// Quick chart ranges shown as chips (all end today).
 enum _RangePreset { last7Days, last30Days, thisMonth }
 
 extension on _RangePreset {
   String get label => switch (this) {
-    _RangePreset.last7Days => '7 days',
-    _RangePreset.last30Days => '30 days',
-    _RangePreset.thisMonth => 'This month',
+    _RangePreset.last7Days => 'charts.rangeChips.last7Days'.tr(),
+    _RangePreset.last30Days => 'charts.rangeChips.last30Days'.tr(),
+    _RangePreset.thisMonth => 'charts.presets.thisMonth'.tr(),
   };
 
   DateTimeRange get range {
@@ -89,7 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: ShellHeader(
-        title: 'Charts',
+        title: 'charts.title'.tr(),
         subtitle: rangeLabel,
         bottom: state.isLoading
             ? const PreferredSize(
@@ -104,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (ShellHeader.showsRefreshButton)
             HeaderIconButton(
               icon: Icons.refresh_rounded,
-              tooltip: 'Refresh',
+              tooltip: 'charts.refresh'.tr(),
               onPressed: state.isLoading ? null : () => notifier.fetchData(),
             ),
           const SettingsAppBarAction(),
@@ -117,14 +119,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildRangeChips(HomeState state) {
+  Widget _buildRangeChips(HomeState state, {double inset = 0}) {
     final selected = _matchingPreset(state);
     final notifier = ref.read(homeProvider.notifier);
     return SizedBox(
       height: 48,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+        padding: EdgeInsets.fromLTRB(16 + inset, 4, 16 + inset, 4),
         children: [
           for (final p in _RangePreset.values) ...[
             _RangeChip(
@@ -138,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(width: 8),
           ],
           _RangeChip(
-            label: 'Custom',
+            label: 'charts.rangeChips.custom'.tr(),
             icon: Icons.calendar_today_rounded,
             selected: selected == null,
             onTap: state.isLoading ? null : _pickChartRange,
@@ -156,7 +158,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ) {
     if (state.error != null && state.overview == null) {
       return AppStateMessage.error(
-        title: 'Couldn’t load your overview',
+        title: 'charts.errors.loadTitle'.tr(),
         message: state.error!,
         onRetry: notifier.fetchData,
         bottomPadding: mainShellFloatingTabBarScrollPadding(context),
@@ -190,43 +192,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(child: _buildRangeChips(state)),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: loading
-                ? card(OverviewMetricType.mrr, featured: true)
-                : card(
-                    OverviewMetricType.mrr,
-                    featured: true,
-                  ).appCardEntrance(),
-          ),
-        ),
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            8,
-            16,
-            8 + mainShellFloatingTabBarScrollPadding(context),
-          ),
-          sliver: SliverGrid.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisExtent: 128,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        // More, narrower cards as the window widens; centered past 1200.
+        final columns = width >= 900
+            ? 4
+            : width >= 600
+            ? 3
+            : 2;
+        final inset = AppBreakpoints.centeringInset(width, maxWidth: 1232);
+        return CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildRangeChips(state, inset: inset)),
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(16 + inset, 4, 16 + inset, 0),
+              sliver: SliverToBoxAdapter(
+                child: loading
+                    ? card(OverviewMetricType.mrr, featured: true)
+                    : card(
+                        OverviewMetricType.mrr,
+                        featured: true,
+                      ).appCardEntrance(),
+              ),
             ),
-            itemCount: gridMetrics.length,
-            itemBuilder: (context, index) {
-              final c = card(gridMetrics[index]);
-              return loading ? c : c.appListItemEntrance(index);
-            },
-          ),
-        ),
-      ],
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                16 + inset,
+                8,
+                16 + inset,
+                8 + mainShellFloatingTabBarScrollPadding(context),
+              ),
+              sliver: SliverGrid.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  mainAxisExtent: 128,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: gridMetrics.length,
+                itemBuilder: (context, index) {
+                  final c = card(gridMetrics[index]);
+                  return loading ? c : c.appListItemEntrance(index);
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
