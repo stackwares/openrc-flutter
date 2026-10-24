@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/utils/subscriber_tenure_format.dart';
+import 'package:openrc/features/revenue/widgets/revenue_insights_list.dart';
 import 'package:openrc/features/transactions/transaction_detail_screen.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
@@ -192,6 +193,17 @@ class _RealtimeSectionTransactionsScreenState
               ),
             )
           else ...[
+            if (widget.filter == TransactionDaySectionFilter.trial)
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(inset, 8, inset, 4),
+                sliver: SliverToBoxAdapter(
+                  child: RealtimeRevenueInsightsList(
+                    transactions: filtered,
+                    asModalEntry: true,
+                    cardMargin: const EdgeInsets.symmetric(horizontal: 16),
+                  ).appCardEntrance(),
+                ),
+              ),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: inset),

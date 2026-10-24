@@ -33,6 +33,10 @@ All notable changes to OpenRC are listed here. The format follows
   notify (trials, renewals, refunds…), for all projects or one at a time;
   tapping a notification opens the transaction. Off in builds without
   Firebase settings.
+- A trials breakdown: with only the Trials tile picked (or a day of only
+  trials), the Breakdown card counts trials by status, store, app, country
+  and plan instead of showing an all-zero revenue split. On the Revenue
+  tab it shows for the month's trials.
 
 ### Removed
 
