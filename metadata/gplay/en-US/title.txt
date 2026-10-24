@@ -1,1 +1,1 @@
-OpenRC
+OpenRC: RevenueCat Dashboard
