@@ -420,7 +420,6 @@
     "appleCompany": "Apple",
     "googleCompany": "Google"
   },
-
   "detail": {
     "transaction": "取引",
     "appIcon": "アプリアイコン",
@@ -616,8 +615,11 @@
     "custom": "カスタム",
     "save": "保存",
     "privacy": "プライバシー",
+    "aiConsent": "質問を許可",
+    "aiConsentHint": "質問文とグラフの結果を、選んだモデル提供元に送ります。キーはこの端末に残ります。",
     "shareUsage": "匿名の利用状況を共有",
     "shareUsageHint": "クラッシュレポートと、利用された画面の情報を共有します。アカウント、アプリ、売上の情報は含まれません。",
+    "watchIntroduction": "はじめにを見る",
     "account": "アカウント",
     "distinctId": "Distinct ID",
     "notAvailable": "利用できません",
@@ -929,6 +931,106 @@
       "payout": "次の入金がこの金額になる理由と、入金日はいつ？",
       "transaction": "この{type}はどうなっていますか？",
       "sale": "この売上はどうなっていますか？"
+    }
+  },
+  "onboarding": {
+    "skip": "スキップ",
+    "back": "戻る",
+    "continue": "続ける",
+    "stepOf": "{current} / {total}",
+    "welcome": {
+      "title": "OpenRC",
+      "subtitle": "RevenueCatの売上を、どの端末でも。",
+      "chips": {
+        "liveSales": "リアルタイムの売上",
+        "proceeds": "手数料後の手取り",
+        "payouts": "入金のタイミング",
+        "charts": "グラフ"
+      }
+    },
+    "proof": {
+      "title": "この端末に置いたまま使う",
+      "sales": {
+        "title": "売上は起きたそのとき",
+        "body": "今日の取引、累計、そして7日分の帯です。"
+      },
+      "local": {
+        "title": "数字はこの端末に残る",
+        "body": "OpenRCはRevenueCatと会話し、答えはここで出します。"
+      },
+      "password": {
+        "title": "パスワードはRevenueCatにだけ",
+        "body": "OpenRCは見ませんし、保存もしません。セッションは安全な領域に置きます。"
+      }
+    },
+    "role": {
+      "title": "いちばん近いのはどれですか？",
+      "subtitle": "ひとつ選んで、この端末に残します。",
+      "indie": "インディー",
+      "indieHint": "ひとりで出している",
+      "studio": "小さなスタジオ",
+      "studioHint": "少人数のチーム",
+      "agency": "代理店",
+      "agencyHint": "複数のアプリを見ている",
+      "finance": "財務と運用",
+      "financeHint": "数字を見ている",
+      "continueIndie": "インディーとして続ける",
+      "continueStudio": "小さなスタジオとして続ける",
+      "continueAgency": "代理店として続ける",
+      "continueFinance": "財務と運用として続ける"
+    },
+    "focus": {
+      "title": "どこから始めますか？",
+      "subtitle": "ログイン後にこのタブを開きます。",
+      "liveSales": "リアルタイムの売上",
+      "liveSalesHint": "入ってくる今日の取引",
+      "revenue": "売上と入金",
+      "revenueHint": "今月と、入金の時期",
+      "charts": "グラフ",
+      "chartsHint": "MRR、手取り、そのほか",
+      "continueLiveSales": "リアルタイムの売上へ",
+      "continueRevenue": "売上へ進む",
+      "continueCharts": "グラフへ進む"
+    },
+    "showcase": {
+      "title": "今日をひと目で",
+      "subtitle": "静かな累計と、その前の1週間。",
+      "example": "例",
+      "today": "今日"
+    },
+    "appearance": {
+      "title": "OpenRCの見た目は？",
+      "subtitle": "すぐに反映されます。"
+    },
+    "money": {
+      "title": "金額の見え方は？",
+      "subtitle": "設定でいつでも変えられます。",
+      "currency": "表示通貨",
+      "more": "その他",
+      "fees": "ストア手数料後の売上を表示",
+      "feesHint": "App StoreとGoogle Playは15%です。率の微調整は設定で。"
+    },
+    "aiConsent": {
+      "title": "数字に質問を使いますか？",
+      "body": "質問は、質問文とグラフの結果を選んだモデル提供元に送ります。キーはこの端末に残ります。取引、売上、グラフはなくても使えます。",
+      "continue": "質問を使って続ける",
+      "notNow": "今はしない"
+    },
+    "helpUsGrow": {
+      "title": "インディーのプロジェクトを広げる",
+      "body": "Google Playの評価は、ほかの開発者がオープンソースのRevenueCatダッシュボードを見つける助けになります。",
+      "rate": "Google Playで評価する",
+      "later": "あとで"
+    },
+    "ready": {
+      "title": "準備できました",
+      "body": "売上ごとの通知は、ログイン後にオンにできます。プッシュにはRevenueCatプロジェクトが必要なので、ここでは求めません。",
+      "signIn": "RevenueCatでサインイン"
+    },
+    "askGate": {
+      "title": "質問はいまオフです",
+      "body": "質問は、質問文とグラフの結果を選んだモデル提供元に送ります。キーはこの端末に残ります。会話を始めるにはこれをオンにしてください。取引、売上、グラフはそのままです。",
+      "allow": "質問を許可"
     }
   }
 }

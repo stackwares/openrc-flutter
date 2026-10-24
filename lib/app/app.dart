@@ -7,8 +7,10 @@ import 'package:openrc/app/mac_menu_bar.dart';
 import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/l10n/app_locales.dart';
+import 'package:openrc/features/onboarding/onboarding_screen.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/sign_in/sign_in_screen.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/services/exchange_rate_provider.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/services/telemetry.dart';
@@ -59,6 +61,7 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
       }
     });
     final signedIn = ref.watch(isSignedInProvider);
+    final onboardingCompleted = ref.watch(onboardingPrefsProvider).completed;
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
 
@@ -98,7 +101,10 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
       },
       navigatorObservers: [_telemetryObserver],
       routes: {SettingsScreen.routeName: (_) => const SettingsScreen()},
-      home: _AuthGate(signedIn: signedIn),
+      home: _AuthGate(
+        signedIn: signedIn,
+        onboardingCompleted: onboardingCompleted,
+      ),
     );
     if (!_hasTransparentTitleBar) return app;
     return MacMenuBar(navigatorKey: _navigatorKey, child: app);
@@ -112,11 +118,15 @@ bool get _hasTransparentTitleBar =>
 
 const double _macTitleBarHeight = 28;
 
-/// Cross-fades between sign-in and the app instead of an instant swap.
+/// Cross-fades between the wizard, sign-in and the app instead of an instant swap.
 class _AuthGate extends StatelessWidget {
-  const _AuthGate({required this.signedIn});
+  const _AuthGate({
+    required this.signedIn,
+    required this.onboardingCompleted,
+  });
 
   final bool signedIn;
+  final bool onboardingCompleted;
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +145,9 @@ class _AuthGate extends StatelessWidget {
       ),
       child: signedIn
           ? const MainShell(key: ValueKey('signed-in'))
-          : const SignInScreen(key: ValueKey('signed-out')),
+          : onboardingCompleted
+          ? const SignInScreen(key: ValueKey('signed-out'))
+          : const OnboardingScreen(key: ValueKey('onboarding')),
     );
   }
 }

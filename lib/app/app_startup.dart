@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/services/utilities_service.dart';
 
@@ -27,6 +28,17 @@ class AppStartup {
 
     final hasSession = await container.read(rcAuthServiceProvider).restoreSession();
     _log.info('Session restored: $hasSession');
+
+    final onboarding = container.read(onboardingPrefsProvider.notifier);
+    await onboarding.load();
+    if (hasSession) {
+      await onboarding.markCompletedForReturningUser();
+    } else {
+      final email = await RcAuthService.lastSignInEmail();
+      if (email != null) {
+        await onboarding.markCompletedForReturningUser();
+      }
+    }
 
     _log.info('App startup initialization completed');
   }

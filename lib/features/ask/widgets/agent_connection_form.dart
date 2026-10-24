@@ -7,8 +7,8 @@ import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
 
-/// Provider, model and API key for Ask. Shown in the settings sheet
-/// (first-run and later edits). Nothing is saved until the user taps Save.
+/// Custom LLM connection. The provider dropdown only prefills the base URL
+/// (and a suggested model / API style). Everything stays editable.
 class AgentConnectionForm extends ConsumerStatefulWidget {
   const AgentConnectionForm({
     super.key,
@@ -33,20 +33,20 @@ class AgentConnectionForm extends ConsumerStatefulWidget {
 }
 
 class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
-  late AgentProviderId _provider = widget.initial.providerId;
-  late bool _useFaster = widget.initial.useFasterModel;
-  late AgentApiStyle _customStyle = widget.initial.customStyle;
-  late final _url = TextEditingController(text: widget.initial.customBaseUrl);
+  late AgentProviderId _provider = widget.initial.resolvedPreset.id;
+  late AgentApiStyle _customStyle = widget.initial.effectiveStyle;
+  late final _url = TextEditingController(
+    text: widget.initial.effectiveBaseUrl,
+  );
   late final _model = TextEditingController(
-    text: widget.initial.providerId == AgentProviderId.custom
-        ? widget.initial.model
-        : '',
+    text: widget.initial.effectiveModel,
   );
   final _key = TextEditingController();
-  late var _withKeys = {if (widget.initial.hasKey) widget.initial.providerId};
+  late var _hasSavedKey = widget.initial.hasKey;
   var _obscure = true;
   var _consent = false;
   var _saving = false;
+  var _syncingFromDropdown = false;
   String? _keyError;
 
   @override
@@ -55,7 +55,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
     for (final c in [_url, _model, _key]) {
       c.addListener(_onTextChanged);
     }
-    _loadSavedKeys();
+    _url.addListener(_syncProviderFromUrl);
   }
 
   @override
@@ -66,18 +66,27 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
     super.dispose();
   }
 
-  Future<void> _loadSavedKeys() async {
-    final ids = await ref
-        .read(agentSettingsProvider.notifier)
-        .providersWithKeys();
-    if (mounted) setState(() => _withKeys = {..._withKeys, ...ids});
-  }
-
   void _onTextChanged() => setState(() {});
 
-  bool get _custom => _provider == AgentProviderId.custom;
-  bool get _blockedOnWeb => kIsWeb && _custom;
-  bool get _hasSavedKey => _withKeys.contains(_provider);
+  void _syncProviderFromUrl() {
+    if (_syncingFromDropdown) return;
+    final matched = presetMatchingBaseUrl(_url.text);
+    final next = matched?.id ?? AgentProviderId.custom;
+    if (next == _provider) return;
+    setState(() {
+      _provider = next;
+      if (matched != null) _customStyle = matched.style;
+    });
+  }
+
+  AgentPreset get _preset => presetFor(_provider);
+
+  bool get _blockedOnWeb =>
+      kIsWeb &&
+      (presetMatchingBaseUrl(_url.text) ??
+              (_url.text.trim().isEmpty ? _preset : null))
+          ?.relaySlug ==
+      null;
 
   bool get _urlValid {
     final uri = Uri.tryParse(_url.text.trim());
@@ -90,8 +99,32 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
       !_saving &&
       !_blockedOnWeb &&
       (_key.text.trim().isNotEmpty || _hasSavedKey) &&
-      (!_custom || (_urlValid && _model.text.trim().isNotEmpty)) &&
+      _urlValid &&
+      _model.text.trim().isNotEmpty &&
       (!widget.requireConsent || _consent);
+
+  void _applyPreset(AgentPreset next) {
+    _syncingFromDropdown = true;
+    final currentModel = _model.text.trim();
+    final keepModel =
+        currentModel.isNotEmpty && !_isKnownPresetModel(currentModel);
+    setState(() {
+      _provider = next.id;
+      _keyError = null;
+      if (next.id != AgentProviderId.custom) {
+        _url.text = next.baseUrl;
+        _customStyle = next.style;
+        if (!keepModel) _model.text = next.recommendedModel;
+      }
+    });
+    _syncingFromDropdown = false;
+  }
+
+  bool _isKnownPresetModel(String model) {
+    return kAgentPresets.any(
+      (p) => p.recommendedModel == model || p.fasterModel == model,
+    );
+  }
 
   Future<void> _paste() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -108,8 +141,13 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
     if (!_canSave) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final key = _key.text.trim();
+    final prefixPreset =
+        presetMatchingBaseUrl(_url.text) ??
+        (_provider == AgentProviderId.custom
+            ? presetFor(AgentProviderId.custom)
+            : _preset);
     if (key.isNotEmpty &&
-        !AgentSettingsNotifier.keyPrefixMatches(presetFor(_provider), key)) {
+        !AgentSettingsNotifier.keyPrefixMatches(prefixPreset, key)) {
       HapticFeedback.mediumImpact();
       setState(() => _keyError = 'settings.agent.invalidPrefix'.tr());
       return;
@@ -123,7 +161,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
           .read(agentSettingsProvider.notifier)
           .saveConnection(
             provider: _provider,
-            useFasterModel: _useFaster,
+            useFasterModel: false,
             customBaseUrl: _url.text,
             customStyle: _customStyle,
             model: _model.text,
@@ -144,7 +182,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
     try {
       await ref.read(agentSettingsProvider.notifier).clearApiKey(_provider);
       if (!mounted) return;
-      setState(() => _withKeys = {..._withKeys}..remove(_provider));
+      setState(() => _hasSavedKey = false);
       widget.onSaved();
     } catch (_) {
       if (mounted) setState(() => _keyError = 'agent.errors.generic'.tr());
@@ -157,68 +195,114 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final preset = presetFor(_provider);
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
     );
     final disclosure = 'agent.setup.disclosure'.tr(
-      namedArgs: {'provider': preset.nameKey.tr()},
+      namedArgs: {'provider': _preset.nameKey.tr()},
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _SectionLabel('agent.setup.chooseProvider'.tr()),
-        Wrap(
-          spacing: AppSpace.xs,
-          runSpacing: AppSpace.xs,
-          children: [
-            for (final p in kAgentPresets)
-              ChoiceChip(
-                label: Text(p.nameKey.tr()),
-                // Providers with a saved key switch without retyping it.
-                avatar: _withKeys.contains(p.id) && _provider != p.id
-                    ? const Icon(Icons.key_rounded, size: 16)
-                    : null,
-                selected: _provider == p.id,
-                onSelected: _saving
-                    ? null
-                    : (_) => setState(() {
-                        _provider = p.id;
-                        _keyError = null;
-                      }),
+        DropdownButtonFormField<AgentProviderId>(
+          key: ValueKey<AgentProviderId>(_provider),
+          initialValue: _provider,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: 'settings.agent.provider'.tr(),
+            prefixIcon: const Icon(Icons.dns_outlined, size: 20),
+          ),
+          items: [
+            for (final preset in kAgentPresets)
+              DropdownMenuItem(
+                value: preset.id,
+                child: Text(preset.nameKey.tr()),
               ),
           ],
+          onChanged: _saving
+              ? null
+              : (id) {
+                  if (id == null) return;
+                  _applyPreset(presetFor(id));
+                },
         ),
-        const SizedBox(height: AppSpace.lg),
-        if (_custom)
-          ..._customFields(theme)
-        else ...[
-          _SectionLabel('agent.setup.model'.tr()),
-          if (preset.recommendedModel != preset.fasterModel) ...[
-            SegmentedButton<bool>(
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(
-                  value: false,
-                  label: Text('settings.agent.recommended'.tr()),
-                ),
-                ButtonSegment(
-                  value: true,
-                  label: Text('settings.agent.faster'.tr()),
-                ),
-              ],
-              selected: {_useFaster},
-              onSelectionChanged: _saving
-                  ? null
-                  : (next) => setState(() => _useFaster = next.first),
+        const SizedBox(height: AppSpace.sm),
+        TextField(
+          key: const Key('agent-base-url'),
+          controller: _url,
+          enabled: !_saving,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: 'settings.agent.customUrl'.tr(),
+            hintText: 'https://…',
+            prefixIcon: const Icon(Icons.link_rounded, size: 20),
+          ),
+        ),
+        const SizedBox(height: AppSpace.sm),
+        TextField(
+          key: const Key('agent-model'),
+          controller: _model,
+          enabled: !_saving,
+          autocorrect: false,
+          enableSuggestions: false,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: 'agent.setup.model'.tr(),
+            hintText: _preset.recommendedModel.isEmpty
+                ? null
+                : _preset.recommendedModel,
+            prefixIcon: const Icon(Icons.memory_rounded, size: 20),
+          ),
+        ),
+        const SizedBox(height: AppSpace.sm),
+        SegmentedButton<AgentApiStyle>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: AgentApiStyle.openAi,
+              label: Text('settings.agent.styleOpenAi'.tr()),
             ),
-            const SizedBox(height: AppSpace.xs),
+            ButtonSegment(
+              value: AgentApiStyle.anthropic,
+              label: Text('settings.agent.styleAnthropic'.tr()),
+            ),
           ],
-          Text(
-            _useFaster ? preset.fasterModel : preset.recommendedModel,
-            style: muted,
+          selected: {_customStyle},
+          onSelectionChanged: _saving
+              ? null
+              : (next) => setState(() => _customStyle = next.first),
+        ),
+        if (_blockedOnWeb) ...[
+          const SizedBox(height: AppSpace.sm),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.error.withValues(alpha: 0.08),
+              borderRadius: AppRadius.tileAll,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpace.sm),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.public_off_rounded,
+                    size: 20,
+                    color: scheme.error,
+                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  Expanded(
+                    child: Text(
+                      'agent.setup.customWeb'.tr(),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
         const SizedBox(height: AppSpace.lg),
@@ -237,9 +321,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
             labelText: 'settings.agent.apiKey'.tr(),
             hintText: _hasSavedKey
                 ? '••••••••••••'
-                : preset.keyPrefix.isEmpty
+                : _preset.keyPrefix.isEmpty
                 ? null
-                : '${preset.keyPrefix}…',
+                : '${_preset.keyPrefix}…',
             floatingLabelBehavior: _hasSavedKey
                 ? FloatingLabelBehavior.always
                 : null,
@@ -325,100 +409,6 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
           ),
         ],
       ],
-    );
-  }
-
-  List<Widget> _customFields(ThemeData theme) {
-    if (_blockedOnWeb) {
-      return [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.error.withValues(alpha: 0.08),
-            borderRadius: AppRadius.tileAll,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpace.sm),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.public_off_rounded,
-                  size: 20,
-                  color: theme.colorScheme.error,
-                ),
-                const SizedBox(width: AppSpace.xs),
-                Expanded(
-                  child: Text(
-                    'agent.setup.customWeb'.tr(),
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ];
-    }
-    return [
-      TextField(
-        controller: _url,
-        keyboardType: TextInputType.url,
-        autocorrect: false,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          labelText: 'settings.agent.customUrl'.tr(),
-          hintText: 'https://…',
-          prefixIcon: const Icon(Icons.link_rounded, size: 20),
-        ),
-      ),
-      const SizedBox(height: AppSpace.sm),
-      TextField(
-        controller: _model,
-        autocorrect: false,
-        enableSuggestions: false,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          labelText: 'agent.setup.model'.tr(),
-          prefixIcon: const Icon(Icons.memory_rounded, size: 20),
-        ),
-      ),
-      const SizedBox(height: AppSpace.sm),
-      SegmentedButton<AgentApiStyle>(
-        showSelectedIcon: false,
-        segments: [
-          ButtonSegment(
-            value: AgentApiStyle.openAi,
-            label: Text('settings.agent.styleOpenAi'.tr()),
-          ),
-          ButtonSegment(
-            value: AgentApiStyle.anthropic,
-            label: Text('settings.agent.styleAnthropic'.tr()),
-          ),
-        ],
-        selected: {_customStyle},
-        onSelectionChanged: _saving
-            ? null
-            : (next) => setState(() => _customStyle = next.first),
-      ),
-    ];
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpace.xs),
-      child: Text(
-        text,
-        style: Theme.of(
-          context,
-        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-      ),
     );
   }
 }

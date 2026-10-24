@@ -12,14 +12,18 @@ import 'package:openrc/features/ask/ask_notifier.dart';
 import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/ask/widgets/ask_composer.dart';
 import 'package:openrc/features/ask/widgets/ask_turn_view.dart';
+import 'package:openrc/features/onboarding/onboarding_steps.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/settings/widgets/agent_settings_section.dart';
 import 'package:openrc/models/agent_block.dart';
 import 'package:openrc/services/agent/agent_relay_capability.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
+import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/widgets/app_logo.dart';
 import 'package:openrc/widgets/app_state_message.dart';
 import 'package:openrc/widgets/shell_header.dart';
 
@@ -224,6 +228,8 @@ class _AskScreenState extends ConsumerState<AskScreen> {
     final settings = settingsAsync.value;
     final turns = ref.watch(askNotifierProvider);
     final connected = settings?.hasKey ?? false;
+    final aiConsentGranted = ref.watch(onboardingPrefsProvider).aiConsentGranted;
+    final askBlocked = isAppleAiConsentPlatform && !aiConsentGranted;
 
     // The shell leaves the keyboard to this tab on phones: the floating tab
     // bar stays under it and the composer rides on top.
@@ -233,7 +239,9 @@ class _AskScreenState extends ConsumerState<AskScreen> {
         : mainShellFloatingTabBarScrollPadding(context);
 
     final Widget body;
-    if (settings == null) {
+    if (askBlocked) {
+      body = const _AskConsentGate();
+    } else if (settings == null) {
       body = settingsAsync.hasError
           ? AppStateMessage.error(
               message: 'agent.errors.generic'.tr(),
@@ -248,17 +256,19 @@ class _AskScreenState extends ConsumerState<AskScreen> {
       children: [
         ShellHeader(
           title: 'shell.tabs.ask'.tr(),
-          subtitle: !connected && settings != null
+          subtitle: askBlocked
+              ? 'onboarding.askGate.title'.tr()
+              : !connected && settings != null
               ? 'agent.setup.notConnected'.tr()
               : settings?.displayName,
           actions: [
-            if (connected && turns.isNotEmpty)
+            if (!askBlocked && connected && turns.isNotEmpty)
               HeaderIconButton(
                 icon: Icons.delete_sweep_outlined,
                 tooltip: 'agent.clear'.tr(),
                 onPressed: _confirmClear,
               ),
-            if (settings != null)
+            if (!askBlocked && settings != null)
               HeaderIconButton(
                 icon: Icons.tune_rounded,
                 tooltip: 'settings.agent.provider'.tr(),
@@ -301,88 +311,99 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                   text: 'agent.errors.relay'.tr(),
                 ),
               ),
-            Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: turns.isEmpty
-                        ? _EmptyThread(
-                            side: side,
-                            onAsk: _ask,
-                            needsSetup: !connected,
-                            onConnect: _openProvider,
-                          )
-                        : ListView.builder(
-                            controller: _scroll,
-                            padding: EdgeInsets.fromLTRB(
-                              side,
-                              AppSpace.md,
-                              side,
-                              AppSpace.xl,
+            if (!connected)
+              Expanded(
+                child: _AskSetupView(
+                  side: side,
+                  bottom: bottom,
+                  onConnect: _openProvider,
+                ),
+              )
+            else ...[
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: turns.isEmpty
+                          ? _EmptyThread(
+                              side: side,
+                              onAsk: _ask,
+                            )
+                          : ListView.builder(
+                              controller: _scroll,
+                              padding: EdgeInsets.fromLTRB(
+                                side,
+                                AppSpace.md,
+                                side,
+                                AppSpace.xl,
+                              ),
+                              itemCount: turns.length,
+                              itemBuilder: (context, i) {
+                                final turn = turns[i];
+                                final last = i == turns.length - 1;
+                                return Padding(
+                                  key: _turnKeys.putIfAbsent(
+                                    turn.id,
+                                    GlobalKey.new,
+                                  ),
+                                  padding: EdgeInsets.only(
+                                    bottom: last ? 0 : AppSpace.xxl,
+                                  ),
+                                  child: AskTurnView(turn: turn, isLast: last),
+                                );
+                              },
                             ),
-                            itemCount: turns.length,
-                            itemBuilder: (context, i) {
-                              final turn = turns[i];
-                              final last = i == turns.length - 1;
-                              return Padding(
-                                key: _turnKeys.putIfAbsent(
-                                  turn.id,
-                                  GlobalKey.new,
-                                ),
-                                padding: EdgeInsets.only(
-                                  bottom: last ? 0 : AppSpace.xxl,
-                                ),
-                                child: AskTurnView(turn: turn, isLast: last),
-                              );
-                            },
-                          ),
-                  ),
-                  // Content fades out above the composer instead of being cut.
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: AppSpace.md,
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              background.withValues(alpha: 0),
-                              background,
-                            ],
+                    ),
+                    // Content fades out above the composer instead of being cut.
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: AppSpace.md,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                background.withValues(alpha: 0),
+                                background,
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: AppSpace.sm,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: _showJump,
-                        builder: (context, show, _) => IgnorePointer(
-                          ignoring: !show || turns.isEmpty,
-                          child: AnimatedSlide(
-                            offset: show ? Offset.zero : const Offset(0, 0.4),
-                            duration: AppMotion.of(context, AppMotion.fast),
-                            curve: AppMotion.curve,
-                            child: AnimatedOpacity(
-                              opacity: show && turns.isNotEmpty ? 1 : 0,
+                    Positioned(
+                      bottom: AppSpace.sm,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: _showJump,
+                          builder: (context, show, _) => IgnorePointer(
+                            ignoring: !show || turns.isEmpty,
+                            child: AnimatedSlide(
+                              offset: show
+                                  ? Offset.zero
+                                  : const Offset(0, 0.4),
                               duration: AppMotion.of(context, AppMotion.fast),
-                              child: IconButton.filledTonal(
-                                tooltip: 'agent.latest'.tr(),
-                                onPressed: _scrollToEnd,
-                                icon: const Icon(Icons.arrow_downward_rounded),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: scheme.surfaceContainerHigh,
-                                  foregroundColor: scheme.onSurface,
-                                  side: BorderSide(
-                                    color: context.appColors.hairline,
+                              curve: AppMotion.curve,
+                              child: AnimatedOpacity(
+                                opacity: show && turns.isNotEmpty ? 1 : 0,
+                                duration: AppMotion.of(context, AppMotion.fast),
+                                child: IconButton.filledTonal(
+                                  tooltip: 'agent.latest'.tr(),
+                                  onPressed: _scrollToEnd,
+                                  icon: const Icon(Icons.arrow_downward_rounded),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor:
+                                        scheme.surfaceContainerHigh,
+                                    foregroundColor: scheme.onSurface,
+                                    side: BorderSide(
+                                      color: context.appColors.hairline,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -391,21 +412,20 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, bottom),
-              child: AskComposer(
-                controller: _composer,
-                focusNode: _focusNode,
-                running: running,
-                onSend: _send,
-                onStop: ref.read(askNotifierProvider.notifier).cancel,
-                onLocked: connected ? null : _openProvider,
+              Padding(
+                padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, bottom),
+                child: AskComposer(
+                  controller: _composer,
+                  focusNode: _focusNode,
+                  running: running,
+                  onSend: _send,
+                  onStop: ref.read(askNotifierProvider.notifier).cancel,
+                ),
               ),
-            ),
+            ],
           ],
         );
       },
@@ -413,20 +433,151 @@ class _AskScreenState extends ConsumerState<AskScreen> {
   }
 }
 
-/// First open: a connect CTA when there is no key, otherwise one sentence
-/// of what Ask is for and questions parked above the composer.
-class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({
+/// Centered onboarding state shown when no provider / API key is configured.
+class _AskSetupView extends StatelessWidget {
+  const _AskSetupView({
     required this.side,
-    required this.onAsk,
-    required this.needsSetup,
+    required this.bottom,
     required this.onConnect,
   });
 
   final double side;
-  final ValueChanged<String> onAsk;
-  final bool needsSetup;
+  final double bottom;
   final VoidCallback onConnect;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final tt = context.textTheme;
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          side,
+          AppSpace.xl,
+          side,
+          bottom + AppSpace.xl,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: math.max(
+              0,
+              constraints.maxHeight - bottom - (AppSpace.xl * 2),
+            ),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _AskHeroMark().appCardEntrance(),
+                  const SizedBox(height: AppSpace.xl),
+                  Text(
+                    'agent.setup.connectTitle'.tr(),
+                    textAlign: TextAlign.center,
+                    style: tt.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    'agent.setup.connectMessage'.tr(),
+                    textAlign: TextAlign.center,
+                    style: tt.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.xl),
+                  FilledButton(
+                    onPressed: onConnect,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(200, 48),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.xl,
+                      ),
+                    ),
+                    child: Text('agent.setup.addKey'.tr()),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The OpenRC app icon with a subtle shadow and an AI sparkle corner badge.
+class _AskHeroMark extends StatelessWidget {
+  const _AskHeroMark();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final background = Theme.of(context).scaffoldBackgroundColor;
+    return SizedBox(
+      width: 88,
+      height: 84,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: context.isDark ? 0.5 : 0.14,
+                  ),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const AppLogo(size: 76),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: ExcludeSemantics(
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: background, width: 2.5),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 15,
+                  color: scheme.onPrimary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// First open when a key is connected: one sentence of what Ask is for and
+/// starter questions parked above the composer.
+class _EmptyThread extends StatelessWidget {
+  const _EmptyThread({
+    required this.side,
+    required this.onAsk,
+  });
+
+  final double side;
+  final ValueChanged<String> onAsk;
 
   @override
   Widget build(BuildContext context) {
@@ -447,8 +598,7 @@ class _EmptyThread extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                (needsSetup ? 'agent.setup.connectTitle' : 'agent.empty.title')
-                    .tr(),
+                'agent.empty.title'.tr(),
                 style: context.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
@@ -456,26 +606,14 @@ class _EmptyThread extends StatelessWidget {
               ).appCardEntrance(),
               const SizedBox(height: AppSpace.xs),
               Text(
-                (needsSetup
-                        ? 'agent.setup.connectMessage'
-                        : 'agent.empty.subtitle')
-                    .tr(),
+                'agent.empty.subtitle'.tr(),
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                   height: 1.4,
                 ),
               ),
               const SizedBox(height: AppSpace.lg),
-              if (needsSetup)
-                FilledButton(
-                  onPressed: onConnect,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: Text('agent.setup.addKey'.tr()),
-                )
-              else
-                _Suggestions(onAsk: onAsk),
+              _Suggestions(onAsk: onAsk),
             ],
           ),
         ),
@@ -568,6 +706,81 @@ class _Notice extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Apple-only: Ask stays closed until the user opts in. The other tabs
+/// are unchanged.
+class _AskConsentGate extends ConsumerWidget {
+  const _AskConsentGate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final granted = ref.watch(onboardingPrefsProvider).aiConsentGranted;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final side =
+            AppSpace.gutter +
+            AppBreakpoints.centeringInset(constraints.maxWidth);
+        return ListView(
+          padding: EdgeInsets.fromLTRB(side, AppSpace.xl, side, AppSpace.xl),
+          children: [
+            Icon(
+              Icons.auto_awesome_outlined,
+              size: 40,
+              color: scheme.primary,
+            ),
+            const SizedBox(height: AppSpace.lg),
+            Text(
+              'onboarding.askGate.title'.tr(),
+              style: context.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
+            ),
+            const SizedBox(height: AppSpace.xs),
+            Text(
+              'onboarding.askGate.body'.tr(),
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: AppSpace.xl),
+            AppCard(
+              onTap: () {
+                UtilitiesService.hapticSelection();
+                ref
+                    .read(onboardingPrefsProvider.notifier)
+                    .setAiConsentGranted(!granted);
+              },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'onboarding.askGate.allow'.tr(),
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: granted,
+                    onChanged: (value) {
+                      UtilitiesService.hapticSelection();
+                      ref
+                          .read(onboardingPrefsProvider.notifier)
+                          .setAiConsentGranted(value);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

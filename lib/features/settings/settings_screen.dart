@@ -9,6 +9,8 @@ import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/currency_format.dart';
 import 'package:openrc/features/notifications/widgets/notifications_settings_row.dart';
+import 'package:openrc/features/onboarding/onboarding_screen.dart';
+import 'package:openrc/features/onboarding/onboarding_steps.dart';
 import 'package:openrc/features/settings/widgets/accent_scheme_sheet.dart';
 import 'package:openrc/features/settings/widgets/agent_settings_section.dart';
 import 'package:openrc/features/settings/widgets/account_header.dart';
@@ -18,6 +20,7 @@ import 'package:openrc/features/settings/widgets/language_sheet.dart';
 import 'package:openrc/features/settings/widgets/settings_rows.dart';
 import 'package:openrc/features/settings/widgets/store_fee_sheet.dart';
 import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/services/display_currency_store.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_auth_service.dart';
@@ -406,21 +409,54 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ],
 
-          // Only builds that report anything have something to turn off.
-          if (Telemetry.isAvailable) ...[
+          // Apple Ask consent always has a Privacy row; usage sharing only
+          // appears in builds that can send anything.
+          if (Telemetry.isAvailable || isAppleAiConsentPlatform) ...[
             SettingsGroupLabel('settings.privacy'.tr()),
             Card(
               clipBehavior: Clip.antiAlias,
-              child: SettingsRow(
-                icon: Icons.insights_rounded,
-                title: 'settings.shareUsage'.tr(),
-                subtitle: 'settings.shareUsageHint'.tr(),
-                trailing: Switch(
-                  value: telemetryEnabled,
-                  onChanged: (v) => _setTelemetry(ref, v),
-                ),
-                showChevron: false,
-                onTap: () => _setTelemetry(ref, !telemetryEnabled),
+              child: Column(
+                children: [
+                  if (isAppleAiConsentPlatform)
+                    SettingsRow(
+                      icon: Icons.auto_awesome_outlined,
+                      title: 'settings.aiConsent'.tr(),
+                      subtitle: 'settings.aiConsentHint'.tr(),
+                      trailing: Switch(
+                        value: ref.watch(onboardingPrefsProvider).aiConsentGranted,
+                        onChanged: (v) {
+                          UtilitiesService.hapticSelection();
+                          ref
+                              .read(onboardingPrefsProvider.notifier)
+                              .setAiConsentGranted(v);
+                        },
+                      ),
+                      showChevron: false,
+                      onTap: () {
+                        UtilitiesService.hapticSelection();
+                        final next = !ref
+                            .read(onboardingPrefsProvider)
+                            .aiConsentGranted;
+                        ref
+                            .read(onboardingPrefsProvider.notifier)
+                            .setAiConsentGranted(next);
+                      },
+                    ),
+                  if (isAppleAiConsentPlatform && Telemetry.isAvailable)
+                    const Divider(indent: kSettingsDividerIndent),
+                  if (Telemetry.isAvailable)
+                    SettingsRow(
+                      icon: Icons.insights_rounded,
+                      title: 'settings.shareUsage'.tr(),
+                      subtitle: 'settings.shareUsageHint'.tr(),
+                      trailing: Switch(
+                        value: telemetryEnabled,
+                        onChanged: (v) => _setTelemetry(ref, v),
+                      ),
+                      showChevron: false,
+                      onTap: () => _setTelemetry(ref, !telemetryEnabled),
+                    ),
+                ],
               ),
             ).appCardEntrance(delay: const Duration(milliseconds: 100)),
           ],
@@ -458,6 +494,16 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ).appCardEntrance(delay: const Duration(milliseconds: 120)),
+
+          SettingsGroupLabel('settings.help'.tr()),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: SettingsRow(
+              icon: Icons.auto_stories_outlined,
+              title: 'settings.watchIntroduction'.tr(),
+              onTap: () => OnboardingScreen.openPreview(context),
+            ),
+          ).appCardEntrance(delay: const Duration(milliseconds: 140)),
 
           const SizedBox(height: 28),
           const _AboutFooter(),

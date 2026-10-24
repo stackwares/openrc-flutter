@@ -35,26 +35,40 @@ class AgentSettings {
 
   AgentPreset get preset => presetFor(providerId);
 
-  String get effectiveBaseUrl =>
-      providerId == AgentProviderId.custom ? customBaseUrl.trim() : preset.baseUrl;
-
-  /// Custom hosts name their own model; presets pick one of theirs, so a
-  /// custom model name never follows the user to another provider.
-  String get effectiveModel {
-    if (providerId == AgentProviderId.custom) return model.trim();
-    final p = preset;
-    return useFasterModel ? p.fasterModel : p.recommendedModel;
+  /// Named-provider leftovers fall back to that preset until URL/model
+  /// are saved as a custom connection.
+  String get effectiveBaseUrl {
+    final url = customBaseUrl.trim();
+    if (url.isNotEmpty) return url;
+    if (providerId != AgentProviderId.custom) return preset.baseUrl;
+    return '';
   }
+
+  String get effectiveModel {
+    final value = model.trim();
+    if (value.isNotEmpty) return value;
+    if (providerId != AgentProviderId.custom) {
+      return useFasterModel ? preset.fasterModel : preset.recommendedModel;
+    }
+    return '';
+  }
+
+  AgentApiStyle get effectiveStyle {
+    if (customBaseUrl.trim().isNotEmpty) return customStyle;
+    if (providerId != AgentProviderId.custom) return preset.style;
+    return customStyle;
+  }
+
+  /// Preset whose base URL matches, else the stored dropdown id.
+  AgentPreset get resolvedPreset =>
+      presetMatchingBaseUrl(effectiveBaseUrl) ?? preset;
 
   /// `OpenRouter · openai/gpt-4o`, or just the provider when no model is set.
   String get displayName {
-    final name = preset.nameKey.tr();
+    final name = resolvedPreset.nameKey.tr();
     final model = effectiveModel;
     return model.isEmpty ? name : '$name · $model';
   }
-
-  AgentApiStyle get effectiveStyle =>
-      providerId == AgentProviderId.custom ? customStyle : preset.style;
 }
 
 class AgentSettingsNotifier extends AsyncNotifier<AgentSettings> {
@@ -72,25 +86,66 @@ class AgentSettingsNotifier extends AsyncNotifier<AgentSettings> {
       (id) => id.name == providerName,
       orElse: () => AgentProviderId.openrouter,
     );
-    final preset = presetFor(providerId);
-    final key = await _storage.read(key: preset.secureStorageKey);
+    final useFasterModel = prefs.getBool(_prefUseFasterModel) ?? false;
+    var model = prefs.getString(_prefModel) ?? '';
+    var customBaseUrl = prefs.getString(_prefCustomUrl) ?? '';
+    var styleName = prefs.getString(_prefCustomStyle);
+    if (providerId != AgentProviderId.custom) {
+      final preset = presetFor(providerId);
+      var migrated = false;
+      if (customBaseUrl.trim().isEmpty) {
+        customBaseUrl = preset.baseUrl;
+        migrated = true;
+      }
+      if (model.trim().isEmpty) {
+        model = useFasterModel ? preset.fasterModel : preset.recommendedModel;
+        migrated = true;
+      }
+      styleName ??= preset.style.name;
+      if (migrated) {
+        await prefs.setString(_prefCustomUrl, customBaseUrl);
+        await prefs.setString(_prefModel, model);
+        await prefs.setString(_prefCustomStyle, styleName);
+      }
+    }
+    final customStyle = AgentApiStyle.values.firstWhere(
+      (s) => s.name == (styleName ?? AgentApiStyle.openAi.name),
+      orElse: () => AgentApiStyle.openAi,
+    );
+    final hasKey = await _hasStoredKey(providerId);
     return AgentSettings(
       providerId: providerId,
-      model: prefs.getString(_prefModel) ?? '',
-      customBaseUrl: prefs.getString(_prefCustomUrl) ?? '',
-      customStyle: AgentApiStyle.values.firstWhere(
-        (s) => s.name == (prefs.getString(_prefCustomStyle) ?? AgentApiStyle.openAi.name),
-        orElse: () => AgentApiStyle.openAi,
-      ),
-      useFasterModel: prefs.getBool(_prefUseFasterModel) ?? false,
-      hasKey: key != null && key.trim().isNotEmpty,
+      model: model,
+      customBaseUrl: customBaseUrl,
+      customStyle: customStyle,
+      useFasterModel: useFasterModel,
+      hasKey: hasKey,
     );
   }
 
-  /// Removes the key for [providerId], or for the selected provider.
+  Future<bool> _hasStoredKey(AgentProviderId providerId) async {
+    for (final id in {AgentProviderId.custom, providerId}) {
+      try {
+        final key = await _storage.read(key: presetFor(id).secureStorageKey);
+        if (key != null && key.trim().isNotEmpty) return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  /// Removes the key for [providerId], the custom slot, and the current
+  /// resolved host so leftover named-provider keys cannot come back.
   Future<void> clearApiKey([AgentProviderId? providerId]) async {
-    final id = providerId ?? (await future).providerId;
-    await _storage.delete(key: presetFor(id).secureStorageKey);
+    final settings = await future;
+    final ids = {
+      AgentProviderId.custom,
+      settings.providerId,
+      settings.resolvedPreset.id,
+      ?providerId,
+    };
+    for (final id in ids) {
+      await _storage.delete(key: presetFor(id).secureStorageKey);
+    }
     ref.invalidateSelf();
     await future;
   }
@@ -106,24 +161,34 @@ class AgentSettingsNotifier extends AsyncNotifier<AgentSettings> {
     String? apiKey,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    final custom = provider == AgentProviderId.custom;
     await prefs.setString(_prefProvider, provider.name);
     await prefs.setBool(_prefUseFasterModel, useFasterModel);
-    await prefs.setString(_prefModel, custom ? model.trim() : '');
-    if (custom) {
-      await prefs.setString(_prefCustomUrl, customBaseUrl.trim());
-      await prefs.setString(_prefCustomStyle, customStyle.name);
-    }
+    await prefs.setString(_prefModel, model.trim());
+    await prefs.setString(_prefCustomUrl, customBaseUrl.trim());
+    await prefs.setString(_prefCustomStyle, customStyle.name);
     final key = apiKey?.trim() ?? '';
     if (key.isNotEmpty) {
-      await _storage.write(key: presetFor(provider).secureStorageKey, value: key);
+      await _storage.write(
+        key: presetFor(AgentProviderId.custom).secureStorageKey,
+        value: key,
+      );
+      if (provider != AgentProviderId.custom) {
+        await _storage.write(key: presetFor(provider).secureStorageKey, value: key);
+      }
     }
     ref.invalidateSelf();
     await future;
   }
 
-  Future<String?> readApiKey(AgentProviderId providerId) =>
-      _storage.read(key: presetFor(providerId).secureStorageKey);
+  Future<String?> readApiKey(AgentProviderId providerId) async {
+    for (final id in {AgentProviderId.custom, providerId}) {
+      try {
+        final key = await _storage.read(key: presetFor(id).secureStorageKey);
+        if (key != null && key.trim().isNotEmpty) return key;
+      } catch (_) {}
+    }
+    return null;
+  }
 
   /// Providers that already have a key on this device.
   Future<Set<AgentProviderId>> providersWithKeys() async {
@@ -153,10 +218,9 @@ class AgentSettingsNotifier extends AsyncNotifier<AgentSettings> {
     return trimmed.startsWith(preset.keyPrefix);
   }
 
-  /// Web custom providers need a self-hosted relay; hosted worker is allowlisted only.
+  /// Web only forwards known hosts through the relay. Unknown URLs stay native-only.
   static bool webLlmAvailable(AgentSettings settings, {required bool relayHasLlm}) {
     if (!kIsWeb) return true;
-    if (settings.providerId == AgentProviderId.custom) return false;
-    return relayHasLlm && settings.preset.relaySlug != null;
+    return relayHasLlm && settings.resolvedPreset.relaySlug != null;
   }
 }

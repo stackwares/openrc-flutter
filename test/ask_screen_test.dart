@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openrc/features/ask/ask_screen.dart';
+import 'package:openrc/features/ask/widgets/ask_composer.dart';
 import 'package:openrc/models/agent_block.dart';
 import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/services/agent/agent_conversation_runner.dart';
 import 'package:openrc/services/agent/agent_llm_client.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/theme/app_theme.dart';
+import 'package:openrc/widgets/app_logo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Settings extends AgentSettingsNotifier {
@@ -55,6 +58,7 @@ void main() {
   Future<_Runner?> pump(
     WidgetTester tester, {
     required bool hasKey,
+    bool aiConsentGranted = true,
     Future<List<AgentBlock>> Function(String prompt)? reply,
   }) async {
     tester.view.physicalSize = const Size(430, 1600);
@@ -64,6 +68,11 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          onboardingPrefsProvider.overrideWith(
+            (ref) => OnboardingPrefsNotifier.loaded(
+              OnboardingPrefs(aiConsentGranted: aiConsentGranted),
+            ),
+          ),
           agentSettingsProvider.overrideWith(() => _Settings(hasKey: hasKey)),
           agentConversationRunnerProvider.overrideWith(
             (ref) => runner = _Runner(
@@ -88,26 +97,49 @@ void main() {
     return runner;
   }
 
-  testWidgets('without a key, Ask stays a chat and opens setup in a sheet', (
-    tester,
-  ) async {
-    await pump(tester, hasKey: false);
-    expect(find.text('Connect a model'), findsOneWidget);
-    expect(find.text('Add API key'), findsOneWidget);
-    expect(find.text('Not connected'), findsOneWidget);
-    expect(find.text('Add a key to ask'), findsOneWidget);
-    expect(find.text('What is my MRR trend?'), findsNothing);
-    expect(find.text('Save and start'), findsNothing);
+  testWidgets(
+    'without a key, Ask shows centered setup with app icon and hides composer',
+    (tester) async {
+      await pump(tester, hasKey: false);
+      expect(find.byType(AppLogo), findsOneWidget);
+      expect(find.text('Connect a model'), findsOneWidget);
+      expect(
+        find.text(
+          'Add a provider API key to ask about revenue, charts, and payouts.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<Text>(find.text('Connect a model')).textAlign,
+        TextAlign.center,
+      );
+      expect(
+        tester
+            .widget<Text>(
+              find.text(
+                'Add a provider API key to ask about revenue, charts, and payouts.',
+              ),
+            )
+            .textAlign,
+        TextAlign.center,
+      );
+      expect(find.text('Add API key'), findsOneWidget);
+      expect(find.text('Not connected'), findsOneWidget);
+      expect(find.byType(AskComposer), findsNothing);
+      expect(find.text('Add a key to ask'), findsNothing);
+      expect(find.text('What is my MRR trend?'), findsNothing);
+      expect(find.text('Save and start'), findsNothing);
 
-    await tester.tap(find.text('Add API key'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Add API key'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Connect your LLM'), findsOneWidget);
-    final save = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Save and start'),
-    );
-    expect(save.onPressed, isNull, reason: 'no key and no consent yet');
-  });
+      expect(find.text('Connect your LLM'), findsOneWidget);
+      final save = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Save and start'),
+      );
+      expect(save.onPressed, isNull, reason: 'no key and no consent yet');
+    },
+  );
 
   testWidgets('a suggestion is asked and its answer drawn', (tester) async {
     await pump(tester, hasKey: true);

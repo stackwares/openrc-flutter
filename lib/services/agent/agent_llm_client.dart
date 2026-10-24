@@ -59,7 +59,7 @@ class AgentLlmClient {
     required List<Map<String, dynamic>> messages,
     required CancelToken cancelToken,
   }) async {
-    if (kIsWeb && settings.providerId == AgentProviderId.custom) {
+    if (kIsWeb && settings.resolvedPreset.relaySlug == null) {
       throw AgentLlmException('agent.errors.customWeb');
     }
     if (settings.effectiveStyle == AgentApiStyle.anthropic) {
@@ -79,8 +79,8 @@ class AgentLlmClient {
   }
 
   String _baseUrl(AgentSettings settings) {
-    if (kIsWeb && settings.preset.relaySlug != null) {
-      return '${AppConstants.relayUrl}/llm/${settings.preset.relaySlug}';
+    if (kIsWeb && settings.resolvedPreset.relaySlug != null) {
+      return '${AppConstants.relayUrl}/llm/${settings.resolvedPreset.relaySlug}';
     }
     return settings.effectiveBaseUrl;
   }
@@ -96,7 +96,7 @@ class AgentLlmClient {
       'Authorization': 'Bearer $apiKey',
       'Content-Type': 'application/json',
     };
-    if (settings.providerId == AgentProviderId.openrouter) {
+    if (settings.resolvedPreset.id == AgentProviderId.openrouter) {
       headers['HTTP-Referer'] = AppConstants.repoUrl;
       headers['X-Title'] = AppConstants.appName;
     }

@@ -420,7 +420,6 @@
     "appleCompany": "Apple",
     "googleCompany": "Google"
   },
-
   "detail": {
     "transaction": "Transaksi",
     "appIcon": "Ikon aplikasi",
@@ -616,8 +615,11 @@
     "custom": "Kustom",
     "save": "Simpan",
     "privacy": "Privasi",
+    "aiConsent": "Izinkan Tanya",
+    "aiConsentHint": "Mengirim pertanyaan dan hasil grafik ke penyedia model yang Anda pilih. Kuncinya tetap di perangkat ini.",
     "shareUsage": "Bagikan penggunaan anonim",
     "shareUsageHint": "Laporan crash dan layar yang dipakai. Tidak pernah akun, aplikasi, atau pendapatan Anda.",
+    "watchIntroduction": "Tonton pengantar",
     "account": "Akun",
     "distinctId": "ID unik",
     "notAvailable": "Tidak tersedia",
@@ -929,6 +931,106 @@
       "payout": "Mengapa jumlah payout berikutnya seperti ini, dan kapan cair?",
       "transaction": "Ada apa dengan {type} ini?",
       "sale": "Ada apa dengan penjualan ini?"
+    }
+  },
+  "onboarding": {
+    "skip": "Lewati",
+    "back": "Kembali",
+    "continue": "Lanjut",
+    "stepOf": "{current} dari {total}",
+    "welcome": {
+      "title": "OpenRC",
+      "subtitle": "Pendapatan RevenueCat Anda, di setiap perangkat.",
+      "chips": {
+        "liveSales": "Penjualan langsung",
+        "proceeds": "Hasil setelah biaya",
+        "payouts": "Waktu pencairan",
+        "charts": "Grafik"
+      }
+    },
+    "proof": {
+      "title": "Dibuat agar tetap di perangkat Anda",
+      "sales": {
+        "title": "Setiap penjualan, saat terjadi",
+        "body": "Transaksi hari ini, total berjalan, dan pita tujuh hari."
+      },
+      "local": {
+        "title": "Angka tetap di perangkat ini",
+        "body": "OpenRC berbicara dengan RevenueCat dan menghitung jawabannya di sini."
+      },
+      "password": {
+        "title": "Kata sandi Anda hanya ke RevenueCat",
+        "body": "OpenRC tidak pernah melihat atau menyimpannya. Sesi tetap di penyimpanan aman."
+      }
+    },
+    "role": {
+      "title": "Mana yang paling menggambarkan Anda?",
+      "subtitle": "Satu pilihan, disimpan di perangkat ini.",
+      "indie": "Indie",
+      "indieHint": "Merilis sendirian",
+      "studio": "Studio kecil",
+      "studioHint": "Beberapa orang saja",
+      "agency": "Agensi",
+      "agencyHint": "Saya mengurus beberapa aplikasi",
+      "finance": "Keuangan dan ops",
+      "financeHint": "Saya memantau angkanya",
+      "continueIndie": "Lanjut sebagai indie",
+      "continueStudio": "Lanjut sebagai studio kecil",
+      "continueAgency": "Lanjut sebagai agensi",
+      "continueFinance": "Lanjut di keuangan dan ops"
+    },
+    "focus": {
+      "title": "Anda ingin mulai dari mana?",
+      "subtitle": "Kami akan membuka tab ini setelah Anda masuk.",
+      "liveSales": "Penjualan langsung",
+      "liveSalesHint": "Transaksi hari ini saat masuk",
+      "revenue": "Pendapatan dan pencairan",
+      "revenueHint": "Bulan ini dan kapan Anda dibayar",
+      "charts": "Grafik",
+      "chartsHint": "MRR, hasil, dan sisanya",
+      "continueLiveSales": "Lanjut ke penjualan langsung",
+      "continueRevenue": "Lanjut ke pendapatan",
+      "continueCharts": "Lanjut ke grafik"
+    },
+    "showcase": {
+      "title": "Hari ini, sekilas",
+      "subtitle": "Total berjalan yang tenang dan minggu di belakangnya.",
+      "example": "Contoh",
+      "today": "Hari ini"
+    },
+    "appearance": {
+      "title": "OpenRC harus terlihat seperti apa?",
+      "subtitle": "Ini berlaku langsung."
+    },
+    "money": {
+      "title": "Jumlah harus terlihat seperti apa?",
+      "subtitle": "Anda bisa mengubahnya kapan saja di Pengaturan.",
+      "currency": "Mata uang tampilan",
+      "more": "Lainnya",
+      "fees": "Tampilkan pendapatan setelah biaya toko",
+      "feesHint": "Memakai 15% untuk App Store dan Google Play. Sesuaikan tarif di Pengaturan."
+    },
+    "aiConsent": {
+      "title": "Pakai Tanya dengan angka Anda?",
+      "body": "Tanya mengirim pertanyaan dan hasil grafik ke penyedia model yang Anda pilih. Kuncinya tetap di perangkat ini. Transaksi, Pendapatan, dan Grafik tetap jalan tanpanya.",
+      "continue": "Lanjut dengan Tanya",
+      "notNow": "Nanti saja"
+    },
+    "helpUsGrow": {
+      "title": "Bantu proyek indie tumbuh",
+      "body": "Rating di Google Play membantu pengembang lain menemukan dasbor RevenueCat sumber terbuka.",
+      "rate": "Beri rating di Google Play",
+      "later": "Mungkin nanti"
+    },
+    "ready": {
+      "title": "Anda siap",
+      "body": "Notifikasi untuk setiap penjualan bisa dinyalakan setelah masuk. Push membutuhkan proyek RevenueCat, jadi tidak diminta di sini.",
+      "signIn": "Masuk dengan RevenueCat"
+    },
+    "askGate": {
+      "title": "Tanya sedang mati untuk sekarang",
+      "body": "Tanya mengirim pertanyaan dan hasil grafik ke penyedia model yang Anda pilih. Kuncinya tetap di perangkat ini. Nyalakan ini untuk mulai percakapan. Transaksi, Pendapatan, dan Grafik tidak berubah.",
+      "allow": "Izinkan Tanya"
     }
   }
 }

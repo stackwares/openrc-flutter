@@ -2,7 +2,7 @@ enum AgentApiStyle { openAi, anthropic }
 
 enum AgentProviderId { openrouter, openai, anthropic, deepseek, custom }
 
-/// Prefill for a BYOK provider. URLs and models are editable.
+/// URL / model / style prefill for the custom connection form.
 class AgentPreset {
   const AgentPreset({
     required this.id,
@@ -86,3 +86,25 @@ const kAgentPresets = <AgentPreset>[
 
 AgentPreset presetFor(AgentProviderId id) =>
     kAgentPresets.firstWhere((p) => p.id == id);
+
+/// Known hosts only — the dropdown's Custom row is not a URL match.
+Iterable<AgentPreset> get kKnownAgentPresets =>
+    kAgentPresets.where((p) => p.id != AgentProviderId.custom);
+
+String normalizeAgentBaseUrl(String url) {
+  var value = url.trim();
+  while (value.endsWith('/')) {
+    value = value.substring(0, value.length - 1);
+  }
+  return value.toLowerCase();
+}
+
+/// Exact host match after trim / trailing slash. Unknown URLs are custom.
+AgentPreset? presetMatchingBaseUrl(String url) {
+  final normalized = normalizeAgentBaseUrl(url);
+  if (normalized.isEmpty) return null;
+  for (final preset in kKnownAgentPresets) {
+    if (normalizeAgentBaseUrl(preset.baseUrl) == normalized) return preset;
+  }
+  return null;
+}

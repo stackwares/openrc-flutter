@@ -18,6 +18,7 @@ import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/ask/ask_screen.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/charts/home_screen.dart';
+import 'package:openrc/features/onboarding/onboarding_steps.dart';
 import 'package:openrc/features/revenue/revenue_screen.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/settings/widgets/account_header.dart';
@@ -27,6 +28,8 @@ import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/display_currency_store.dart';
 import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/onboarding_analytics.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_auth_service.dart';
@@ -144,6 +147,18 @@ class _MainShellState extends ConsumerState<MainShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final onboarding = ref.read(onboardingPrefsProvider);
+      if (!onboarding.focusApplied) {
+        if (onboarding.focus != null) {
+          ref.read(mainShellTabIndexProvider.notifier).state =
+              onboardingTabIndexForFocus(onboarding.focus);
+        }
+        unawaited(ref.read(onboardingPrefsProvider.notifier).markFocusApplied());
+      }
+      if (onboarding.pendingHomeArrived) {
+        logOnboardingEvent(onboardingHomeArrivedEvent(), track: true);
+        unawaited(ref.read(onboardingPrefsProvider.notifier).markHomeArrived());
+      }
       ref.read(transactionsProvider.notifier).fetchInitial();
       Telemetry.screen(
         _mainShellTabs[ref.read(mainShellTabIndexProvider)].telemetryName,

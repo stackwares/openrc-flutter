@@ -12,6 +12,7 @@ import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/models/rc_me_response.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,6 +70,11 @@ void main() {
       ProviderScope(
         overrides: [
           isSignedInProvider.overrideWith((ref) => true),
+          onboardingPrefsProvider.overrideWith(
+            (ref) => OnboardingPrefsNotifier.loaded(
+              const OnboardingPrefs(completed: true),
+            ),
+          ),
           rcMeProvider.overrideWith(
             (ref) => const RcMeResponse(email: 'ada@example.com'),
           ),

@@ -90,6 +90,16 @@ abstract final class Telemetry {
   }
 
   static void event(String name, [Map<String, Object>? properties]) {
+    if (kDebugMode) {
+      final params = (properties ?? const {}).entries
+          .map((e) => '${e.key}=${e.value}')
+          .join(' ');
+      debugPrint(
+        params.isEmpty
+            ? '[ANALYTICS] EVENT | $name'
+            : '[ANALYTICS] EVENT | $name | $params',
+      );
+    }
     if (!_active) return;
     unawaited(
       Posthog()

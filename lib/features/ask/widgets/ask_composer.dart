@@ -24,7 +24,6 @@ class AskComposer extends StatelessWidget {
     required this.running,
     required this.onSend,
     required this.onStop,
-    this.onLocked,
   });
 
   final TextEditingController controller;
@@ -32,9 +31,6 @@ class AskComposer extends StatelessWidget {
   final bool running;
   final VoidCallback onSend;
   final VoidCallback onStop;
-
-  /// When set, the field is read-only and taps / send open this instead.
-  final VoidCallback? onLocked;
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (!_enterSends || event is! KeyDownEvent) return KeyEventResult.ignored;
@@ -46,10 +42,6 @@ class AskComposer extends StatelessWidget {
     }
     // An input method still composing (Japanese, Chinese…) owns Enter.
     if (controller.value.composing.isValid) return KeyEventResult.ignored;
-    if (onLocked != null) {
-      onLocked!();
-      return KeyEventResult.handled;
-    }
     if (!running) onSend();
     return KeyEventResult.handled;
   }
@@ -62,8 +54,7 @@ class AskComposer extends StatelessWidget {
       listenable: Listenable.merge([controller, focusNode]),
       builder: (context, _) {
         final hasText = controller.text.trim().isNotEmpty;
-        final locked = onLocked != null;
-        final focused = focusNode.hasFocus && !locked;
+        final focused = focusNode.hasFocus;
         return AnimatedContainer(
           duration: AppMotion.of(context, AppMotion.fast),
           curve: AppMotion.curve,
@@ -98,9 +89,6 @@ class AskComposer extends StatelessWidget {
                   child: TextField(
                     controller: controller,
                     focusNode: focusNode,
-                    readOnly: locked,
-                    enableInteractiveSelection: !locked,
-                    onTap: locked ? onLocked : null,
                     minLines: 1,
                     maxLines: 6,
                     textCapitalization: TextCapitalization.sentences,
@@ -108,9 +96,7 @@ class AskComposer extends StatelessWidget {
                     textInputAction: TextInputAction.newline,
                     style: context.textTheme.bodyLarge,
                     decoration: InputDecoration(
-                      hintText: locked
-                          ? 'agent.setup.composerHint'.tr()
-                          : 'agent.composerHint'.tr(),
+                      hintText: 'agent.composerHint'.tr(),
                       hintStyle: context.textTheme.bodyLarge?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -152,11 +138,7 @@ class AskComposer extends StatelessWidget {
                           icon: Icons.arrow_upward_rounded,
                           background: scheme.primary,
                           foreground: scheme.onPrimary,
-                          onPressed: locked
-                              ? onLocked
-                              : hasText
-                              ? onSend
-                              : null,
+                          onPressed: hasText ? onSend : null,
                         ),
                 ),
               ),

@@ -420,7 +420,6 @@
     "appleCompany": "Apple",
     "googleCompany": "Google"
   },
-
   "detail": {
     "transaction": "Transação",
     "appIcon": "Ícone do app",
@@ -621,8 +620,11 @@
     "custom": "Personalizada",
     "save": "Salvar",
     "privacy": "Privacidade",
+    "aiConsent": "Permitir Perguntar",
+    "aiConsentHint": "Envia sua pergunta e os resultados dos gráficos para o provedor de modelo que você escolher. A chave fica neste dispositivo.",
     "shareUsage": "Compartilhar uso anônimo",
     "shareUsageHint": "Relatórios de falhas e quais telas são usadas. Nunca sua conta, seus apps ou sua receita.",
+    "watchIntroduction": "Ver a introdução",
     "account": "Conta",
     "distinctId": "ID distinto",
     "notAvailable": "Indisponível",
@@ -944,6 +946,106 @@
       "payout": "Por que este é o valor do próximo repasse e quando ele cai?",
       "transaction": "O que está acontecendo com este {type}?",
       "sale": "O que está acontecendo com esta venda?"
+    }
+  },
+  "onboarding": {
+    "skip": "Pular",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "stepOf": "{current} de {total}",
+    "welcome": {
+      "title": "OpenRC",
+      "subtitle": "Sua receita do RevenueCat, em cada dispositivo.",
+      "chips": {
+        "liveSales": "Vendas ao vivo",
+        "proceeds": "Receita após taxas",
+        "payouts": "Prazo dos pagamentos",
+        "charts": "Gráficos"
+      }
+    },
+    "proof": {
+      "title": "Feito para ficar no seu dispositivo",
+      "sales": {
+        "title": "Cada venda, assim que acontece",
+        "body": "As transações de hoje, um total acumulado e uma faixa de sete dias."
+      },
+      "local": {
+        "title": "Os números ficam neste dispositivo",
+        "body": "O OpenRC fala com o RevenueCat e calcula as respostas aqui."
+      },
+      "password": {
+        "title": "Sua senha vai só para o RevenueCat",
+        "body": "O OpenRC nunca a vê nem a guarda. A sessão fica no armazenamento seguro."
+      }
+    },
+    "role": {
+      "title": "O que mais descreve você?",
+      "subtitle": "Uma escolha, guardada neste dispositivo.",
+      "indie": "Indie",
+      "indieHint": "Publico por conta própria",
+      "studio": "Estúdio pequeno",
+      "studioHint": "Um punhado de pessoas",
+      "agency": "Agência",
+      "agencyHint": "Cuido de vários apps",
+      "finance": "Finanças e ops",
+      "financeHint": "Acompanho os números",
+      "continueIndie": "Continuar como indie",
+      "continueStudio": "Continuar como estúdio pequeno",
+      "continueAgency": "Continuar como agência",
+      "continueFinance": "Continuar em finanças e ops"
+    },
+    "focus": {
+      "title": "Por onde você quer começar?",
+      "subtitle": "Vamos abrir esta aba depois do login.",
+      "liveSales": "Vendas ao vivo",
+      "liveSalesHint": "As transações de hoje conforme chegam",
+      "revenue": "Receita e pagamentos",
+      "revenueHint": "Este mês e quando você recebe",
+      "charts": "Gráficos",
+      "chartsHint": "MRR, receita e o resto",
+      "continueLiveSales": "Continuar para vendas ao vivo",
+      "continueRevenue": "Continuar para receita",
+      "continueCharts": "Continuar para gráficos"
+    },
+    "showcase": {
+      "title": "Hoje, num relance",
+      "subtitle": "Um total acumulado discreto e a semana anterior.",
+      "example": "Exemplo",
+      "today": "Hoje"
+    },
+    "appearance": {
+      "title": "Como o OpenRC deve parecer?",
+      "subtitle": "Isso vale na hora."
+    },
+    "money": {
+      "title": "Como os valores devem aparecer?",
+      "subtitle": "Você pode mudar isso a qualquer momento em Ajustes.",
+      "currency": "Moeda de exibição",
+      "more": "Mais",
+      "fees": "Mostrar receita após taxas das lojas",
+      "feesHint": "Usa 15% para a App Store e o Google Play. Ajuste as taxas em Ajustes."
+    },
+    "aiConsent": {
+      "title": "Usar Perguntar com os seus números?",
+      "body": "Perguntar envia sua pergunta e os resultados dos gráficos para o provedor de modelo que você escolher. A chave fica neste dispositivo. Transações, Receita e Gráficos sempre funcionam sem isso.",
+      "continue": "Continuar com Perguntar",
+      "notNow": "Agora não"
+    },
+    "helpUsGrow": {
+      "title": "Ajude um projeto indie a crescer",
+      "body": "Uma avaliação no Google Play ajuda outros desenvolvedores a achar um painel open source do RevenueCat.",
+      "rate": "Avaliar no Google Play",
+      "later": "Talvez depois"
+    },
+    "ready": {
+      "title": "Você está pronto",
+      "body": "Um aviso para cada venda pode ser ligado depois do login. O push precisa de um projeto do RevenueCat, então não é pedido aqui.",
+      "signIn": "Entrar com RevenueCat"
+    },
+    "askGate": {
+      "title": "Perguntar está desligado por enquanto",
+      "body": "Perguntar envia sua pergunta e os resultados dos gráficos para o provedor de modelo que você escolher. A chave fica neste dispositivo. Ligue isso para começar uma conversa. Transações, Receita e Gráficos não mudam.",
+      "allow": "Permitir Perguntar"
     }
   }
 }

@@ -420,7 +420,6 @@
     "appleCompany": "Apple",
     "googleCompany": "Google"
   },
-
   "detail": {
     "transaction": "交易",
     "appIcon": "应用图标",
@@ -616,8 +615,11 @@
     "custom": "自定义",
     "save": "保存",
     "privacy": "隐私",
+    "aiConsent": "允许提问",
+    "aiConsentHint": "会把你的问题和图表结果发送到你选择的模型服务商。密钥留在这台设备上。",
     "shareUsage": "分享匿名使用数据",
     "shareUsageHint": "崩溃报告以及使用过的页面。绝不包括你的账户、应用或收入。",
+    "watchIntroduction": "查看介绍",
     "account": "账户",
     "distinctId": "Distinct ID",
     "notAvailable": "不可用",
@@ -929,6 +931,106 @@
       "payout": "为什么下一次付款是这个金额，何时到账？",
       "transaction": "这笔{type}是怎么回事？",
       "sale": "这笔销售是怎么回事？"
+    }
+  },
+  "onboarding": {
+    "skip": "跳过",
+    "back": "返回",
+    "continue": "继续",
+    "stepOf": "{current} / {total}",
+    "welcome": {
+      "title": "OpenRC",
+      "subtitle": "你的 RevenueCat 收入，每台设备都能看。",
+      "chips": {
+        "liveSales": "实时销售",
+        "proceeds": "扣除费用后的实收",
+        "payouts": "结算时间",
+        "charts": "图表"
+      }
+    },
+    "proof": {
+      "title": "数据留在你的设备上",
+      "sales": {
+        "title": "每笔销售，发生即见",
+        "body": "今天的交易、累计总额，还有七天的条带。"
+      },
+      "local": {
+        "title": "数字留在这台设备",
+        "body": "OpenRC 与 RevenueCat 通信，并在本地算出结果。"
+      },
+      "password": {
+        "title": "密码只发给 RevenueCat",
+        "body": "OpenRC 既看不到也不保存。会话留在安全存储里。"
+      }
+    },
+    "role": {
+      "title": "哪一项最符合你？",
+      "subtitle": "选一项，保存在这台设备上。",
+      "indie": "独立开发者",
+      "indieHint": "我自己发布",
+      "studio": "小团队",
+      "studioHint": "只有几个人",
+      "agency": "代理商",
+      "agencyHint": "我负责多款应用",
+      "finance": "财务与运营",
+      "financeHint": "我盯着数字",
+      "continueIndie": "以独立开发者继续",
+      "continueStudio": "以小团队继续",
+      "continueAgency": "以代理商继续",
+      "continueFinance": "以财务与运营继续"
+    },
+    "focus": {
+      "title": "你想从哪里开始？",
+      "subtitle": "登录后我们会打开这个标签。",
+      "liveSales": "实时销售",
+      "liveSalesHint": "今天进来的交易",
+      "revenue": "收入与结算",
+      "revenueHint": "本月以及何时到账",
+      "charts": "图表",
+      "chartsHint": "MRR、实收，以及其他",
+      "continueLiveSales": "继续到实时销售",
+      "continueRevenue": "继续到收入",
+      "continueCharts": "继续到图表"
+    },
+    "showcase": {
+      "title": "今天，一眼看完",
+      "subtitle": "安静的累计总额，以及此前一周。",
+      "example": "示例",
+      "today": "今天"
+    },
+    "appearance": {
+      "title": "OpenRC 该是什么样子？",
+      "subtitle": "马上生效。"
+    },
+    "money": {
+      "title": "金额该怎么显示？",
+      "subtitle": "之后随时可在设置里改。",
+      "currency": "显示货币",
+      "more": "更多",
+      "fees": "显示扣除商店费用后的收入",
+      "feesHint": "App Store 和 Google Play 使用 15%。费率可在设置里微调。"
+    },
+    "aiConsent": {
+      "title": "用提问来看你的数字？",
+      "body": "提问会把你的问题和图表结果发送到你选择的模型服务商。密钥留在这台设备上。交易、收入和图表即使关闭也能用。",
+      "continue": "继续使用提问",
+      "notNow": "以后再说"
+    },
+    "helpUsGrow": {
+      "title": "帮一个独立项目成长",
+      "body": "在 Google Play 评分，能帮其他开发者找到开源的 RevenueCat 看板。",
+      "rate": "在 Google Play 评分",
+      "later": "以后再说"
+    },
+    "ready": {
+      "title": "可以开始了",
+      "body": "每笔销售的提醒可以在登录后打开。推送需要 RevenueCat 项目，所以这里不申请。",
+      "signIn": "使用 RevenueCat 登录"
+    },
+    "askGate": {
+      "title": "提问暂时关闭",
+      "body": "提问会把你的问题和图表结果发送到你选择的模型服务商。密钥留在这台设备上。打开后即可开始对话。交易、收入和图表不受影响。",
+      "allow": "允许提问"
     }
   }
 }

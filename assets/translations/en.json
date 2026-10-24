@@ -794,8 +794,12 @@
     "custom": "Custom",
     "save": "Save",
     "privacy": "Privacy",
+    "aiConsent": "Allow Ask",
+    "aiConsentHint": "Sends your question and chart results to the model provider you choose. The key stays on this device.",
     "shareUsage": "Share anonymous usage",
     "shareUsageHint": "Crash reports and which screens are used. Never your account, apps or revenue.",
+    "help": "Help",
+    "watchIntroduction": "Watch the introduction",
     "account": "Account",
     "distinctId": "Distinct ID",
     "notAvailable": "Not available",
@@ -910,6 +914,106 @@
     "helpSsoBody": "If your organization requires single sign-on, sign in through it on RevenueCat’s website. This app signs in with an email and password only.",
     "helpPrivateTitle": "Your password stays private",
     "helpPrivateBody": "It goes straight to RevenueCat and is never saved. Your session is kept in this device’s secure storage."
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "back": "Back",
+    "continue": "Continue",
+    "stepOf": "{current} of {total}",
+    "welcome": {
+      "title": "OpenRC",
+      "subtitle": "Your RevenueCat revenue, on every device.",
+      "chips": {
+        "liveSales": "Live sales",
+        "proceeds": "Proceeds after fees",
+        "payouts": "Payout timing",
+        "charts": "Charts"
+      }
+    },
+    "proof": {
+      "title": "Built to stay on your device",
+      "sales": {
+        "title": "Every sale, as it happens",
+        "body": "Today’s transactions, a running total, and a seven-day strip."
+      },
+      "local": {
+        "title": "Numbers stay on this device",
+        "body": "OpenRC talks to RevenueCat and works the answers out here."
+      },
+      "password": {
+        "title": "Your password goes only to RevenueCat",
+        "body": "OpenRC never sees or stores it. The session stays in secure storage."
+      }
+    },
+    "role": {
+      "title": "What describes you best?",
+      "subtitle": "One choice, kept on this device.",
+      "indie": "Indie",
+      "indieHint": "Shipping on my own",
+      "studio": "Small studio",
+      "studioHint": "A handful of people",
+      "agency": "Agency",
+      "agencyHint": "I look after several apps",
+      "finance": "Finance and ops",
+      "financeHint": "I watch the numbers",
+      "continueIndie": "Continue as an indie",
+      "continueStudio": "Continue as a small studio",
+      "continueAgency": "Continue as an agency",
+      "continueFinance": "Continue in finance and ops"
+    },
+    "focus": {
+      "title": "Where do you want to start?",
+      "subtitle": "We’ll open this tab after you sign in.",
+      "liveSales": "Live sales",
+      "liveSalesHint": "Today’s transactions as they come in",
+      "revenue": "Revenue and payouts",
+      "revenueHint": "This month and when you get paid",
+      "charts": "Charts",
+      "chartsHint": "MRR, proceeds, and the rest",
+      "continueLiveSales": "Continue to live sales",
+      "continueRevenue": "Continue to revenue",
+      "continueCharts": "Continue to charts"
+    },
+    "showcase": {
+      "title": "Today, at a glance",
+      "subtitle": "A quiet running total and the week behind it.",
+      "example": "Example",
+      "today": "Today"
+    },
+    "appearance": {
+      "title": "How should OpenRC look?",
+      "subtitle": "This applies right away."
+    },
+    "money": {
+      "title": "How should amounts look?",
+      "subtitle": "You can change these anytime in Settings.",
+      "currency": "Display currency",
+      "more": "More",
+      "fees": "Show revenue after store fees",
+      "feesHint": "Uses 15% for the App Store and Google Play. Fine-tune the rates in Settings."
+    },
+    "aiConsent": {
+      "title": "Use Ask with your numbers?",
+      "body": "Ask sends your question and the chart results to the model provider you choose. The key stays on this device. Transactions, Revenue, and Charts always work without it.",
+      "continue": "Continue with Ask",
+      "notNow": "Not now"
+    },
+    "helpUsGrow": {
+      "title": "Help an indie project grow",
+      "body": "A rating on Google Play helps other developers find an open-source RevenueCat dashboard.",
+      "rate": "Rate on Google Play",
+      "later": "Maybe later"
+    },
+    "ready": {
+      "title": "You’re ready",
+      "body": "A ping for each sale can be turned on after you sign in. Push needs a RevenueCat project, so it isn’t requested here.",
+      "signIn": "Sign in with RevenueCat"
+    },
+    "askGate": {
+      "title": "Ask is off for now",
+      "body": "Ask sends your question and the chart results to the model provider you choose. The key stays on this device. Turn this on to start a conversation. Transactions, Revenue, and Charts are unchanged.",
+      "allow": "Allow Ask"
+    }
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
