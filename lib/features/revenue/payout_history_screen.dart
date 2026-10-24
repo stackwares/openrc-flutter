@@ -5,10 +5,12 @@ import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
+import 'package:openrc/features/revenue/payout_detail_screen.dart';
 import 'package:openrc/features/revenue/payout_history.dart';
 import 'package:openrc/features/revenue/payout_history_provider.dart';
 import 'package:openrc/features/revenue/widgets/payout_history_chart.dart';
 import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/side_panel.dart';
 import 'package:openrc/widgets/animated_number.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/app_state_message.dart';
@@ -459,7 +461,8 @@ class _MonthChartCard extends StatelessWidget {
 }
 
 /// One payment: store, amount, pay date, the days it covers, and the change
-/// from that store's payment before.
+/// from that store's payment before. Tapping it opens that earnings window as
+/// the Revenue tab shows it.
 class _PayoutRow extends StatelessWidget {
   const _PayoutRow({required this.payout, required this.previous});
 
@@ -478,96 +481,103 @@ class _PayoutRow extends StatelessWidget {
     final date = DateFormat.MMMd().format(period.paymentDate);
     final before = previous?.amount;
     return MergeSemantics(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.md,
-          vertical: AppSpace.sm,
+      child: InkWell(
+        key: ValueKey('payout-row-${period.id}'),
+        onTap: () => openDetail(
+          context,
+          (context) => PayoutDetailScreen(payout: payout),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(AppRadius.icon),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.md,
+            vertical: AppSpace.sm,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppRadius.icon),
+                ),
+                alignment: Alignment.center,
+                child: Icon(_storeIcon(period.store), size: 20, color: color),
               ),
-              alignment: Alignment.center,
-              child: Icon(_storeIcon(period.store), size: 20, color: color),
-            ),
-            const SizedBox(width: AppSpace.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          period.store.displayLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            period.store.displayLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpace.xs),
-                      DualCurrencyExactText(
-                        amount: payout.amount,
-                        applyCommissionAdjustment: false,
-                        textAlign: TextAlign.end,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontFeatures: AppText.tabular,
+                        const SizedBox(width: AppSpace.xs),
+                        DualCurrencyExactText(
+                          amount: payout.amount,
+                          applyCommissionAdjustment: false,
+                          textAlign: TextAlign.end,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontFeatures: AppText.tabular,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          period.isProjected
-                              ? 'revenue.payouts.paidAbout'.tr(
-                                  namedArgs: {'date': date},
-                                )
-                              : 'revenue.payouts.paid'.tr(
-                                  namedArgs: {'date': date},
-                                ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: caption,
-                        ),
-                      ),
-                      if (before != null && before.abs() >= 0.005)
-                        DeltaBadge.percent(
-                          current: payout.amount,
-                          previous: before,
-                          comparison: 'revenue.payouts.previousPayout'.tr(),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'revenue.earningsRange'.tr(
-                      namedArgs: {
-                        'range': formatPaydayRange(
-                          period.earningsStart,
-                          period.earningsEnd,
-                        ),
-                      },
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: caption?.copyWith(fontSize: 12),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            period.isProjected
+                                ? 'revenue.payouts.paidAbout'.tr(
+                                    namedArgs: {'date': date},
+                                  )
+                                : 'revenue.payouts.paid'.tr(
+                                    namedArgs: {'date': date},
+                                  ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: caption,
+                          ),
+                        ),
+                        if (before != null && before.abs() >= 0.005)
+                          DeltaBadge.percent(
+                            current: payout.amount,
+                            previous: before,
+                            comparison: 'revenue.payouts.previousPayout'.tr(),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'revenue.earningsRange'.tr(
+                        namedArgs: {
+                          'range': formatPaydayRange(
+                            period.earningsStart,
+                            period.earningsEnd,
+                          ),
+                        },
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: caption?.copyWith(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

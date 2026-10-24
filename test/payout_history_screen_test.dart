@@ -205,6 +205,24 @@ void main() {
     expect(find.text('Tap a month to see what it paid'), findsOneWidget);
   });
 
+  testWidgets('a phone opens the payout details full screen', (tester) async {
+    await pump(
+      tester,
+      PayoutHistoryState(amounts: _amounts(), hasLoaded: true),
+      size: const Size(400, 4000),
+    );
+    final period = paidPayouts(PayoutStore.apple, DateTime.now()).last;
+    final row = find.byKey(ValueKey('payout-row-${period.id}'));
+    await tester.ensureVisible(row);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+
+    // A route, not the wide window's side panel: the list is gone behind it.
+    expect(find.byType(PayoutDetailScreen), findsOneWidget);
+    expect(find.byType(PayoutHistoryScreen), findsNothing);
+    expect(find.text('App Store'), findsWidgets);
+  });
+
   testWidgets('tapping a payout row opens its detail screen', (tester) async {
     await pump(
       tester,
