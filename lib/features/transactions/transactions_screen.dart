@@ -351,11 +351,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   void setSelectedDayKey(String dayKey) {
     if (!isIsoCalendarDayKey(dayKey) || dayKey == state.selectedDayKey) return;
-    state = state.copyWith(
-      selectedDayKey: dayKey,
-      error: null,
-      isLoadingMore: false,
-    );
+    state = state.copyWith(selectedDayKey: dayKey, error: null);
     unawaited(_loadDay(dayKey));
   }
 
@@ -632,8 +628,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     }
   }
 
+  /// The day's list neared its end: keeps loading the selected day if it
+  /// isn't complete. Older pages never show in a day's list, so once it is
+  /// there's nothing to page in.
   Future<void> fetchMore() async {
-    await _performFetchMorePage(requestContext: 'transactions:scroll');
+    if (state.isLoading || state.isLoadingMore || state.isLoadingDay) return;
+    await _loadDay(state.selectedDayKey);
   }
 
   /// Keeps calling [_performFetchMorePage] while [state.hasMore] and under
@@ -1139,7 +1139,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             },
           ),
       ],
-      if ((state.hasMore && state.isLoadingMore) || state.isLoadingDay)
+      // Only while this day's rows are on the way: the Revenue tab's month
+      // backfill pages other days and can run for a hundred pages.
+      if (!dayLoaded && (state.isLoadingMore || state.isLoadingDay))
         const SliverToBoxAdapter(child: TransactionRowsSkeleton(rows: 3)),
     ];
 
@@ -1158,14 +1160,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ],
         );
 
-    // Loads the next page as the list nears its end.
+    // Keeps loading an unfinished day as its list nears the end.
     Widget pagesMore(Widget child) => NotificationListener<ScrollNotification>(
       onNotification: (scrollInfo) {
-        if (scrollInfo.metrics.pixels >=
-            scrollInfo.metrics.maxScrollExtent - 240) {
-          if (state.hasMore && !state.isLoadingMore && !state.isLoading) {
-            ref.read(transactionsProvider.notifier).fetchMore();
-          }
+        if (!dayLoaded &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 240) {
+          ref.read(transactionsProvider.notifier).fetchMore();
         }
         return false;
       },
@@ -1650,7 +1651,8 @@ class _FutureTransactionsSection extends StatelessWidget {
                         text: 'transactions.scheduled'.tr(),
                         children: [
                           TextSpan(
-                            text: '  ${'transactions.laterToday'.tr(namedArgs: {'count': '${transactions.length}'})}',
+                            text:
+                                '  ${'transactions.laterToday'.tr(namedArgs: {'count': '${transactions.length}'})}',
                             style: TextStyle(
                               color: scheme.onSurfaceVariant,
                               fontWeight: FontWeight.w500,
