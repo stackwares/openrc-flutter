@@ -573,7 +573,8 @@
       "splitUnavailableMessage": "RevenueCat tidak mengembalikan pendapatan per toko, jadi pencairan tidak dapat dihitung.",
       "estimateNote": "Perkiraan dari penerimaan di RevenueCat, setelah biaya toko dan perkiraan pajak. Pembayaran sebenarnya bisa berbeda karena kurs, pemotongan pajak, dan batas minimum pembayaran.",
       "savedNote": "Setiap pencairan disimpan setelah dibayarkan dan tidak berubah lagi. RevenueCat membebankan refund ke bulan pembelian, sedangkan toko memotongnya dari pembayaran berikutnya, jadi totalnya bisa sedikit berbeda."
-    }
+    },
+    "monthTransactions": "Transaksi bulan ini"
   },
   "settings": {
     "title": "Pengaturan",
@@ -812,6 +813,20 @@
     "sortNewest": "Terbaru",
     "sortOldest": "Terlama",
     "sortHighest": "Tertinggi",
-    "sortLowest": "Terendah"
+    "sortLowest": "Terendah",
+    "filterBar": {
+      "allProjects": "Semua proyek",
+      "allStores": "Semua toko",
+      "allCountriesMenu": "Semua negara…",
+      "pickSeveralMac": "⌘-klik untuk memilih beberapa",
+      "pickSeveral": "Ctrl-klik untuk memilih beberapa"
+    },
+    "table": {
+      "customer": "Pelanggan",
+      "project": "Proyek",
+      "product": "Produk",
+      "expires": "Berakhir",
+      "type": "Jenis"
+    }
   }
 }

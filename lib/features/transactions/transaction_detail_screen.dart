@@ -545,7 +545,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                   _buildChip(
                     context,
                     null,
-                    '${_countryFlag(tx.subscriberCountryCode!)} ${regionDisplayNameEnglish(tx.subscriberCountryCode)}',
+                    '${countryFlagEmoji(tx.subscriberCountryCode!)} ${regionDisplayNameEnglish(tx.subscriberCountryCode)}',
                     maxLines: 2,
                   ),
                 if (tx.isSandbox == true)
@@ -1013,13 +1013,6 @@ class TransactionDetailScreen extends ConsumerWidget {
   String _relativeTime(String? dateStr) {
     if (dateStr == null) return 'detail.notAvailable'.tr();
     return formatRelativeTimeShort(dateStr);
-  }
-
-  String _countryFlag(String code) {
-    if (code.length != 2) return code;
-    return String.fromCharCodes(
-      code.toUpperCase().codeUnits.map((c) => c + 127397),
-    );
   }
 
   /// Right side of the History section header; shows total renewals + total spent.

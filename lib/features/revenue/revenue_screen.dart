@@ -14,22 +14,46 @@ import 'package:openrc/features/transactions/transactions_screen.dart';
 import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
 import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
 import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
+import 'package:openrc/features/transactions/widgets/transactions_filter_bar.dart';
+import 'package:openrc/features/transactions/widgets/transactions_table.dart';
+import 'package:openrc/features/transactions/transaction_detail_screen.dart';
 import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/services/transaction_list_sort_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/animated_number.dart';
 import 'package:openrc/widgets/animated_reveal.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/shell_header.dart';
+import 'package:openrc/widgets/section_header.dart';
+import 'package:openrc/widgets/side_panel.dart';
 
 /// Month-to-date Revenue tab totals (local calendar month). Shares [transactionsProvider] with [TransactionsScreen].
-class RealtimeTransactionsScreen extends ConsumerWidget {
+class RealtimeTransactionsScreen extends ConsumerStatefulWidget {
   const RealtimeTransactionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RealtimeTransactionsScreen> createState() =>
+      _RealtimeTransactionsScreenState();
+}
+
+class _RealtimeTransactionsScreenState
+    extends ConsumerState<RealtimeTransactionsScreen> {
+  /// Type tiles picked on the dashboard; they narrow its table.
+  Set<TransactionDaySectionFilter> _sectionFilters = {};
+
+  void _toggleSectionFilter(TransactionDaySectionFilter filter) {
+    setState(() {
+      final next = Set<TransactionDaySectionFilter>.from(_sectionFilters);
+      if (!next.remove(filter)) next.add(filter);
+      _sectionFilters = next;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(transactionsProvider);
     final commission = ref.watch(commissionSettingsProvider);
     final appIncludeFilter = ref.watch(transactionsAppIncludeFilterProvider);
@@ -91,6 +115,7 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
       ref.read(transactionsAppIncludeFilterProvider.notifier).state = null;
       ref.read(transactionsCountryFilterProvider.notifier).state = null;
       ref.read(transactionsPlatformFilterProvider.notifier).state = null;
+      setState(() => _sectionFilters = {});
     }
 
     return Scaffold(
@@ -229,19 +254,26 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
           return LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              // Wide: the summary beside the breakdown, each scrolling.
-              if (width >= 900) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SizedBox(
-                      width: (width * 0.45).clamp(380.0, 520.0),
-                      child: column(summary),
+              if (width >= AppBreakpoints.dashboard) {
+                return RefreshIndicator(
+                  onRefresh: refresh,
+                  child: _dashboard(
+                    context,
+                    width: width,
+                    monthTransactions: txs,
+                    allMonthTransactions: windowTxsRaw,
+                    allLoadedTransactions: allLoadedTxs,
+                    hero: _MonthHeroCard(
+                      netTotal: netTotal,
+                      grossTotal: grossTotal,
+                      showGross: commission.adjustmentEnabled,
+                      loadComplete: state.realtimeLoadComplete,
                     ),
-                    Expanded(
-                      child: column([const SizedBox(height: 8), ...breakdown]),
-                    ),
-                  ],
+                    filtersActive: filtersActive,
+                    openFilters: openFilters,
+                    clearFilters: clearFilters,
+                    bottomPadding: bottom,
+                  ),
                 );
               }
               return column(
@@ -255,6 +287,162 @@ class RealtimeTransactionsScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  /// Wide windows: filters, the month's cards, then the month's table, in
+  /// one column.
+  Widget _dashboard(
+    BuildContext context, {
+    required double width,
+    required List<RcTransaction> monthTransactions,
+    required List<RcTransaction> allMonthTransactions,
+    required List<RcTransaction> allLoadedTransactions,
+    required Widget hero,
+    required bool filtersActive,
+    required VoidCallback openFilters,
+    required VoidCallback clearFilters,
+    required double bottomPadding,
+  }) {
+    final gutter =
+        AppBreakpoints.dashboardGutter +
+        AppBreakpoints.centeringInset(
+          width,
+          maxWidth: AppBreakpoints.dashboardMaxWidth,
+        );
+    final listSort = ref.watch(transactionListSortProvider);
+    final rows = monthTransactions
+        .where((tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters))
+        .toList();
+    sortMutableTransactionList(rows, listSort);
+    final muted = context.textTheme.bodyMedium?.copyWith(
+      color: context.colorScheme.onSurfaceVariant,
+    );
+
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: gutter),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              SliverToBoxAdapter(
+                child: TransactionsFilterBar(
+                  transactions: allMonthTransactions,
+                  onOpenAllFilters: openFilters,
+                  sectionFilters: _sectionFilters,
+                  onRemoveSection: _toggleSectionFilter,
+                  onClearSections: () => setState(() => _sectionFilters = {}),
+                ),
+              ),
+              // The month and its tiles beside the payouts, which run
+              // taller than the month card alone.
+              SliverPadding(
+                padding: const EdgeInsets.only(top: AppSpace.xs),
+                sliver: SliverToBoxAdapter(
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 11,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(child: hero),
+                              const SizedBox(height: AppSpace.sm),
+                              DayTypeCountSummary(
+                                transactions: monthTransactions,
+                                previousDayTransactions: null,
+                                selectedFilters: _sectionFilters,
+                                onFilterCellTap: _toggleSectionFilter,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpace.sm),
+                        Expanded(
+                          flex: 9,
+                          child: RealtimeNextPaydayProceedsCard(
+                            allLoadedTransactions: allLoadedTransactions,
+                            loadedTransactionCount:
+                                allLoadedTransactions.length,
+                            margin: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).appCardEntrance(),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.only(top: AppSpace.sm),
+                sliver: SliverToBoxAdapter(
+                  child: RealtimeRevenueInsightsList(
+                    transactions: monthTransactions,
+                    compactRevenueAmounts: false,
+                    cardMargin: EdgeInsets.zero,
+                    columns: 2,
+                  ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SectionHeader(
+                  title: 'revenue.monthTransactions'.tr(),
+                  count: rows.isEmpty ? null : '${rows.length}',
+                  padding: const EdgeInsets.fromLTRB(4, 24, 4, 10),
+                ),
+              ),
+              if (rows.isEmpty)
+                SliverToBoxAdapter(
+                  child: AppCard(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            filtersActive || _sectionFilters.isNotEmpty
+                                ? 'transactions.noFilterMatches'.tr()
+                                : 'revenue.noTransactionsToBreakDown'.tr(),
+                            style: muted,
+                          ),
+                        ),
+                        if (filtersActive || _sectionFilters.isNotEmpty)
+                          TextButton(
+                            onPressed: clearFilters,
+                            child: Text('transactions.clearFilters'.tr()),
+                          ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                TransactionsTable(
+                  transactions: rows,
+                  width: width - 2 * gutter,
+                  onOpen: (tx) => openDetail(
+                    context,
+                    (context) => TransactionDetailScreen(transaction: tx),
+                  ),
+                ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+                  child: Text(
+                    ShellHeader.showsRefreshButton
+                        ? 'revenue.totalsNoteRefresh'.tr()
+                        : 'revenue.totalsNotePullDown'.tr(),
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
+      ],
     );
   }
 }

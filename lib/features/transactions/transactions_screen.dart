@@ -19,6 +19,8 @@ import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
 import 'package:openrc/features/transactions/widgets/day_revenue_strip.dart';
 import 'package:openrc/features/transactions/widgets/jump_to_day_sheet.dart';
 import 'package:openrc/features/transactions/widgets/transaction_list_sort_menu.dart';
+import 'package:openrc/features/transactions/widgets/transactions_filter_bar.dart';
+import 'package:openrc/features/transactions/widgets/transactions_table.dart';
 import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
 import 'package:openrc/services/auto_app_icons_store.dart';
@@ -780,9 +782,6 @@ final transactionsCountryFilterProvider = StateProvider<Set<String>?>(
 final transactionsPlatformFilterProvider =
     StateProvider<Set<TransactionPlatformFilter>?>((ref) => null);
 
-/// Content width from which the summary and the list sit side by side.
-const double _twoColumnMinWidth = 900;
-
 /// A single column of cards, gutters included, never grows past this.
 const double _columnMaxWidth =
     AppBreakpoints.readableWidth + 2 * AppSpace.gutter;
@@ -1173,34 +1172,160 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       child: child,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        // Wide: the summary and the list side by side, each scrolling.
-        if (width >= _twoColumnMinWidth) {
-          final summaryWidth = (width * 0.4).clamp(360.0, 440.0);
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: summaryWidth,
-                child: RefreshIndicator(
-                  onRefresh: refresh,
-                  child: scrollView(summarySlivers),
-                ),
+    // Wide windows: filters, the day's cards, then the day's table, in one
+    // column.
+    List<Widget> dashboardSlivers(double tableWidth) {
+      final hero = _DayHeroCard(
+        label: commission.adjustmentEnabled
+            ? 'transactions.netRevenue'.tr()
+            : 'transactions.revenue'.tr(),
+        total: headerDaily,
+        previousTotal: headerPrevTotal,
+        loading: !dayLoaded,
+        strip: DayRevenueStrip(
+          days: stripDays,
+          selectedDayKey: selectedKey,
+          formatAmount: _formatAmountForSemantics,
+          onDaySelected: state.isLoading ? null : _goToDay,
+        ),
+      );
+      final showBreakdown =
+          dayLoaded && !filtersHideResults && allForDayForMetrics.isNotEmpty;
+      return [
+        SliverToBoxAdapter(
+          child: TransactionsFilterBar(
+            transactions: days[selectedKey] ?? const [],
+            onOpenAllFilters: () => _showAppFilterSheet(context, state),
+            sectionFilters: _sectionFilters,
+            onRemoveSection: _toggleSectionFilter,
+            onClearSections: () => setState(() => _sectionFilters = {}),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.only(top: AppSpace.xs),
+          sliver: SliverToBoxAdapter(
+            child: showBreakdown
+                ? IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(flex: 5, child: hero),
+                        const SizedBox(width: AppSpace.sm),
+                        Expanded(
+                          flex: 4,
+                          child: RealtimeRevenueInsightsList(
+                            transactions: allForDayForMetrics,
+                            asModalEntry: true,
+                            cardMargin: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).appCardEntrance()
+                : hero.appCardEntrance(),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.only(top: AppSpace.sm),
+          sliver: SliverToBoxAdapter(
+            child: Skeletonizer(
+              enabled: !dayLoaded,
+              child: DayTypeCountSummary(
+                transactions: allForDay,
+                previousDayTransactions: previousDayLoaded
+                    ? previousDayForSummary
+                    : null,
+                selectedFilters: _sectionFilters,
+                onFilterCellTap: _toggleSectionFilter,
+                singleRow: true,
               ),
-              Expanded(
-                child: pagesMore(
-                  RefreshIndicator(
-                    onRefresh: refresh,
-                    child: scrollView([
-                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                      ...listSlivers,
-                    ]),
+            ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+          ),
+        ),
+        if (futureTxs.isNotEmpty)
+          SliverToBoxAdapter(
+            child: _FutureTransactionsSection(
+              transactions: futureTxs,
+              expanded: _futureTransactionsExpanded,
+              onExpandedChanged: (v) {
+                setState(() => _futureTransactionsExpanded = v);
+              },
+              subscriberEarliestPurchaseLocalDayById:
+                  subscriberEarliestPurchaseDay,
+              subscriberEarliestPurchaseLocalInstantById:
+                  subscriberEarliestPurchaseInstant,
+              onOpenTransaction: openTransaction,
+              margin: const EdgeInsets.only(top: AppSpace.sm),
+            ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+          ),
+        if (filtersHideResults)
+          SliverToBoxAdapter(
+            child: AppStateMessage(
+              icon: Icons.filter_list_off_outlined,
+              title: 'transactions.noFilterMatches'.tr(),
+              message: 'transactions.noFilterMatchesMessage'.tr(),
+              actionLabel: 'transactions.clearFilters'.tr(),
+              actionIcon: Icons.filter_alt_off_outlined,
+              onAction: _clearTransactionFilters,
+              bottomPadding: bottomPadding,
+              shrinkWrap: true,
+            ),
+          )
+        else ...[
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'transactions.title'.tr(),
+              count: transactions.isEmpty ? null : '${transactions.length}',
+              padding: const EdgeInsets.fromLTRB(4, 24, 4, 10),
+            ),
+          ),
+          if (transactions.isEmpty &&
+              state.grouped.isNotEmpty &&
+              (dayLoaded || !(state.isLoadingMore || state.isLoadingDay)))
+            SliverToBoxAdapter(
+              child: AppCard(
+                child: Text(
+                  dayLoaded
+                      ? (viewingToday
+                            ? 'transactions.noTransactionsToday'.tr()
+                            : 'transactions.noTransactionsOnDay'.tr())
+                      : 'transactions.dayNotFinished'.tr(),
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
-            ],
+            )
+          else if (transactions.isNotEmpty)
+            TransactionsTable(
+              transactions: transactions,
+              width: tableWidth,
+              onOpen: openTransaction,
+            ),
+        ],
+        if (!dayLoaded && (state.isLoadingMore || state.isLoadingDay))
+          const SliverToBoxAdapter(child: TransactionRowsSkeleton(rows: 3)),
+      ];
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        if (width >= AppBreakpoints.dashboard) {
+          final gutter =
+              AppBreakpoints.dashboardGutter +
+              AppBreakpoints.centeringInset(
+                width,
+                maxWidth: AppBreakpoints.dashboardMaxWidth,
+              );
+          return pagesMore(
+            RefreshIndicator(
+              onRefresh: refresh,
+              child: scrollView(
+                dashboardSlivers(width - 2 * gutter),
+                inset: gutter,
+              ),
+            ),
           );
         }
         return pagesMore(
@@ -1480,6 +1605,7 @@ class _FutureTransactionsSection extends StatelessWidget {
   final Map<String, DateTime> subscriberEarliestPurchaseLocalDayById;
   final Map<String, DateTime> subscriberEarliestPurchaseLocalInstantById;
   final void Function(RcTransaction tx, {Object? heroTag}) onOpenTransaction;
+  final EdgeInsetsGeometry margin;
 
   static Object? _heroTag(RcTransaction tx) {
     final key = rcTransactionDedupKey(tx);
@@ -1493,13 +1619,14 @@ class _FutureTransactionsSection extends StatelessWidget {
     required this.subscriberEarliestPurchaseLocalDayById,
     required this.subscriberEarliestPurchaseLocalInstantById,
     required this.onOpenTransaction,
+    this.margin = const EdgeInsets.fromLTRB(16, 12, 16, 0),
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Card(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      margin: margin,
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

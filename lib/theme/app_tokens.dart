@@ -62,6 +62,16 @@ abstract final class AppBreakpoints {
   /// Widest a single column of cards grows before it centers.
   static const double readableWidth = 720;
 
+  /// Content width from which Transactions and Revenue become a dashboard:
+  /// filter bar, cards in rows, then a transactions table.
+  static const double dashboard = 900;
+
+  /// Widest the dashboard grows before it centers.
+  static const double dashboardMaxWidth = 1360;
+
+  /// Dashboard side gutter.
+  static const double dashboardGutter = 24;
+
   static WindowSize of(double width) => width >= expanded
       ? WindowSize.expanded
       : width >= medium
