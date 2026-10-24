@@ -1,5 +1,8 @@
+import { parseLanguage, type Language } from "./strings";
+
 /**
- * How a device shows amounts, as the app puts it in the webhook URL:
+ * How a device shows notifications, as the app puts it in the webhook URL:
+ * `lang=de` for the app's language (English when missing),
  * `currency=EUR` for its display currency and `fees=15,30` (App Store, then
  * Google Play, in percent) when it subtracts store fees, plus `rate`, the
  * app's last saved rate for that currency, in case no fresh one can be had.
@@ -7,6 +10,8 @@
  * no fee.
  */
 export interface Display {
+  /** The app's language; also formats amounts and country names. */
+  language?: Language;
   currency: string;
   fees: { apple: number; google: number } | null;
   /** The app's last saved rate: one US dollar in [currency]. */
@@ -20,6 +25,7 @@ export function parseDisplay(params: URLSearchParams): Display {
   const fee = (n: number | undefined) => n !== undefined && Number.isFinite(n) && n >= 0 && n <= 100;
   const rate = Number(params.get("rate"));
   return {
+    language: parseLanguage(params.get("lang")),
     currency,
     fees: fee(apple) && fee(google) ? { apple: apple!, google: google! } : null,
     savedRate: Number.isFinite(rate) && rate > 0 ? rate : null,

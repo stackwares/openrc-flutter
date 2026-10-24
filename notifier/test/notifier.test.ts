@@ -1,7 +1,8 @@
 import { env } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { kindOf, notificationFor, parseKinds } from "../src/copy";
-import { forgetRates } from "../src/display";
+import { forgetRates, parseDisplay } from "../src/display";
+import { LANGUAGES, STRINGS } from "../src/strings";
 import { forgetAccessToken } from "../src/fcm";
 import worker from "../src/index";
 import { parseSecret, topicFor } from "../src/topic";
@@ -489,5 +490,36 @@ describe("notification copy", () => {
       title: "⚪ Test notification",
       body: "RevenueCat can reach this device.",
     });
+  });
+});
+
+describe("notification language", () => {
+  const display = (query: string) => parseDisplay(new URLSearchParams(query));
+
+  it("reads the app's language from the URL, falling back to English", () => {
+    expect(display("lang=de").language).toBe("de");
+    expect(display("lang=pt-br").language).toBe("pt-BR");
+    expect(display("lang=xx").language).toBe("en");
+    expect(display("").language).toBe("en");
+  });
+
+  it("writes the title, body, amounts and countries in that language", () => {
+    const copy = notificationFor(
+      { type: "RENEWAL", price: 1234.5, country_code: "DE", store: "APP_STORE", environment: "SANDBOX" },
+      display("lang=de"),
+    );
+    expect(copy?.title).toBe("🟢 Verlängerung · 1.234,50\u00a0$");
+    expect(copy?.body).toBe("🇩🇪 Deutschland · App Store · Sandbox");
+    expect(notificationFor({ type: "TEST" }, display("lang=ja"))?.body).toBe(
+      "RevenueCat からこのデバイスに届きます。",
+    );
+  });
+
+  it("has every string in every language", () => {
+    const keys = Object.keys(STRINGS.en).sort();
+    for (const language of LANGUAGES) {
+      expect(Object.keys(STRINGS[language]).sort()).toEqual(keys);
+      for (const value of Object.values(STRINGS[language])) expect(value.trim()).not.toBe("");
+    }
   });
 });

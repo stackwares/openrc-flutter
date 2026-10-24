@@ -196,6 +196,24 @@ void main() {
       rc.webhooks['p1']!.single['url'],
       endsWith('?notify=trial&currency=EUR&rate=1&fees=15,30'),
     );
+
+    // Notifications follow the app's language too.
+    expect(
+      await notifier.setDisplay(
+        const PushDisplay(
+          currency: 'EUR',
+          appleFee: 15,
+          googleFee: 30,
+          rate: 1,
+          language: 'pt-BR',
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      rc.webhooks['p1']!.single['url'],
+      endsWith('?notify=trial&lang=pt-BR&currency=EUR&rate=1&fees=15,30'),
+    );
   });
 
   test('signing out removes webhooks and forgets the secret', () async {

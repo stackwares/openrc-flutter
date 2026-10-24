@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:openrc/app/floating_tab_chrome.dart';
+import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
@@ -137,8 +138,24 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Timer? _pushDisplayTimer;
 
-  /// Hands Settings' currency and store fees to notifications. Waits a
-  /// moment, so settings still loading at launch arrive as one change.
+  /// The language notifications were last handed.
+  String? _pushLanguage;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Notifications follow the app's language, picked or the device's.
+    final locale = EasyLocalization.of(context)?.locale;
+    final language = locale == null ? null : AppLocales.fileStem(locale);
+    if (language != null && language != _pushLanguage) {
+      _pushLanguage = language;
+      _syncPushDisplay();
+    }
+  }
+
+  /// Hands Settings' language, currency and store fees to notifications.
+  /// Waits a moment, so settings still loading at launch arrive as one
+  /// change.
   void _syncPushDisplay() {
     _pushDisplayTimer?.cancel();
     _pushDisplayTimer = Timer(const Duration(seconds: 2), () {
@@ -161,6 +178,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                   ? fees.googleCommissionPercent
                   : null,
               rate: rate,
+              language: _pushLanguage ?? 'en',
             ),
           );
     });
