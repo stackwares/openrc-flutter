@@ -27,6 +27,7 @@ import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/animated_reveal.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/app_logo.dart';
+import 'package:openrc/widgets/dialog_navigator.dart';
 import 'package:openrc/widgets/grouped_list.dart';
 import 'package:openrc/widgets/shell_header.dart';
 
@@ -70,7 +71,10 @@ class SettingsScreen extends ConsumerWidget {
               removeTop: true,
               removeRight: true,
               removeBottom: true,
-              child: const SettingsScreen(inDialog: true),
+              // Everything Settings opens slides in inside the dialog.
+              child: const DialogNavigator(
+                child: SettingsScreen(inDialog: true),
+              ),
             ),
           ),
         );
@@ -208,7 +212,9 @@ class SettingsScreen extends ConsumerWidget {
               child: IconButton(
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 icon: const Icon(Icons.close_rounded),
-                onPressed: () => Navigator.of(context).pop(),
+                // The dialog is on the app's navigator, not the one inside it.
+                onPressed: () =>
+                    Navigator.of(context, rootNavigator: true).pop(),
               ),
             ),
         ],
