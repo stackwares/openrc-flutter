@@ -16,6 +16,8 @@ export interface Display {
   fees: { apple: number; google: number } | null;
   /** The app's last saved rate: one US dollar in [currency]. */
   savedRate: number | null;
+  /** The RevenueCat project the webhook belongs to, when the app names it. */
+  project?: string;
 }
 
 export function parseDisplay(params: URLSearchParams): Display {
@@ -24,11 +26,13 @@ export function parseDisplay(params: URLSearchParams): Display {
   const [apple, google] = (params.get("fees") ?? "").split(",").map(Number);
   const fee = (n: number | undefined) => n !== undefined && Number.isFinite(n) && n >= 0 && n <= 100;
   const rate = Number(params.get("rate"));
+  const project = params.get("project")?.replace(/\s+/g, " ").trim().slice(0, 60);
   return {
     language: parseLanguage(params.get("lang")),
     currency,
     fees: fee(apple) && fee(google) ? { apple: apple!, google: google! } : null,
     savedRate: Number.isFinite(rate) && rate > 0 ? rate : null,
+    ...(project ? { project } : {}),
   };
 }
 

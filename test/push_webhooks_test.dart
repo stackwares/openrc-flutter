@@ -82,7 +82,10 @@ void main() {
         sandbox: false,
         kinds: PushKind.all,
       );
-      expect(await webhooks.findAll(secret), {'p2': id});
+      final found = await webhooks.findAll(secret);
+      expect(found.keys, ['p2']);
+      expect(found['p2']!.id, id);
+      expect(found['p2']!.projectName, 'Project p2');
     });
 
     test('two devices get separate webhooks in one project', () async {
@@ -127,6 +130,22 @@ void main() {
       expect(await webhooks.find('p1', secret), id);
     });
 
+    test('names the project in the URL for the notifier', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      final webhooks = PushWebhooks(rc.api());
+      final id = await webhooks.add(
+        'p1',
+        secret,
+        sandbox: false,
+        kinds: PushKind.all,
+        projectName: 'My App',
+      );
+      final hook = rc.webhooks['p1']!.single;
+      expect(hook['url'], '${PushWebhooks.urlFor(secret)}?project=My+App');
+      // The tag still finds it, whatever the query.
+      expect(await webhooks.find('p1', secret), id);
+    });
+
     test('the tag names a secret without giving it away', () {
       final tag = PushWebhooks.tagFor(secret);
       expect(tag, hasLength(6));
@@ -168,7 +187,7 @@ void main() {
     Future<PushProjectsNotifier> loaded() async {
       container.listen(pushProjectsProvider, (_, _) {});
       final notifier = container.read(pushProjectsProvider.notifier);
-      await pumpEventQueue();
+      await notifier.firstLoad;
       expect(container.read(pushProjectsProvider).loading, isFalse);
       return notifier;
     }
@@ -221,6 +240,17 @@ void main() {
       rc.offline = true;
       await loaded();
       expect(container.read(pushProjectsProvider).failed, isTrue);
+    });
+
+    test('names the project in a webhook from before URLs did', () async {
+      final secret = container.read(pushSettingsProvider).secret!;
+      await PushWebhooks(
+        rc.api(),
+      ).add('p2', secret, sandbox: false, kinds: PushKind.all);
+      expect(rc.webhooks['p2']!.single['url'], isNot(contains('project=')));
+
+      await loaded();
+      expect(rc.webhooks['p2']!.single['url'], endsWith('?project=Project+p2'));
     });
 
     test('reads existing webhooks as connected', () async {

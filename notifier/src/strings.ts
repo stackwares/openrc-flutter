@@ -45,6 +45,9 @@ export interface Strings {
   testBody: string;
   sandbox: string;
   fallbackBody: string;
+  weekly: string;
+  monthly: string;
+  annual: string;
 }
 
 export const STRINGS: Record<Language, Strings> = {
@@ -68,6 +71,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat can reach this device.",
     sandbox: "Sandbox",
     fallbackBody: "RevenueCat event",
+    weekly: "Weekly",
+    monthly: "Monthly",
+    annual: "Annual",
   },
   ar: {
     trialStarted: "بدأت الفترة التجريبية",
@@ -89,6 +95,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "يمكن لـ RevenueCat الوصول إلى هذا الجهاز.",
     sandbox: "بيئة الاختبار",
     fallbackBody: "حدث من RevenueCat",
+    weekly: "أسبوعي",
+    monthly: "شهري",
+    annual: "سنوي",
   },
   de: {
     trialStarted: "Testphase gestartet",
@@ -110,6 +119,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat erreicht dieses Gerät.",
     sandbox: "Sandbox",
     fallbackBody: "RevenueCat-Ereignis",
+    weekly: "Wöchentlich",
+    monthly: "Monatlich",
+    annual: "Jährlich",
   },
   "es-ES": {
     trialStarted: "Prueba iniciada",
@@ -131,6 +143,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat puede llegar a este dispositivo.",
     sandbox: "Sandbox",
     fallbackBody: "Evento de RevenueCat",
+    weekly: "Semanal",
+    monthly: "Mensual",
+    annual: "Anual",
   },
   fr: {
     trialStarted: "Essai commencé",
@@ -152,6 +167,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat peut joindre cet appareil.",
     sandbox: "Sandbox",
     fallbackBody: "Événement RevenueCat",
+    weekly: "Hebdomadaire",
+    monthly: "Mensuel",
+    annual: "Annuel",
   },
   hi: {
     trialStarted: "ट्रायल शुरू हुआ",
@@ -173,6 +191,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat इस डिवाइस तक पहुँच सकता है।",
     sandbox: "सैंडबॉक्स",
     fallbackBody: "RevenueCat इवेंट",
+    weekly: "साप्ताहिक",
+    monthly: "मासिक",
+    annual: "वार्षिक",
   },
   id: {
     trialStarted: "Uji coba dimulai",
@@ -194,6 +215,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat dapat menjangkau perangkat ini.",
     sandbox: "Sandbox",
     fallbackBody: "Peristiwa RevenueCat",
+    weekly: "Mingguan",
+    monthly: "Bulanan",
+    annual: "Tahunan",
   },
   ja: {
     trialStarted: "トライアル開始",
@@ -215,6 +239,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat からこのデバイスに届きます。",
     sandbox: "サンドボックス",
     fallbackBody: "RevenueCat イベント",
+    weekly: "週額",
+    monthly: "月額",
+    annual: "年額",
   },
   "pt-BR": {
     trialStarted: "Teste iniciado",
@@ -236,6 +263,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "O RevenueCat consegue alcançar este dispositivo.",
     sandbox: "Sandbox",
     fallbackBody: "Evento do RevenueCat",
+    weekly: "Semanal",
+    monthly: "Mensal",
+    annual: "Anual",
   },
   ru: {
     trialStarted: "Пробный период начат",
@@ -257,6 +287,9 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat может связаться с этим устройством.",
     sandbox: "Песочница",
     fallbackBody: "Событие RevenueCat",
+    weekly: "Недельная",
+    monthly: "Месячная",
+    annual: "Годовая",
   },
   "zh-CN": {
     trialStarted: "试用开始",
@@ -278,5 +311,8 @@ export const STRINGS: Record<Language, Strings> = {
     testBody: "RevenueCat 可以连接到此设备。",
     sandbox: "沙盒",
     fallbackBody: "RevenueCat 事件",
+    weekly: "每周",
+    monthly: "每月",
+    annual: "每年",
   },
 };

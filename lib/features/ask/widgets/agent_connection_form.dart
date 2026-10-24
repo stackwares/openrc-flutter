@@ -42,6 +42,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
     text: widget.initial.effectiveModel,
   );
   final _key = TextEditingController();
+  final _keyFocus = FocusNode();
   late var _hasSavedKey = widget.initial.hasKey;
   var _obscure = true;
   var _consent = false;
@@ -63,10 +64,23 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
     _url.dispose();
     _model.dispose();
     _key.dispose();
+    _keyFocus.dispose();
     super.dispose();
   }
 
   void _onTextChanged() => setState(() {});
+
+  /// Swaps the key field for a newly built one. Toggling `obscureText` alone
+  /// leaves Flutter web's hidden input stale (flutter/flutter#192102), and a
+  /// fresh field always paints the key in the new visibility.
+  void _toggleKeyVisibility() {
+    final focused = _keyFocus.hasFocus;
+    setState(() => _obscure = !_obscure);
+    if (!focused) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _keyFocus.requestFocus();
+    });
+  }
 
   void _syncProviderFromUrl() {
     if (_syncingFromDropdown) return;
@@ -84,9 +98,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
   bool get _blockedOnWeb =>
       kIsWeb &&
       (presetMatchingBaseUrl(_url.text) ??
-              (_url.text.trim().isEmpty ? _preset : null))
-          ?.relaySlug ==
-      null;
+                  (_url.text.trim().isEmpty ? _preset : null))
+              ?.relaySlug ==
+          null;
 
   bool get _urlValid {
     final uri = Uri.tryParse(_url.text.trim());
@@ -288,11 +302,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.public_off_rounded,
-                    size: 20,
-                    color: scheme.error,
-                  ),
+                  Icon(Icons.public_off_rounded, size: 20, color: scheme.error),
                   const SizedBox(width: AppSpace.xs),
                   Expanded(
                     child: Text(
@@ -307,7 +317,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
         ],
         const SizedBox(height: AppSpace.lg),
         TextField(
+          key: ValueKey<bool>(_obscure),
           controller: _key,
+          focusNode: _keyFocus,
           obscureText: _obscure,
           autocorrect: false,
           enableSuggestions: false,
@@ -345,7 +357,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
                         : Icons.visibility_off_outlined,
                     size: 20,
                   ),
-                  onPressed: () => setState(() => _obscure = !_obscure),
+                  onPressed: _toggleKeyVisibility,
                 ),
               ],
             ),

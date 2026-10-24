@@ -149,7 +149,7 @@ describe("webhook", () => {
     expect(message.topic).toBe(TOPIC);
     expect(message.notification).toEqual({
       title: "🔵 New subscription · $10.83",
-      body: "pro_monthly · €9.99 · 🇩🇪 Germany · App Store",
+      body: "pro_monthly · €9.99 · 🇩🇪 DE · 🍎",
     });
     // Only the store's transaction id, so a tap can open the transaction.
     expect(message.data).toEqual({
@@ -347,7 +347,7 @@ describe("display currency and fees", () => {
     // $10.83, less the App Store's 15%, at 0.9.
     expect(title(spy)).toBe("🔵 New subscription · €8.28");
     // Paid in euros, the currency shown: not repeated.
-    expect(body(spy)).toBe("pro_monthly · 🇩🇪 Germany · App Store");
+    expect(body(spy)).toBe("pro_monthly · 🇩🇪 DE · 🍎");
   });
 
   it("applies Google Play's fee to Play purchases, and none to others", async () => {
@@ -474,7 +474,7 @@ describe("notification copy", () => {
         currency: "USD",
         price_in_purchased_currency: 49.99,
       })?.body,
-    ).toBe("pro_monthly → pro_yearly · 🇺🇸 United States · Google Play · Sandbox");
+    ).toBe("pro_monthly → pro_yearly · 🇺🇸 US · 🤖 · Sandbox");
     expect(notificationFor({ type: "RENEWAL", store: "SOME_NEW_STORE", country_code: "XYZ" })?.body).toBe(
       "Some new store",
     );
@@ -490,6 +490,61 @@ describe("notification copy", () => {
       title: "⚪ Test notification",
       body: "RevenueCat can reach this device.",
     });
+  });
+});
+
+describe("project and plan", () => {
+  const DAY = 86_400_000;
+
+  it("names the RevenueCat project from the webhook URL", () => {
+    const display = parseDisplay(new URLSearchParams("project=OpenRC%20App"));
+    expect(notificationFor({ type: "RENEWAL", product_id: "pro", price: 5 }, display)).toEqual({
+      title: "🟢 Renewal · $5.00",
+      body: "OpenRC App · pro",
+    });
+    expect(notificationFor({ type: "TEST" }, display)?.body).toBe(
+      "OpenRC App · RevenueCat can reach this device.",
+    );
+    expect(parseDisplay(new URLSearchParams("project=%20%20")).project).toBeUndefined();
+  });
+
+  it("labels the plan length from the store's dates", () => {
+    const body = (days: number, extra: object = {}) =>
+      notificationFor({
+        type: "RENEWAL",
+        product_id: "pro",
+        purchased_at_ms: 1_000,
+        expiration_at_ms: 1_000 + days * DAY,
+        ...extra,
+      })?.body;
+    expect(body(7)).toBe("pro · Weekly");
+    expect(body(31)).toBe("pro · Monthly");
+    expect(body(365)).toBe("pro · Annual");
+    expect(body(92)).toBe("pro · 3 months");
+    expect(body(14)).toBe("pro · 14 days");
+  });
+
+  it("leaves out lengths the dates can't tell", () => {
+    const event = {
+      type: "RENEWAL",
+      product_id: "pro",
+      purchased_at_ms: 1_000,
+      expiration_at_ms: 1_000 + 365 * DAY,
+    };
+    expect(notificationFor({ ...event, environment: "SANDBOX" })?.body).toBe("pro · Sandbox");
+    expect(notificationFor({ ...event, period_type: "TRIAL" })?.body).toBe("pro");
+    expect(notificationFor({ ...event, expiration_at_ms: null })?.body).toBe("pro");
+  });
+
+  it("writes the plan length in the device's language", () => {
+    const display = parseDisplay(new URLSearchParams("lang=de"));
+    const body = (days: number) =>
+      notificationFor(
+        { type: "RENEWAL", product_id: "pro", purchased_at_ms: 1_000, expiration_at_ms: 1_000 + days * DAY },
+        display,
+      )?.body;
+    expect(body(31)).toBe("pro · Monatlich");
+    expect(body(92)).toBe("pro · 3 Monate");
   });
 });
 
@@ -509,7 +564,7 @@ describe("notification language", () => {
       display("lang=de"),
     );
     expect(copy?.title).toBe("🟢 Verlängerung · 1.234,50\u00a0$");
-    expect(copy?.body).toBe("🇩🇪 Deutschland · App Store · Sandbox");
+    expect(copy?.body).toBe("🇩🇪 DE · 🍎 · Sandbox");
     expect(notificationFor({ type: "TEST" }, display("lang=ja"))?.body).toBe(
       "RevenueCat からこのデバイスに届きます。",
     );

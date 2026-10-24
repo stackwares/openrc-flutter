@@ -42,15 +42,23 @@ class PushWebhooks {
   }
 
   /// This device's webhook URL. The notifier ignores the tag, and only sends
-  /// the [kinds] named in `notify` (every kind when it's left out).
+  /// the [kinds] named in `notify` (every kind when it's left out). The
+  /// [projectName] lets the notifier name the project in the notification.
   static String urlFor(
     String secret, [
     Set<PushKind>? kinds,
     PushDisplay display = const PushDisplay(),
+    String? projectName,
   ]) {
     final base = '${PushConfig.webhookUrl}/${tagFor(secret)}';
     final notify = kinds == null ? null : PushKind.queryFor(kinds);
-    final query = {'notify': ?notify, ...display.query};
+    final name = projectName?.trim();
+    final query = {
+      'notify': ?notify,
+      ...display.query,
+      if (name != null && name.isNotEmpty)
+        'project': Uri.encodeQueryComponent(name),
+    };
     if (query.isEmpty) return base;
     return '$base?${[for (final e in query.entries) '${e.key}=${e.value}'].join('&')}';
   }
@@ -69,9 +77,10 @@ class PushWebhooks {
     required bool sandbox,
     required Set<PushKind> kinds,
     PushDisplay display = const PushDisplay(),
+    String? projectName,
   }) => RcWebhookInput(
     name: nameFor(secret),
-    url: urlFor(secret, kinds, display),
+    url: urlFor(secret, kinds, display, projectName),
     authorizationHeader: PushChannel.authorizationHeader(secret),
     environment: sandbox ? null : 'production',
     eventTypes: PushKind.eventTypesFor(kinds),
@@ -80,10 +89,14 @@ class PushWebhooks {
   Future<List<RcProject>> projects() => _api.projects();
 
   /// This device's webhook in [projectId], if it has one.
-  Future<String?> find(String projectId, String secret) async {
+  Future<RcWebhook?> webhookFor(String projectId, String secret) async {
     final webhooks = await _api.webhooks(projectId);
-    return webhooks.firstWhereOrNull((w) => isOwn(w, secret))?.id;
+    return webhooks.firstWhereOrNull((w) => isOwn(w, secret));
   }
+
+  /// This device's webhook in [projectId], if it has one.
+  Future<String?> find(String projectId, String secret) async =>
+      (await webhookFor(projectId, secret))?.id;
 
   /// Adds this device's webhook to [projectId], or brings an existing one
   /// up to date. Returns its id.
@@ -93,12 +106,14 @@ class PushWebhooks {
     required bool sandbox,
     required Set<PushKind> kinds,
     PushDisplay display = const PushDisplay(),
+    String? projectName,
   }) async {
     final input = inputFor(
       secret,
       sandbox: sandbox,
       kinds: kinds,
       display: display,
+      projectName: projectName,
     );
     final existing = await find(projectId, secret);
     if (existing != null) {
@@ -117,10 +132,17 @@ class PushWebhooks {
     required bool sandbox,
     required Set<PushKind> kinds,
     PushDisplay display = const PushDisplay(),
+    String? projectName,
   }) => _api.updateWebhook(
     projectId,
     webhookId,
-    inputFor(secret, sandbox: sandbox, kinds: kinds, display: display),
+    inputFor(
+      secret,
+      sandbox: sandbox,
+      kinds: kinds,
+      display: display,
+      projectName: projectName,
+    ),
   );
 
   Future<void> remove(String projectId, String webhookId) =>
@@ -130,15 +152,16 @@ class PushWebhooks {
       _api.testWebhook(projectId, webhookId);
 
   /// This device's webhook in each project that has one, by project id.
-  Future<Map<String, String>> findAll(String secret) async {
-    final found = <String, String>{};
-    final ids = [
-      for (final p in await projects())
-        if (p.id != null) p.id!,
-    ];
-    await forEachLimited(ids, (projectId) async {
+  Future<Map<String, DeviceWebhook>> findAll(String secret) async {
+    final found = <String, DeviceWebhook>{};
+    final all = await projects();
+    final names = {
+      for (final p in all)
+        if (p.id != null) p.id!: p.name,
+    };
+    await forEachLimited(names.keys, (projectId) async {
       final id = await find(projectId, secret);
-      if (id != null) found[projectId] = id;
+      if (id != null) found[projectId] = DeviceWebhook(id, names[projectId]);
     });
     return found;
   }
@@ -162,6 +185,14 @@ Future<void> forEachLimited<T>(
   }
 
   await Future.wait([for (var i = 0; i < width; i++) worker()]);
+}
+
+/// This device's webhook in one RevenueCat project.
+class DeviceWebhook {
+  const DeviceWebhook(this.id, this.projectName);
+
+  final String id;
+  final String? projectName;
 }
 
 /// RevenueCat for this device's webhooks, or null in builds without
@@ -221,10 +252,13 @@ final pushProjectsProvider =
 
 class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
   PushProjectsNotifier(this._ref) : super(const PushProjectsState()) {
-    load();
+    firstLoad = load();
   }
 
   final Ref _ref;
+
+  /// The sheet's first read; [load] runs again only when asked.
+  late final Future<void> firstLoad;
 
   PushWebhooks? get _webhooks => _ref.read(pushWebhooksProvider);
 
@@ -247,13 +281,41 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
             if (p.id != null) PushProject(project: p, busy: true),
         ],
       );
+      final settings = _ref.read(pushSettingsProvider);
+      final names = {
+        for (final p in projects)
+          if (p.id != null) p.id!: p.name?.trim(),
+      };
       await forEachLimited(state.projects.map((p) => p.id), (id) async {
         try {
-          final webhookId = await webhooks.find(id, secret);
+          final webhook = await webhooks.webhookFor(id, secret);
+          final webhookId = webhook?.id;
           _set(
             id,
             (p) => PushProject(project: p.project, webhookId: webhookId),
           );
+          // Webhooks from before URLs named their project pick the name up
+          // here, so existing devices see it without changing a setting.
+          final name = names[id];
+          final url = Uri.tryParse(webhook?.url ?? '');
+          if (webhookId != null &&
+              name != null &&
+              name.isNotEmpty &&
+              url?.queryParameters['project'] != name) {
+            try {
+              await webhooks.update(
+                id,
+                webhookId,
+                secret,
+                sandbox: settings.sandbox,
+                kinds: settings.kindsFor(id),
+                display: settings.display,
+                projectName: name,
+              );
+            } catch (e) {
+              _log.warning('Naming a webhook failed: $e');
+            }
+          }
         } catch (e) {
           _log.warning('Reading webhooks failed: $e');
           _set(id, (p) => PushProject(project: p.project, error: _message(e)));
@@ -299,6 +361,7 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
             sandbox: settings.sandbox,
             kinds: settings.kindsFor(id),
             display: settings.display,
+            projectName: current.project.name,
           );
           _set(
             id,

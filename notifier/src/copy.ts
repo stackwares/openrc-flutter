@@ -22,6 +22,8 @@ export interface WebhookEvent {
   currency?: unknown;
   is_trial_conversion?: unknown;
   cancel_reason?: unknown;
+  purchased_at_ms?: unknown;
+  expiration_at_ms?: unknown;
 }
 
 export interface NotificationCopy {
@@ -153,21 +155,71 @@ function money(amount: unknown, currency: string, language: Language): string | 
   }
 }
 
-function country(code: unknown, language: Language): string | undefined {
+function country(code: unknown): string | undefined {
   const cc = text(code)?.toUpperCase();
   if (!cc || !/^[A-Z]{2}$/.test(cc)) return undefined;
   const flag = String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
-  let name = cc;
-  try {
-    name = new Intl.DisplayNames([language, "en"], { type: "region" }).of(cc) ?? cc;
-  } catch {}
-  return `${flag} ${name}`;
+  return `${flag} ${cc}`;
 }
+
+/** Apple's and Google's stores as their emojis; others keep their names. */
+const STORE_EMOJI: Record<string, string> = {
+  APP_STORE: "🍎",
+  MAC_APP_STORE: "🍎",
+  PLAY_STORE: "🤖",
+};
 
 function store(value: unknown): string | undefined {
   const id = text(value);
   if (!id) return undefined;
-  return STORES[id] ?? id.charAt(0) + id.slice(1).toLowerCase().replace(/_/g, " ");
+  return STORE_EMOJI[id] ?? STORES[id] ?? id.charAt(0) + id.slice(1).toLowerCase().replace(/_/g, " ");
+}
+
+/** Events whose dates describe one billing period. */
+const PERIOD_EVENTS: Record<string, true> = {
+  INITIAL_PURCHASE: true,
+  RENEWAL: true,
+  NON_RENEWING_PURCHASE: true,
+  CANCELLATION: true,
+  UNCANCELLATION: true,
+  EXPIRATION: true,
+};
+
+/**
+ * The plan's length, from the store's own dates: `Weekly`, `Monthly`,
+ * `Annual`, `3 months`, `14 days`, mirroring `planLengthLabel` in
+ * `lib/core/utils/plan_display.dart`. Sandbox purchases shorten periods to
+ * minutes, and trials or intro offers expire when the offer ends, not when
+ * the plan does, so neither is labelled.
+ */
+function period(event: WebhookEvent, s: Strings, language: Language): string | undefined {
+  if (event.environment === "SANDBOX") return undefined;
+  if (event.period_type === "TRIAL" || event.period_type === "INTRO") return undefined;
+  if (typeof event.type !== "string" || !PERIOD_EVENTS[event.type]) return undefined;
+  const purchased = typeof event.purchased_at_ms === "number" ? event.purchased_at_ms : NaN;
+  const expires = typeof event.expiration_at_ms === "number" ? event.expiration_at_ms : NaN;
+  if (!Number.isFinite(purchased) || !Number.isFinite(expires) || expires <= purchased) {
+    return undefined;
+  }
+  const days = Math.round((expires - purchased) / 86_400_000);
+  if (days <= 0) return undefined;
+  if (days >= 6 && days <= 8) return s.weekly;
+  if (days >= 358 && days <= 372) return s.annual;
+  for (const months of [1, 2, 3, 6]) {
+    if (Math.abs(days - months * 30.44) <= months * 2 + 1) {
+      return months === 1 ? s.monthly : unitLabel(months, "month", language);
+    }
+  }
+  return unitLabel(days, "day", language);
+}
+
+/** `3 months`, `14 days`, pluralized for [language]. */
+function unitLabel(count: number, unit: "month" | "day", language: Language): string {
+  try {
+    return new Intl.NumberFormat(language, { style: "unit", unit, unitDisplay: "long" }).format(count);
+  } catch {
+    return `${count} ${unit}${count === 1 ? "" : "s"}`;
+  }
 }
 
 /**
@@ -187,7 +239,7 @@ export function notificationFor(
   const name = label(event, s);
   if (!name) return null;
   if (event.type === "TEST") {
-    return { title: name, body: s.testBody };
+    return { title: name, body: display.project ? `${display.project} · ${s.testBody}` : s.testBody };
   }
 
   const net = typeof event.price === "number" ? afterFees(event.price, event.store, display) : undefined;
@@ -203,10 +255,16 @@ export function notificationFor(
 
   const product = text(event.product_id);
   const newProduct = text(event.new_product_id);
+  const length = period(event, s, language);
+  const plan =
+    product && newProduct
+      ? `${product} → ${newProduct}`
+      : [product, length].filter(Boolean).join(" · ");
   const body = [
-    product && newProduct ? `${product} → ${newProduct}` : product,
+    display.project,
+    plan,
     paid,
-    country(event.country_code, language),
+    country(event.country_code),
     store(event.store),
     event.environment === "SANDBOX" ? s.sandbox : undefined,
   ].filter(Boolean).join(" · ");

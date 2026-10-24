@@ -143,17 +143,29 @@ void main() {
     await webhooks.add('p2', secret, sandbox: false, kinds: PushKind.all);
 
     expect(await notifier.setProjectKinds('p2', {PushKind.refund}), isTrue);
-    expect(rc.webhooks['p2']!.single['url'], endsWith('?notify=refund'));
+    expect(
+      rc.webhooks['p2']!.single['url'],
+      endsWith('?notify=refund&project=Project+p2'),
+    );
 
     expect(await notifier.setKinds({PushKind.trial}), isTrue);
-    expect(rc.webhooks['p1']!.single['url'], endsWith('?notify=trial'));
+    expect(
+      rc.webhooks['p1']!.single['url'],
+      endsWith('?notify=trial&project=Project+p1'),
+    );
     expect(rc.webhooks['p1']!.single['event_types'], ['INITIAL_PURCHASE']);
     // p2 keeps its own choice.
-    expect(rc.webhooks['p2']!.single['url'], endsWith('?notify=refund'));
+    expect(
+      rc.webhooks['p2']!.single['url'],
+      endsWith('?notify=refund&project=Project+p2'),
+    );
 
     // Back to the shared choice.
     await notifier.setProjectKinds('p2', null);
-    expect(rc.webhooks['p2']!.single['url'], endsWith('?notify=trial'));
+    expect(
+      rc.webhooks['p2']!.single['url'],
+      endsWith('?notify=trial&project=Project+p2'),
+    );
 
     // Choices outlive a restart.
     final next = PushSettingsNotifier(FakePushMessaging(), webhooks);
@@ -180,7 +192,7 @@ void main() {
     expect(await notifier.setDisplay(euros), isTrue);
     expect(
       rc.webhooks['p1']!.single['url'],
-      endsWith('?currency=EUR&rate=0.92&fees=15,30'),
+      endsWith('?currency=EUR&rate=0.92&fees=15,30&project=Project+p1'),
     );
 
     // A newer rate alone doesn't touch the webhooks.
@@ -194,7 +206,9 @@ void main() {
     await notifier.setKinds({PushKind.trial});
     expect(
       rc.webhooks['p1']!.single['url'],
-      endsWith('?notify=trial&currency=EUR&rate=1&fees=15,30'),
+      endsWith(
+        '?notify=trial&currency=EUR&rate=1&fees=15,30&project=Project+p1',
+      ),
     );
 
     // Notifications follow the app's language too.
@@ -212,7 +226,9 @@ void main() {
     );
     expect(
       rc.webhooks['p1']!.single['url'],
-      endsWith('?notify=trial&lang=pt-BR&currency=EUR&rate=1&fees=15,30'),
+      endsWith(
+        '?notify=trial&lang=pt-BR&currency=EUR&rate=1&fees=15,30&project=Project+p1',
+      ),
     );
   });
 

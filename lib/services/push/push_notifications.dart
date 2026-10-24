@@ -496,11 +496,12 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
         try {
           await webhooks.update(
             entry.key,
-            entry.value,
+            entry.value.id,
             secret,
             sandbox: state.sandbox,
             kinds: state.kindsFor(entry.key),
             display: state.display,
+            projectName: entry.value.projectName,
           );
         } catch (e) {
           _log.warning('Updating a webhook failed: $e');
@@ -566,7 +567,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
       final found = await webhooks.findAll(secret);
       await forEachLimited(found.entries, (entry) async {
         try {
-          await webhooks.remove(entry.key, entry.value);
+          await webhooks.remove(entry.key, entry.value.id);
         } catch (e) {
           _log.warning('Removing a webhook failed: $e');
           ok = false;

@@ -91,6 +91,9 @@ class AskComposer extends StatelessWidget {
                     focusNode: focusNode,
                     minLines: 1,
                     maxLines: 6,
+                    // Multiline fields align to the top by default, which
+                    // leaves a one-line question high in the rounded field.
+                    textAlignVertical: TextAlignVertical.center,
                     textCapitalization: TextCapitalization.sentences,
                     keyboardType: TextInputType.multiline,
                     textInputAction: TextInputAction.newline,

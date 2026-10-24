@@ -183,6 +183,16 @@ it("has a health check for uptime monitors", async () => {
   });
 });
 
+it("lets the web app read the health check", async () => {
+  const res = await call("/", { headers: { Origin: APP } });
+  expect(res.status).toBe(200);
+  expect(res.headers.get("Access-Control-Allow-Origin")).toBe(APP);
+  expect(res.headers.get("Vary")).toContain("Origin");
+
+  const denied = await call("/", { headers: { Origin: "https://evil.example" } });
+  expect(denied.headers.get("Access-Control-Allow-Origin")).toBeNull();
+});
+
 describe("LLM pass-through", () => {
   it("forwards allowlisted presets and rejects traversal", async () => {
     const fetchSpy = mockUpstream(new Response('{"ok":true}'));

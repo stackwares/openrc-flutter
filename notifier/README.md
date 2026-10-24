@@ -30,11 +30,18 @@ It is deliberately small and stateless:
   Settings do: in that currency and after App Store / Google Play fees. Rates
   come from the same free source the app uses, cached in memory; when that's
   down it uses the last rates it fetched, then the app's saved `rate`, then
-  US dollars. Wrong or missing secrets get
+  US dollars. `&project=<name>` puts the RevenueCat project's name first in
+  the body; the app sends the name of the project whose webhook it is.
+  Wrong or missing secrets get
   `401`. Events that aren't about a purchase (aliases, experiments, virtual
   currency, invoices) get `200` without a notification. A failed delivery
   gets `502`, so RevenueCat retries it; retried events replace their
   notification instead of adding another.
+- The body also labels the plan's length from the store's own dates
+  (`purchased_at_ms` to `expiration_at_ms`): `Weekly`, `Monthly`, `Annual`,
+  `3 months`, `14 days`, in the device's language. Sandbox purchases shorten
+  periods to minutes, and trials or intro offers expire when the offer ends,
+  so neither gets a length.
 - `POST /subscribe` and `POST /unsubscribe` put a browser on its device's
   topic, or take it off, with `{"registration": "<installation id or token>"}`
   and the secret as `Authorization`. Phones subscribe themselves; browsers

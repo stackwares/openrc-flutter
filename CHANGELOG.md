@@ -34,10 +34,17 @@ All notable changes to OpenRC are listed here. The format follows
   amounts follow your display currency and store fees; tapping a
   notification opens the transaction. Off in builds without
   Firebase settings.
+- Push notifications name the RevenueCat project each event came from and
+  label the plan (`Weekly`, `Monthly`, `Annual`, `3 months`) from the store's
+  own purchase and expiration dates.
 - A trials breakdown: with only the Trials tile picked (or a day of only
   trials), the Breakdown card counts trials by status, store, app, country
   and plan instead of showing an all-zero revenue split. On the Revenue
   tab it shows for the month's trials.
+
+### Changed
+
+- The Transactions tab is now Home.
 
 ### Removed
 
@@ -47,6 +54,13 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Fixed
 
+- The Ask message field centers its text and hint vertically.
+- The provider sheet's eye button now shows and hides the API key reliably,
+  including on the web where a stale hidden input could keep the field
+  masked.
+- Ask works on the web again: the relay's capability check now allows the app
+  to read it, so the web app stops reporting that the relay doesn't support
+  Ask.
 - The loader under a day's transactions no longer spins on and on: it shows
   only while that day is still loading, and scrolling to the end no longer
   pages through your whole history.

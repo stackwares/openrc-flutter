@@ -112,12 +112,15 @@ on a click, focuses an open tab (which opens the transaction) or opens
    replace with its own. It travels in the webhook URL as `?notify=…`, with
    the webhook's RevenueCat event types narrowed to match, and the notifier
    drops events of other kinds. The URL also carries the display currency,
-   store fees (when subtracted) and the app's last saved exchange rate
-   (`push_display.dart`), so the notifier shows amounts as Settings does; the
+   store fees (when subtracted), the app's last saved exchange rate
+   (`push_display.dart`) and the project's name, so the notifier shows
+   amounts as Settings does and names the project the event came from; the
    shell keeps the webhooks in step when those settings change. Copying the URL and
    header by hand (`push_setup_sheet.dart`) remains as a fallback.
 3. For each event, the notifier hashes the header to find the topic, writes
-   the notification (`notifier/src/copy.ts`) and sends it through FCM's HTTP
+   the notification (`notifier/src/copy.ts`) — including the plan's length
+   (`Weekly`, `Monthly`, `Annual`, `3 months`) read from the store's own
+   purchase and expiration dates — and sends it through FCM's HTTP
    v1 API with a service account. It keeps no record of devices or events.
 4. A notification that arrives while the app is open reloads the
    transactions. Tapping one opens that transaction's details, found by the

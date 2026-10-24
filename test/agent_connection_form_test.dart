@@ -20,15 +20,16 @@ class _SilentSettings extends AgentSettingsNotifier {
 }
 
 void main() {
-  Future<void> pumpForm(WidgetTester tester, {required AgentSettings initial}) async {
+  Future<void> pumpForm(
+    WidgetTester tester, {
+    required AgentSettings initial,
+  }) async {
     tester.view.physicalSize = const Size(430, 1100);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          agentSettingsProvider.overrideWith(_SilentSettings.new),
-        ],
+        overrides: [agentSettingsProvider.overrideWith(_SilentSettings.new)],
         child: MaterialApp(
           theme: AppTheme.dark(
             FlexScheme.indigoM3,
@@ -39,10 +40,7 @@ void main() {
           ),
           home: Scaffold(
             body: SingleChildScrollView(
-              child: AgentConnectionForm(
-                initial: initial,
-                onSaved: () {},
-              ),
+              child: AgentConnectionForm(initial: initial, onSaved: () {}),
             ),
           ),
         ),
@@ -54,6 +52,45 @@ void main() {
   TextEditingController controllerOf(Key key, WidgetTester tester) {
     return tester.widget<TextField>(find.byKey(key)).controller!;
   }
+
+  testWidgets('the eye shows and hides the key without losing it', (
+    tester,
+  ) async {
+    await pumpForm(
+      tester,
+      initial: const AgentSettings(
+        providerId: AgentProviderId.openai,
+        model: 'gpt-4o',
+        customBaseUrl: 'https://api.openai.com/v1',
+        customStyle: AgentApiStyle.openAi,
+        useFasterModel: false,
+        hasKey: false,
+      ),
+    );
+
+    final keyField = find.byWidgetPredicate(
+      (w) => w is TextField && w.keyboardType == TextInputType.visiblePassword,
+    );
+    TextField field() => tester.widget<TextField>(keyField);
+
+    await tester.tap(keyField);
+    await tester.pumpAndSettle();
+    await tester.enterText(keyField, 'sk-test-123456');
+    await tester.pumpAndSettle();
+    expect(field().obscureText, isTrue);
+    expect(field().controller!.text, 'sk-test-123456');
+
+    await tester.tap(find.byIcon(Icons.visibility_outlined));
+    await tester.pumpAndSettle();
+    expect(field().obscureText, isFalse);
+    expect(field().controller!.text, 'sk-test-123456');
+    expect(field().focusNode!.hasFocus, isTrue);
+
+    await tester.tap(find.byIcon(Icons.visibility_off_outlined));
+    await tester.pumpAndSettle();
+    expect(field().obscureText, isTrue);
+    expect(field().controller!.text, 'sk-test-123456');
+  });
 
   testWidgets('choosing a provider prefills its base URL and model', (
     tester,

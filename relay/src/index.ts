@@ -33,11 +33,17 @@ export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/" && request.method === "GET") {
-      return Response.json({
+      const health = Response.json({
         service: "openrc-relay",
         ok: true,
         llm: LLM_PRESET_LIST,
       });
+      // The web app probes this path to see whether Ask works; without CORS
+      // its browser can't read the answer and hides Ask.
+      const origin = request.headers.get("Origin");
+      return origin !== null && isAllowedOrigin(origin, env.ALLOWED_ORIGINS)
+        ? withCors(health, origin)
+        : health;
     }
 
     // Only the OpenRC web app's own pages may use the relay.

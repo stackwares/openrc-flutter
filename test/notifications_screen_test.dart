@@ -122,7 +122,7 @@ void main() {
     for (final id in ['p1', 'p2']) {
       expect(
         rc.webhooks[id]!.single['url'],
-        endsWith('?notify=new,trial,conversion,purchase'),
+        endsWith('?notify=new,trial,conversion,purchase&project=Project+$id'),
       );
     }
     expect(find.text('Saved for your projects'), findsOneWidget);
@@ -143,10 +143,13 @@ void main() {
     }
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
-    expect(rc.webhooks['p1']!.single['url'], endsWith('?notify=trial'));
+    expect(
+      rc.webhooks['p1']!.single['url'],
+      endsWith('?notify=trial&project=Project+p1'),
+    );
     expect(
       rc.webhooks['p2']!.single['url'],
-      endsWith('?notify=new,trial,conversion,purchase'),
+      endsWith('?notify=new,trial,conversion,purchase&project=Project+p2'),
     );
     expect(find.text('Own choice · 1 kind'), findsOneWidget);
   });
