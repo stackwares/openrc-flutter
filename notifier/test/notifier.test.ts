@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { kindOf, notificationFor, parseKinds } from "../src/copy";
+import { forgetRates } from "../src/display";
 import { forgetAccessToken } from "../src/fcm";
 import worker from "../src/index";
 import { parseSecret, topicFor } from "../src/topic";
@@ -302,6 +303,87 @@ describe("browser subscriptions", () => {
     expect(logged).toContain("503");
     expect(logged).not.toContain(FID);
     expect(logged).not.toContain(SECRET);
+  });
+});
+
+describe("display currency and fees", () => {
+  const send = (query: string, event: object = PURCHASE) =>
+    call(`/revenuecat/OWRekN${query}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SECRET}` },
+      body: JSON.stringify({ event }),
+    });
+
+  /** Google, plus the rate source answering [rates] (null: unreachable). */
+  function mockWithRates(rates: Record<string, number> | null) {
+    const google = mockGoogle();
+    const fallback = google.getMockImplementation()!;
+    google.mockImplementation(async (input, init) => {
+      const url = String(input instanceof Request ? input.url : input);
+      if (url.includes("currency-api")) {
+        if (!rates) throw new Error("offline");
+        return Response.json({ date: "2026-10-24", usd: rates });
+      }
+      return fallback(input, init);
+    });
+    return google;
+  }
+
+  const title = (spy: ReturnType<typeof mockGoogle>) => {
+    const [send0] = requestsTo(spy, "https://fcm.googleapis.com/");
+    return JSON.parse(String(send0[1]!.body)).message.notification.title;
+  };
+  const body = (spy: ReturnType<typeof mockGoogle>) => {
+    const [send0] = requestsTo(spy, "https://fcm.googleapis.com/");
+    return JSON.parse(String(send0[1]!.body)).message.notification.body;
+  };
+
+  beforeEach(() => forgetRates());
+
+  it("shows the amount in the device's currency, after its store fee", async () => {
+    const spy = mockWithRates({ eur: 0.9, jpy: 150 });
+    await send("?currency=EUR&fees=15,30");
+    // $10.83, less the App Store's 15%, at 0.9.
+    expect(title(spy)).toBe("🔵 New subscription · €8.28");
+    // Paid in euros, the currency shown: not repeated.
+    expect(body(spy)).toBe("pro_monthly · 🇩🇪 Germany · App Store");
+  });
+
+  it("applies Google Play's fee to Play purchases, and none to others", async () => {
+    let spy = mockWithRates({ eur: 0.9 });
+    await send("?fees=15,30", { ...PURCHASE, store: "PLAY_STORE" });
+    expect(title(spy)).toBe("🔵 New subscription · $7.58");
+    vi.restoreAllMocks();
+    spy = mockWithRates({ eur: 0.9 });
+    await send("?fees=15,30", { ...PURCHASE, store: "STRIPE" });
+    expect(title(spy)).toBe("🔵 New subscription · $10.83");
+  });
+
+  it("falls back to the last rate it had, then the app's saved one", async () => {
+    let spy = mockWithRates({ eur: 0.9 });
+    await send("?currency=EUR");
+    expect(title(spy)).toBe("🔵 New subscription · €9.75");
+
+    // The source goes down: the last rate it fetched still works.
+    vi.restoreAllMocks();
+    spy = mockWithRates(null);
+    vi.spyOn(Date, "now").mockReturnValue(Date.now() + 7 * 3600_000);
+    await send("?currency=EUR&rate=0.5");
+    expect(title(spy)).toBe("🔵 New subscription · €9.75");
+
+    // With nothing fetched yet, the rate saved in the URL.
+    vi.restoreAllMocks();
+    forgetRates();
+    spy = mockWithRates(null);
+    await send("?currency=EUR&rate=0.5");
+    expect(title(spy)).toBe("🔵 New subscription · €5.42");
+
+    // And with no rate at all, US dollars.
+    vi.restoreAllMocks();
+    forgetRates();
+    spy = mockWithRates(null);
+    await send("?currency=EUR");
+    expect(title(spy)).toBe("🔵 New subscription · $10.83");
   });
 });
 

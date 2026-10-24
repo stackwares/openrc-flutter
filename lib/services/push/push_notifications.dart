@@ -11,6 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
+import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
 import 'package:openrc/services/push/push_web_stub.dart'
     if (dart.library.js_interop) 'package:openrc/services/push/push_web.dart';
@@ -214,6 +215,7 @@ class PushSettings {
     this.knownProjects = const {},
     Set<PushKind>? kinds,
     this.projectKinds = const {},
+    this.display = const PushDisplay(),
   }) : kinds = kinds ?? const {...PushKind.values};
 
   /// This device is subscribed to [secret]'s notifications.
@@ -237,6 +239,9 @@ class PushSettings {
   /// Projects with their own choice, by project id.
   final Map<String, Set<PushKind>> projectKinds;
 
+  /// The currency and fees notifications show amounts with.
+  final PushDisplay display;
+
   Set<PushKind> kindsFor(String projectId) => projectKinds[projectId] ?? kinds;
 
   PushSettings copyWith({
@@ -247,6 +252,7 @@ class PushSettings {
     Set<String>? knownProjects,
     Set<PushKind>? kinds,
     Map<String, Set<PushKind>>? projectKinds,
+    PushDisplay? display,
   }) => PushSettings(
     enabled: enabled ?? this.enabled,
     secret: secret ?? this.secret,
@@ -255,6 +261,7 @@ class PushSettings {
     knownProjects: knownProjects ?? this.knownProjects,
     kinds: kinds ?? this.kinds,
     projectKinds: projectKinds ?? this.projectKinds,
+    display: display ?? this.display,
   );
 }
 
@@ -283,6 +290,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
   static const _knownProjectsKey = 'push_known_projects_v1';
   static const _kindsKey = 'push_kinds_v1';
   static const _projectKindsKey = 'push_project_kinds_v1';
+  static const _displayKey = 'push_display_v1';
   static const _secretKey = 'push_secret_v1';
 
   /// Secrets whose webhooks couldn't all be removed (offline, say), retried
@@ -311,6 +319,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
         knownProjects: (prefs.getStringList(_knownProjectsKey) ?? []).toSet(),
         kinds: savedKinds.isEmpty ? null : savedKinds,
         projectKinds: _decodeProjectKinds(prefs.getString(_projectKindsKey)),
+        display: _decodeDisplay(prefs.getString(_displayKey)),
       );
       // A topic subscription belongs to the device's FCM registration, which
       // can change (a restore, a reinstall); subscribing on each launch keeps
@@ -386,6 +395,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
       await prefs.remove(_knownProjectsKey);
       await prefs.remove(_kindsKey);
       await prefs.remove(_projectKindsKey);
+      await prefs.remove(_displayKey);
     } catch (e, st) {
       _log.warning('Forgetting notification settings failed', e, st);
     }
@@ -443,6 +453,30 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
     return _updateWebhooks((id) => id == projectId);
   }
 
+  /// Follows Settings' display currency and store fees. Updates this
+  /// device's webhooks when either changed; false when some couldn't be.
+  Future<bool> setDisplay(PushDisplay display) async {
+    await _hydrated;
+    final changed = !state.display.sameAs(display);
+    state = state.copyWith(display: display);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_displayKey, jsonEncode(display.toJson()));
+    } catch (e, st) {
+      _log.warning('Saving the notification currency failed', e, st);
+    }
+    return changed ? _updateWebhooks((_) => true) : true;
+  }
+
+  static PushDisplay _decodeDisplay(String? raw) {
+    if (raw == null || raw.isEmpty) return const PushDisplay();
+    try {
+      return PushDisplay.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return const PushDisplay();
+    }
+  }
+
   /// Brings this device's webhooks in the projects [which] picks up to date
   /// with the current choices.
   Future<bool> _updateWebhooks(bool Function(String projectId) which) async {
@@ -462,6 +496,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
             secret,
             sandbox: state.sandbox,
             kinds: state.kindsFor(entry.key),
+            display: state.display,
           );
         } catch (e) {
           _log.warning('Updating a webhook failed: $e');

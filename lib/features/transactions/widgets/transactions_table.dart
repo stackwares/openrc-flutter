@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/theme/store_brand_icon_colors.dart';
-import 'package:openrc/core/utils/product_identifier_display.dart';
+import 'package:openrc/core/utils/plan_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/relative_time_format.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
@@ -325,7 +325,7 @@ class _TransactionRow extends ConsumerWidget {
           );
         case _Column.product:
           return text(
-            productIdentifierDisplayTitle(tx.productIdentifier),
+            planDescription(tx),
             tooltip: tx.productIdentifier,
           );
         case _Column.purchased:

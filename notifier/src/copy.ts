@@ -1,3 +1,5 @@
+import { afterFees, type Display } from "./display";
+
 /**
  * Notification text for a RevenueCat webhook event. Field reference:
  * https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields
@@ -167,18 +169,31 @@ function store(value: unknown): string | undefined {
   return STORES[id] ?? id.charAt(0) + id.slice(1).toLowerCase().replace(/_/g, " ");
 }
 
-/** Title and body for [event], or null when it shouldn't notify. */
-export function notificationFor(event: WebhookEvent): NotificationCopy | null {
+/**
+ * Title and body for [event], or null when it shouldn't notify. The title's
+ * amount follows the device's [display]: after store fees when it subtracts
+ * them, and in its currency at [rate] (one US dollar in it); without a rate
+ * it stays in US dollars.
+ */
+export function notificationFor(
+  event: WebhookEvent,
+  display: Display = { currency: "USD", fees: null, savedRate: null },
+  rate: number | null = 1,
+): NotificationCopy | null {
   const name = label(event);
   if (!name) return null;
   if (event.type === "TEST") {
     return { title: name, body: "RevenueCat can reach this device." };
   }
 
-  const usd = money(event.price, "USD");
+  const net = typeof event.price === "number" ? afterFees(event.price, event.store, display) : undefined;
+  const shown = rate !== null && display.currency !== "USD"
+    ? money(net !== undefined ? net * rate : undefined, display.currency)
+    : money(net, "USD");
   const currency = text(event.currency)?.toUpperCase();
-  // What the customer paid, when it wasn't in US dollars.
-  const paid = currency && currency !== "USD"
+  // What the customer paid, when it wasn't in the currency shown.
+  const shownCurrency = rate !== null ? display.currency : "USD";
+  const paid = currency && currency !== shownCurrency
     ? money(event.price_in_purchased_currency, currency)
     : undefined;
 
@@ -193,7 +208,7 @@ export function notificationFor(event: WebhookEvent): NotificationCopy | null {
   ].filter(Boolean).join(" · ");
 
   return {
-    title: usd ? `${name} · ${usd}` : name,
+    title: shown ? `${name} · ${shown}` : name,
     body: body || "RevenueCat event",
   };
 }

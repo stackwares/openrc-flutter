@@ -93,7 +93,10 @@ on a click, focuses an open tab (which opens the transaction) or opens
    renewals, refunds…) is a choice for all projects, which each project can
    replace with its own. It travels in the webhook URL as `?notify=…`, with
    the webhook's RevenueCat event types narrowed to match, and the notifier
-   drops events of other kinds. Copying the URL and
+   drops events of other kinds. The URL also carries the display currency,
+   store fees (when subtracted) and the app's last saved exchange rate
+   (`push_display.dart`), so the notifier shows amounts as Settings does; the
+   shell keeps the webhooks in step when those settings change. Copying the URL and
    header by hand (`push_setup_sheet.dart`) remains as a fallback.
 3. For each event, the notifier hashes the header to find the topic, writes
    the notification (`notifier/src/copy.ts`) and sends it through FCM's HTTP

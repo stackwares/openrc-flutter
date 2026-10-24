@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openrc/services/push/push_channel.dart';
+import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/push/push_webhooks.dart';
@@ -160,6 +161,41 @@ void main() {
     expect(next.state.kinds, {PushKind.trial});
     expect(next.state.projectKinds, isEmpty);
     expect(await notifier.setKinds({}), isFalse);
+  });
+
+  test('currency and fee changes update the webhooks', () async {
+    final rc = FakeRevenueCat();
+    final webhooks = PushWebhooks(rc.api());
+    final notifier = PushSettingsNotifier(FakePushMessaging(), webhooks);
+    await notifier.enable();
+    final secret = notifier.state.secret!;
+    await webhooks.add('p1', secret, sandbox: false, kinds: PushKind.all);
+
+    const euros = PushDisplay(
+      currency: 'EUR',
+      appleFee: 15,
+      googleFee: 30,
+      rate: 0.92,
+    );
+    expect(await notifier.setDisplay(euros), isTrue);
+    expect(
+      rc.webhooks['p1']!.single['url'],
+      endsWith('?currency=EUR&rate=0.92&fees=15,30'),
+    );
+
+    // A newer rate alone doesn't touch the webhooks.
+    rc.requests.clear();
+    await notifier.setDisplay(
+      const PushDisplay(currency: 'EUR', appleFee: 15, googleFee: 30, rate: 1),
+    );
+    expect(rc.requests, isEmpty);
+
+    // Kinds and display travel together.
+    await notifier.setKinds({PushKind.trial});
+    expect(
+      rc.webhooks['p1']!.single['url'],
+      endsWith('?notify=trial&currency=EUR&rate=1&fees=15,30'),
+    );
   });
 
   test('signing out removes webhooks and forgets the secret', () async {
