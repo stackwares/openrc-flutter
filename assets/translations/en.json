@@ -544,6 +544,14 @@
     "moreCount": "+{count} more",
     "unknown": "Unknown",
     "unknownApp": "Unknown app",
+    "trialsBreakdown": "Trials breakdown",
+    "trialCount": {
+      "one": "{} trial",
+      "other": "{} trials"
+    },
+    "trialStatus": "Status",
+    "autoRenewOn": "Auto-renew on",
+    "topPlans": "Top plans",
     "payday": {
       "today": "Today",
       "tomorrow": "Tomorrow",

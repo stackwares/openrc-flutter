@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:openrc/core/utils/product_identifier_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/store_commission.dart';
 import 'package:openrc/models/rc_transaction.dart';
@@ -122,6 +123,14 @@ String _txAppLabel(RcTransaction tx) {
 String _countryFlagEmoji(String code) =>
     code.length != 2 ? '🏳️' : countryFlagEmoji(code);
 
+/// Localized name for a country key; `'__'` is the unknown bucket.
+String _countryName(String countryKey) {
+  final name = countryKey == '__'
+      ? 'revenue.unknown'.tr()
+      : regionDisplayNameForCompactBadge(countryKey);
+  return name.isNotEmpty ? name : countryKey;
+}
+
 /// Flag / region glyph for insights (`__` → globe).
 String countryInsightLeadingEmoji(String countryKey) {
   if (countryKey == '__') return '🌍';
@@ -227,14 +236,10 @@ RevenueInsightsSnapshot computeRevenueInsights(
   ) {
     final e = countryEntries[i];
     if (e.value.abs() <= revEps) continue;
-    final name = e.key == '__'
-        ? 'revenue.unknown'.tr()
-        : regionDisplayNameForCompactBadge(e.key);
-    final displayName = name.isNotEmpty ? name : e.key;
     topCountries.add(
       RevenueInsightCountryLine(
         countryKey: e.key,
-        name: displayName,
+        name: _countryName(e.key),
         pct: pctOf(e.value),
         revenue: e.value,
       ),
@@ -254,5 +259,140 @@ RevenueInsightsSnapshot computeRevenueInsights(
     renewalPct: pctOf(renewalRev),
     newRevenue: newRev,
     renewalRevenue: renewalRev,
+  );
+}
+
+/// One share of the trials: an app, a country or a plan.
+class TrialInsightLine {
+  /// App key, country key (ISO code or `'__'`), or plan title.
+  final String key;
+  final String label;
+  final int count;
+  final double pct;
+
+  /// App lines only, for the icon.
+  final String? appId;
+
+  const TrialInsightLine({
+    required this.key,
+    required this.label,
+    required this.count,
+    required this.pct,
+    this.appId,
+  });
+}
+
+/// Trials counted by status, store, app, country and plan. Trials earn
+/// nothing, so a revenue breakdown of them is all zeros.
+class TrialInsightsSnapshot {
+  final int total;
+  final int autoRenewing;
+  final int cancelled;
+  final int apple;
+  final int google;
+
+  /// Web billing and any other store.
+  final int otherStores;
+  final List<TrialInsightLine> topApps;
+  final List<TrialInsightLine> topCountries;
+  final List<TrialInsightLine> topPlans;
+
+  const TrialInsightsSnapshot({
+    required this.total,
+    required this.autoRenewing,
+    required this.cancelled,
+    required this.apple,
+    required this.google,
+    required this.otherStores,
+    required this.topApps,
+    required this.topCountries,
+    required this.topPlans,
+  });
+
+  /// Share of [total], 0–100.
+  double pctOf(int count) => total == 0 ? 0 : count / total * 100;
+}
+
+/// Every row is a trial, so the breakdown counts trials instead of revenue.
+bool isTrialsOnly(List<RcTransaction> txs) =>
+    txs.isNotEmpty && txs.every((tx) => tx.type == RcTransactionType.trial);
+
+/// Counts [txs] (trials) the way [computeRevenueInsights] adds up revenue.
+TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
+  var cancelled = 0;
+  var apple = 0;
+  var google = 0;
+  var otherStores = 0;
+  final byApp = <String, int>{};
+  final appLabel = <String, String>{};
+  final appIdByKey = <String, String>{};
+  final byCountry = <String, int>{};
+  final byPlan = <String, int>{};
+
+  for (final tx in txs) {
+    if (tx.isCanceledTrial) cancelled++;
+
+    switch (_storePlatformBucket(tx.storeForCommission)) {
+      case _StorePlatformBucket.apple:
+        apple++;
+      case _StorePlatformBucket.google:
+        google++;
+      case _StorePlatformBucket.other:
+        otherStores++;
+    }
+
+    final rawKey = _txAppKey(tx);
+    final appKey = rawKey.isEmpty ? '__app' : rawKey;
+    byApp.update(appKey, (v) => v + 1, ifAbsent: () => 1);
+    appLabel.putIfAbsent(appKey, () => _txAppLabel(tx));
+    final aid = tx.app?.id?.trim();
+    if (aid != null && aid.isNotEmpty) {
+      appIdByKey.putIfAbsent(appKey, () => aid);
+    }
+
+    final rawCc = tx.subscriberCountryCode?.trim().toUpperCase();
+    final cKey = (rawCc != null && rawCc.isNotEmpty) ? rawCc : '__';
+    byCountry.update(cKey, (v) => v + 1, ifAbsent: () => 1);
+
+    final plan = productIdentifierDisplayTitle(tx.productIdentifier);
+    byPlan.update(plan, (v) => v + 1, ifAbsent: () => 1);
+  }
+
+  final total = txs.length;
+  double pctOf(int count) => total == 0 ? 0 : count / total * 100;
+
+  // Most trials first; ties by key so the order holds between rebuilds.
+  List<TrialInsightLine> top(
+    Map<String, int> counts,
+    String Function(String key) label, {
+    Map<String, String> appIds = const {},
+  }) {
+    final entries = counts.entries.toList()
+      ..sort((a, b) {
+        final byCount = b.value.compareTo(a.value);
+        return byCount != 0 ? byCount : a.key.compareTo(b.key);
+      });
+    return [
+      for (final e in entries.take(_kRevenueInsightsTopN))
+        TrialInsightLine(
+          key: e.key,
+          label: label(e.key),
+          count: e.value,
+          pct: pctOf(e.value),
+          appId: appIds[e.key],
+        ),
+    ];
+  }
+
+  return TrialInsightsSnapshot(
+    total: total,
+    autoRenewing: total - cancelled,
+    cancelled: cancelled,
+    apple: apple,
+    google: google,
+    otherStores: otherStores,
+    topApps: top(byApp, (k) => appLabel[k] ?? k, appIds: appIdByKey),
+    topCountries: top(byCountry, _countryName),
+    topPlans: top(byPlan, (k) => k),
   );
 }

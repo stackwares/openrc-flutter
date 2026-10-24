@@ -315,6 +315,9 @@ class _RealtimeTransactionsScreenState
         .where((tx) => transactionMatchesAnySectionFilters(tx, _sectionFilters))
         .toList();
     sortMutableTransactionList(rows, listSort);
+    final trialsPicked =
+        _sectionFilters.length == 1 &&
+        _sectionFilters.contains(TransactionDaySectionFilter.trial);
     final muted = context.textTheme.bodyMedium?.copyWith(
       color: context.colorScheme.onSurfaceVariant,
     );
@@ -378,8 +381,9 @@ class _RealtimeTransactionsScreenState
               SliverPadding(
                 padding: const EdgeInsets.only(top: AppSpace.sm),
                 sliver: SliverToBoxAdapter(
+                  // Only Trials picked: the month's trials, counted.
                   child: RealtimeRevenueInsightsList(
-                    transactions: monthTransactions,
+                    transactions: trialsPicked ? rows : monthTransactions,
                     compactRevenueAmounts: false,
                     cardMargin: EdgeInsets.zero,
                     columns: 2,
