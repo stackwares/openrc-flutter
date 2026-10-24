@@ -100,6 +100,10 @@ class AskComposer extends StatelessWidget {
                     style: context.textTheme.bodyLarge,
                     decoration: InputDecoration(
                       hintText: 'agent.composerHint'.tr(),
+                      // A hint that wraps to two lines makes the field two
+                      // lines tall while the question is one line, which
+                      // leaves the text above the middle of the field.
+                      hintMaxLines: 1,
                       hintStyle: context.textTheme.bodyLarge?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),

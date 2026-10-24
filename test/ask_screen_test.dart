@@ -179,4 +179,29 @@ void main() {
     expect(find.text('Remove key'), findsOneWidget);
     expect(find.text('Cancel'), findsNothing);
   });
+
+  testWidgets('the composer keeps its text and hint vertically centered', (
+    tester,
+  ) async {
+    await pump(tester, hasKey: true);
+
+    final field = tester.getRect(find.byType(TextField));
+    final editable = tester.getRect(find.byType(EditableText));
+    expect(
+      editable.center.dy,
+      moreOrLessEquals(field.center.dy, epsilon: 0.5),
+      reason: 'the empty field centers its hint',
+    );
+
+    await tester.enterText(find.byType(TextField), 'What is my MRR?');
+    await tester.pumpAndSettle();
+
+    final typedField = tester.getRect(find.byType(TextField));
+    final typed = tester.getRect(find.byType(EditableText));
+    expect(
+      typed.center.dy,
+      moreOrLessEquals(typedField.center.dy, epsilon: 0.5),
+      reason: 'a one-line question centers in its field',
+    );
+  });
 }

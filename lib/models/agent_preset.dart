@@ -37,7 +37,7 @@ const kAgentPresets = <AgentPreset>[
     nameKey: 'settings.agent.providers.openrouter',
     baseUrl: 'https://openrouter.ai/api/v1',
     style: AgentApiStyle.openAi,
-    recommendedModel: 'openai/gpt-4o',
+    recommendedModel: 'deepseek/deepseek-v4.1-flash',
     fasterModel: 'openai/gpt-4o-mini',
     keyPrefix: 'sk-or-',
     relaySlug: 'openrouter',

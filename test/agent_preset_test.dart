@@ -31,4 +31,11 @@ void main() {
     expect(presetMatchingBaseUrl('https://localhost:11434/v1'), isNull);
     expect(presetMatchingBaseUrl('https://api.openai.com'), isNull);
   });
+
+  test('OpenRouter prefills DeepSeek v4.1 Flash', () {
+    final preset = presetFor(AgentProviderId.openrouter);
+    expect(preset.recommendedModel, 'deepseek/deepseek-v4.1-flash');
+    expect(preset.baseUrl, 'https://openrouter.ai/api/v1');
+    expect(preset.keyPrefix, 'sk-or-');
+  });
 }
