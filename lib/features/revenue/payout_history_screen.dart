@@ -505,7 +505,7 @@ class _PayoutRow extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          period.store.label,
+                          period.store.displayLabel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.bodyMedium?.copyWith(
