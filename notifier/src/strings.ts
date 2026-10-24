@@ -25,6 +25,9 @@ export function parseLanguage(param: string | null): Language {
   return known ?? "en";
 }
 
+/** The plan lengths a period name can state. */
+export type PeriodLength = "weekly" | "monthly" | "annual";
+
 export interface Strings {
   trialStarted: string;
   newSubscription: string;
@@ -48,6 +51,12 @@ export interface Strings {
   weekly: string;
   monthly: string;
   annual: string;
+  /**
+   * The app's own period names (`products.name*`), lowercase, each with the
+   * length it already states: `{ "1 year": "annual" }`. They keep a body
+   * from reading `Yearly · Annual` (see `statesLength` in `copy.ts`).
+   */
+  periodNames: Record<string, PeriodLength>;
 }
 
 export const STRINGS: Record<Language, Strings> = {
@@ -74,6 +83,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Weekly",
     monthly: "Monthly",
     annual: "Annual",
+    periodNames: {
+      yearly: "annual",
+      "1 year": "annual",
+      monthly: "monthly",
+      "1 month": "monthly",
+      weekly: "weekly",
+      "1 week": "weekly",
+    },
   },
   ar: {
     trialStarted: "بدأت الفترة التجريبية",
@@ -98,6 +115,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "أسبوعي",
     monthly: "شهري",
     annual: "سنوي",
+    periodNames: {
+      "سنوي": "annual",
+      "سنة واحدة": "annual",
+      "شهري": "monthly",
+      "شهر واحد": "monthly",
+      "أسبوعي": "weekly",
+      "أسبوع واحد": "weekly",
+    },
   },
   de: {
     trialStarted: "Testphase gestartet",
@@ -122,6 +147,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Wöchentlich",
     monthly: "Monatlich",
     annual: "Jährlich",
+    periodNames: {
+      "jährlich": "annual",
+      "1 jahr": "annual",
+      monatlich: "monthly",
+      "1 monat": "monthly",
+      "wöchentlich": "weekly",
+      "1 woche": "weekly",
+    },
   },
   "es-ES": {
     trialStarted: "Prueba iniciada",
@@ -146,6 +179,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Semanal",
     monthly: "Mensual",
     annual: "Anual",
+    periodNames: {
+      anual: "annual",
+      "1 año": "annual",
+      mensual: "monthly",
+      "1 mes": "monthly",
+      semanal: "weekly",
+      "1 semana": "weekly",
+    },
   },
   fr: {
     trialStarted: "Essai commencé",
@@ -170,6 +211,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Hebdomadaire",
     monthly: "Mensuel",
     annual: "Annuel",
+    periodNames: {
+      annuel: "annual",
+      "1 an": "annual",
+      mensuel: "monthly",
+      "1 mois": "monthly",
+      hebdomadaire: "weekly",
+      "1 semaine": "weekly",
+    },
   },
   hi: {
     trialStarted: "ट्रायल शुरू हुआ",
@@ -194,6 +243,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "साप्ताहिक",
     monthly: "मासिक",
     annual: "वार्षिक",
+    periodNames: {
+      "वार्षिक": "annual",
+      "1 वर्ष": "annual",
+      "मासिक": "monthly",
+      "1 महीना": "monthly",
+      "साप्ताहिक": "weekly",
+      "1 सप्ताह": "weekly",
+    },
   },
   id: {
     trialStarted: "Uji coba dimulai",
@@ -218,6 +275,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Mingguan",
     monthly: "Bulanan",
     annual: "Tahunan",
+    periodNames: {
+      tahunan: "annual",
+      "1 tahun": "annual",
+      bulanan: "monthly",
+      "1 bulan": "monthly",
+      mingguan: "weekly",
+      "1 minggu": "weekly",
+    },
   },
   ja: {
     trialStarted: "トライアル開始",
@@ -242,6 +307,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "週額",
     monthly: "月額",
     annual: "年額",
+    periodNames: {
+      "年額": "annual",
+      "1 年": "annual",
+      "月額": "monthly",
+      "1 か月": "monthly",
+      "週額": "weekly",
+      "1 週間": "weekly",
+    },
   },
   "pt-BR": {
     trialStarted: "Teste iniciado",
@@ -266,6 +339,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Semanal",
     monthly: "Mensal",
     annual: "Anual",
+    periodNames: {
+      anual: "annual",
+      "1 ano": "annual",
+      mensal: "monthly",
+      "1 mês": "monthly",
+      semanal: "weekly",
+      "1 semana": "weekly",
+    },
   },
   ru: {
     trialStarted: "Пробный период начат",
@@ -290,6 +371,14 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "Недельная",
     monthly: "Месячная",
     annual: "Годовая",
+    periodNames: {
+      "годовая": "annual",
+      "1 год": "annual",
+      "месячная": "monthly",
+      "1 месяц": "monthly",
+      "недельная": "weekly",
+      "1 неделя": "weekly",
+    },
   },
   "zh-CN": {
     trialStarted: "试用开始",
@@ -314,5 +403,13 @@ export const STRINGS: Record<Language, Strings> = {
     weekly: "每周",
     monthly: "每月",
     annual: "每年",
+    periodNames: {
+      "每年": "annual",
+      "1 年": "annual",
+      "每月": "monthly",
+      "1 个月": "monthly",
+      "每周": "weekly",
+      "1 周": "weekly",
+    },
   },
 };

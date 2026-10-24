@@ -30,8 +30,14 @@ It is deliberately small and stateless:
   Settings do: in that currency and after App Store / Google Play fees. Rates
   come from the same free source the app uses, cached in memory; when that's
   down it uses the last rates it fetched, then the app's saved `rate`, then
-  US dollars. `&project=<name>` puts the RevenueCat project's name first in
-  the body; the app sends the name of the project whose webhook it is.
+  US dollars. `&names=<id>%0A<name>%09…` (one entry per named product, tabs
+  between them) calls each product what that device's Settings calls it,
+  falling back to the store's product id, and drops the plan length when the
+  name already states it (`Yearly`, not `Yearly · Annual`). The names are
+  that device's own, live in its webhook URL and nowhere else, and are read
+  and dropped with the request like everything else here.
+  `&project=<name>` puts the RevenueCat project's name first in the body; the
+  app sends the name of the project whose webhook it is.
   Wrong or missing secrets get
   `401`. Events that aren't about a purchase (aliases, experiments, virtual
   currency, invoices) get `200` without a notification. A failed delivery

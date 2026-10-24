@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { kindOf, notificationFor, parseKinds } from "../src/copy";
-import { forgetRates, parseDisplay } from "../src/display";
+import { forgetRates, parseDisplay, parseNames } from "../src/display";
 import { LANGUAGES, STRINGS } from "../src/strings";
 import { forgetAccessToken } from "../src/fcm";
 import worker from "../src/index";
@@ -548,6 +548,80 @@ describe("project and plan", () => {
   });
 });
 
+describe("product names", () => {
+  const DAY = 86_400_000;
+
+  /** The `names` parameter the app builds (`lib/services/push/push_names.dart`). */
+  const namesParam = (names: Record<string, string>) =>
+    "names=" +
+    Object.keys(names)
+      .sort()
+      .map((id) => encodeURIComponent(`${id}\n${names[id]}`))
+      .join("%09");
+
+  const body = (
+    event: object,
+    names: Record<string, string>,
+    query = "",
+  ) =>
+    notificationFor(
+      { type: "RENEWAL", purchased_at_ms: 1_000, expiration_at_ms: 1_000 + 31 * DAY, ...event },
+      parseDisplay(new URLSearchParams([namesParam(names), query].filter(Boolean).join("&"))),
+    )?.body;
+
+  it("calls a product what Settings calls it", () => {
+    expect(body({ product_id: "com.acme.pro.monthly" }, { "com.acme.pro.monthly": "Pro" })).toBe(
+      "Pro · Monthly",
+    );
+    // No name for this one: the store's id, as before.
+    expect(body({ product_id: "com.acme.other" }, { "com.acme.pro.monthly": "Pro" })).toBe(
+      "com.acme.other · Monthly",
+    );
+    expect(parseDisplay(new URLSearchParams("names=")).names).toEqual({});
+  });
+
+  it("doesn't repeat a name that already says the length", () => {
+    expect(body({ product_id: "pro" }, { pro: "Monthly" })).toBe("Monthly");
+    expect(
+      notificationFor(
+        { type: "RENEWAL", product_id: "pro", purchased_at_ms: 1_000, expiration_at_ms: 1_000 + 365 * DAY },
+        parseDisplay(new URLSearchParams(namesParam({ pro: "Yearly" }))),
+      )?.body,
+    ).toBe("Yearly");
+    // A name that is some other period keeps the real one, as in the app.
+    expect(body({ product_id: "pro" }, { pro: "Weekly" })).toBe("Weekly · Monthly");
+  });
+
+  it("writes the period names in the device's language", () => {
+    expect(body({ product_id: "pro" }, { pro: "Monatlich" }, "lang=de")).toBe("Monatlich");
+    expect(body({ product_id: "pro" }, { pro: "Monatlich" })).toBe("Monatlich · Monthly");
+  });
+
+  it("names both sides of a plan change", () => {
+    expect(
+      body({ type: "PRODUCT_CHANGE", product_id: "com.acme.pro", new_product_id: "com.acme.max" }, {
+        "com.acme.pro": "Pro",
+        "com.acme.max": "Max",
+      }),
+    ).toBe("Pro → Max");
+  });
+
+  it("reads only what a name can be", () => {
+    const names = parseNames(
+      ["known\n  Pro  Annual ", "dup\nFirst", "dup\nSecond", "\nNoId", "noName\n ", "__proto__\nPolluted"].join("\t"),
+    );
+    expect(Object.getPrototypeOf(names)).toBeNull();
+    expect(Object.keys(names).sort()).toEqual(["__proto__", "dup", "known"]);
+    expect(names.known).toBe("Pro Annual");
+    expect(names.dup).toBe("First");
+    expect(names["__proto__"]).toBe("Polluted");
+    expect(parseNames(null)).toEqual({});
+    // A name can't smuggle in another entry, whatever it holds.
+    expect(parseNames("pro\nA\tB").pro).toBe("A");
+    expect(parseNames("x".repeat(5000))).toEqual({});
+  });
+});
+
 describe("notification language", () => {
   const display = (query: string) => parseDisplay(new URLSearchParams(query));
 
@@ -574,7 +648,12 @@ describe("notification language", () => {
     const keys = Object.keys(STRINGS.en).sort();
     for (const language of LANGUAGES) {
       expect(Object.keys(STRINGS[language]).sort()).toEqual(keys);
-      for (const value of Object.values(STRINGS[language])) expect(value.trim()).not.toBe("");
+      const { periodNames, ...flat } = STRINGS[language];
+      for (const value of Object.values(flat)) expect(value.trim()).not.toBe("");
+      for (const [name, kind] of Object.entries(periodNames)) {
+        expect(name).toBe(name.trim().toLowerCase());
+        expect(["weekly", "monthly", "annual"]).toContain(kind);
+      }
     }
   });
 });

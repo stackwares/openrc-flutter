@@ -218,6 +218,22 @@ function period(event: WebhookEvent, s: Strings, language: Language): string | u
   return unitLabel(days, "day", language);
 }
 
+/**
+ * True when [name] already says the plan length, so a body doesn't read
+ * `Monthly · Monthly` or `Yearly · Annual`, mirroring `_nameStatesLength` in
+ * `lib/core/utils/plan_display.dart`.
+ */
+function statesLength(name: string, length: string, s: Strings): boolean {
+  const n = name.trim().toLowerCase();
+  const l = length.trim().toLowerCase();
+  if (!n) return false;
+  if (n === l) return true;
+  const kind = s.periodNames[n];
+  if (kind !== "annual" && kind !== "monthly" && kind !== "weekly") return false;
+  const label = kind === "annual" ? s.annual : kind === "monthly" ? s.monthly : s.weekly;
+  return label.trim().toLowerCase() === l;
+}
+
 /** `3 months`, `14 days`, pluralized for [language]. */
 function unitLabel(count: number, unit: "month" | "day", language: Language): string {
   try {
@@ -236,7 +252,7 @@ function unitLabel(count: number, unit: "month" | "day", language: Language): st
  */
 export function notificationFor(
   event: WebhookEvent,
-  display: Display = { currency: "USD", fees: null, savedRate: null },
+  display: Display = { currency: "USD", fees: null, savedRate: null, names: {} },
   rate: number | null = 1,
 ): NotificationCopy | null {
   const language = display.language ?? "en";
@@ -262,10 +278,19 @@ export function notificationFor(
   const product = text(event.product_id);
   const newProduct = text(event.new_product_id);
   const length = period(event, s, language);
+  // The name Settings gave the product, else the store's own id.
+  const nameOf = (id: string) => display.names[id] ?? id;
+  // `Pro · Monthly`, but `Monthly` when the name already says the length.
+  const withLength = (id: string) => {
+    const shown = nameOf(id);
+    return length && !statesLength(shown, length, s) ? `${shown} · ${length}` : shown;
+  };
   const plan =
     product && newProduct
-      ? `${product} → ${newProduct}`
-      : [product, length].filter(Boolean).join(" · ");
+      ? `${nameOf(product)} → ${nameOf(newProduct)}`
+      : product
+        ? withLength(product)
+        : length;
   const body = [
     display.project,
     plan,

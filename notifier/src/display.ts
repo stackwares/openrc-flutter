@@ -7,7 +7,7 @@ import { parseLanguage, type Language } from "./strings";
  * Google Play, in percent) when it subtracts store fees, plus `rate`, the
  * app's last saved rate for that currency, in case no fresh one can be had.
  * Like the app (`lib/core/utils/store_commission.dart`), other stores keep
- * no fee.
+ * no fee. `names` holds the product names Settings gave.
  */
 export interface Display {
   /** The app's language; also formats amounts and country names. */
@@ -18,6 +18,42 @@ export interface Display {
   savedRate: number | null;
   /** The RevenueCat project the webhook belongs to, when the app names it. */
   project?: string;
+  /** The app's product names by store product id, when Settings gave any. */
+  names: Record<string, string>;
+}
+
+/** How many product names a webhook URL may carry, and how long each may be. */
+const MAX_NAMES = 200;
+const MAX_NAME = 60;
+const MAX_ID = 200;
+const MAX_NAMES_PARAM = 4096;
+
+/**
+ * `names=com.acme.pro%0APro%09com.acme.lite%0ALite`: the names Settings gave,
+ * as `id`, a newline, then the name, one entry per product, entries split by
+ * tabs (`PushNames` in `lib/services/push/push_names.dart`). Read and
+ * dropped with the request: the URL is where they come from, and this worker
+ * stores nothing.
+ */
+export function parseNames(raw: string | null): Record<string, string> {
+  // A null prototype, so a product id like `__proto__` is just a key.
+  const names = Object.create(null) as Record<string, string>;
+  if (!raw || raw.length > MAX_NAMES_PARAM) return names;
+  const entries = raw.split("\t");
+  for (const entry of entries.slice(0, MAX_NAMES)) {
+    const split = entry.indexOf("\n");
+    if (split <= 0) continue;
+    const id = entry.slice(0, split).trim();
+    if (!id || id.length > MAX_ID || id in names) continue;
+    const name = entry
+      .slice(split + 1)
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, MAX_NAME)
+      .trim();
+    if (name) names[id] = name;
+  }
+  return names;
 }
 
 export function parseDisplay(params: URLSearchParams): Display {
@@ -32,6 +68,7 @@ export function parseDisplay(params: URLSearchParams): Display {
     currency,
     fees: fee(apple) && fee(google) ? { apple: apple!, google: google! } : null,
     savedRate: Number.isFinite(rate) && rate > 0 ? rate : null,
+    names: parseNames(params.get("names")),
     ...(project ? { project } : {}),
   };
 }
