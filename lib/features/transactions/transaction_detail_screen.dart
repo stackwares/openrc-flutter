@@ -11,6 +11,7 @@ import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/theme/store_brand_icon_colors.dart';
 import 'package:openrc/core/utils/plan_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/core/utils/relative_time_format.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
@@ -534,7 +535,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                   _buildChip(
                     context,
                     _storeIcon(tx.store!),
-                    tx.store!,
+                    revenueCatStoreDisplayName(tx.store!),
                     iconTint: storeBrandIconTint(tx.store),
                   ),
                 if (tx.subscriberCountryCode != null)
@@ -921,7 +922,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       items.add(
         _HistoryItem(
           timestamp: dt?.millisecondsSinceEpoch ?? 0,
-          title: h.event ?? 'Event',
+          title: h.event ?? 'detail.eventTypes.event'.tr(),
           subtitle: h.product ?? '',
           priceUsd: h.priceInUsd,
           date: dt,
@@ -935,7 +936,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       items.add(
         _HistoryItem(
           timestamp: ms,
-          title: e.type ?? 'Event',
+          title: e.type ?? 'detail.eventTypes.event'.tr(),
           subtitle: e.productId ?? e.newProductId ?? '',
           priceUsd: e.price,
           date: dt,

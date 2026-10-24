@@ -110,7 +110,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           _NextPayoutPlatformRow(
             icon: Icons.apple,
             iconColor: colors.apple,
-            storeLabel: 'App Store',
+            storeLabel: 'storeNames.appStore'.tr(),
             paymentDate: est.applePayday?.paymentDate,
             projected: est.applePayday?.isProjected ?? false,
             accrualLine: appleAccrual,
@@ -122,7 +122,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
           _NextPayoutPlatformRow(
             icon: Icons.android,
             iconColor: colors.google,
-            storeLabel: 'Google Play',
+            storeLabel: 'storeNames.googlePlay'.tr(),
             paymentDate: est.googlePayday?.paymentDate,
             accrualLine: googleAccrual,
             netUsd: est.googleNetUsd,

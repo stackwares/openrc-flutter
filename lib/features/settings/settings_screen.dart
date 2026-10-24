@@ -129,8 +129,12 @@ class SettingsScreen extends ConsumerWidget {
     final current = ref.read(commissionSettingsProvider);
     final picked = await showStoreFeeSheet(
       context,
-      store: isApple ? 'App Store' : 'Google Play',
-      company: isApple ? 'Apple' : 'Google',
+      store: isApple
+          ? 'storeNames.appStore'.tr()
+          : 'storeNames.googlePlay'.tr(),
+      company: isApple
+          ? 'storeNames.appleCompany'.tr()
+          : 'storeNames.googleCompany'.tr(),
       icon: isApple ? Icons.apple : Icons.android,
       current: isApple
           ? current.appleCommissionPercent
@@ -174,10 +178,7 @@ class SettingsScreen extends ConsumerWidget {
     final scheme = context.colorScheme;
     final tt = context.textTheme;
     final distinctId = me?.distinctId?.trim();
-    final currencyName = currencyOption == null
-        ? currency
-        : '${currencyOption.label[0].toUpperCase()}'
-              '${currencyOption.label.substring(1)}';
+    final currencyName = currencyOption?.label ?? currency;
     final currencyExample = currency == 'USD'
         ? formatExactUsd(_kCurrencyExample)
         : formatExactForeign(_kCurrencyExample, currency);

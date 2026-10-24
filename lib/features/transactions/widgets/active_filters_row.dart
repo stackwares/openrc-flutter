@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -31,11 +32,8 @@ class ActiveFiltersRow extends StatelessWidget {
   final void Function(TransactionDaySectionFilter)? onRemoveSection;
   final VoidCallback onClearAll;
 
-  static String _platformName(TransactionPlatformFilter p) => switch (p) {
-    TransactionPlatformFilter.apple => 'App Store',
-    TransactionPlatformFilter.google => 'Google Play',
-    TransactionPlatformFilter.web => 'transactions.web'.tr(),
-  };
+  static String _platformName(TransactionPlatformFilter p) =>
+      transactionPlatformFilterLabel(p);
 
   @override
   Widget build(BuildContext context) {

@@ -609,7 +609,7 @@ class _SidebarAccount extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasName ? name : (email ?? 'RevenueCat account'),
+                        hasName ? name : (email ?? 'settings.revenueCatAccount'.tr()),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(

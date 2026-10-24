@@ -164,7 +164,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         rows: [
           enter(
             ShareRow(
-              label: 'App Store',
+              label: 'storeNames.appStore'.tr(),
               pct: data.applePct,
               amount: amount(data.appleRevenue),
               barColor: colors.apple,
@@ -173,7 +173,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
           ),
           enter(
             ShareRow(
-              label: 'Google Play',
+              label: 'storeNames.googlePlay'.tr(),
               pct: data.googlePct,
               amount: amount(data.googleRevenue),
               barColor: colors.google,
@@ -321,13 +321,13 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
         title: 'revenue.stores'.tr(),
         rows: [
           row(
-            label: 'App Store',
+            label: 'storeNames.appStore'.tr(),
             count: data.apple,
             barColor: colors.apple,
             leading: _LeadingIconTile(icon: Icons.apple, color: colors.apple),
           ),
           row(
-            label: 'Google Play',
+            label: 'storeNames.googlePlay'.tr(),
             count: data.google,
             barColor: colors.google,
             leading: _LeadingIconTile(
@@ -509,12 +509,12 @@ class _CollapsedBreakdownCard extends StatelessWidget {
               SplitSegment(
                 value: data.applePct,
                 color: colors.apple,
-                label: 'App Store',
+                label: 'storeNames.appStore'.tr(),
               ),
               SplitSegment(
                 value: data.googlePct,
                 color: colors.google,
-                label: 'Google Play',
+                label: 'storeNames.googlePlay'.tr(),
               ),
               SplitSegment(
                 value: data.otherStoresPct,
@@ -532,7 +532,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
                 child: _StoreShareLabel(
                   icon: Icons.apple,
                   color: colors.apple,
-                  name: 'App Store',
+                  name: 'storeNames.appStore'.tr(),
                   value: '${data.applePct.toStringAsFixed(1)}%',
                   labelStyle: labelStyle,
                   valueStyle: valueStyle,
@@ -557,7 +557,7 @@ class _CollapsedBreakdownCard extends StatelessWidget {
                 child: _StoreShareLabel(
                   icon: Icons.android,
                   color: colors.google,
-                  name: 'Google Play',
+                  name: 'storeNames.googlePlay'.tr(),
                   value: '${data.googlePct.toStringAsFixed(1)}%',
                   labelStyle: labelStyle,
                   valueStyle: valueStyle,
@@ -728,9 +728,19 @@ class _CollapsedTrialsCard extends StatelessWidget {
             more: 0,
             items: [
               if (data.apple > 0)
-                store(Icons.apple, colors.apple, 'App Store', data.apple),
+                store(
+                  Icons.apple,
+                  colors.apple,
+                  'storeNames.appStore'.tr(),
+                  data.apple,
+                ),
               if (data.google > 0)
-                store(Icons.android, colors.google, 'Google Play', data.google),
+                store(
+                  Icons.android,
+                  colors.google,
+                  'storeNames.googlePlay'.tr(),
+                  data.google,
+                ),
               if (data.otherStores > 0)
                 store(
                   Icons.language_rounded,

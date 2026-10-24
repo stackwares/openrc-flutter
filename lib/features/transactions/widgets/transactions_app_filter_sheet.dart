@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/features/revenue/revenue_insights_compute.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
@@ -376,13 +377,13 @@ class _TransactionsAppFilterModalState
     final stores = [
       (
         filter: TransactionPlatformFilter.apple,
-        label: 'App Store',
+        label: transactionPlatformFilterLabel(TransactionPlatformFilter.apple),
         icon: Icons.apple,
         color: colors.apple,
       ),
       (
         filter: TransactionPlatformFilter.google,
-        label: 'Google Play',
+        label: transactionPlatformFilterLabel(TransactionPlatformFilter.google),
         icon: Icons.android,
         color: colors.google,
       ),

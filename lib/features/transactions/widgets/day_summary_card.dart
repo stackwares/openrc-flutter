@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/commission_settings_store.dart';
@@ -58,14 +59,8 @@ Color daySummaryPlatformDistColor(
   };
 }
 
-String daySummaryPlatformLabel(TransactionDaySummaryPlatform p) {
-  return switch (p) {
-    TransactionDaySummaryPlatform.apple => 'App Store',
-    TransactionDaySummaryPlatform.google => 'Google Play',
-    TransactionDaySummaryPlatform.web => 'transactions.web'.tr(),
-    TransactionDaySummaryPlatform.other => 'transactions.other'.tr(),
-  };
-}
+String daySummaryPlatformLabel(TransactionDaySummaryPlatform p) =>
+    transactionDaySummaryPlatformLabel(p);
 
 /// Short tile label (fits a third of a phone width).
 String daySummaryTileLabel(TransactionDaySectionFilter filter) {

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
 import 'package:openrc/features/transactions/widgets/day_summary_card.dart';
@@ -34,11 +35,8 @@ bool get _addsToSelection =>
     HardwareKeyboard.instance.isMetaPressed ||
     HardwareKeyboard.instance.isControlPressed;
 
-String _platformName(TransactionPlatformFilter p) => switch (p) {
-  TransactionPlatformFilter.apple => 'App Store',
-  TransactionPlatformFilter.google => 'Google Play',
-  TransactionPlatformFilter.web => 'transactions.web'.tr(),
-};
+String _platformName(TransactionPlatformFilter p) =>
+    transactionPlatformFilterLabel(p);
 
 IconData _platformIcon(TransactionPlatformFilter p) => switch (p) {
   TransactionPlatformFilter.apple => Icons.apple,

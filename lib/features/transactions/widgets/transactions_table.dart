@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
@@ -321,7 +322,9 @@ class _TransactionRow extends ConsumerWidget {
               size: 16,
               color: storeBrandIconTint(store) ?? scheme.onSurfaceVariant,
             ),
-            text(store ?? '—'),
+            text(
+              store == null ? '—' : revenueCatStoreDisplayName(store),
+            ),
           );
         case _Column.product:
           return text(planDescription(tx), tooltip: tx.productIdentifier);
