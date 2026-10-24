@@ -1,6 +1,7 @@
 import 'package:openrc/core/utils/store_commission.dart';
 import 'package:openrc/models/rc_project.dart';
 import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction_derived.dart';
 import 'package:openrc/models/transaction_list_sort_mode.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -25,44 +26,43 @@ final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 bool isIsoCalendarDayKey(String key) => _isoCalendarDayKeyRe.hasMatch(key);
 
 /// Dedupe key when merging paginated `/me/transactions` responses (Kedi-style).
-String? rcTransactionDedupKey(RcTransaction tx) {
-  final stid = tx.storeTransactionIdentifier?.trim();
-  if (stid != null && stid.isNotEmpty) return 'stid:$stid';
-  final sub = tx.subscriberId?.trim();
-  final prod = tx.productIdentifier?.trim();
-  final pd = tx.purchaseDate?.trim();
-  if (sub != null &&
-      sub.isNotEmpty &&
-      prod != null &&
-      prod.isNotEmpty &&
-      pd != null &&
-      pd.isNotEmpty) {
-    return 'cmp:$sub|$prod|$pd';
-  }
-  return null;
-}
+/// Built once per row; see [RcTransactionDerived.mergeKey].
+String? rcTransactionDedupKey(RcTransaction tx) => tx.mergeKey;
 
 /// Local calendar day of [tx.purchaseDate], or null when the date is missing.
-DateTime? localPurchaseCalendarDay(RcTransaction tx) {
-  final pd = tx.purchaseDate?.trim();
-  if (pd == null || pd.isEmpty) return null;
-  final parsed = DateTime.tryParse(pd);
-  if (parsed == null) return null;
-  final local = parsed.toLocal();
-  return DateTime(local.year, local.month, local.day);
-}
+///
+/// Parsed once per row ([RcTransactionDerived.purchaseLocalDay]); the loaded
+/// feed is re-walked for every rebuild and every background page.
+DateTime? localPurchaseCalendarDay(RcTransaction tx) => tx.purchaseLocalDay;
+
+/// Local midnight of [date]'s calendar day, for range comparisons.
+DateTime localCalendarDay(DateTime date) =>
+    DateTime(date.year, date.month, date.day);
 
 /// True when [tx]'s local purchase day sits in [[start], [end]], inclusive.
 bool localPurchaseDayInInclusiveRange(
   RcTransaction tx,
   DateTime start,
   DateTime end,
+) => localPurchaseDayInDayRange(
+  tx,
+  localCalendarDay(start),
+  localCalendarDay(end),
+);
+
+/// [localPurchaseDayInInclusiveRange] for a caller that already reduced the
+/// bounds to [localCalendarDay]s.
+///
+/// Building a local `DateTime` is not free, and the payout estimate checks
+/// the same two bounds against every loaded row; the caller can hoist them.
+bool localPurchaseDayInDayRange(
+  RcTransaction tx,
+  DateTime startDay,
+  DateTime endDay,
 ) {
   final day = localPurchaseCalendarDay(tx);
   if (day == null) return false;
-  final s = DateTime(start.year, start.month, start.day);
-  final e = DateTime(end.year, end.month, end.day);
-  return !day.isBefore(s) && !day.isAfter(e);
+  return !day.isBefore(startDay) && !day.isAfter(endDay);
 }
 
 /// Deduped rows whose local purchase day is in [[start], [end]], inclusive.
@@ -71,12 +71,14 @@ List<RcTransaction> collectTransactionsInLocalInclusiveRange(
   required DateTime start,
   required DateTime end,
 }) {
+  final startDay = localCalendarDay(start);
+  final endDay = localCalendarDay(end);
   final out = <RcTransaction>[];
   final seen = <String>{};
   for (final tx in transactions) {
     final dedup = rcTransactionDedupKey(tx);
     if (dedup != null && seen.contains(dedup)) continue;
-    if (!localPurchaseDayInInclusiveRange(tx, start, end)) continue;
+    if (!localPurchaseDayInDayRange(tx, startDay, endDay)) continue;
     if (dedup != null) seen.add(dedup);
     out.add(tx);
   }
@@ -136,12 +138,8 @@ List<RcTransaction> collectTransactionsInLastLocalDays(
       if (dedup != null) {
         if (seen.contains(dedup)) continue;
       }
-      final pd = tx.purchaseDate?.trim();
-      if (pd == null || pd.isEmpty) continue;
-      final parsed = DateTime.tryParse(pd);
-      if (parsed == null) continue;
-      final local = parsed.toLocal();
-      final day = DateTime(local.year, local.month, local.day);
+      final day = tx.purchaseLocalDay;
+      if (day == null) continue;
       if (day.isBefore(start) || day.isAfter(today)) continue;
       if (dedup != null) seen.add(dedup);
       out.add(tx);
@@ -163,12 +161,8 @@ DateTime? oldestPurchaseLocalCalendarDay(
   DateTime? oldest;
   for (final list in grouped.values) {
     for (final tx in list) {
-      final pd = tx.purchaseDate?.trim();
-      if (pd == null || pd.isEmpty) continue;
-      final parsed = DateTime.tryParse(pd);
-      if (parsed == null) continue;
-      final local = parsed.toLocal();
-      final day = DateTime(local.year, local.month, local.day);
+      final day = tx.purchaseLocalDay;
+      if (day == null) continue;
       if (oldest == null || day.isBefore(oldest)) oldest = day;
     }
   }
@@ -192,14 +186,11 @@ List<RcTransaction> collectTransactionsInCurrentLocalMonth(
       if (dedup != null) {
         if (seen.contains(dedup)) continue;
       }
-      final pd = tx.purchaseDate?.trim();
-      if (pd == null || pd.isEmpty) continue;
-      final parsed = DateTime.tryParse(pd);
-      if (parsed == null) continue;
-      final local = parsed.toLocal();
-      final day = DateTime(local.year, local.month, local.day);
+      final day = tx.purchaseLocalDay;
+      final instant = tx.purchaseLocalInstant;
+      if (day == null || instant == null) continue;
       if (day.isBefore(monthStart) || day.isAfter(today)) continue;
-      if (local.isAfter(now)) continue;
+      if (instant.isAfter(now)) continue;
       if (dedup != null) seen.add(dedup);
       out.add(tx);
     }
@@ -455,13 +446,14 @@ List<AppFilterOption> collectAppFilterOptionsWithProjects(
     byKey[id] = AppFilterOption(id, label, id);
   }
 
-  for (final opt in collectAppFilterOptions(filterSource)) {
+  // One pass over [filterSource]: this runs from `build`, so scanning and
+  // sorting its apps twice would be wasted work on every frame.
+  final onScreen = collectAppFilterOptions(filterSource);
+  for (final opt in onScreen) {
     byKey.putIfAbsent(opt.key, () => opt);
   }
 
-  final onScreenOrdered = collectAppFilterOptions(
-    filterSource,
-  ).map((o) => o.key).toList();
+  final onScreenOrdered = onScreen.map((o) => o.key).toList();
   final seen = <String>{};
   final out = <AppFilterOption>[];
   for (final k in onScreenOrdered) {
@@ -483,9 +475,22 @@ List<AppFilterOption> collectAppFilterOptionsWithProjects(
   return out;
 }
 
+/// `yyyy-MM-dd` for the local calendar day of [date].
+///
+/// Built by hand rather than with [DateFormat]: day keys are compared and
+/// reversed as strings (and matched against [isIsoCalendarDayKey]), so they
+/// always need ASCII digits, and a formatter per call is work the day view
+/// cannot spare.
+String isoLocalDayKey(DateTime date) {
+  final y = date.year.toString().padLeft(4, '0');
+  final m = date.month.toString().padLeft(2, '0');
+  final d = date.day.toString().padLeft(2, '0');
+  return '$y-$m-$d';
+}
+
 String localTodayDayKey() {
   final n = DateTime.now();
-  return DateFormat('yyyy-MM-dd').format(DateTime(n.year, n.month, n.day));
+  return isoLocalDayKey(DateTime(n.year, n.month, n.day));
 }
 
 /// Day header grid categories (Transactions day view + Revenue tab).

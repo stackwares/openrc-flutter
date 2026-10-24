@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction_derived.dart';
 
 /// Local calendar date from an ISO-8601 timestamp ([purchaseDate] / subscriber created).
 DateTime? purchaseLocalCalendarDayFromIso(String? iso) {
@@ -11,6 +12,9 @@ DateTime? purchaseLocalCalendarDayFromIso(String? iso) {
 }
 
 /// Earliest [RcTransaction.purchaseDate] per subscriber across [transactions] (loaded feed).
+///
+/// Walks the whole feed, so it reads the row's memoized day
+/// ([RcTransactionDerived.purchaseLocalDay]) instead of re-parsing every date.
 Map<String, DateTime> earliestPurchaseLocalDayBySubscriberId(
   Iterable<RcTransaction> transactions,
 ) {
@@ -18,7 +22,7 @@ Map<String, DateTime> earliestPurchaseLocalDayBySubscriberId(
   for (final tx in transactions) {
     final id = tx.subscriberId?.trim();
     if (id == null || id.isEmpty) continue;
-    final day = purchaseLocalCalendarDayFromIso(tx.purchaseDate);
+    final day = tx.purchaseLocalDay;
     if (day == null) continue;
     final prev = out[id];
     if (prev == null || day.isBefore(prev)) out[id] = day;
@@ -36,11 +40,8 @@ Map<String, DateTime> earliestPurchaseLocalInstantBySubscriberId(
   for (final tx in transactions) {
     final id = tx.subscriberId?.trim();
     if (id == null || id.isEmpty) continue;
-    final raw = tx.purchaseDate?.trim();
-    if (raw == null || raw.isEmpty) continue;
-    final d = DateTime.tryParse(raw);
-    if (d == null) continue;
-    final local = d.toLocal();
+    final local = tx.purchaseLocalInstant;
+    if (local == null) continue;
     final prev = out[id];
     if (prev == null || local.isBefore(prev)) out[id] = local;
   }

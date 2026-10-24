@@ -47,81 +47,93 @@ class DayRevenueStrip extends StatelessWidget {
     final weekday = DateFormat('EEEEE');
     final longDate = DateFormat.MMMEd();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        for (final (i, d) in days.indexed)
-          Expanded(
-            child: Semantics(
-              button: onDaySelected != null,
-              selected: d.dayKey == selectedDayKey,
-              label: d.total == null
-                  ? 'transactions.stripDayNotLoaded'.tr(namedArgs: {'date': longDate.format(d.date)})
-                  : 'transactions.stripDayAmount'.tr(namedArgs: {'date': longDate.format(d.date), 'amount': formatAmount(d.total!)}),
-              excludeSemantics: true,
-              child: InkWell(
-                key: ValueKey('day_strip_${d.dayKey}'),
-                borderRadius: BorderRadius.circular(8),
-                onTap: onDaySelected == null || d.dayKey == selectedDayKey
-                    ? null
-                    : () => onDaySelected!(d.dayKey),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        height: barAreaHeight,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          // Grows from zero on first show (left to right),
-                          // then glides between heights on later changes.
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(
-                              begin: 0,
-                              end: _barHeight(d.total, maxTotal),
-                            ),
-                            duration: reduceMotion
-                                ? Duration.zero
-                                : Duration(milliseconds: 420 + i * 45),
-                            curve: Curves.easeOutCubic,
-                            builder: (context, height, _) => SizedBox(
-                              height: height,
-                              width: double.infinity,
-                              child: AnimatedContainer(
-                                duration: reduceMotion
-                                    ? Duration.zero
-                                    : const Duration(milliseconds: 220),
-                                decoration: BoxDecoration(
-                                  color: _barColor(context, d),
-                                  borderRadius: BorderRadius.circular(4),
+    // The bars animate whenever a total arrives (a whole month of background
+    // pages lands on this card), so keep their repaints inside their own
+    // layer instead of dirtying the scroll view above them.
+    return RepaintBoundary(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (final (i, d) in days.indexed)
+            Expanded(
+              child: Semantics(
+                button: onDaySelected != null,
+                selected: d.dayKey == selectedDayKey,
+                label: d.total == null
+                    ? 'transactions.stripDayNotLoaded'.tr(
+                        namedArgs: {'date': longDate.format(d.date)},
+                      )
+                    : 'transactions.stripDayAmount'.tr(
+                        namedArgs: {
+                          'date': longDate.format(d.date),
+                          'amount': formatAmount(d.total!),
+                        },
+                      ),
+                excludeSemantics: true,
+                child: InkWell(
+                  key: ValueKey('day_strip_${d.dayKey}'),
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: onDaySelected == null || d.dayKey == selectedDayKey
+                      ? null
+                      : () => onDaySelected!(d.dayKey),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: barAreaHeight,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            // Grows from zero on first show (left to right),
+                            // then glides between heights on later changes.
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(
+                                begin: 0,
+                                end: _barHeight(d.total, maxTotal),
+                              ),
+                              duration: reduceMotion
+                                  ? Duration.zero
+                                  : Duration(milliseconds: 420 + i * 45),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, height, _) => SizedBox(
+                                height: height,
+                                width: double.infinity,
+                                child: AnimatedContainer(
+                                  duration: reduceMotion
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 220),
+                                  decoration: BoxDecoration(
+                                    color: _barColor(context, d),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        weekday.format(d.date),
-                        style: context.textTheme.labelSmall?.copyWith(
-                          color: d.dayKey == selectedDayKey
-                              ? scheme.onSurface
-                              : scheme.onSurfaceVariant.withValues(
-                                  alpha: d.total == null ? 0.5 : 1,
-                                ),
-                          fontWeight: d.dayKey == selectedDayKey
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                        const SizedBox(height: 6),
+                        Text(
+                          weekday.format(d.date),
+                          style: context.textTheme.labelSmall?.copyWith(
+                            color: d.dayKey == selectedDayKey
+                                ? scheme.onSurface
+                                : scheme.onSurfaceVariant.withValues(
+                                    alpha: d.total == null ? 0.5 : 1,
+                                  ),
+                            fontWeight: d.dayKey == selectedDayKey
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

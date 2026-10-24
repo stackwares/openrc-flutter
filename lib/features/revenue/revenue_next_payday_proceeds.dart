@@ -57,40 +57,41 @@ NextPaydayProceedsEstimate computeNextPaydayProceedsEstimate(
   var appleSum = 0.0;
   var googleSum = 0.0;
 
+  // Reduced once, not per row: these bounds are checked against the whole
+  // loaded feed and building a local DateTime costs more than the test.
+  final appleStart = apple == null ? null : localCalendarDay(apple.startDate);
+  final appleEnd = apple == null ? null : localCalendarDay(apple.endDate);
+  final googleStart = google == null
+      ? null
+      : localCalendarDay(google.earningsStart);
+  final googleEnd = google == null
+      ? null
+      : localCalendarDay(google.earningsEnd);
+
   // Stores always keep their fee before paying out, so apply the configured
   // rates even when revenue elsewhere is shown before fees.
   final fees = commission.copyWith(adjustmentEnabled: true);
+  // The accrual windows cover days, the feed covers months: pick the rows
+  // first and net only those, instead of classifying and adjusting every
+  // loaded transaction to throw most of it away.
   for (final tx in transactions) {
-    final gross = tx.revenue ?? 0;
-    final net = adjustUsdForDisplay(
-      gross: gross,
-      settings: fees,
-      store: tx.storeForCommission,
-    );
-
-    switch (classifyStore(tx.storeForCommission)) {
-      case StoreCommissionPlatform.apple:
-        if (apple != null &&
-            localPurchaseDayInInclusiveRange(
-              tx,
-              apple.startDate,
-              apple.endDate,
-            )) {
-          appleSum += net;
-        }
-        break;
-      case StoreCommissionPlatform.google:
-        if (google != null &&
-            localPurchaseDayInInclusiveRange(
-              tx,
-              google.earningsStart,
-              google.earningsEnd,
-            )) {
-          googleSum += net;
-        }
-        break;
-      case StoreCommissionPlatform.other:
-        break;
+    final store = classifyStore(tx.storeForCommission);
+    if (store == StoreCommissionPlatform.apple) {
+      if (appleStart == null || appleEnd == null) continue;
+      if (!localPurchaseDayInDayRange(tx, appleStart, appleEnd)) continue;
+      appleSum += adjustUsdForDisplay(
+        gross: tx.revenue ?? 0,
+        settings: fees,
+        store: tx.storeForCommission,
+      );
+    } else if (store == StoreCommissionPlatform.google) {
+      if (googleStart == null || googleEnd == null) continue;
+      if (!localPurchaseDayInDayRange(tx, googleStart, googleEnd)) continue;
+      googleSum += adjustUsdForDisplay(
+        gross: tx.revenue ?? 0,
+        settings: fees,
+        store: tx.storeForCommission,
+      );
     }
   }
 

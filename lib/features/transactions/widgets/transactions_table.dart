@@ -299,9 +299,12 @@ class _TransactionRow extends ConsumerWidget {
           );
         case _Column.project:
           final appId = tx.app?.id;
+          // Watch only this row's icon; the map fills in one app at a time.
           final iconUrl = appId == null
               ? null
-              : ref.watch(resolvedAppIconsProvider)[appId];
+              : ref.watch(
+                  resolvedAppIconsProvider.select((icons) => icons[appId]),
+                );
           return withLeading(
             TransactionLeadingAvatar(
               imageUrl: iconUrl,

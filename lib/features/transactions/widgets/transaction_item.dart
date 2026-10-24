@@ -75,9 +75,11 @@ class TransactionItem extends ConsumerWidget {
     final type = transaction.type;
     final statusColor = transactionStatusColor(transaction, context);
     final appId = transaction.app?.id;
-    final iconUrl = appId != null
-        ? ref.watch(resolvedAppIconsProvider)[appId]
-        : null;
+    // Watch only this row's icon: the map fills in one app at a time as icons
+    // resolve, and watching all of it rebuilt every visible row each time.
+    final iconUrl = appId == null
+        ? null
+        : ref.watch(resolvedAppIconsProvider.select((icons) => icons[appId]));
 
     final appName = transaction.app?.name?.trim();
     final hasAppName = appName != null && appName.isNotEmpty;

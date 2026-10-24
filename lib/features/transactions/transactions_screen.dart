@@ -34,6 +34,7 @@ import 'package:openrc/services/widget_data_channel.dart';
 import 'package:openrc/services/transaction_list_sort_store.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/models/rc_transaction_derived.dart';
 import 'package:openrc/services/rc_api_service.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/features/transactions/transaction_detail_screen.dart';
@@ -175,7 +176,7 @@ class TransactionsDayRun {
 
   /// Opens a run at the last millisecond of [dayKey] (local time).
   factory TransactionsDayRun.endOf(String dayKey) {
-    final d = DateFormat('yyyy-MM-dd').parse(dayKey);
+    final d = DateTime.parse(dayKey);
     final end = DateTime(d.year, d.month, d.day + 1);
     return TransactionsDayRun(
       topDayKey: dayKey,
@@ -224,7 +225,7 @@ const int _kediPaginationLimit = 100;
 String _kediEndDateString() {
   final n = DateTime.now();
   final end = DateTime(n.year, n.month, n.day).add(const Duration(days: 7));
-  return DateFormat('yyyy-MM-dd').format(end);
+  return isoLocalDayKey(end);
 }
 
 int? _purchaseDateMs(String? s) {
@@ -234,30 +235,37 @@ int? _purchaseDateMs(String? s) {
 }
 
 bool _isPurchaseInstantInFuture(RcTransaction tx) {
-  final p = tx.purchaseDate?.trim();
-  if (p == null || p.isEmpty) return false;
-  final dt = DateTime.tryParse(p);
-  if (dt == null) return false;
-  return dt.toLocal().isAfter(DateTime.now());
+  final instant = tx.purchaseLocalInstant;
+  return instant != null && instant.isAfter(DateTime.now());
 }
 
+/// Scheduled rows that haven't happened yet, newest first, from the days that
+/// can hold them.
+///
+/// Purchase dates bucket rows into `yyyy-MM-dd` keys, so a future-dated row
+/// always sits in today's bucket or a later one: scanning the whole loaded
+/// feed (a hundred pages of history) for it on every rebuild is avoidable.
 List<RcTransaction> _collectFutureTransactions({
   required Map<String, List<RcTransaction>> groupedForList,
   required Set<TransactionDaySectionFilter> sectionFilters,
 }) {
+  final todayKey = localTodayDayKey();
   final out = <RcTransaction>[];
   final seen = <String>{};
-  for (final tx in groupedForList.values.expand((e) => e)) {
-    if (!_isPurchaseInstantInFuture(tx)) continue;
-    if (!transactionMatchesAnySectionFilters(tx, sectionFilters)) {
-      continue;
+  for (final entry in groupedForList.entries) {
+    if (entry.key.compareTo(todayKey) < 0) continue;
+    for (final tx in entry.value) {
+      if (!_isPurchaseInstantInFuture(tx)) continue;
+      if (!transactionMatchesAnySectionFilters(tx, sectionFilters)) {
+        continue;
+      }
+      final k = rcTransactionDedupKey(tx);
+      if (k != null) {
+        if (seen.contains(k)) continue;
+        seen.add(k);
+      }
+      out.add(tx);
     }
-    final k = rcTransactionDedupKey(tx);
-    if (k != null) {
-      if (seen.contains(k)) continue;
-      seen.add(k);
-    }
-    out.add(tx);
   }
   out.sort((a, b) {
     final ma = _purchaseDateMs(a.purchaseDate) ?? 0;
@@ -290,8 +298,7 @@ String _dayKeyFromPurchaseDate(String dateStr) {
   try {
     final dt = DateTime.tryParse(dateStr);
     if (dt != null) {
-      final local = dt.toLocal();
-      return DateFormat('yyyy-MM-dd').format(local);
+      return isoLocalDayKey(dt.toLocal());
     }
   } catch (_) {}
   return dateStr;
@@ -574,7 +581,14 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   /// Fetches the next page (older transactions). Returns false if the request
   /// did not complete successfully (caller may stop retry loops).
-  Future<bool> _performFetchMorePage({required String requestContext}) async {
+  ///
+  /// [advanceRealtimeStep] adds the page to the Revenue tab's preload progress
+  /// in the same state change as the rows, so a background page costs one
+  /// rebuild of the dashboard instead of two.
+  Future<bool> _performFetchMorePage({
+    required String requestContext,
+    bool advanceRealtimeStep = false,
+  }) async {
     if (state.isLoadingMore || !state.hasMore) return false;
     if (state.lastPurchaseMs == null) {
       state = state.copyWith(hasMore: false);
@@ -603,7 +617,6 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       );
       _mergeRawIntoGrouped(existingGrouped, raw);
 
-      final dailyTotals = _calculateDailyTotals(existingGrouped);
       final nextCursor = raw.isNotEmpty
           ? _nextCursorFromResponse(raw, response.lastPurchaseMs)
           : null;
@@ -611,11 +624,18 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
       state = state.copyWith(
         grouped: existingGrouped,
-        dailyTotals: dailyTotals,
+        dailyTotals: _dailyTotalsWithPage(
+          totals: state.dailyTotals,
+          grouped: existingGrouped,
+          page: raw,
+        ),
         isLoadingMore: false,
         hasMore: hasMorePages,
         firstPurchaseMs: state.firstPurchaseMs ?? response.firstPurchaseMs,
         lastPurchaseMs: hasMorePages ? nextCursor : null,
+        realtimeLoadStep: advanceRealtimeStep
+            ? state.realtimeLoadStep + 1
+            : null,
       );
       _ensureAppIcons(raw);
       return true;
@@ -693,6 +713,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
             : 'transactions:backfill_after_day_change';
         final ok = await _performFetchMorePage(
           requestContext: '$backfillKind page=${pages + 1}',
+          advanceRealtimeStep: true,
         );
         if (!ok) {
           // A scroll or day load took the page slot; wait for it and go on.
@@ -702,9 +723,6 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           break;
         }
         pages++;
-        if (gen == _backfillGeneration) {
-          state = state.copyWith(realtimeLoadStep: state.realtimeLoadStep + 1);
-        }
         if (onlyThroughCurrentMonth &&
             realtimeTabPreloadBoundaryReached(state.grouped)) {
           break;
@@ -745,6 +763,26 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       totals[entry.key] = netRevenueSum(entry.value, commission);
     }
     return totals;
+  }
+
+  /// [totals] with the days [page] touched re-summed from [grouped].
+  ///
+  /// A page only ever adds rows to a handful of days, while the feed can hold
+  /// a hundred pages of history: re-summing the whole feed for every page is
+  /// quadratic in the number of pages loaded.
+  Map<String, double> _dailyTotalsWithPage({
+    required Map<String, double> totals,
+    required Map<String, List<RcTransaction>> grouped,
+    required List<RcTransaction> page,
+  }) {
+    if (page.isEmpty) return totals;
+    final commission = _ref.read(commissionSettingsProvider);
+    final next = Map<String, double>.from(totals);
+    for (final dayKey in _groupByDateStatic(page).keys) {
+      final rows = grouped[dayKey];
+      next[dayKey] = rows == null ? 0 : netRevenueSum(rows, commission);
+    }
+    return next;
   }
 
   /// Push current state to native home screen widgets.
@@ -1033,10 +1071,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               formatAmount: _formatAmountForSemantics,
               onDaySelected: state.isLoading ? null : _goToDay,
             ),
-            onAsk: () => openAskTab(
-              ref,
-              context: AskPrefills.selectedDay(selectedKey),
-            ),
+            onAsk: () =>
+                openAskTab(ref, context: AskPrefills.selectedDay(selectedKey)),
           ).appCardEntrance(),
         ),
       ),
@@ -1196,10 +1232,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           formatAmount: _formatAmountForSemantics,
           onDaySelected: state.isLoading ? null : _goToDay,
         ),
-        onAsk: () => openAskTab(
-          ref,
-          context: AskPrefills.selectedDay(selectedKey),
-        ),
+        onAsk: () =>
+            openAskTab(ref, context: AskPrefills.selectedDay(selectedKey)),
       );
       final showBreakdown =
           dayLoaded && !filtersHideResults && allForDayForMetrics.isNotEmpty;
@@ -1363,7 +1397,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }) {
     final DateTime selected;
     try {
-      selected = DateFormat('yyyy-MM-dd').parse(selectedKey);
+      selected = DateTime.parse(selectedKey);
     } catch (_) {
       return const [];
     }
@@ -1375,7 +1409,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             selected.month,
             selected.day - i,
           );
-          final key = DateFormat('yyyy-MM-dd').format(date);
+          final key = isoLocalDayKey(date);
           return DayRevenueStripDay(
             dayKey: key,
             date: date,
@@ -1398,10 +1432,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Future<void> _pickDay(String selectedKey) async {
     final picked = await showJumpToDaySheet(
       context,
-      selectedDay: DateFormat('yyyy-MM-dd').parse(selectedKey),
+      selectedDay: DateTime.parse(selectedKey),
     );
     if (picked == null || !mounted) return;
-    _goToDay(DateFormat('yyyy-MM-dd').format(picked));
+    _goToDay(isoLocalDayKey(picked));
   }
 
   void _goToDay(String dayKey) {
@@ -1417,7 +1451,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       return 'transactions.yesterday'.tr();
     }
     try {
-      final date = DateFormat('yyyy-MM-dd').parse(dayKey);
+      final date = DateTime.parse(dayKey);
       final sameYear = date.year == DateTime.now().year;
       return (sameYear ? DateFormat.MMMEd() : DateFormat.yMMMd()).format(date);
     } catch (_) {
@@ -1427,7 +1461,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   String _daySubtitle(String dayKey) {
     try {
-      final date = DateFormat('yyyy-MM-dd').parse(dayKey);
+      final date = DateTime.parse(dayKey);
       return DateFormat.yMMMMEEEEd().format(date);
     } catch (_) {
       return dayKey;
@@ -1484,10 +1518,8 @@ void stepTransactionsDay(WidgetRef ref, int delta) {
 String? _previousCalendarDayKey(String dayKey) {
   if (!isIsoCalendarDayKey(dayKey)) return null;
   try {
-    final d = DateFormat('yyyy-MM-dd').parse(dayKey);
-    return DateFormat(
-      'yyyy-MM-dd',
-    ).format(DateTime(d.year, d.month, d.day - 1));
+    final d = DateTime.parse(dayKey);
+    return isoLocalDayKey(DateTime(d.year, d.month, d.day - 1));
   } catch (_) {
     return null;
   }
@@ -1496,10 +1528,8 @@ String? _previousCalendarDayKey(String dayKey) {
 String? _nextCalendarDayKey(String dayKey) {
   if (!isIsoCalendarDayKey(dayKey)) return null;
   try {
-    final d = DateFormat('yyyy-MM-dd').parse(dayKey);
-    return DateFormat(
-      'yyyy-MM-dd',
-    ).format(DateTime(d.year, d.month, d.day + 1));
+    final d = DateTime.parse(dayKey);
+    return isoLocalDayKey(DateTime(d.year, d.month, d.day + 1));
   } catch (_) {
     return null;
   }
@@ -1571,10 +1601,7 @@ class _DayHeroCard extends StatelessWidget {
                   ),
                 ),
               ),
-              AskContextChip(
-                label: 'agent.askAboutDay'.tr(),
-                onPressed: onAsk,
-              ),
+              AskContextChip(label: 'agent.askAboutDay'.tr(), onPressed: onAsk),
             ],
           ),
           const SizedBox(height: 4),
