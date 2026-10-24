@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/features/revenue/payout_detail_provider.dart';
+import 'package:openrc/features/revenue/payout_detail_screen.dart';
 import 'package:openrc/features/revenue/payout_history.dart';
 import 'package:openrc/features/revenue/payout_history_provider.dart';
 import 'package:openrc/features/revenue/payout_history_screen.dart';
 import 'package:openrc/features/revenue/widgets/revenue_next_payday_proceeds_card.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FixedHistory extends PayoutHistoryNotifier {
@@ -51,6 +54,14 @@ void main() {
             notifier = _FixedHistory(ref, state);
             return notifier;
           }),
+          payoutDetailTransactionsProvider.overrideWith((ref, period) {
+            return PayoutDetailNotifier.ready(
+              ref,
+              period,
+              const PayoutDetailState(loadComplete: true),
+            );
+          }),
+          usdExchangeRatesProvider.overrideWith((ref) async => const {}),
         ],
         child: MaterialApp(
           theme: ThemeData(splashFactory: InkRipple.splashFactory),
@@ -192,5 +203,24 @@ void main() {
     expect(total.left, greaterThan(1400 - 480));
     expect(total.width, greaterThan(100));
     expect(find.text('Tap a month to see what it paid'), findsOneWidget);
+  });
+
+  testWidgets('tapping a payout row opens its detail screen', (tester) async {
+    await pump(
+      tester,
+      PayoutHistoryState(amounts: _amounts(), hasLoaded: true),
+    );
+    final period = paidPayouts(PayoutStore.apple, DateTime.now()).last;
+    final row = find.byKey(ValueKey('payout-row-${period.id}'));
+    await tester.ensureVisible(row);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PayoutDetailScreen), findsOneWidget);
+    expect(find.text('App Store'), findsWidgets);
+    expect(
+      find.textContaining('differ from the saved payout figure'),
+      findsOneWidget,
+    );
   });
 }

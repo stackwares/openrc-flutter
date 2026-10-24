@@ -413,6 +413,14 @@
     "ZAR": "南非兰特",
     "ZMW": "赞比亚克瓦查"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "交易",
     "appIcon": "应用图标",

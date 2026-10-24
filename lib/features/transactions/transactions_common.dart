@@ -12,7 +12,8 @@ const int kRealtimeBackfillMaxPages = 100;
 const int kRealtimeLoadTarget = 1 + kRealtimeBackfillMaxPages;
 
 /// Month-to-date label above the Revenue tab MTD total (local calendar month).
-String get kRealtimeWindowSubtitle => 'transactions.realtimeWindowSubtitle'.tr();
+String get kRealtimeWindowSubtitle =>
+    'transactions.realtimeWindowSubtitle'.tr();
 
 final RegExp _isoCalendarDayKeyRe = RegExp(r'^\d{4}-\d{2}-\d{2}$');
 
@@ -34,6 +35,58 @@ String? rcTransactionDedupKey(RcTransaction tx) {
     return 'cmp:$sub|$prod|$pd';
   }
   return null;
+}
+
+/// Local calendar day of [tx.purchaseDate], or null when the date is missing.
+DateTime? localPurchaseCalendarDay(RcTransaction tx) {
+  final pd = tx.purchaseDate?.trim();
+  if (pd == null || pd.isEmpty) return null;
+  final parsed = DateTime.tryParse(pd);
+  if (parsed == null) return null;
+  final local = parsed.toLocal();
+  return DateTime(local.year, local.month, local.day);
+}
+
+/// True when [tx]'s local purchase day sits in [[start], [end]], inclusive.
+bool localPurchaseDayInInclusiveRange(
+  RcTransaction tx,
+  DateTime start,
+  DateTime end,
+) {
+  final day = localPurchaseCalendarDay(tx);
+  if (day == null) return false;
+  final s = DateTime(start.year, start.month, start.day);
+  final e = DateTime(end.year, end.month, end.day);
+  return !day.isBefore(s) && !day.isAfter(e);
+}
+
+/// Deduped rows whose local purchase day is in [[start], [end]], inclusive.
+List<RcTransaction> collectTransactionsInLocalInclusiveRange(
+  Iterable<RcTransaction> transactions, {
+  required DateTime start,
+  required DateTime end,
+}) {
+  final out = <RcTransaction>[];
+  final seen = <String>{};
+  for (final tx in transactions) {
+    final dedup = rcTransactionDedupKey(tx);
+    if (dedup != null && seen.contains(dedup)) continue;
+    if (!localPurchaseDayInInclusiveRange(tx, start, end)) continue;
+    if (dedup != null) seen.add(dedup);
+    out.add(tx);
+  }
+  return out;
+}
+
+/// Oldest local purchase day in [transactions], or null if none parse.
+DateTime? oldestLocalPurchaseCalendarDay(Iterable<RcTransaction> transactions) {
+  DateTime? oldest;
+  for (final tx in transactions) {
+    final day = localPurchaseCalendarDay(tx);
+    if (day == null) continue;
+    if (oldest == null || day.isBefore(oldest)) oldest = day;
+  }
+  return oldest;
 }
 
 /// Gross revenue: sum of [RcTransaction.revenue] (null → 0), before store commission.
@@ -202,11 +255,7 @@ bool transactionMatchesCountryFilters(
 ///
 /// There is no sandbox option: transactions are always requested with
 /// `sandbox_mode=false`, so a sandbox filter could never match.
-enum TransactionPlatformFilter {
-  apple,
-  google,
-  web,
-}
+enum TransactionPlatformFilter { apple, google, web }
 
 bool _transactionStoreLooksLikeWebBilling(RcTransaction tx) {
   final raw = tx.store?.trim();
@@ -254,12 +303,7 @@ bool transactionMatchesPlatformFilter(
 /// Single store bucket per transaction for day-summary **count** distribution.
 /// Sandbox rows are omitted from distribution ([platformCountsByDaySection] skips them).
 /// Web-style billing uses the same heuristic as [TransactionPlatformFilter.web].
-enum TransactionDaySummaryPlatform {
-  apple,
-  google,
-  web,
-  other,
-}
+enum TransactionDaySummaryPlatform { apple, google, web, other }
 
 TransactionDaySummaryPlatform transactionDaySummaryPlatform(RcTransaction tx) {
   switch (classifyStore(tx.storeForCommission)) {
@@ -324,15 +368,15 @@ void sortMutableTransactionList(
   switch (mode) {
     case TransactionListSortMode.purchaseNewestFirst:
       list.sort(
-        (a, b) => _transactionPurchaseDateMs(b).compareTo(
-          _transactionPurchaseDateMs(a),
-        ),
+        (a, b) => _transactionPurchaseDateMs(
+          b,
+        ).compareTo(_transactionPurchaseDateMs(a)),
       );
     case TransactionListSortMode.purchaseOldestFirst:
       list.sort(
-        (a, b) => _transactionPurchaseDateMs(a).compareTo(
-          _transactionPurchaseDateMs(b),
-        ),
+        (a, b) => _transactionPurchaseDateMs(
+          a,
+        ).compareTo(_transactionPurchaseDateMs(b)),
       );
     case TransactionListSortMode.revenueHighToLow:
       list.sort((a, b) {
@@ -340,9 +384,9 @@ void sortMutableTransactionList(
           a.tileDisplayRevenue ?? 0.0,
         );
         if (cmp != 0) return cmp;
-        return _transactionPurchaseDateMs(b).compareTo(
-          _transactionPurchaseDateMs(a),
-        );
+        return _transactionPurchaseDateMs(
+          b,
+        ).compareTo(_transactionPurchaseDateMs(a));
       });
     case TransactionListSortMode.revenueLowToHigh:
       list.sort((a, b) {
@@ -350,9 +394,9 @@ void sortMutableTransactionList(
           b.tileDisplayRevenue ?? 0.0,
         );
         if (cmp != 0) return cmp;
-        return _transactionPurchaseDateMs(b).compareTo(
-          _transactionPurchaseDateMs(a),
-        );
+        return _transactionPurchaseDateMs(
+          b,
+        ).compareTo(_transactionPurchaseDateMs(a));
       });
   }
 }
@@ -434,9 +478,9 @@ List<AppFilterOption> collectAppFilterOptionsWithProjects(
     byKey.putIfAbsent(opt.key, () => opt);
   }
 
-  final onScreenOrdered = collectAppFilterOptions(filterSource)
-      .map((o) => o.key)
-      .toList();
+  final onScreenOrdered = collectAppFilterOptions(
+    filterSource,
+  ).map((o) => o.key).toList();
   final seen = <String>{};
   final out = <AppFilterOption>[];
   for (final k in onScreenOrdered) {
@@ -449,8 +493,8 @@ List<AppFilterOption> collectAppFilterOptionsWithProjects(
   final restKeys = byKey.keys.where((k) => !seen.contains(k)).toList()
     ..sort(
       (a, b) => byKey[a]!.label.toLowerCase().compareTo(
-            byKey[b]!.label.toLowerCase(),
-          ),
+        byKey[b]!.label.toLowerCase(),
+      ),
     );
   for (final k in restKeys) {
     out.add(byKey[k]!);

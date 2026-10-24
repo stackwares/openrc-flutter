@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
 import 'package:openrc/features/revenue/payout_history.dart';
 import 'package:openrc/features/revenue/payout_history_provider.dart';
@@ -181,11 +182,11 @@ class _PayoutHistoryScreenState extends ConsumerState<PayoutHistoryScreen> {
                       ),
                       ButtonSegment(
                         value: _StoreFilter.apple,
-                        label: Text(PayoutStore.apple.label),
+                        label: Text(PayoutStore.apple.displayLabel),
                       ),
                       ButtonSegment(
                         value: _StoreFilter.google,
-                        label: Text(PayoutStore.google.label),
+                        label: Text(PayoutStore.google.displayLabel),
                       ),
                     ],
                     selected: {filter},
@@ -325,7 +326,7 @@ class _TotalCard extends StatelessWidget {
                   SplitSegment(
                     value: storeTotal(s).clamp(0.0, double.infinity),
                     color: _storeColor(context, s),
-                    label: s.label,
+                    label: s.displayLabel,
                   ),
               ],
             ),
@@ -366,7 +367,7 @@ class _StoreAmounts extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  store.label,
+                  store.displayLabel,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

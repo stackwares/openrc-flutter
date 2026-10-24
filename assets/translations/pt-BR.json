@@ -413,6 +413,14 @@
     "ZAR": "rand sul-africano",
     "ZMW": "cuacha zambiano"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "Transação",
     "appIcon": "Ícone do app",

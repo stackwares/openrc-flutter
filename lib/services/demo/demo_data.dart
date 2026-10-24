@@ -62,8 +62,15 @@ class DemoData {
     for (var back = 0; back < _historyDays; back++) {
       final day = DateTime(today.year, today.month, today.day - back);
       final rng = Random(7000 + back);
-      final weekdayLift = const [1.0, 1.04, 1.02, 0.98, 1.0, 0.92, 0.88][
-          day.weekday - 1];
+      final weekdayLift = const [
+        1.0,
+        1.04,
+        1.02,
+        0.98,
+        1.0,
+        0.92,
+        0.88,
+      ][day.weekday - 1];
       final trend = 1 - 0.18 * (back / _historyDays);
       final count = back == 0
           ? 232
@@ -79,10 +86,7 @@ class DemoData {
         _dayCount[back] = (_dayCount[back] ?? 0) + 1;
       }
     }
-    transactions.sort(
-      (a, b) =>
-          (b['_ms'] as int).compareTo(a['_ms'] as int),
-    );
+    transactions.sort((a, b) => (b['_ms'] as int).compareTo(a['_ms'] as int));
     _purchaseTimes.addAll(
       transactions.map(
         (t) => DateTime.fromMillisecondsSinceEpoch(t['_ms'] as int),
@@ -172,12 +176,21 @@ class DemoData {
   }
 
   /// One page of transactions, newest first, strictly older than
-  /// [startFromMs] when given.
-  Map<String, dynamic> transactionsPage({int limit = 20, int? startFromMs}) {
+  /// [startFromMs] when given. [startDate] / [endDate] (`yyyy-MM-dd`) keep
+  /// rows whose local purchase day sits in that inclusive range.
+  Map<String, dynamic> transactionsPage({
+    int limit = 20,
+    int? startFromMs,
+    String? startDate,
+    String? endDate,
+  }) {
+    final startDay = _parseYmd(startDate);
+    final endDay = _parseYmd(endDate);
     final page = <Map<String, dynamic>>[];
     for (final t in transactions) {
       final ms = t['_ms'] as int;
       if (startFromMs != null && ms >= startFromMs) continue;
+      if (!_msOnLocalDayInRange(ms, startDay, endDay)) continue;
       page.add(t);
       if (page.length >= limit) break;
     }
@@ -193,6 +206,22 @@ class DemoData {
           },
       ],
     };
+  }
+
+  static DateTime? _parseYmd(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return null;
+    return DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  static bool _msOnLocalDayInRange(int ms, DateTime? start, DateTime? end) {
+    if (start == null && end == null) return true;
+    final at = DateTime.fromMillisecondsSinceEpoch(ms);
+    final day = DateTime(at.year, at.month, at.day);
+    if (start != null && day.isBefore(start)) return false;
+    if (end != null && day.isAfter(end)) return false;
+    return true;
   }
 
   // Charts ------------------------------------------------------------------
@@ -212,8 +241,7 @@ class DemoData {
         (0.94 + rng.nextDouble() * 0.12);
   }
 
-  int countOn(int back) =>
-      _dayCount[back] ?? (revenueOn(back) / 35).round();
+  int countOn(int back) => _dayCount[back] ?? (revenueOn(back) / 35).round();
 
   /// Daily points for a `charts_v2/<name>` series between [start] and [end].
   Map<String, dynamic> chart(
@@ -228,8 +256,8 @@ class DemoData {
     var revenueTotal = 0.0;
     var countTotal = 0;
     void add(DateTime day, int measure, double value) => values.add({
-      'cohort': DateTime.utc(day.year, day.month, day.day)
-              .millisecondsSinceEpoch ~/
+      'cohort':
+          DateTime.utc(day.year, day.month, day.day).millisecondsSinceEpoch ~/
           1000,
       'measure': measure,
       'value': value,
@@ -253,7 +281,11 @@ class DemoData {
         case 'actives':
           add(day, 0, 612400 * g * wobble);
         case 'trials':
-          add(day, 0, 1942 * (0.62 + 0.38 * g) * (0.995 + rng.nextDouble() * 0.01));
+          add(
+            day,
+            0,
+            1942 * (0.62 + 0.38 * g) * (0.995 + rng.nextDouble() * 0.01),
+          );
         case 'customers_new':
           add(day, 0, 9115 / 28 * g * (0.9 + rng.nextDouble() * 0.2));
         case 'churn':

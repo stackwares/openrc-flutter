@@ -24,10 +24,14 @@ class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
   final List<RcTransaction> windowTransactions;
   final TransactionDaySectionFilter filter;
 
+  /// Shown under the category heading. Defaults to this month so far.
+  final String? windowSubtitle;
+
   const RealtimeSectionTransactionsScreen({
     super.key,
     required this.windowTransactions,
     required this.filter,
+    this.windowSubtitle,
   });
 
   @override
@@ -132,7 +136,7 @@ class _RealtimeSectionTransactionsScreenState
           children: [
             Text(heading),
             Text(
-              'revenue.thisMonthSoFar'.tr(),
+              widget.windowSubtitle ?? 'revenue.thisMonthSoFar'.tr(),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,

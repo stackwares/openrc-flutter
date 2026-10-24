@@ -48,22 +48,6 @@ bool realtimeTabPreloadBoundaryReached(
   return true;
 }
 
-bool _localPurchaseDayInInclusiveRange(
-  RcTransaction tx,
-  DateTime rangeStart,
-  DateTime rangeEnd,
-) {
-  final pd = tx.purchaseDate?.trim();
-  if (pd == null || pd.isEmpty) return false;
-  final parsed = DateTime.tryParse(pd);
-  if (parsed == null) return false;
-  final local = parsed.toLocal();
-  final day = DateTime(local.year, local.month, local.day);
-  final s = DateTime(rangeStart.year, rangeStart.month, rangeStart.day);
-  final e = DateTime(rangeEnd.year, rangeEnd.month, rangeEnd.day);
-  return !day.isBefore(s) && !day.isAfter(e);
-}
-
 NextPaydayProceedsEstimate computeNextPaydayProceedsEstimate(
   Iterable<RcTransaction> transactions,
   CommissionSettings commission,
@@ -87,13 +71,17 @@ NextPaydayProceedsEstimate computeNextPaydayProceedsEstimate(
     switch (classifyStore(tx.storeForCommission)) {
       case StoreCommissionPlatform.apple:
         if (apple != null &&
-            _localPurchaseDayInInclusiveRange(tx, apple.startDate, apple.endDate)) {
+            localPurchaseDayInInclusiveRange(
+              tx,
+              apple.startDate,
+              apple.endDate,
+            )) {
           appleSum += net;
         }
         break;
       case StoreCommissionPlatform.google:
         if (google != null &&
-            _localPurchaseDayInInclusiveRange(
+            localPurchaseDayInInclusiveRange(
               tx,
               google.earningsStart,
               google.earningsEnd,

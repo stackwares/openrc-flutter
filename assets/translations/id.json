@@ -413,6 +413,14 @@
     "ZAR": "rand Afrika Selatan",
     "ZMW": "kwacha Zambia"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "Transaksi",
     "appIcon": "Ikon aplikasi",

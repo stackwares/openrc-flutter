@@ -413,6 +413,14 @@
     "ZAR": "южноафриканский рэнд",
     "ZMW": "замбийская квача"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "Транзакция",
     "appIcon": "Иконка приложения",

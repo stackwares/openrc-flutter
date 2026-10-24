@@ -38,6 +38,8 @@ class DemoAdapter implements HttpClientAdapter {
       body = data.transactionsPage(
         limit: int.tryParse('${query['limit']}') ?? 20,
         startFromMs: int.tryParse('${query['start_from']}'),
+        startDate: _queryString(query['start_date']),
+        endDate: _queryString(query['end_date']),
       );
     } else if (path.endsWith('/charts_v2/overview')) {
       body = data.overview();
@@ -90,4 +92,11 @@ class DemoAdapter implements HttpClientAdapter {
 
   @override
   void close({bool force = false}) {}
+}
+
+String? _queryString(Object? value) {
+  if (value == null) return null;
+  final text = '$value';
+  if (text.isEmpty || text == 'null') return null;
+  return text;
 }

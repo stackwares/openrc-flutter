@@ -3,12 +3,10 @@ import 'package:openrc/models/rc_chart_response.dart';
 
 /// A store that pays developers on its own schedule.
 enum PayoutStore {
-  apple('App Store', ['app_store', 'mac_app_store']),
-  google('Google Play', ['play_store']);
+  apple(['app_store', 'mac_app_store']),
+  google(['play_store']);
 
-  const PayoutStore(this.label, this.chartStores);
-
-  final String label;
+  const PayoutStore(this.chartStores);
 
   /// RevenueCat `store` chart filter values whose proceeds this store pays.
   final List<String> chartStores;

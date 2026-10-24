@@ -413,6 +413,14 @@
     "ZAR": "南アフリカ・ランド",
     "ZMW": "ザンビア・クワチャ"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "取引",
     "appIcon": "アプリアイコン",

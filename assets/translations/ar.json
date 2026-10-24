@@ -413,6 +413,14 @@
     "ZAR": "راند جنوب أفريقي",
     "ZMW": "كواشا زامبية"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "معاملة",
     "appIcon": "أيقونة التطبيق",

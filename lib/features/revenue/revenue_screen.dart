@@ -9,6 +9,7 @@ import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/revenue/revenue_section_screen.dart';
 import 'package:openrc/features/revenue/widgets/revenue_next_payday_proceeds_card.dart';
 import 'package:openrc/features/revenue/widgets/revenue_insights_list.dart';
+import 'package:openrc/features/revenue/widgets/revenue_period_hero_card.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
 import 'package:openrc/features/transactions/widgets/active_filters_row.dart';
@@ -23,7 +24,6 @@ import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/services/transaction_list_sort_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
-import 'package:openrc/widgets/animated_number.dart';
 import 'package:openrc/widgets/animated_reveal.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/shell_header.dart';
@@ -185,7 +185,8 @@ class _RealtimeTransactionsScreenState
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: _MonthHeroCard(
+              child: RevenuePeriodHeroCard(
+                title: 'revenue.thisMonthSoFar'.tr(),
                 netTotal: netTotal,
                 grossTotal: grossTotal,
                 showGross: commission.adjustmentEnabled,
@@ -263,7 +264,8 @@ class _RealtimeTransactionsScreenState
                     monthTransactions: txs,
                     allMonthTransactions: windowTxsRaw,
                     allLoadedTransactions: allLoadedTxs,
-                    hero: _MonthHeroCard(
+                    hero: RevenuePeriodHeroCard(
+                      title: 'revenue.thisMonthSoFar'.tr(),
                       netTotal: netTotal,
                       grossTotal: grossTotal,
                       showGross: commission.adjustmentEnabled,
@@ -447,74 +449,6 @@ class _RealtimeTransactionsScreenState
         ),
         SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
       ],
-    );
-  }
-}
-
-/// Month-to-date net total, gross before fees, and backfill progress.
-class _MonthHeroCard extends StatelessWidget {
-  const _MonthHeroCard({
-    required this.netTotal,
-    required this.grossTotal,
-    required this.showGross,
-    required this.loadComplete,
-  });
-
-  final double netTotal;
-  final double grossTotal;
-  final bool showGross;
-  final bool loadComplete;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final muted = context.textTheme.bodySmall?.copyWith(
-      color: scheme.onSurfaceVariant,
-      fontWeight: FontWeight.w500,
-      fontFeatures: AppText.tabular,
-    );
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'revenue.thisMonthSoFar'.tr(),
-            style: context.textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedExactAmount(
-            amount: netTotal,
-            countFromZero: true,
-            style: AppText.amount(context, size: 34),
-          ),
-          if (showGross) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Text('revenue.beforeStoreFees'.tr(), style: muted),
-                AnimatedExactAmount(
-                  amount: grossTotal,
-                  applyCommissionAdjustment: false,
-                  style: muted,
-                ),
-              ],
-            ),
-          ],
-          if (!loadComplete) ...[
-            const SizedBox(height: 14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: const LinearProgressIndicator(minHeight: 3),
-            ),
-            const SizedBox(height: 6),
-            Text('revenue.loadingOlder'.tr(), style: muted),
-          ],
-        ],
-      ),
     );
   }
 }

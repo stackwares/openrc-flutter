@@ -413,6 +413,14 @@
     "ZAR": "दक्षिण अफ़्रीकी रैंड",
     "ZMW": "ज़ाम्बियाई क्वाचा"
   },
+  "storeNames": {
+    "appStore": "App Store",
+    "googlePlay": "Google Play",
+    "stripe": "Stripe",
+    "appleCompany": "Apple",
+    "googleCompany": "Google"
+  },
+
   "detail": {
     "transaction": "लेनदेन",
     "appIcon": "ऐप आइकन",
