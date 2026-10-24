@@ -1,15 +1,33 @@
-OpenRC is an open-source dashboard for RevenueCat. It answers the question you ask ten times a day: how are sales going?
+OpenRC is the mobile RevenueCat dashboard for app developers who want subscription and in-app purchase metrics in their pocket—not only at a desk.
 
-Sign in with your RevenueCat account and OpenRC works out the answers on your device.
+Sign in with your RevenueCat account. OpenRC loads your data on device and helps you answer the question you ask all day: how are sales going?
 
-• Every sale, as it happens: today's transactions with app icons, products, countries and stores, a running total against yesterday, and a seven-day strip to step back through the week.
-• What each sale is: new subscriptions, renewals, trials, conversions, refunds and cancellations, counted and filterable.
-• Revenue you'll actually receive: optionally net of store fees, with your own fee rates, in any of 100 display currencies.
-• When you'll get paid: upcoming App Store and Google Play payouts.
-• Where the money comes from: breakdowns by store, new vs. renewals, top apps and top countries.
-• The charts that matter: MRR, ARR, revenue, subscriptions, trials, users, churn and more, over any date range.
-• At a glance: home screen widgets.
+WHY OPENRC
+• Built for quick checks between meetings, launches, and ad runs
+• Free and open source (MIT): https://github.com/stackwares/openrc-flutter
+• Not affiliated with RevenueCat, Inc.
 
-Private by design: your password goes straight to RevenueCat and is never seen or stored by OpenRC. No OpenRC server holds your data. Crash reports and usage stats are anonymous and can be turned off in Settings.
+LIVE SALES & TRANSACTIONS
+• Today’s transactions with app icons, products, countries, and stores
+• Running total vs. yesterday plus a 7-day strip to scan the week
+• Filter new subscriptions, renewals, trials, conversions, refunds, and cancellations
 
-OpenRC is free, open source (MIT) and not affiliated with RevenueCat, Inc.
+REVENUE & PAYOUTS
+• Revenue and proceeds, optionally net of App Store and Google Play fees
+• Your fee rates and 100+ display currencies
+• Upcoming payout dates on Apple’s fiscal calendar and Google Play schedules
+
+ANALYTICS & CHARTS
+• MRR, ARR, revenue, subscriptions, trials, active users, and churn
+• Pick any date range; compare stores, apps, and countries
+• Top apps and top countries for the day or month to date
+
+WIDGETS & PRIVACY
+• Home screen widgets for at-a-glance metrics on Android
+• Your password goes directly to RevenueCat; OpenRC does not store it
+• No OpenRC backend on native Android—requests go to RevenueCat
+• Optional anonymous crash and usage analytics; disable anytime in Settings
+
+OpenRC is free. Use it alongside the official RevenueCat web dashboard whenever you need depth—use OpenRC when you need speed.
+
+Source code: https://github.com/stackwares/openrc-flutter
