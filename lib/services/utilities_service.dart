@@ -21,12 +21,7 @@ final colorSchemeProvider = StateProvider<FlexScheme>(
   (ref) => _defaultColorScheme,
 );
 
-ThemeMode _defaultThemeMode() {
-  if (defaultTargetPlatform == TargetPlatform.macOS) {
-    return ThemeMode.system;
-  }
-  return ThemeMode.dark;
-}
+ThemeMode _defaultThemeMode() => ThemeMode.system;
 
 final FlexScheme _defaultColorScheme = _resolveDefaultColorScheme();
 
