@@ -515,7 +515,72 @@
     "days": {
       "one": "{} 日",
       "other": "{} 日"
-    }
+    },
+    "title": "商品名",
+    "intro": "ストアの商品に分かりやすい名前を付けられます。名前はこの端末に保存され、アプリ全体に表示されます。金額や件数は変わりません。",
+    "search": "商品を検索",
+    "emptyTitle": "商品が読み込まれていません",
+    "emptyBody": "先に取引リストを開いてください。名前は読み込み済みの売上から作成されます。",
+    "sales": {
+      "one": "{} 件の販売",
+      "other": "{} 件の販売"
+    },
+    "count": {
+      "one": "{} 商品",
+      "other": "{} 商品"
+    },
+    "suggestionsReady": {
+      "one": "{} 件の候補",
+      "other": "{} 件の候補"
+    },
+    "applied": {
+      "one": "{} 商品に名前を付けました",
+      "other": "{} 商品に名前を付けました"
+    },
+    "undo": "元に戻す",
+    "dismiss": "閉じる",
+    "applyAll": "すべて適用",
+    "accept": "この名前を使う",
+    "aiTitle": "名前を提案",
+    "suggestAi": "AI で提案",
+    "useParser": "組み込みの名前",
+    "aiPrivacyBody": "送信するのは商品 ID のみ。収益や顧客データは含みません。",
+    "parserNote": "商品 ID から期間を名前にします。",
+    "aiNoKeyBody": "AI で名前を提案するにはモデルを接続してください。組み込みの名前も使えます。",
+    "aiConsentBody": "このアプリでは AI がオフです。設定のプライバシーで AI データ利用を許可するか、組み込みの名前をお使いください。",
+    "aiProgress": "{total} 件中 {done} 件を命名中...",
+    "stop": "停止",
+    "aiNothing": "提案できる名前がありません。",
+    "allNamed": "読み込み済みの商品にはすべて名前があります。",
+    "editTitle": "商品名",
+    "nameLabel": "名前",
+    "nameHint": "例: Pro",
+    "planLabel": "プラングループ",
+    "planNone": "プランなし",
+    "planNew": "新しいプラン...",
+    "planNameHint": "例: Pro",
+    "save": "保存",
+    "reset": "リセット",
+    "cancel": "キャンセル",
+    "renamePlanTitle": "プラン名を変更",
+    "deletePlan": "プランを削除",
+    "clear": "消去",
+    "clearTitle": "{app} の名前を消去しますか？",
+    "clearBody": "この端末でこのアプリのすべての名前とプランを削除します。",
+    "suggestTitle": "名前を提案",
+    "suggestSubtitle": {
+      "one": "名前のない商品が {} 件",
+      "other": "名前のない商品が {} 件"
+    },
+    "connectModel": "モデルを接続",
+    "offlineBadge": "オフライン",
+    "nameYearly": "年額",
+    "nameMonthly": "月額",
+    "nameWeekly": "週額",
+    "nameLifetime": "買い切り",
+    "nameOneYear": "1 年",
+    "nameOneMonth": "1 か月",
+    "nameOneWeek": "1 週間"
   },
   "revenue": {
     "title": "売上",
@@ -626,6 +691,8 @@
     "searchCurrencies": "通貨を検索",
     "noCurrencies": "検索に一致する通貨はありません。",
     "subtractFees": "ストア手数料を差し引く",
+    "productNames": "商品名",
+    "productNamesHint": "ストア商品に自分の言葉で名前を付ける",
     "feesAfter": "売上は、ストア手数料を差し引いた後の金額で表示されます",
     "feesBefore": "売上は、App Store と Google Play の手数料を差し引く前の金額で表示されます",
     "appStoreFee": "App Store の手数料",
@@ -700,7 +767,7 @@
       "settings": "設定…",
       "previousDay": "前の日",
       "nextDay": "次の日",
-      "askAboutDay": "選択した日について質問",
+      "askAboutDay": "質問",
       "refresh": "更新",
       "onGitHub": "GitHub の {app}",
       "reportIssue": "問題を報告"
@@ -942,10 +1009,10 @@
     "latest": "最新へ移動",
     "retry": "再試行",
     "editKey": "キーを編集",
-    "askAbout": "これについて質問",
-    "askAboutDay": "この日について質問",
-    "askAboutRange": "この期間について質問",
-    "askAboutPayout": "この入金について質問",
+    "askAbout": "質問",
+    "askAboutDay": "質問",
+    "askAboutRange": "質問",
+    "askAboutPayout": "質問",
     "chartSummary": "{metric}、{count} ポイント、最終値 {last}",
     "followUp": {
       "showTable": "表で表示",

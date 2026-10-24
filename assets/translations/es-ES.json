@@ -516,7 +516,72 @@
     "days": {
       "one": "{} día",
       "other": "{} días"
-    }
+    },
+    "title": "Nombres de productos",
+    "intro": "Pon a los productos de la tienda nombres que reconozcas. Los nombres se quedan en este dispositivo y aparecen en toda la app. Los importes y recuentos nunca cambian.",
+    "search": "Buscar productos",
+    "emptyTitle": "No hay productos cargados",
+    "emptyBody": "Abre primero la lista de transacciones: los nombres salen de las ventas ya cargadas.",
+    "sales": {
+      "one": "{} venta",
+      "other": "{} ventas"
+    },
+    "count": {
+      "one": "{} producto",
+      "other": "{} productos"
+    },
+    "suggestionsReady": {
+      "one": "{} sugerencia lista",
+      "other": "{} sugerencias listas"
+    },
+    "applied": {
+      "one": "{} producto nombrado",
+      "other": "{} productos nombrados"
+    },
+    "undo": "Deshacer",
+    "dismiss": "Descartar",
+    "applyAll": "Aplicar todo",
+    "accept": "Usar este nombre",
+    "aiTitle": "Sugerir nombres",
+    "suggestAi": "Sugerir con IA",
+    "useParser": "Nombres integrados",
+    "aiPrivacyBody": "Solo se envían ID de producto. Sin ingresos ni datos de clientes.",
+    "parserNote": "Etiqueta el período según el ID del producto.",
+    "aiNoKeyBody": "Conecta un modelo para sugerir nombres con IA o usa los nombres integrados.",
+    "aiConsentBody": "La IA está desactivada para esta app. Permite el uso de datos de IA en Ajustes, Privacidad, o usa los nombres integrados.",
+    "aiProgress": "Nombrando {done} de {total}...",
+    "stop": "Detener",
+    "aiNothing": "No hay nombres que sugerir.",
+    "allNamed": "Todos los productos cargados ya tienen nombre.",
+    "editTitle": "Nombre del producto",
+    "nameLabel": "Nombre",
+    "nameHint": "p. ej. Pro",
+    "planLabel": "Grupo de plan",
+    "planNone": "Sin plan",
+    "planNew": "Plan nuevo...",
+    "planNameHint": "p. ej. Pro",
+    "save": "Guardar",
+    "reset": "Restablecer",
+    "cancel": "Cancelar",
+    "renamePlanTitle": "Renombrar plan",
+    "deletePlan": "Eliminar plan",
+    "clear": "Borrar",
+    "clearTitle": "¿Borrar los nombres de {app}?",
+    "clearBody": "Elimina cada nombre y plan de esta app en este dispositivo.",
+    "suggestTitle": "Sugerir nombres",
+    "suggestSubtitle": {
+      "one": "{} producto aún no tiene nombre",
+      "other": "{} productos aún no tienen nombre"
+    },
+    "connectModel": "Conectar un modelo",
+    "offlineBadge": "Sin conexión",
+    "nameYearly": "Anual",
+    "nameMonthly": "Mensual",
+    "nameWeekly": "Semanal",
+    "nameLifetime": "De por vida",
+    "nameOneYear": "1 año",
+    "nameOneMonth": "1 mes",
+    "nameOneWeek": "1 semana"
   },
   "revenue": {
     "title": "Ingresos",
@@ -631,6 +696,8 @@
     "searchCurrencies": "Buscar monedas",
     "noCurrencies": "Ninguna moneda coincide con esa búsqueda.",
     "subtractFees": "Restar comisiones de la tienda",
+    "productNames": "Nombres de productos",
+    "productNamesHint": "Nombra los productos de la tienda a tu manera",
     "feesAfter": "Los ingresos se muestran después de tus comisiones de la tienda",
     "feesBefore": "Los ingresos se muestran antes de las comisiones de App Store y Google Play",
     "appStoreFee": "Comisión de App Store",
@@ -706,7 +773,7 @@
       "settings": "Ajustes…",
       "previousDay": "Día anterior",
       "nextDay": "Día siguiente",
-      "askAboutDay": "Preguntar por el día seleccionado",
+      "askAboutDay": "Preguntar",
       "refresh": "Actualizar",
       "onGitHub": "{app} en GitHub",
       "reportIssue": "Informar de un problema"
@@ -957,10 +1024,10 @@
     "latest": "Ir a lo más reciente",
     "retry": "Reintentar",
     "editKey": "Editar clave",
-    "askAbout": "Preguntar por esto",
-    "askAboutDay": "Preguntar por este día",
-    "askAboutRange": "Preguntar por este periodo",
-    "askAboutPayout": "Preguntar por este pago",
+    "askAbout": "Preguntar",
+    "askAboutDay": "Preguntar",
+    "askAboutRange": "Preguntar",
+    "askAboutPayout": "Preguntar",
     "chartSummary": "{metric}, {count} puntos, último valor {last}",
     "followUp": {
       "showTable": "Ver como tabla",

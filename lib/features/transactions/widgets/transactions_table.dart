@@ -14,6 +14,7 @@ import 'package:openrc/features/transactions/widgets/transaction_type_badge.dart
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/models/transaction_list_sort_mode.dart';
 import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/services/transaction_list_sort_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/dual_currency_text.dart';
@@ -249,6 +250,7 @@ class _TransactionRow extends ConsumerWidget {
       fontWeight: FontWeight.w500,
     );
     final muted = body?.copyWith(color: scheme.onSurfaceVariant);
+    final labels = ref.watch(productLabelsProvider);
 
     Widget text(String value, {TextStyle? style, String? tooltip}) {
       final t = Text(
@@ -322,12 +324,13 @@ class _TransactionRow extends ConsumerWidget {
               size: 16,
               color: storeBrandIconTint(store) ?? scheme.onSurfaceVariant,
             ),
-            text(
-              store == null ? '—' : revenueCatStoreDisplayName(store),
-            ),
+            text(store == null ? '—' : revenueCatStoreDisplayName(store)),
           );
         case _Column.product:
-          return text(planDescription(tx), tooltip: tx.productIdentifier);
+          return text(
+            planDescription(tx, labels: labels),
+            tooltip: tx.productIdentifier,
+          );
         case _Column.purchased:
           final date = DateTime.tryParse(tx.purchaseDate ?? '')?.toLocal();
           return text(

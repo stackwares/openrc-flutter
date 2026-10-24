@@ -8,6 +8,7 @@ import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/auto_app_icons_store.dart';
 import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/app_card.dart';
@@ -108,7 +109,10 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
 
     // Trials earn nothing: counting them is the only breakdown they have.
     if (isTrialsOnly(transactions)) {
-      final trials = computeTrialInsights(transactions);
+      final trials = computeTrialInsights(
+        transactions,
+        labels: ref.watch(productLabelsProvider),
+      );
       final title = 'revenue.trialsBreakdown'.tr();
       if (asModalEntry) {
         return _CollapsedTrialsCard(

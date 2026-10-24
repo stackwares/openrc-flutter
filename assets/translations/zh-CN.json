@@ -515,7 +515,72 @@
     "days": {
       "one": "{} 天",
       "other": "{} 天"
-    }
+    },
+    "title": "产品名称",
+    "intro": "为商店产品起一个你熟悉的名字。名称保存在此设备上，并显示在应用的各个位置。金额和数量不会改变。",
+    "search": "搜索产品",
+    "emptyTitle": "尚未加载产品",
+    "emptyBody": "请先打开交易列表：名称来自已加载的销售记录。",
+    "sales": {
+      "one": "{} 笔销售",
+      "other": "{} 笔销售"
+    },
+    "count": {
+      "one": "{} 个产品",
+      "other": "{} 个产品"
+    },
+    "suggestionsReady": {
+      "one": "{} 个建议已就绪",
+      "other": "{} 个建议已就绪"
+    },
+    "applied": {
+      "one": "已命名 {} 个产品",
+      "other": "已命名 {} 个产品"
+    },
+    "undo": "撤销",
+    "dismiss": "忽略",
+    "applyAll": "全部应用",
+    "accept": "使用此名称",
+    "aiTitle": "建议名称",
+    "suggestAi": "用 AI 建议",
+    "useParser": "内置名称",
+    "aiPrivacyBody": "仅发送产品 ID，不含收入或客户数据。",
+    "parserNote": "根据产品 ID 标注周期。",
+    "aiNoKeyBody": "连接模型以使用 AI 建议名称，或使用内置名称。",
+    "aiConsentBody": "此应用已关闭 AI。请在“设置 - 隐私”中允许 AI 数据使用，或使用内置名称。",
+    "aiProgress": "正在命名第 {done} 个，共 {total} 个...",
+    "stop": "停止",
+    "aiNothing": "没有可建议的名称。",
+    "allNamed": "已加载的产品都已有名称。",
+    "editTitle": "产品名称",
+    "nameLabel": "名称",
+    "nameHint": "例如 Pro",
+    "planLabel": "套餐分组",
+    "planNone": "无套餐",
+    "planNew": "新套餐...",
+    "planNameHint": "例如 Pro",
+    "save": "保存",
+    "reset": "重置",
+    "cancel": "取消",
+    "renamePlanTitle": "重命名套餐",
+    "deletePlan": "删除套餐",
+    "clear": "清除",
+    "clearTitle": "清除 {app} 的名称？",
+    "clearBody": "将删除此设备上该应用的所有名称和套餐。",
+    "suggestTitle": "建议名称",
+    "suggestSubtitle": {
+      "one": "{} 个产品还没有名称",
+      "other": "{} 个产品还没有名称"
+    },
+    "connectModel": "连接模型",
+    "offlineBadge": "离线",
+    "nameYearly": "每年",
+    "nameMonthly": "每月",
+    "nameWeekly": "每周",
+    "nameLifetime": "一次性",
+    "nameOneYear": "1 年",
+    "nameOneMonth": "1 个月",
+    "nameOneWeek": "1 周"
   },
   "revenue": {
     "title": "收入",
@@ -626,6 +691,8 @@
     "searchCurrencies": "搜索货币",
     "noCurrencies": "没有符合搜索的货币。",
     "subtractFees": "扣除商店手续费",
+    "productNames": "产品名称",
+    "productNamesHint": "用自己的话命名商店产品",
     "feesAfter": "收入将显示为扣除商店手续费后的金额",
     "feesBefore": "收入将显示为未扣除 App Store 和 Google Play 手续费前的金额",
     "appStoreFee": "App Store 手续费",
@@ -700,7 +767,7 @@
       "settings": "设置…",
       "previousDay": "前一天",
       "nextDay": "后一天",
-      "askAboutDay": "询问所选日期",
+      "askAboutDay": "询问",
       "refresh": "刷新",
       "onGitHub": "GitHub 上的 {app}",
       "reportIssue": "报告问题"
@@ -942,10 +1009,10 @@
     "latest": "跳到最新",
     "retry": "重试",
     "editKey": "编辑密钥",
-    "askAbout": "询问此项",
-    "askAboutDay": "询问这一天",
-    "askAboutRange": "询问此区间",
-    "askAboutPayout": "询问这笔付款",
+    "askAbout": "询问",
+    "askAboutDay": "询问",
+    "askAboutRange": "询问",
+    "askAboutPayout": "询问",
     "chartSummary": "{metric}，{count} 个点，最后值为 {last}",
     "followUp": {
       "showTable": "以表格显示",

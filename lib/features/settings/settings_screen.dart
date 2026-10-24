@@ -11,6 +11,7 @@ import 'package:openrc/core/utils/currency_format.dart';
 import 'package:openrc/features/notifications/widgets/notifications_settings_row.dart';
 import 'package:openrc/features/onboarding/onboarding_screen.dart';
 import 'package:openrc/features/onboarding/onboarding_steps.dart';
+import 'package:openrc/features/settings/product_names_screen.dart';
 import 'package:openrc/features/settings/widgets/accent_scheme_sheet.dart';
 import 'package:openrc/features/settings/widgets/agent_settings_section.dart';
 import 'package:openrc/features/settings/widgets/account_header.dart';
@@ -21,6 +22,7 @@ import 'package:openrc/features/settings/widgets/settings_rows.dart';
 import 'package:openrc/features/settings/widgets/store_fee_sheet.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/onboarding_prefs_store.dart';
+import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/services/display_currency_store.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_auth_service.dart';
@@ -392,6 +394,25 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
+                ),
+                const Divider(indent: kSettingsDividerIndent),
+                SettingsRow(
+                  icon: Icons.sell_outlined,
+                  title: 'settings.productNames'.tr(),
+                  subtitle: 'settings.productNamesHint'.tr(),
+                  trailing: Text(
+                    switch (ref.watch(productLabelsProvider).namedCount) {
+                      0 => '—',
+                      final count => '$count',
+                    },
+                    style: tt.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontFeatures: AppText.tabular,
+                    ),
+                  ),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).push<void>(ProductNamesScreen.route()),
                 ),
               ],
             ),

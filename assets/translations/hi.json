@@ -516,7 +516,72 @@
     "days": {
       "one": "{} दिन",
       "other": "{} दिन"
-    }
+    },
+    "title": "उत्पाद नाम",
+    "intro": "स्टोर उत्पादों को ऐसे नाम दें जिन्हें आप पहचानते हैं। नाम इस डिवाइस पर रहते हैं और पूरे ऐप में दिखते हैं। राशि और गिनती कभी नहीं बदलती।",
+    "search": "उत्पाद खोजें",
+    "emptyTitle": "कोई उत्पाद लोड नहीं हुआ",
+    "emptyBody": "पहले लेन-देन सूची खोलें: नाम पहले से लोड हुई बिक्री से बनते हैं।",
+    "sales": {
+      "one": "{} बिक्री",
+      "other": "{} बिक्रियाँ"
+    },
+    "count": {
+      "one": "{} उत्पाद",
+      "other": "{} उत्पाद"
+    },
+    "suggestionsReady": {
+      "one": "{} सुझाव तैयार",
+      "other": "{} सुझाव तैयार"
+    },
+    "applied": {
+      "one": "{} उत्पाद का नाम रखा गया",
+      "other": "{} उत्पादों के नाम रखे गए"
+    },
+    "undo": "पूर्ववत करें",
+    "dismiss": "खारिज करें",
+    "applyAll": "सभी लागू करें",
+    "accept": "यह नाम इस्तेमाल करें",
+    "aiTitle": "नाम सुझाएँ",
+    "suggestAi": "AI से सुझाएँ",
+    "useParser": "अंतर्निहित नाम",
+    "aiPrivacyBody": "केवल उत्पाद ID भेजे जाते हैं। कोई राजस्व या ग्राहक डेटा नहीं।",
+    "parserNote": "उत्पाद ID से अवधि का नाम लेता है।",
+    "aiNoKeyBody": "AI से नाम सुझाने के लिए मॉडल कनेक्ट करें, या अंतर्निहित नाम इस्तेमाल करें।",
+    "aiConsentBody": "इस ऐप के लिए AI बंद है। सेटिंग्स, गोपनीयता में AI डेटा उपयोग की अनुमति दें, या अंतर्निहित नाम इस्तेमाल करें।",
+    "aiProgress": "{total} में से {done} का नाम रखा जा रहा है...",
+    "stop": "रोकें",
+    "aiNothing": "सुझाने के लिए कोई नाम नहीं।",
+    "allNamed": "हर लोड हुए उत्पाद का नाम पहले से है।",
+    "editTitle": "उत्पाद नाम",
+    "nameLabel": "नाम",
+    "nameHint": "जैसे Pro",
+    "planLabel": "प्लान समूह",
+    "planNone": "कोई प्लान नहीं",
+    "planNew": "नया प्लान...",
+    "planNameHint": "जैसे Pro",
+    "save": "सहेजें",
+    "reset": "रीसेट",
+    "cancel": "रद्द करें",
+    "renamePlanTitle": "प्लान का नाम बदलें",
+    "deletePlan": "प्लान हटाएँ",
+    "clear": "साफ़ करें",
+    "clearTitle": "{app} के नाम साफ़ करें?",
+    "clearBody": "इस डिवाइस पर इस ऐप के सभी नाम और प्लान हटा देता है।",
+    "suggestTitle": "नाम सुझाएँ",
+    "suggestSubtitle": {
+      "one": "{} उत्पाद का नाम अभी नहीं है",
+      "other": "{} उत्पादों के नाम अभी नहीं हैं"
+    },
+    "connectModel": "मॉडल कनेक्ट करें",
+    "offlineBadge": "ऑफ़लाइन",
+    "nameYearly": "वार्षिक",
+    "nameMonthly": "मासिक",
+    "nameWeekly": "साप्ताहिक",
+    "nameLifetime": "आजीवन",
+    "nameOneYear": "1 वर्ष",
+    "nameOneMonth": "1 महीना",
+    "nameOneWeek": "1 सप्ताह"
   },
   "revenue": {
     "title": "राजस्व",
@@ -631,6 +696,8 @@
     "searchCurrencies": "मुद्राएँ खोजें",
     "noCurrencies": "इस खोज से कोई मुद्रा मेल नहीं खाती।",
     "subtractFees": "स्टोर शुल्क घटाएँ",
+    "productNames": "उत्पाद नाम",
+    "productNamesHint": "स्टोर उत्पादों को अपने शब्दों में नाम दें",
     "feesAfter": "राजस्व आपके स्टोर शुल्क के बाद दिखाया जाता है",
     "feesBefore": "राजस्व App Store और Google Play शुल्क से पहले दिखाया जाता है",
     "appStoreFee": "App Store शुल्क",
@@ -706,7 +773,7 @@
       "settings": "सेटिंग्स…",
       "previousDay": "पिछला दिन",
       "nextDay": "अगला दिन",
-      "askAboutDay": "चयनित दिन के बारे में पूछें",
+      "askAboutDay": "पूछें",
       "refresh": "रीफ़्रेश",
       "onGitHub": "GitHub पर {app}",
       "reportIssue": "समस्या रिपोर्ट करें"
@@ -957,10 +1024,10 @@
     "latest": "नवीनतम पर जाएँ",
     "retry": "फिर कोशिश करें",
     "editKey": "कुंजी संपादित करें",
-    "askAbout": "इसके बारे में पूछें",
-    "askAboutDay": "इस दिन के बारे में पूछें",
-    "askAboutRange": "इस अवधि के बारे में पूछें",
-    "askAboutPayout": "इस भुगतान के बारे में पूछें",
+    "askAbout": "पूछें",
+    "askAboutDay": "पूछें",
+    "askAboutRange": "पूछें",
+    "askAboutPayout": "पूछें",
     "chartSummary": "{metric}, {count} बिंदु, अंतिम मान {last}",
     "followUp": {
       "showTable": "तालिका में दिखाएँ",

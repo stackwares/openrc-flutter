@@ -21,7 +21,7 @@ optional notifier, and neither stores anything.
 |---|---|
 | `lib/app/` | App root, sign-in gate, the adaptive shell (tab bar, rail, sidebar), macOS menu bar, keyboard shortcuts |
 | `lib/features/` | One folder per area: `transactions`, `revenue`, `charts`, `ask`, `settings`, `sign_in`. Screens, their notifiers and widgets |
-| `lib/services/` | RevenueCat API client and auth, local stores (fees, currency, icons, sort), exchange rates, telemetry, the home-screen widget channel, optional Ask LLM client and tools |
+| `lib/services/` | RevenueCat API client and auth, local stores (fees, currency, icons, sort, product names), exchange rates, telemetry, the home-screen widget channel, optional Ask LLM client and tools |
 | `lib/models/` | API response models |
 | `lib/core/` | Constants, extensions, formatting and date utilities, motion helpers |
 | `lib/theme/` | Design tokens, colors, typography, breakpoints |
@@ -54,7 +54,12 @@ widgets only read providers and call notifier methods.
    exchange-rate API) are applied when amounts are shown.
 6. **App icons**: looked up from the App Store or Google Play by bundle id,
    cached locally, and overridable per app.
-7. **Widgets**: after loading, a summary is handed to the native widgets
+7. **Product names**: `product_labels_store.dart` keeps per-app labels for
+   store product ids on the device only, and `plan_display.dart` reads them
+   wherever a product is shown. Names never touch amounts, filters or
+   notifications, which keep using the raw id. The naming screen can suggest
+   labels with the connected Ask model, sending product ids only.
+8. **Widgets**: after loading, a summary is handed to the native widgets
    through the `com.openrc.app/widgets` method channel (an App Group on iOS,
    shared preferences on Android).
 

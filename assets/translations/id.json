@@ -515,7 +515,72 @@
     "days": {
       "one": "{} hari",
       "other": "{} hari"
-    }
+    },
+    "title": "Nama produk",
+    "intro": "Beri produk toko nama yang Anda kenali. Nama tetap di perangkat ini dan muncul di seluruh aplikasi. Jumlah dan hitungan tidak pernah berubah.",
+    "search": "Cari produk",
+    "emptyTitle": "Tidak ada produk dimuat",
+    "emptyBody": "Buka daftar transaksi dulu: nama dibuat dari penjualan yang sudah dimuat.",
+    "sales": {
+      "one": "{} penjualan",
+      "other": "{} penjualan"
+    },
+    "count": {
+      "one": "{} produk",
+      "other": "{} produk"
+    },
+    "suggestionsReady": {
+      "one": "{} saran siap",
+      "other": "{} saran siap"
+    },
+    "applied": {
+      "one": "{} produk dinamai",
+      "other": "{} produk dinamai"
+    },
+    "undo": "Urungkan",
+    "dismiss": "Tutup",
+    "applyAll": "Terapkan semua",
+    "accept": "Pakai nama ini",
+    "aiTitle": "Sarankan nama",
+    "suggestAi": "Sarankan dengan AI",
+    "useParser": "Nama bawaan",
+    "aiPrivacyBody": "Hanya ID produk yang dikirim. Tanpa pendapatan atau data pelanggan.",
+    "parserNote": "Memberi nama periode dari ID produk.",
+    "aiNoKeyBody": "Hubungkan model untuk menyarankan nama dengan AI, atau pakai nama bawaan.",
+    "aiConsentBody": "AI dimatikan untuk aplikasi ini. Izinkan penggunaan data AI di Pengaturan, Privasi, atau pakai nama bawaan.",
+    "aiProgress": "Menamai {done} dari {total}...",
+    "stop": "Hentikan",
+    "aiNothing": "Tidak ada nama untuk disarankan.",
+    "allNamed": "Semua produk yang dimuat sudah punya nama.",
+    "editTitle": "Nama produk",
+    "nameLabel": "Nama",
+    "nameHint": "mis. Pro",
+    "planLabel": "Grup paket",
+    "planNone": "Tanpa paket",
+    "planNew": "Paket baru...",
+    "planNameHint": "mis. Pro",
+    "save": "Simpan",
+    "reset": "Atur ulang",
+    "cancel": "Batal",
+    "renamePlanTitle": "Ganti nama paket",
+    "deletePlan": "Hapus paket",
+    "clear": "Hapus",
+    "clearTitle": "Hapus nama untuk {app}?",
+    "clearBody": "Menghapus setiap nama dan paket untuk aplikasi ini di perangkat ini.",
+    "suggestTitle": "Sarankan nama",
+    "suggestSubtitle": {
+      "one": "{} produk belum punya nama",
+      "other": "{} produk belum punya nama"
+    },
+    "connectModel": "Hubungkan model",
+    "offlineBadge": "Offline",
+    "nameYearly": "Tahunan",
+    "nameMonthly": "Bulanan",
+    "nameWeekly": "Mingguan",
+    "nameLifetime": "Seumur hidup",
+    "nameOneYear": "1 tahun",
+    "nameOneMonth": "1 bulan",
+    "nameOneWeek": "1 minggu"
   },
   "revenue": {
     "title": "Pendapatan",
@@ -626,6 +691,8 @@
     "searchCurrencies": "Cari mata uang",
     "noCurrencies": "Tidak ada mata uang yang cocok dengan pencarian itu.",
     "subtractFees": "Kurangi biaya toko",
+    "productNames": "Nama produk",
+    "productNamesHint": "Beri nama produk toko dengan kata-kata Anda",
     "feesAfter": "Pendapatan ditampilkan setelah biaya toko Anda",
     "feesBefore": "Pendapatan ditampilkan sebelum biaya App Store dan Google Play",
     "appStoreFee": "Biaya App Store",
@@ -700,7 +767,7 @@
       "settings": "Pengaturan…",
       "previousDay": "Hari Sebelumnya",
       "nextDay": "Hari Berikutnya",
-      "askAboutDay": "Tanya hari yang dipilih",
+      "askAboutDay": "Tanya",
       "refresh": "Muat Ulang",
       "onGitHub": "{app} di GitHub",
       "reportIssue": "Laporkan Masalah"
@@ -942,10 +1009,10 @@
     "latest": "Lompat ke terbaru",
     "retry": "Coba lagi",
     "editKey": "Edit kunci",
-    "askAbout": "Tanya tentang ini",
-    "askAboutDay": "Tanya hari tersebut",
-    "askAboutRange": "Tanya rentang ini",
-    "askAboutPayout": "Tanya payout ini",
+    "askAbout": "Tanya",
+    "askAboutDay": "Tanya",
+    "askAboutRange": "Tanya",
+    "askAboutPayout": "Tanya",
     "chartSummary": "{metric}, {count} titik, nilai terakhir {last}",
     "followUp": {
       "showTable": "Tampilkan sebagai tabel",

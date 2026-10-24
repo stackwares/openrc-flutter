@@ -10,6 +10,7 @@ import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.
 import 'package:openrc/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/dual_currency_text.dart';
@@ -80,7 +81,10 @@ class TransactionItem extends ConsumerWidget {
 
     final appName = transaction.app?.name?.trim();
     final hasAppName = appName != null && appName.isNotEmpty;
-    final product = planDescription(transaction);
+    final product = planDescription(
+      transaction,
+      labels: ref.watch(productLabelsProvider),
+    );
     final title = hasAppName ? appName : product;
     final cc = transaction.subscriberCountryCode;
     final country = cc == null

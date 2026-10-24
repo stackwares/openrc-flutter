@@ -516,7 +516,72 @@
     "days": {
       "one": "{} jour",
       "other": "{} jours"
-    }
+    },
+    "title": "Noms des produits",
+    "intro": "Donnez aux produits du store des noms que vous reconnaissez. Les noms restent sur cet appareil et apparaissent partout dans l’app. Les montants et les comptes ne changent jamais.",
+    "search": "Rechercher des produits",
+    "emptyTitle": "Aucun produit chargé",
+    "emptyBody": "Ouvrez d’abord la liste des transactions : les noms viennent des ventes déjà chargées.",
+    "sales": {
+      "one": "{} vente",
+      "other": "{} ventes"
+    },
+    "count": {
+      "one": "{} produit",
+      "other": "{} produits"
+    },
+    "suggestionsReady": {
+      "one": "{} suggestion prête",
+      "other": "{} suggestions prêtes"
+    },
+    "applied": {
+      "one": "{} produit nommé",
+      "other": "{} produits nommés"
+    },
+    "undo": "Défaire",
+    "dismiss": "Ignorer",
+    "applyAll": "Tout appliquer",
+    "accept": "Utiliser ce nom",
+    "aiTitle": "Suggérer des noms",
+    "suggestAi": "Suggérer avec l’IA",
+    "useParser": "Noms intégrés",
+    "aiPrivacyBody": "Seuls les ID de produit sont envoyés. Aucun revenu ni donnée client.",
+    "parserNote": "Nomme la période à partir de l’ID du produit.",
+    "aiNoKeyBody": "Connectez un modèle pour suggérer des noms avec l’IA, ou utilisez les noms intégrés.",
+    "aiConsentBody": "L’IA est désactivée pour cette app. Autorisez l’utilisation des données d’IA dans Réglages, Confidentialité, ou utilisez les noms intégrés.",
+    "aiProgress": "Nommage de {done} sur {total}...",
+    "stop": "Arrêter",
+    "aiNothing": "Aucun nom à suggérer.",
+    "allNamed": "Tous les produits chargés ont déjà un nom.",
+    "editTitle": "Nom du produit",
+    "nameLabel": "Nom",
+    "nameHint": "ex. Pro",
+    "planLabel": "Groupe d’offres",
+    "planNone": "Aucune offre",
+    "planNew": "Nouvelle offre...",
+    "planNameHint": "ex. Pro",
+    "save": "Enregistrer",
+    "reset": "Réinitialiser",
+    "cancel": "Annuler",
+    "renamePlanTitle": "Renommer l’offre",
+    "deletePlan": "Supprimer l’offre",
+    "clear": "Effacer",
+    "clearTitle": "Effacer les noms de {app} ?",
+    "clearBody": "Supprime tous les noms et offres de cette app sur cet appareil.",
+    "suggestTitle": "Suggérer des noms",
+    "suggestSubtitle": {
+      "one": "{} produit n’a pas encore de nom",
+      "other": "{} produits n’ont pas encore de nom"
+    },
+    "connectModel": "Connecter un modèle",
+    "offlineBadge": "Hors ligne",
+    "nameYearly": "Annuel",
+    "nameMonthly": "Mensuel",
+    "nameWeekly": "Hebdomadaire",
+    "nameLifetime": "À vie",
+    "nameOneYear": "1 an",
+    "nameOneMonth": "1 mois",
+    "nameOneWeek": "1 semaine"
   },
   "revenue": {
     "title": "Revenus",
@@ -631,6 +696,8 @@
     "searchCurrencies": "Rechercher des devises",
     "noCurrencies": "Aucune devise ne correspond à cette recherche.",
     "subtractFees": "Déduire les frais des boutiques",
+    "productNames": "Noms des produits",
+    "productNamesHint": "Nommez les produits du store avec vos mots",
     "feesAfter": "Les revenus sont affichés après vos frais de boutique",
     "feesBefore": "Les revenus sont affichés avant les frais de l’App Store et de Google Play",
     "appStoreFee": "Frais de l’App Store",
@@ -706,7 +773,7 @@
       "settings": "Réglages…",
       "previousDay": "Jour précédent",
       "nextDay": "Jour suivant",
-      "askAboutDay": "Demander le jour sélectionné",
+      "askAboutDay": "Demander",
       "refresh": "Actualiser",
       "onGitHub": "{app} sur GitHub",
       "reportIssue": "Signaler un problème"
@@ -957,10 +1024,10 @@
     "latest": "Aller au plus récent",
     "retry": "Réessayer",
     "editKey": "Modifier la clé",
-    "askAbout": "Demander à propos de ceci",
-    "askAboutDay": "Demander ce jour",
-    "askAboutRange": "Demander cette période",
-    "askAboutPayout": "Demander ce paiement",
+    "askAbout": "Demander",
+    "askAboutDay": "Demander",
+    "askAboutRange": "Demander",
+    "askAboutPayout": "Demander",
     "chartSummary": "{metric}, {count} points, dernière valeur {last}",
     "followUp": {
       "showTable": "Afficher en tableau",

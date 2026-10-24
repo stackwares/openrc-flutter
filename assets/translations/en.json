@@ -521,7 +521,72 @@
     "days": {
       "one": "{} day",
       "other": "{} days"
-    }
+    },
+    "title": "Product names",
+    "intro": "Give store products names you recognise. Names stay on this device and appear everywhere in the app. Amounts and counts never change.",
+    "search": "Search products",
+    "emptyTitle": "No products loaded",
+    "emptyBody": "Open the transactions list first: names are built from the sales already loaded.",
+    "sales": {
+      "one": "{} sale",
+      "other": "{} sales"
+    },
+    "count": {
+      "one": "{} product",
+      "other": "{} products"
+    },
+    "suggestionsReady": {
+      "one": "{} suggestion ready",
+      "other": "{} suggestions ready"
+    },
+    "applied": {
+      "one": "Named {} product",
+      "other": "Named {} products"
+    },
+    "undo": "Undo",
+    "dismiss": "Dismiss",
+    "applyAll": "Apply all",
+    "accept": "Use this name",
+    "aiTitle": "Suggest names",
+    "suggestAi": "Suggest with AI",
+    "useParser": "Built-in names",
+    "aiPrivacyBody": "Only product IDs are sent. No revenue or customer data.",
+    "parserNote": "Labels the period from the product ID.",
+    "aiNoKeyBody": "Connect a model to suggest names with AI, or use built-in names.",
+    "aiConsentBody": "AI is turned off for this app. Allow AI data use under Settings, Privacy, or use built-in names.",
+    "aiProgress": "Naming {done} of {total}...",
+    "stop": "Stop",
+    "aiNothing": "No names to suggest.",
+    "allNamed": "Every loaded product already has a name.",
+    "editTitle": "Product name",
+    "nameLabel": "Name",
+    "nameHint": "e.g. Pro",
+    "planLabel": "Plan group",
+    "planNone": "No plan",
+    "planNew": "New plan...",
+    "planNameHint": "e.g. Pro",
+    "save": "Save",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "renamePlanTitle": "Rename plan",
+    "deletePlan": "Delete plan",
+    "clear": "Clear",
+    "clearTitle": "Clear names for {app}?",
+    "clearBody": "This removes every name and plan for this app on this device.",
+    "suggestTitle": "Suggest Names",
+    "suggestSubtitle": {
+      "one": "{} product has no name yet",
+      "other": "{} products have no name yet"
+    },
+    "connectModel": "Connect a model",
+    "offlineBadge": "Offline",
+    "nameYearly": "Yearly",
+    "nameMonthly": "Monthly",
+    "nameWeekly": "Weekly",
+    "nameLifetime": "Lifetime",
+    "nameOneYear": "1 Year",
+    "nameOneMonth": "1 Month",
+    "nameOneWeek": "1 Week"
   },
   "revenue": {
     "title": "Revenue",
@@ -781,6 +846,8 @@
     "searchCurrencies": "Search currencies",
     "noCurrencies": "No currencies match that search.",
     "subtractFees": "Subtract store fees",
+    "productNames": "Product names",
+    "productNamesHint": "Name store products in your own words",
     "feesAfter": "Revenue is shown after your store fees",
     "feesBefore": "Revenue is shown before App Store and Google Play fees",
     "appStoreFee": "App Store fee",
@@ -871,7 +938,7 @@
       "settings": "Settings…",
       "previousDay": "Previous Day",
       "nextDay": "Next Day",
-      "askAboutDay": "Ask about Selected Day",
+      "askAboutDay": "Ask",
       "refresh": "Refresh",
       "onGitHub": "{app} on GitHub",
       "reportIssue": "Report an Issue"
@@ -1172,10 +1239,10 @@
     "latest": "Jump to latest",
     "retry": "Retry",
     "editKey": "Edit key",
-    "askAbout": "Ask about this",
-    "askAboutDay": "Ask about this day",
-    "askAboutRange": "Ask about this range",
-    "askAboutPayout": "Ask about this payout",
+    "askAbout": "Ask",
+    "askAboutDay": "Ask",
+    "askAboutRange": "Ask",
+    "askAboutPayout": "Ask",
     "chartSummary": "{metric}, {count} points, last value {last}",
     "suggestions": {
       "today": "How was today vs yesterday?",

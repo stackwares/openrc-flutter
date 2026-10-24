@@ -18,10 +18,7 @@ class AgentLlmException implements Exception {
 }
 
 class AgentLlmResponse {
-  const AgentLlmResponse({
-    this.assistantText,
-    this.toolCalls = const [],
-  });
+  const AgentLlmResponse({this.assistantText, this.toolCalls = const []});
 
   final String? assistantText;
   final List<AgentToolCall> toolCalls;
@@ -41,15 +38,16 @@ class AgentToolCall {
 
 class AgentLlmClient {
   AgentLlmClient({Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                connectTimeout: const Duration(seconds: 20),
-                sendTimeout: const Duration(seconds: 30),
-                // Large models with tools can take a while to answer.
-                receiveTimeout: const Duration(seconds: 120),
-              ),
-            );
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 20),
+              sendTimeout: const Duration(seconds: 30),
+              // Large models with tools can take a while to answer.
+              receiveTimeout: const Duration(seconds: 120),
+            ),
+          );
 
   final Dio _dio;
 
@@ -58,6 +56,39 @@ class AgentLlmClient {
     required String apiKey,
     required List<Map<String, dynamic>> messages,
     required CancelToken cancelToken,
+  }) {
+    return _request(
+      settings: settings,
+      apiKey: apiKey,
+      messages: messages,
+      cancelToken: cancelToken,
+      tools: agentToolDefinitions(),
+    );
+  }
+
+  /// One answer, no tools: for jobs that ask the model for JSON rather than
+  /// a conversation (e.g. naming products).
+  Future<AgentLlmResponse> complete({
+    required AgentSettings settings,
+    required String apiKey,
+    required List<Map<String, dynamic>> messages,
+    required CancelToken cancelToken,
+  }) {
+    return _request(
+      settings: settings,
+      apiKey: apiKey,
+      messages: messages,
+      cancelToken: cancelToken,
+      tools: const [],
+    );
+  }
+
+  Future<AgentLlmResponse> _request({
+    required AgentSettings settings,
+    required String apiKey,
+    required List<Map<String, dynamic>> messages,
+    required CancelToken cancelToken,
+    required List<Map<String, dynamic>> tools,
   }) async {
     if (kIsWeb && settings.resolvedPreset.relaySlug == null) {
       throw AgentLlmException('agent.errors.customWeb');
@@ -68,6 +99,7 @@ class AgentLlmClient {
         apiKey: apiKey,
         messages: messages,
         cancelToken: cancelToken,
+        tools: tools,
       );
     }
     return _openAiCompatible(
@@ -75,6 +107,7 @@ class AgentLlmClient {
       apiKey: apiKey,
       messages: messages,
       cancelToken: cancelToken,
+      tools: tools,
     );
   }
 
@@ -90,6 +123,7 @@ class AgentLlmClient {
     required String apiKey,
     required List<Map<String, dynamic>> messages,
     required CancelToken cancelToken,
+    required List<Map<String, dynamic>> tools,
   }) async {
     final url = '${_baseUrl(settings)}/chat/completions';
     final headers = <String, String>{
@@ -107,7 +141,7 @@ class AgentLlmClient {
           'model': settings.effectiveModel,
           'temperature': 0,
           'messages': messages,
-          'tools': agentToolDefinitions(),
+          if (tools.isNotEmpty) 'tools': tools,
         },
         options: Options(headers: headers, responseType: ResponseType.json),
         cancelToken: cancelToken,
@@ -143,6 +177,7 @@ class AgentLlmClient {
     required String apiKey,
     required List<Map<String, dynamic>> messages,
     required CancelToken cancelToken,
+    required List<Map<String, dynamic>> tools,
   }) async {
     final url = '${_baseUrl(settings)}/v1/messages';
     final system = messages
@@ -158,14 +193,15 @@ class AgentLlmClient {
           'temperature': 0,
           'system': system,
           'messages': anthropicMessagesFromOpenAi(messages),
-          'tools': [
-            for (final t in agentToolDefinitions())
-              {
-                'name': (t['function'] as Map)['name'],
-                'description': (t['function'] as Map)['description'],
-                'input_schema': (t['function'] as Map)['parameters'],
-              },
-          ],
+          if (tools.isNotEmpty)
+            'tools': [
+              for (final t in tools)
+                {
+                  'name': (t['function'] as Map)['name'],
+                  'description': (t['function'] as Map)['description'],
+                  'input_schema': (t['function'] as Map)['parameters'],
+                },
+            ],
         },
         options: Options(
           headers: {

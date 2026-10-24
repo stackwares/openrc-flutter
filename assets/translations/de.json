@@ -516,7 +516,72 @@
     "days": {
       "one": "{} Tag",
       "other": "{} Tage"
-    }
+    },
+    "title": "Produktnamen",
+    "intro": "Gib Store-Produkten Namen, die du wiedererkennst. Namen bleiben auf diesem Gerät und erscheinen überall in der App. Beträge und Zahlen ändern sich nie.",
+    "search": "Produkte suchen",
+    "emptyTitle": "Keine Produkte geladen",
+    "emptyBody": "Öffne zuerst die Transaktionsliste: Namen entstehen aus den bereits geladenen Verkäufen.",
+    "sales": {
+      "one": "{} Verkauf",
+      "other": "{} Verkäufe"
+    },
+    "count": {
+      "one": "{} Produkt",
+      "other": "{} Produkte"
+    },
+    "suggestionsReady": {
+      "one": "{} Vorschlag bereit",
+      "other": "{} Vorschläge bereit"
+    },
+    "applied": {
+      "one": "{} Produkt benannt",
+      "other": "{} Produkte benannt"
+    },
+    "undo": "Rückgängig",
+    "dismiss": "Verwerfen",
+    "applyAll": "Alle übernehmen",
+    "accept": "Diesen Namen verwenden",
+    "aiTitle": "Namen vorschlagen",
+    "suggestAi": "Mit KI vorschlagen",
+    "useParser": "Eingebaute Namen",
+    "aiPrivacyBody": "Nur Produkt-IDs werden gesendet. Keine Umsätze oder Kundendaten.",
+    "parserNote": "Benennt den Zeitraum aus der Produkt-ID.",
+    "aiNoKeyBody": "Verbinde ein Modell, um Namen mit KI vorzuschlagen, oder nutze eingebaute Namen.",
+    "aiConsentBody": "KI ist für diese App ausgeschaltet. Erlaube die KI-Datennutzung unter Einstellungen, Datenschutz, oder nutze eingebaute Namen.",
+    "aiProgress": "Benenne {done} von {total}...",
+    "stop": "Stopp",
+    "aiNothing": "Keine Namen vorzuschlagen.",
+    "allNamed": "Jedes geladene Produkt hat bereits einen Namen.",
+    "editTitle": "Produktname",
+    "nameLabel": "Name",
+    "nameHint": "z. B. Pro",
+    "planLabel": "Tarifgruppe",
+    "planNone": "Kein Tarif",
+    "planNew": "Neuer Tarif...",
+    "planNameHint": "z. B. Pro",
+    "save": "Speichern",
+    "reset": "Zurücksetzen",
+    "cancel": "Abbrechen",
+    "renamePlanTitle": "Tarif umbenennen",
+    "deletePlan": "Tarif löschen",
+    "clear": "Löschen",
+    "clearTitle": "Namen für {app} löschen?",
+    "clearBody": "Entfernt jeden Namen und Tarif für diese App auf diesem Gerät.",
+    "suggestTitle": "Namen vorschlagen",
+    "suggestSubtitle": {
+      "one": "{} Produkt hat noch keinen Namen",
+      "other": "{} Produkte haben noch keinen Namen"
+    },
+    "connectModel": "Modell verbinden",
+    "offlineBadge": "Offline",
+    "nameYearly": "Jährlich",
+    "nameMonthly": "Monatlich",
+    "nameWeekly": "Wöchentlich",
+    "nameLifetime": "Lebenslang",
+    "nameOneYear": "1 Jahr",
+    "nameOneMonth": "1 Monat",
+    "nameOneWeek": "1 Woche"
   },
   "revenue": {
     "title": "Umsatz",
@@ -631,6 +696,8 @@
     "searchCurrencies": "Währungen suchen",
     "noCurrencies": "Keine Währung passt zu dieser Suche.",
     "subtractFees": "Store-Gebühren abziehen",
+    "productNames": "Produktnamen",
+    "productNamesHint": "Store-Produkte mit eigenen Worten benennen",
     "feesAfter": "Umsatz wird nach deinen Store-Gebühren angezeigt",
     "feesBefore": "Umsatz wird vor den Gebühren von App Store und Google Play angezeigt",
     "appStoreFee": "App-Store-Gebühr",
@@ -706,7 +773,7 @@
       "settings": "Einstellungen…",
       "previousDay": "Vorheriger Tag",
       "nextDay": "Nächster Tag",
-      "askAboutDay": "Ausgewählten Tag fragen",
+      "askAboutDay": "Fragen",
       "refresh": "Aktualisieren",
       "onGitHub": "{app} auf GitHub",
       "reportIssue": "Problem melden"
@@ -957,10 +1024,10 @@
     "latest": "Zum Neuesten springen",
     "retry": "Erneut versuchen",
     "editKey": "Schlüssel bearbeiten",
-    "askAbout": "Danach fragen",
-    "askAboutDay": "Diesen Tag fragen",
-    "askAboutRange": "Diesen Zeitraum fragen",
-    "askAboutPayout": "Diese Auszahlung fragen",
+    "askAbout": "Fragen",
+    "askAboutDay": "Fragen",
+    "askAboutRange": "Fragen",
+    "askAboutPayout": "Fragen",
     "chartSummary": "{metric}, {count} Punkte, letzter Wert {last}",
     "followUp": {
       "showTable": "Als Tabelle",

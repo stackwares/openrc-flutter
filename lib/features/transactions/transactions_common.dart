@@ -5,6 +5,11 @@ import 'package:openrc/models/transaction_list_sort_mode.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+export 'package:openrc/core/utils/app_identity.dart'
+    show appKeyForTransaction, appLabelForTransaction;
+
+import 'package:openrc/core/utils/app_identity.dart';
+
 /// Background preload pages after the first fetch (Revenue tab progress).
 const int kRealtimeBackfillMaxPages = 100;
 
@@ -399,30 +404,6 @@ void sortMutableTransactionList(
         ).compareTo(_transactionPurchaseDateMs(a));
       });
   }
-}
-
-String appKeyForTransaction(RcTransaction tx) {
-  final a = tx.app;
-  if (a == null) return '';
-  final id = a.id?.trim();
-  if (id != null && id.isNotEmpty) return id;
-  final bid = a.bundleId?.trim();
-  if (bid != null && bid.isNotEmpty) return bid;
-  final name = a.name?.trim();
-  if (name != null && name.isNotEmpty) return name;
-  return '';
-}
-
-String appLabelForTransaction(RcTransaction tx) {
-  final a = tx.app;
-  if (a == null) return 'transactions.unknownApp'.tr();
-  final name = a.name?.trim();
-  if (name != null && name.isNotEmpty) return name;
-  final bid = a.bundleId?.trim();
-  if (bid != null && bid.isNotEmpty) return bid;
-  final id = a.id?.trim();
-  if (id != null && id.isNotEmpty) return id;
-  return 'transactions.unknownApp'.tr();
 }
 
 class AppFilterOption {

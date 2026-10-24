@@ -516,7 +516,72 @@
     "days": {
       "one": "{} dia",
       "other": "{} dias"
-    }
+    },
+    "title": "Nomes dos produtos",
+    "intro": "Dê aos produtos da loja nomes que você reconheça. Os nomes ficam neste dispositivo e aparecem em todo o app. Valores e contagens nunca mudam.",
+    "search": "Buscar produtos",
+    "emptyTitle": "Nenhum produto carregado",
+    "emptyBody": "Abra primeiro a lista de transações: os nomes vêm das vendas já carregadas.",
+    "sales": {
+      "one": "{} venda",
+      "other": "{} vendas"
+    },
+    "count": {
+      "one": "{} produto",
+      "other": "{} produtos"
+    },
+    "suggestionsReady": {
+      "one": "{} sugestão pronta",
+      "other": "{} sugestões prontas"
+    },
+    "applied": {
+      "one": "{} produto nomeado",
+      "other": "{} produtos nomeados"
+    },
+    "undo": "Desfazer",
+    "dismiss": "Dispensar",
+    "applyAll": "Aplicar tudo",
+    "accept": "Usar este nome",
+    "aiTitle": "Sugerir nomes",
+    "suggestAi": "Sugerir com IA",
+    "useParser": "Nomes integrados",
+    "aiPrivacyBody": "Apenas IDs de produto são enviados. Sem receita ou dados de clientes.",
+    "parserNote": "Rotula o período a partir do ID do produto.",
+    "aiNoKeyBody": "Conecte um modelo para sugerir nomes com IA ou use os nomes integrados.",
+    "aiConsentBody": "A IA está desativada para este app. Permita o uso de dados de IA em Ajustes, Privacidade, ou use os nomes integrados.",
+    "aiProgress": "Nomeando {done} de {total}...",
+    "stop": "Parar",
+    "aiNothing": "Nenhum nome para sugerir.",
+    "allNamed": "Todos os produtos carregados já têm nome.",
+    "editTitle": "Nome do produto",
+    "nameLabel": "Nome",
+    "nameHint": "ex. Pro",
+    "planLabel": "Grupo de plano",
+    "planNone": "Sem plano",
+    "planNew": "Novo plano...",
+    "planNameHint": "ex. Pro",
+    "save": "Salvar",
+    "reset": "Redefinir",
+    "cancel": "Cancelar",
+    "renamePlanTitle": "Renomear plano",
+    "deletePlan": "Excluir plano",
+    "clear": "Limpar",
+    "clearTitle": "Limpar os nomes de {app}?",
+    "clearBody": "Remove todos os nomes e planos deste app neste dispositivo.",
+    "suggestTitle": "Sugerir nomes",
+    "suggestSubtitle": {
+      "one": "{} produto ainda não tem nome",
+      "other": "{} produtos ainda não têm nome"
+    },
+    "connectModel": "Conectar um modelo",
+    "offlineBadge": "Offline",
+    "nameYearly": "Anual",
+    "nameMonthly": "Mensal",
+    "nameWeekly": "Semanal",
+    "nameLifetime": "Vitalício",
+    "nameOneYear": "1 ano",
+    "nameOneMonth": "1 mês",
+    "nameOneWeek": "1 semana"
   },
   "revenue": {
     "title": "Receita",
@@ -631,6 +696,8 @@
     "searchCurrencies": "Buscar moedas",
     "noCurrencies": "Nenhuma moeda corresponde a essa busca.",
     "subtractFees": "Descontar taxas da loja",
+    "productNames": "Nomes dos produtos",
+    "productNamesHint": "Nomeie os produtos da loja do seu jeito",
     "feesAfter": "A receita é exibida após as taxas da loja",
     "feesBefore": "A receita é exibida antes das taxas da App Store e do Google Play",
     "appStoreFee": "Taxa da App Store",
@@ -706,7 +773,7 @@
       "settings": "Configurações…",
       "previousDay": "Dia anterior",
       "nextDay": "Próximo dia",
-      "askAboutDay": "Perguntar sobre o dia selecionado",
+      "askAboutDay": "Perguntar",
       "refresh": "Atualizar",
       "onGitHub": "{app} no GitHub",
       "reportIssue": "Relatar um problema"
@@ -957,10 +1024,10 @@
     "latest": "Ir para o mais recente",
     "retry": "Tentar de novo",
     "editKey": "Editar chave",
-    "askAbout": "Perguntar sobre isto",
-    "askAboutDay": "Perguntar sobre este dia",
-    "askAboutRange": "Perguntar sobre este período",
-    "askAboutPayout": "Perguntar sobre este repasse",
+    "askAbout": "Perguntar",
+    "askAboutDay": "Perguntar",
+    "askAboutRange": "Perguntar",
+    "askAboutPayout": "Perguntar",
     "chartSummary": "{metric}, {count} pontos, último valor {last}",
     "followUp": {
       "showTable": "Mostrar como tabela",

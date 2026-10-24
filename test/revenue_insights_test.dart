@@ -10,6 +10,7 @@ import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:openrc/features/revenue/revenue_insights_compute.dart';
+import 'package:openrc/models/product_labels.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 
@@ -234,6 +235,49 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Trials breakdown'), findsOneWidget);
     expect(find.text('3 trials'), findsOneWidget);
+  });
+
+  test('products in one plan count as that plan', () {
+    const labels = ProductLabels(
+      apps: {
+        'app1': AppProductLabels(
+          products: {
+            'stein.pro.sub.annual.false': ProductLabel(
+              name: 'Pro Annual',
+              planId: 'pro',
+            ),
+            'stein.pro.sub.monthly.false': ProductLabel(
+              name: 'Pro Monthly',
+              planId: 'pro',
+            ),
+          },
+          plans: {'pro': ProductPlan(id: 'pro', name: 'Pro')},
+        ),
+      },
+    );
+
+    final data = computeTrialInsights(trials, labels: labels);
+    final pro = data.topPlans.firstWhere((e) => e.label == 'Pro');
+    expect(pro.count, 2);
+    // The other app's product keeps its own row.
+    expect(
+      data.topPlans.any((e) => e.label == 'orly.pro.sub.annual.false'),
+      isTrue,
+    );
+  });
+
+  test('a named product without a plan shows its name', () {
+    const labels = ProductLabels(
+      apps: {
+        'app2': AppProductLabels(
+          products: {
+            'orly.pro.sub.annual.false': ProductLabel(name: 'Orly Pro'),
+          },
+        ),
+      },
+    );
+    final data = computeTrialInsights(trials, labels: labels);
+    expect(data.topPlans.map((e) => e.label), contains('Orly Pro'));
   });
 
   test('without web sales the other-stores share is zero', () {

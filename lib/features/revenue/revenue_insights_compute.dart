@@ -1,7 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:openrc/core/utils/app_identity.dart';
 import 'package:openrc/core/utils/plan_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/store_commission.dart';
+import 'package:openrc/models/product_labels.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 
@@ -264,7 +266,8 @@ RevenueInsightsSnapshot computeRevenueInsights(
 
 /// One share of the trials: an app, a country or a plan.
 class TrialInsightLine {
-  /// App key, country key (ISO code or `'__'`), or plan title.
+  /// App key, country key (ISO code or `'__'`), or an app-scoped plan /
+  /// product key. Plans are per app, so the same plan name can appear twice.
   final String key;
   final String label;
   final int count;
@@ -318,7 +321,13 @@ bool isTrialsOnly(List<RcTransaction> txs) =>
     txs.isNotEmpty && txs.every((tx) => tx.type == RcTransactionType.trial);
 
 /// Counts [txs] (trials) the way [computeRevenueInsights] adds up revenue.
-TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
+///
+/// Plans use the developer's [labels]: products grouped into one plan family
+/// count as that plan, and named products show their name instead of the id.
+TrialInsightsSnapshot computeTrialInsights(
+  List<RcTransaction> txs, {
+  ProductLabels labels = const ProductLabels.empty(),
+}) {
   var cancelled = 0;
   var apple = 0;
   var google = 0;
@@ -328,6 +337,7 @@ TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
   final appIdByKey = <String, String>{};
   final byCountry = <String, int>{};
   final byPlan = <String, int>{};
+  final planLabels = <String, String>{};
 
   for (final tx in txs) {
     if (tx.isCanceledTrial) cancelled++;
@@ -354,14 +364,29 @@ TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
     final cKey = (rawCc != null && rawCc.isNotEmpty) ? rawCc : '__';
     byCountry.update(cKey, (v) => v + 1, ifAbsent: () => 1);
 
-    final plan = planProductId(tx);
-    byPlan.update(plan, (v) => v + 1, ifAbsent: () => 1);
+    // Keys carry the app, so two apps can both have a "Pro" plan. Products
+    // outside a plan stay separate; named ones show their name.
+    final productId = tx.productIdentifier?.trim();
+    final labelKey = productLabelAppKey(tx);
+    final planName = labels.planName(labelKey, productId);
+    final planId = labels.forApp(labelKey).planIdOf(productId ?? '');
+    final key = planName != null && planId != null
+        ? '$labelKey\u0000plan\u0000$planId'
+        : '$labelKey\u0000product\u0000${productId ?? ''}';
+    planLabels.putIfAbsent(
+      key,
+      () =>
+          planName ??
+          labels.displayName(labelKey, productId) ??
+          planProductId(tx),
+    );
+    byPlan.update(key, (v) => v + 1, ifAbsent: () => 1);
   }
 
   final total = txs.length;
   double pctOf(int count) => total == 0 ? 0 : count / total * 100;
 
-  // Most trials first; ties by key so the order holds between rebuilds.
+  // Most trials first; ties by label so the order holds between rebuilds.
   List<TrialInsightLine> top(
     Map<String, int> counts,
     String Function(String key) label, {
@@ -370,7 +395,7 @@ TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
     final entries = counts.entries.toList()
       ..sort((a, b) {
         final byCount = b.value.compareTo(a.value);
-        return byCount != 0 ? byCount : a.key.compareTo(b.key);
+        return byCount != 0 ? byCount : label(a.key).compareTo(label(b.key));
       });
     return [
       for (final e in entries.take(_kRevenueInsightsTopN))
@@ -393,6 +418,6 @@ TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
     otherStores: otherStores,
     topApps: top(byApp, (k) => appLabel[k] ?? k, appIds: appIdByKey),
     topCountries: top(byCountry, _countryName),
-    topPlans: top(byPlan, (k) => k),
+    topPlans: top(byPlan, (k) => planLabels[k] ?? k),
   );
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:openrc/core/utils/app_identity.dart';
 import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
 import 'package:openrc/core/utils/subscriber_id_mask.dart';
@@ -17,6 +18,7 @@ import 'package:openrc/models/rc_chart_response.dart';
 import 'package:openrc/models/rc_overview_response.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/agent/agent_display_money.dart';
+import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/services/rc_api_service.dart';
 
@@ -260,8 +262,10 @@ class AgentToolExecutor {
   ) {
     final usd = tx.revenue;
     final sub = tx.subscriberId;
+    final productId = tx.productIdentifier;
     return {
-      'product': tx.productIdentifier,
+      'product': productId,
+      'product_name': ?_productDisplayName(productId, productLabelAppKey(tx)),
       'app': tx.app?.name,
       'store': tx.store,
       'country': tx.subscriberCountryCode,
@@ -329,8 +333,17 @@ class AgentToolExecutor {
         ...money.meta(),
         'transaction': row,
         'transactions': [row],
-        'subscriber': _subscriberMap(detail, money, subscriberId),
-        'activity': _activityRows(activity.events, money),
+        'subscriber': _subscriberMap(
+          detail,
+          money,
+          subscriberId,
+          appKey: productLabelAppKey(tx),
+        ),
+        'activity': _activityRows(
+          activity.events,
+          money,
+          appKey: productLabelAppKey(tx),
+        ),
       };
     } catch (_) {
       return {
@@ -342,11 +355,20 @@ class AgentToolExecutor {
     }
   }
 
+  /// The developer's name for a product, when they gave one.
+  String? _productDisplayName(String? productId, String? appKey) {
+    if (productId == null) return null;
+    return _ref
+        .read(productLabelsProvider)
+        .displayName(appKey ?? kUnknownAppLabelKey, productId);
+  }
+
   Map<String, dynamic> _subscriberMap(
     RcTransactionDetailResponse detail,
     AgentDisplayMoney money,
-    String subscriberId,
-  ) {
+    String subscriberId, {
+    String? appKey,
+  }) {
     final spent = detail.dollarsSpent;
     return {
       'subscriber_id': maskSubscriberId(subscriberId),
@@ -362,6 +384,10 @@ class AgentToolExecutor {
         ))
           {
             'product': status.productIdentifier,
+            'product_name': ?_productDisplayName(
+              status.productIdentifier,
+              appKey,
+            ),
             'purchase_date': status.purchaseDate,
             'expires_date': status.expiresDate,
             'is_auto_renewing': status.isAutoRenewing,
@@ -388,13 +414,15 @@ class AgentToolExecutor {
 
   List<Map<String, dynamic>> _activityRows(
     List<RcTransactionDetailEvent>? events,
-    AgentDisplayMoney money,
-  ) {
+    AgentDisplayMoney money, {
+    String? appKey,
+  }) {
     return [
       for (final event in (events ?? const []).take(kAgentActivityLimit))
         {
           'type': event.type,
           'product': event.productId,
+          'product_name': ?_productDisplayName(event.productId, appKey),
           'new_product': event.newProductId,
           'period': event.periodType,
           'cancel_reason': event.cancelReason,

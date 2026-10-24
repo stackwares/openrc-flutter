@@ -19,11 +19,13 @@ import 'package:openrc/core/utils/relative_time_format.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:openrc/features/transactions/widgets/transaction_type_badge.dart';
+import 'package:openrc/models/product_labels.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/models/rc_transaction_detail.dart';
 import 'package:openrc/models/rc_transaction_detail_activity.dart';
 import 'package:openrc/services/app_icon_overrides_store.dart';
 import 'package:openrc/services/auto_app_icons_store.dart';
+import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/services/rc_api_service.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/theme/app_tokens.dart';
@@ -135,10 +137,17 @@ final transactionDetailProvider = StateNotifierProvider.autoDispose
       ),
     );
 
-String _transactionDetailAppBarTitle(RcTransaction transaction) {
+String _transactionDetailAppBarTitle(
+  RcTransaction transaction,
+  ProductLabels labels,
+) {
   final name = transaction.app?.name?.trim();
   if (name != null && name.isNotEmpty) return name;
-  return planProductId(transaction, ifEmpty: 'detail.transaction'.tr());
+  return planProductId(
+    transaction,
+    labels: labels,
+    ifEmpty: 'detail.transaction'.tr(),
+  );
 }
 
 /// `name v1.2.3` when [version] is known, otherwise just [base].
@@ -250,7 +259,10 @@ class TransactionDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _transactionDetailAppBarTitle(transaction),
+          _transactionDetailAppBarTitle(
+            transaction,
+            ref.watch(productLabelsProvider),
+          ),
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
@@ -464,7 +476,10 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     final scheme = context.colorScheme;
     final appTitle = appName?.trim();
-    final productTitle = planDescription(tx);
+    final productTitle = planDescription(
+      tx,
+      labels: ref.watch(productLabelsProvider),
+    );
     final purchased = DateTime.tryParse(tx.purchaseDate ?? '')?.toLocal();
     final muted = context.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,

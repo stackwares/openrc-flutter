@@ -41,6 +41,14 @@ All notable changes to OpenRC are listed here. The format follows
   trials), the Breakdown card counts trials by status, store, app, country
   and plan instead of showing an all-zero revenue split. On the Revenue
   tab it shows for the month's trials.
+- Product names: give store product ids names you recognise, per app, from
+  Settings. Names appear in the transactions list, the detail screen, the
+  trials breakdown and Ask. Products can also be grouped into one plan, so
+  a monthly and an annual product count as the same plan.
+- Naming suggestions: the app labels the billing period it finds in the
+  product id (Yearly, Monthly, Weekly, Lifetime, 1 Year, 1 Month, 1 Week),
+  or asks the connected Ask model for names and plan groupings. Only product
+  ids are sent; suggestions are shown for review and never applied silently.
 
 ### Changed
 
