@@ -5,7 +5,7 @@ import 'package:openrc/core/theme/store_brand_icon_colors.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/subscriber_tenure_format.dart';
 import 'package:openrc/core/utils/relative_time_format.dart';
-import 'package:openrc/core/utils/plan_display.dart';
+import 'package:openrc/core/utils/product_identifier_display.dart';
 import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:openrc/features/transactions/widgets/transaction_type_badge.dart';
 import 'package:openrc/models/rc_transaction.dart';
@@ -80,7 +80,9 @@ class TransactionItem extends ConsumerWidget {
 
     final appName = transaction.app?.name?.trim();
     final hasAppName = appName != null && appName.isNotEmpty;
-    final product = planDescription(transaction);
+    final product = productIdentifierDisplayTitle(
+      transaction.productIdentifier,
+    );
     final title = hasAppName ? appName : product;
     final cc = transaction.subscriberCountryCode;
     final country = cc == null
