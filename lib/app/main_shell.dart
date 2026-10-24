@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:openrc/app/app_navigator.dart';
 import 'package:openrc/app/floating_tab_chrome.dart';
 import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/core/animations/app_motion.dart';
@@ -99,6 +100,10 @@ void refreshShellTab(WidgetRef ref) {
 }
 
 /// Jump to Ask and optionally prefill the composer (⌘K from other tabs).
+///
+/// Anything pushed over the shell (a transaction, a metric detail, a side
+/// panel) is closed first: switching the tab underneath it would otherwise
+/// look like nothing happened.
 void openAskTab(WidgetRef ref, {String? prefill, String? transactionId}) {
   ref.read(mainShellTabIndexProvider.notifier).state = 3;
   final prompt = prefill?.trim();
@@ -109,6 +114,7 @@ void openAskTab(WidgetRef ref, {String? prefill, String? transactionId}) {
   ref.read(askFocusTransactionIdProvider.notifier).state =
       (id != null && id.isNotEmpty) ? id : null;
   ref.read(askFocusTickProvider.notifier).state++;
+  appNavigatorKey.currentState?.popUntil((route) => route.isFirst);
 }
 
 void openAskAboutSelectedDay(WidgetRef ref) {

@@ -54,6 +54,8 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Fixed
 
+- “Ask about this” now opens Ask from transaction and metric details, side
+  panels and other pushed screens instead of switching the tab behind them.
 - The Ask message field centers its text and hint vertically.
 - The provider sheet's eye button now shows and hides the API key reliably,
   including on the web where a stale hidden input could keep the field

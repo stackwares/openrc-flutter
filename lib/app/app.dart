@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrc/app/app_navigator.dart';
 import 'package:openrc/app/mac_menu_bar.dart';
 import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/core/constants/app_constants.dart';
@@ -27,7 +28,6 @@ class OpenRcApp extends ConsumerStatefulWidget {
 
 class _OpenRcAppState extends ConsumerState<OpenRcApp>
     with WidgetsBindingObserver {
-  final _navigatorKey = GlobalKey<NavigatorState>();
   final _telemetryObserver = TelemetryRouteObserver();
 
   @override
@@ -57,7 +57,7 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
     // (Settings, a transaction, a sheet) would stay visible after sign-out.
     ref.listen<bool>(isSignedInProvider, (previous, next) {
       if (previous == true && !next) {
-        _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+        appNavigatorKey.currentState?.popUntil((route) => route.isFirst);
       }
     });
     final signedIn = ref.watch(isSignedInProvider);
@@ -68,7 +68,7 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
     final l10n = EasyLocalization.of(context);
 
     final app = MaterialApp(
-      navigatorKey: _navigatorKey,
+      navigatorKey: appNavigatorKey,
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       // English without an EasyLocalization ancestor (widget tests).
@@ -107,7 +107,7 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
       ),
     );
     if (!_hasTransparentTitleBar) return app;
-    return MacMenuBar(navigatorKey: _navigatorKey, child: app);
+    return MacMenuBar(navigatorKey: appNavigatorKey, child: app);
   }
 }
 
