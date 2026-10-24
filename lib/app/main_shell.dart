@@ -19,6 +19,10 @@ import 'package:openrc/features/settings/widgets/account_header.dart';
 import 'package:openrc/features/transactions/transaction_detail_screen.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
 import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/commission_settings_store.dart';
+import 'package:openrc/services/display_currency_store.dart';
+import 'package:openrc/services/exchange_rate_provider.dart';
+import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/services/telemetry.dart';
@@ -121,6 +125,45 @@ class _MainShellState extends ConsumerState<MainShell> {
     // Starts notifications (re-subscribing this device) and finishes removing
     // webhooks that an earlier turn-off or log-out couldn't.
     ref.read(pushSettingsProvider.notifier).retryPendingRemovals();
+    // Notifications show amounts the way Settings does.
+    ref.listenManual(
+      displayCurrencyProvider,
+      (_, _) => _syncPushDisplay(),
+      fireImmediately: true,
+    );
+    ref.listenManual(commissionSettingsProvider, (_, _) => _syncPushDisplay());
+    ref.listenManual(usdExchangeRatesProvider, (_, _) => _syncPushDisplay());
+  }
+
+  Timer? _pushDisplayTimer;
+
+  /// Hands Settings' currency and store fees to notifications. Waits a
+  /// moment, so settings still loading at launch arrive as one change.
+  void _syncPushDisplay() {
+    _pushDisplayTimer?.cancel();
+    _pushDisplayTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      final currency = ref.read(displayCurrencyProvider);
+      final fees = ref.read(commissionSettingsProvider);
+      final previous = ref.read(pushSettingsProvider).display;
+      final rate =
+          ref.read(usdExchangeRatesProvider).value?[currency.toLowerCase()] ??
+          (previous.currency == currency ? previous.rate : null);
+      ref
+          .read(pushSettingsProvider.notifier)
+          .setDisplay(
+            PushDisplay(
+              currency: currency,
+              appleFee: fees.adjustmentEnabled
+                  ? fees.appleCommissionPercent
+                  : null,
+              googleFee: fees.adjustmentEnabled
+                  ? fees.googleCommissionPercent
+                  : null,
+              rate: rate,
+            ),
+          );
+    });
   }
 
   @override
@@ -128,6 +171,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     for (final subscription in _pushSubscriptions) {
       subscription.cancel();
     }
+    _pushDisplayTimer?.cancel();
     super.dispose();
   }
 

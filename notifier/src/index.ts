@@ -6,6 +6,7 @@
  */
 
 import { kindOf, notificationFor, parseKinds, type Kind, type WebhookEvent } from "./copy";
+import { parseDisplay, usdRate, type Display } from "./display";
 import { FcmError, parseServiceAccount, sendToTopic, setTopicSubscription } from "./fcm";
 import { parseSecret, topicFor } from "./topic";
 
@@ -52,12 +53,22 @@ export default {
     if (request.method !== "POST") {
       return Response.json({ error: "method_not_allowed" }, { status: 405 });
     }
-    return webhook(request, env, parseKinds(url.searchParams.get("notify")));
+    return webhook(
+      request,
+      env,
+      parseKinds(url.searchParams.get("notify")),
+      parseDisplay(url.searchParams),
+    );
   },
 } satisfies ExportedHandler<Env>;
 
 /** [kinds]: what this webhook's device chose to hear about; null for all. */
-async function webhook(request: Request, env: Env, kinds: Set<Kind> | null): Promise<Response> {
+async function webhook(
+  request: Request,
+  env: Env,
+  kinds: Set<Kind> | null,
+  display: Display,
+): Promise<Response> {
   const secret = parseSecret(request.headers.get("Authorization"));
   if (!secret) return Response.json({ error: "unauthorized" }, { status: 401 });
 
@@ -82,7 +93,9 @@ async function webhook(request: Request, env: Env, kinds: Set<Kind> | null): Pro
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const copy = event ? notificationFor(event) : null;
+  const copy = event
+    ? notificationFor(event, display, await usdRate(display))
+    : null;
   // RevenueCat's test event always gets through, so setup can be checked.
   const kind = event ? kindOf(event) : null;
   const chosen = event?.type === "TEST" || kinds === null || (kind !== null && kinds.has(kind));

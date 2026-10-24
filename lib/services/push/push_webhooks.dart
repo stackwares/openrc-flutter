@@ -7,6 +7,7 @@ import 'package:openrc/models/rc_project.dart';
 import 'package:openrc/models/rc_webhook.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
+import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_api_service.dart';
@@ -42,10 +43,16 @@ class PushWebhooks {
 
   /// This device's webhook URL. The notifier ignores the tag, and only sends
   /// the [kinds] named in `notify` (every kind when it's left out).
-  static String urlFor(String secret, [Set<PushKind>? kinds]) {
+  static String urlFor(
+    String secret, [
+    Set<PushKind>? kinds,
+    PushDisplay display = const PushDisplay(),
+  ]) {
     final base = '${PushConfig.webhookUrl}/${tagFor(secret)}';
     final notify = kinds == null ? null : PushKind.queryFor(kinds);
-    return notify == null ? base : '$base?notify=$notify';
+    final query = {'notify': ?notify, ...display.query};
+    if (query.isEmpty) return base;
+    return '$base?${[for (final e in query.entries) '${e.key}=${e.value}'].join('&')}';
   }
 
   /// Matches whatever kinds the URL asks for, and webhooks from before URLs
@@ -61,9 +68,10 @@ class PushWebhooks {
     String secret, {
     required bool sandbox,
     required Set<PushKind> kinds,
+    PushDisplay display = const PushDisplay(),
   }) => RcWebhookInput(
     name: nameFor(secret),
-    url: urlFor(secret, kinds),
+    url: urlFor(secret, kinds, display),
     authorizationHeader: PushChannel.authorizationHeader(secret),
     environment: sandbox ? null : 'production',
     eventTypes: PushKind.eventTypesFor(kinds),
@@ -84,8 +92,14 @@ class PushWebhooks {
     String secret, {
     required bool sandbox,
     required Set<PushKind> kinds,
+    PushDisplay display = const PushDisplay(),
   }) async {
-    final input = inputFor(secret, sandbox: sandbox, kinds: kinds);
+    final input = inputFor(
+      secret,
+      sandbox: sandbox,
+      kinds: kinds,
+      display: display,
+    );
     final existing = await find(projectId, secret);
     if (existing != null) {
       await _api.updateWebhook(projectId, existing, input);
@@ -102,10 +116,11 @@ class PushWebhooks {
     String secret, {
     required bool sandbox,
     required Set<PushKind> kinds,
+    PushDisplay display = const PushDisplay(),
   }) => _api.updateWebhook(
     projectId,
     webhookId,
-    inputFor(secret, sandbox: sandbox, kinds: kinds),
+    inputFor(secret, sandbox: sandbox, kinds: kinds, display: display),
   );
 
   Future<void> remove(String projectId, String webhookId) =>
@@ -283,6 +298,7 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
             secret,
             sandbox: settings.sandbox,
             kinds: settings.kindsFor(id),
+            display: settings.display,
           );
           _set(
             id,

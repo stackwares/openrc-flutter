@@ -66,7 +66,9 @@ Then:
   or refund) to the OpenRC notifier, as it would to any webhook.
 - **The notifier** (a Cloudflare Worker) reads the event in memory and writes
   the notification from its type, price, product identifier, country, store
-  and environment. It sends only that text, plus the store's transaction id
+  and environment, showing the amount in your display currency and after
+  store fees if you chose that in Settings (those choices travel in the
+  webhook's address). It sends only that text, plus the store's transaction id
   so a tap can open the transaction, to Firebase Cloud Messaging, which
   delivers it to Android devices directly and to Apple devices through Apple
   Push Notification service. The notifier does not store events, keys or

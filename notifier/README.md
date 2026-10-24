@@ -25,7 +25,12 @@ It is deliberately small and stateless:
   `?notify=trial,new,…` lists the kinds that device wants (see `KINDS` in
   `src/copy.ts`); other events get `200` without a notification. RevenueCat's
   own filter can't do this, since a trial and a new subscription are the same
-  RevenueCat event. RevenueCat's test event always gets through. Wrong or missing secrets get
+  RevenueCat event. RevenueCat's test event always gets through.
+  `&currency=EUR&fees=15,30&rate=0.92` shows the amount the way the app's
+  Settings do: in that currency and after App Store / Google Play fees. Rates
+  come from the same free source the app uses, cached in memory; when that's
+  down it uses the last rates it fetched, then the app's saved `rate`, then
+  US dollars. Wrong or missing secrets get
   `401`. Events that aren't about a purchase (aliases, experiments, virtual
   currency, invoices) get `200` without a notification. A failed delivery
   gets `502`, so RevenueCat retries it; retried events replace their

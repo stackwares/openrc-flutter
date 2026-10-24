@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/theme/store_brand_icon_colors.dart';
-import 'package:openrc/core/utils/product_identifier_display.dart';
+import 'package:openrc/core/utils/plan_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/relative_time_format.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
@@ -135,8 +135,8 @@ final transactionDetailProvider =
 String _transactionDetailAppBarTitle(RcTransaction transaction) {
   final name = transaction.app?.name?.trim();
   if (name != null && name.isNotEmpty) return name;
-  return productIdentifierDisplayTitle(
-    transaction.productIdentifier,
+  return planProductId(
+    transaction,
     ifEmpty: 'detail.transaction'.tr(),
   );
 }
@@ -457,7 +457,7 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     final scheme = context.colorScheme;
     final appTitle = appName?.trim();
-    final productTitle = productIdentifierDisplayTitle(tx.productIdentifier);
+    final productTitle = planDescription(tx);
     final purchased = DateTime.tryParse(tx.purchaseDate ?? '')?.toLocal();
     final muted = context.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
