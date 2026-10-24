@@ -71,7 +71,7 @@ send nothing.
 
 1. Deploy the relay once (`relay/README.md`). Its `ALLOWED_ORIGINS` must list
    the Pages domain.
-2. The first `wrangler pages deploy` creates the `openrc` Pages project. If
+2. The first `wrangler pages deploy` creates the `openrc-app` Pages project. If
    Cloudflare gives it a different `*.pages.dev` name, update
    `ALLOWED_ORIGINS` in `relay/wrangler.jsonc` and the `og:image` URL in
    `web/index.html`.
@@ -111,7 +111,7 @@ firebase appdistribution:distribute build/ios/ipa/*.ipa \
 (cd notifier && npm ci && npm run deploy)   # only when notifier/ changed
 flutter build web --release --dart-define-from-file=dart_defines/posthog.json \
   --dart-define-from-file=dart_defines/firebase.json
-npx wrangler pages deploy build/web --project-name openrc --branch main
+npx wrangler pages deploy build/web --project-name openrc-app --branch main
 ```
 
 `web/_headers` ships with the build and sets the security headers.
