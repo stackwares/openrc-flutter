@@ -499,9 +499,7 @@
     "unknown": "غير معروف",
     "weekly": "أسبوعي",
     "monthly": "شهري",
-    "annual": "سنوي",
-    "lifetime": "مدى الحياة",
-    "offer": "عرض {period}"
+    "annual": "سنوي"
   },
   "revenue": {
     "title": "الإيرادات",

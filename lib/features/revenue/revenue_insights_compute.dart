@@ -1,5 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:openrc/core/utils/product_identifier_display.dart';
+import 'package:openrc/core/utils/plan_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/store_commission.dart';
 import 'package:openrc/models/rc_transaction.dart';
@@ -354,7 +354,7 @@ TrialInsightsSnapshot computeTrialInsights(List<RcTransaction> txs) {
     final cKey = (rawCc != null && rawCc.isNotEmpty) ? rawCc : '__';
     byCountry.update(cKey, (v) => v + 1, ifAbsent: () => 1);
 
-    final plan = productIdentifierDisplayTitle(tx.productIdentifier);
+    final plan = planProductId(tx);
     byPlan.update(plan, (v) => v + 1, ifAbsent: () => 1);
   }
 

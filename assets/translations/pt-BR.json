@@ -495,9 +495,7 @@
     "unknown": "Desconhecido",
     "weekly": "Semanal",
     "monthly": "Mensal",
-    "annual": "Anual",
-    "lifetime": "Vitalício",
-    "offer": "Oferta de {period}"
+    "annual": "Anual"
   },
   "revenue": {
     "title": "Receita",

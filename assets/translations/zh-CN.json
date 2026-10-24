@@ -494,9 +494,7 @@
     "unknown": "未知",
     "weekly": "每周",
     "monthly": "每月",
-    "annual": "每年",
-    "lifetime": "永久",
-    "offer": "{period}优惠"
+    "annual": "每年"
   },
   "revenue": {
     "title": "收入",
