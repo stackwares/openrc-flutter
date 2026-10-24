@@ -1,15 +1,23 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:openrc/models/product_labels.dart';
+import 'package:openrc/services/push/push_names.dart';
+import 'package:openrc/services/push/push_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Names the developer gave to store product ids, per app, kept on this
-/// device only. Nothing here is sent anywhere: it only changes labels.
+/// device only. They change what the app shows, and travel on this device's
+/// own webhook URL so notifications read the same ([PushNames]).
 final productLabelsProvider =
-    StateNotifierProvider<ProductLabelsNotifier, ProductLabels>(
-      (ref) => ProductLabelsNotifier(),
-    );
+    StateNotifierProvider<ProductLabelsNotifier, ProductLabels>((ref) {
+      return ProductLabelsNotifier(
+        onChanged: (labels) => unawaited(
+          ref.read(pushSettingsProvider.notifier).setNames(PushNames.of(labels)),
+        ),
+      );
+    });
 
 /// One product's new label, from the editor or a suggestion.
 class ProductLabelUpdate {
@@ -23,9 +31,13 @@ class ProductLabelUpdate {
 }
 
 class ProductLabelsNotifier extends StateNotifier<ProductLabels> {
-  ProductLabelsNotifier() : super(const ProductLabels.empty()) {
+  ProductLabelsNotifier({this.onChanged}) : super(const ProductLabels.empty()) {
     _ready = _hydrate();
   }
+
+  /// Hears every change, including the one hydration makes, so whatever
+  /// follows the names (notifications) starts from the saved ones.
+  final void Function(ProductLabels labels)? onChanged;
 
   static const _prefsKey = 'product_labels_v1';
 
@@ -42,18 +54,21 @@ class ProductLabelsNotifier extends StateNotifier<ProductLabels> {
   Future<void> _hydrate() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefsKey);
-    if (raw == null || raw.isEmpty) return;
-    try {
-      state = ProductLabels.fromJson(jsonDecode(raw));
-    } catch (_) {
-      // Corrupt or older payload: start clean rather than lose the screen.
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        state = ProductLabels.fromJson(jsonDecode(raw));
+      } catch (_) {
+        // Corrupt or older payload: start clean rather than lose the screen.
+      }
     }
+    onChanged?.call(state);
   }
 
   Future<void> _commit(ProductLabels next) async {
     if (next == state) return;
     _undo = state;
     state = next;
+    onChanged?.call(state);
     final prefs = await SharedPreferences.getInstance();
     if (next.isEmpty) {
       await prefs.remove(_prefsKey);
@@ -69,6 +84,7 @@ class ProductLabelsNotifier extends StateNotifier<ProductLabels> {
     if (previous == null) return;
     _undo = null;
     state = previous;
+    onChanged?.call(state);
     final prefs = await SharedPreferences.getInstance();
     if (previous.isEmpty) {
       await prefs.remove(_prefsKey);

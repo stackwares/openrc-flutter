@@ -523,7 +523,7 @@
       "other": "{} days"
     },
     "title": "Product Names",
-    "intro": "Give store products names you recognise. Names stay on this device and appear everywhere in the app. Amounts and counts never change.",
+    "intro": "Give store products names you recognise. Names stay on this device and appear everywhere in the app, notifications included. Amounts and counts never change.",
     "search": "Search products",
     "emptyTitle": "No products loaded",
     "emptyBody": "Open the transactions list first: names are built from the sales already loaded.",

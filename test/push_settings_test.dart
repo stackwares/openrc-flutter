@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
+import 'package:openrc/services/push/push_names.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/push/push_webhooks.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -230,6 +231,35 @@ void main() {
         '?notify=trial&lang=pt-BR&currency=EUR&rate=1&fees=15,30&project=Project+p1',
       ),
     );
+  });
+
+  test('product names reach the webhooks, and outlive a restart', () async {
+    final rc = FakeRevenueCat();
+    final webhooks = PushWebhooks(rc.api());
+    final notifier = PushSettingsNotifier(FakePushMessaging(), webhooks);
+    await notifier.enable();
+    final secret = notifier.state.secret!;
+    await webhooks.add('p1', secret, sandbox: false, kinds: PushKind.all);
+
+    expect(await notifier.setNames(PushNames({'com.acme.pro': 'Pro'})), isTrue);
+    expect(
+      rc.webhooks['p1']!.single['url'],
+      contains('names=com.acme.pro%0APro'),
+    );
+
+    // The same names again doesn't touch RevenueCat.
+    rc.requests.clear();
+    expect(await notifier.setNames(PushNames({'com.acme.pro': 'Pro'})), isTrue);
+    expect(rc.requests, isEmpty);
+
+    // Clearing them takes them off the URL.
+    expect(await notifier.setNames(const PushNames.empty()), isTrue);
+    expect(rc.webhooks['p1']!.single['url'], isNot(contains('names=')));
+
+    await notifier.setNames(PushNames({'com.acme.pro': 'Pro'}));
+    final next = PushSettingsNotifier(FakePushMessaging(), webhooks);
+    await pumpEventQueue();
+    expect(next.state.names.nameOf('com.acme.pro'), 'Pro');
   });
 
   test('signing out removes webhooks and forgets the secret', () async {

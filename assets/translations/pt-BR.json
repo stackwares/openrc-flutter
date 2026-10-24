@@ -518,7 +518,7 @@
       "other": "{} dias"
     },
     "title": "Nomes dos produtos",
-    "intro": "Dê aos produtos da loja nomes que você reconheça. Os nomes ficam neste dispositivo e aparecem em todo o app. Valores e contagens nunca mudam.",
+    "intro": "Dê aos produtos da loja nomes que você reconheça. Os nomes ficam neste dispositivo e aparecem em todo o app, inclusive nas notificações. Valores e contagens nunca mudam.",
     "search": "Buscar produtos",
     "emptyTitle": "Nenhum produto carregado",
     "emptyBody": "Abra primeiro a lista de transações: os nomes vêm das vendas já carregadas.",

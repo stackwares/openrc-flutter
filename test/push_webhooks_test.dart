@@ -5,6 +5,7 @@ import 'package:openrc/models/rc_webhook.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
 import 'package:openrc/services/push/push_kinds.dart';
+import 'package:openrc/services/push/push_names.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/push/push_webhooks.dart';
 import 'package:openrc/services/rc_api_service.dart';
@@ -291,6 +292,22 @@ void main() {
       expect(await webhooks.find('p1', secret), id);
     });
 
+    test('carries product names for the notifier', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      final webhooks = PushWebhooks(rc.api());
+      final id = await webhooks.add(
+        'p1',
+        secret,
+        sandbox: false,
+        kinds: PushKind.all,
+        names: PushNames({'com.acme.pro': 'Pro'}),
+      );
+      final hook = rc.webhooks['p1']!.single;
+      expect(hook['url'], endsWith('?names=com.acme.pro%0APro'));
+      // The tag still finds it, whatever the query.
+      expect(await webhooks.find('p1', secret), id);
+    });
+
     test('the tag names a secret without giving it away', () {
       final tag = PushWebhooks.tagFor(secret);
       expect(tag, hasLength(6));
@@ -378,6 +395,29 @@ void main() {
       expect(
         rc.requests.last,
         startsWith('POST /me/projects/p2/integrations/webhooks/'),
+      );
+    });
+
+    test('adds product names to a webhook that has none', () async {
+      final secret = container.read(pushSettingsProvider).secret!;
+      await container
+          .read(pushSettingsProvider.notifier)
+          .setNames(PushNames({'com.acme.pro': 'Pro'}));
+      // Written straight in, as an older app version left it: no names.
+      rc.webhooks['p2']!.add({
+        ...PushWebhooks.inputFor(
+          secret,
+          sandbox: false,
+          kinds: PushKind.all,
+        ).toJson(),
+        'id': 'own-p2',
+      });
+      expect(rc.webhooks['p2']!.single['url'], isNot(contains('names=')));
+
+      await loaded();
+      expect(
+        rc.webhooks['p2']!.single['url'],
+        contains('names=com.acme.pro%0APro'),
       );
     });
 

@@ -41,6 +41,9 @@ All notable changes to OpenRC are listed here. The format follows
   trials), the Breakdown card counts trials by status, store, app, country
   and plan instead of showing an all-zero revenue split. On the Revenue
   tab it shows for the month's trials.
+- Notifications use those product names: each device's webhook URL carries
+  the names Settings gave (capped in length), so a push reads `Pro · Monthly`
+  instead of `com.acme.pro.monthly`, in the device's own language.
 - Product names: give store product ids names you recognise, per app, from
   Settings. Names appear in the transactions list, the detail screen, the
   trials breakdown and Ask. Products can also be grouped into one plan, so

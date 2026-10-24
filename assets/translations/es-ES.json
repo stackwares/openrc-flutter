@@ -518,7 +518,7 @@
       "other": "{} días"
     },
     "title": "Nombres de productos",
-    "intro": "Pon a los productos de la tienda nombres que reconozcas. Los nombres se quedan en este dispositivo y aparecen en toda la app. Los importes y recuentos nunca cambian.",
+    "intro": "Pon a los productos de la tienda nombres que reconozcas. Los nombres se quedan en este dispositivo y aparecen en toda la app, también en las notificaciones. Los importes y recuentos nunca cambian.",
     "search": "Buscar productos",
     "emptyTitle": "No hay productos cargados",
     "emptyBody": "Abre primero la lista de transacciones: los nombres salen de las ventas ya cargadas.",
