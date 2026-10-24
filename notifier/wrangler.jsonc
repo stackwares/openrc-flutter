@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "openrc-notifier",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    // Only the Worker's own log lines. Invocation logs would record request
+    // headers, and a webhook's Authorization header is a device's secret.
+    "logs": { "enabled": true, "invocation_logs": false, "head_sampling_rate": 1 }
+  },
+  "secrets": {
+    // A Firebase service account key (JSON) that may send Cloud Messaging
+    // messages: `npx wrangler secret put FCM_SERVICE_ACCOUNT`.
+    "required": ["FCM_SERVICE_ACCOUNT"]
+  }
+}

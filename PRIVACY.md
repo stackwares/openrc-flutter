@@ -24,6 +24,10 @@ apply to their service.
   details, app names, product names, or revenue amounts are sent. You can turn
   this off in **Settings**.
 - Builds from source without a PostHog token send **no** analytics.
+- **Optional push notifications**: if you turn them on, RevenueCat sends
+  events from your projects to the OpenRC notifier, which writes a short
+  notification and delivers it through Firebase Cloud Messaging. The notifier
+  stores nothing and keeps no list of devices.
 
 ## 3. Information you provide
 
@@ -45,7 +49,36 @@ On **web**, requests go through a small **relay** that forwards traffic to
 RevenueCat without storing or logging request or response bodies, tokens, or
 headers. You may self-host this relay.
 
-## 5. Optional analytics and diagnostics
+## 5. Optional push notifications
+
+Notifications are off until you turn them on in **Settings → Notifications**.
+Then:
+
+- **On your device**, OpenRC creates a random key, kept in the device's secure
+  storage. Firebase Cloud Messaging gives the install a registration token,
+  and the device subscribes to a channel named after a hash of the key.
+- **In your RevenueCat projects**, OpenRC uses your RevenueCat session to add a
+  webhook for this device to each project you pick, with the key as its
+  authorization header. You can also add the webhook yourself instead.
+- **RevenueCat** sends each event you chose (for example a purchase, renewal
+  or refund) to the OpenRC notifier, as it would to any webhook.
+- **The notifier** (a Cloudflare Worker) reads the event in memory and writes
+  the notification from its type, price, product identifier, country, store
+  and environment. It sends only that text, plus the store's transaction id
+  so a tap can open the transaction, to Firebase Cloud Messaging, which
+  delivers it to Android devices directly and to Apple devices through Apple
+  Push Notification service. The notifier does not store events, keys or
+  devices, and does not log them.
+- **Turning notifications off** unsubscribes the device and removes its
+  webhooks from your projects. **Log out** does the same and deletes the key.
+  If a webhook can't be removed at that moment (offline, for example), OpenRC
+  tries again the next time it opens, and you can always delete it in
+  RevenueCat.
+
+Builds without Firebase settings have no notifications. You may self-host
+the notifier.
+
+## 6. Optional analytics and diagnostics
 
 When enabled (and when the build includes a PostHog project token), the app may
 send to PostHog:
@@ -61,7 +94,7 @@ We configure PostHog **not** to create person profiles and we do **not** call
 
 PostHog's policy: [posthog.com/privacy](https://posthog.com/privacy).
 
-## 6. What we do not collect for analytics
+## 7. What we do not collect for analytics
 
 We do not send to PostHog (or other analytics in this app):
 
@@ -69,38 +102,43 @@ We do not send to PostHog (or other analytics in this app):
 - Your email address or RevenueCat distinct ID (for analytics)
 - App names, product names, prices, MRR, revenue amounts, or transaction details
 
-## 7. Third-party services
+## 8. Third-party services
 
 | Service | Purpose | Privacy policy |
 |--------|---------|----------------|
 | **RevenueCat** | Authentication and dashboard API | [revenuecat.com/privacy](https://www.revenuecat.com/privacy) |
 | **PostHog** (optional) | Anonymous usage and crash reporting | [posthog.com/privacy](https://posthog.com/privacy) |
-| **Cloudflare** (web relay / hosting) | Stateless relay and static web hosting | [cloudflare.com/privacypolicy](https://www.cloudflare.com/privacypolicy/) |
+| **Cloudflare** (web relay, notifier, hosting) | Stateless relay and notifier, static web hosting | [cloudflare.com/privacypolicy](https://www.cloudflare.com/privacypolicy/) |
+| **Google Firebase Cloud Messaging** (optional) | Delivering notifications you turn on | [firebase.google.com/support/privacy](https://firebase.google.com/support/privacy) |
+| **Apple Push Notification service** (optional) | Delivering notifications to iPhone and iPad | [apple.com/legal/privacy](https://www.apple.com/legal/privacy/) |
 
-## 8. Data retention and deletion
+## 9. Data retention and deletion
 
 - **Local app data** — Removed when you uninstall the app or use **Log out**
   (session cleared from secure storage).
 - **PostHog** — Retained according to PostHog's policies; opt out in Settings
   stops new collection from that install.
+- **Notifications** — The notifier keeps nothing. Turning notifications off
+  or logging out removes the device's webhooks from RevenueCat, and log out
+  removes its notification key.
 - **RevenueCat** — Governed by RevenueCat's retention and your account settings.
 
-## 9. Security
+## 10. Security
 
 We use HTTPS for network traffic and platform secure storage for session tokens.
 Report security issues privately: see [SECURITY.md](SECURITY.md).
 
-## 10. Children
+## 11. Children
 
 OpenRC is a business tool for developers and is not directed at children under
 13.
 
-## 11. Changes
+## 12. Changes
 
 We may update this policy. The "Last updated" date at the top will change when
 we do. Continued use after changes means you accept the updated policy.
 
-## 12. Contact
+## 13. Contact
 
 For privacy questions about OpenRC: **dev@stackwares.com**.
 

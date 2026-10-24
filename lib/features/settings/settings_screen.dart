@@ -8,6 +8,7 @@ import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/currency_format.dart';
+import 'package:openrc/features/notifications/widgets/notifications_settings_row.dart';
 import 'package:openrc/features/settings/widgets/accent_scheme_sheet.dart';
 import 'package:openrc/features/settings/widgets/account_header.dart';
 import 'package:openrc/features/settings/widgets/appearance_pickers.dart';
@@ -17,6 +18,7 @@ import 'package:openrc/features/settings/widgets/settings_rows.dart';
 import 'package:openrc/features/settings/widgets/store_fee_sheet.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/display_currency_store.dart';
+import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/services/telemetry.dart';
 import 'package:openrc/services/utilities_service.dart';
@@ -160,6 +162,7 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
     final telemetryEnabled = ref.watch(telemetryEnabledProvider);
+    final pushAvailable = ref.watch(pushMessagingProvider) != null;
     final language = ref.watch(appLanguageProvider);
     final scheme = context.colorScheme;
     final tt = context.textTheme;
@@ -379,6 +382,14 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ).appCardEntrance(delay: const Duration(milliseconds: 80)),
+
+          // Only builds with Firebase settings, on platforms that get pushes.
+          if (pushAvailable) ...[
+            SettingsGroupLabel('notifications.title'.tr()),
+            const NotificationsSettingsRow().appCardEntrance(
+              delay: const Duration(milliseconds: 90),
+            ),
+          ],
 
           // Only builds that report anything have something to turn off.
           if (Telemetry.isAvailable) ...[

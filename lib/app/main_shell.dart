@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,11 +16,15 @@ import 'package:openrc/features/charts/home_screen.dart';
 import 'package:openrc/features/revenue/revenue_screen.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/settings/widgets/account_header.dart';
+import 'package:openrc/features/transactions/transaction_detail_screen.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/rc_transaction.dart';
+import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/services/telemetry.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/app_logo.dart';
+import 'package:openrc/widgets/side_panel.dart';
 
 /// Selected tab index for [MainShell]
 /// (`0` = transactions, `1` = revenue, `2` = charts).
@@ -89,6 +96,8 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Moves the tabs between layouts on resize without losing their state.
   final _contentKey = GlobalKey();
 
+  late final List<StreamSubscription<RemoteMessage>> _pushSubscriptions;
+
   @override
   void initState() {
     super.initState();
@@ -99,6 +108,74 @@ class _MainShellState extends ConsumerState<MainShell> {
         _mainShellTabs[ref.read(mainShellTabIndexProvider)].telemetryName,
       );
     });
+    _pushSubscriptions = [
+      PushNotifications.onMessage.listen(_onPushWhileOpen),
+      PushNotifications.onMessageOpenedApp.listen(_openFromPush),
+    ];
+    PushNotifications.initialMessage().then((message) {
+      if (message != null && mounted) _openFromPush(message);
+    });
+    // Starts notifications (re-subscribing this device) and finishes removing
+    // webhooks that an earlier turn-off or log-out couldn't.
+    ref.read(pushSettingsProvider.notifier).retryPendingRemovals();
+  }
+
+  @override
+  void dispose() {
+    for (final subscription in _pushSubscriptions) {
+      subscription.cancel();
+    }
+    super.dispose();
+  }
+
+  void _reloadTransactions() {
+    if (!ref.read(transactionsProvider).isLoading) {
+      ref.read(transactionsProvider.notifier).fetchInitial();
+    }
+  }
+
+  /// A RevenueCat event arrived while the app is open: show it in the list.
+  /// iOS and macOS show the banner themselves; Android doesn't.
+  void _onPushWhileOpen(RemoteMessage message) {
+    _reloadTransactions();
+    final title = message.notification?.title;
+    if (defaultTargetPlatform == TargetPlatform.android && title != null) {
+      context.showSnackBar(title);
+    }
+  }
+
+  /// Tapping a notification opens the transaction it's about, once the
+  /// list has it: RevenueCat's list can trail its webhooks by a few seconds.
+  Future<void> _openFromPush(RemoteMessage message) async {
+    _select(0);
+    final id = message.data['transaction_id'];
+    final notifier = ref.read(transactionsProvider.notifier);
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await Future<void>.delayed(const Duration(seconds: 3));
+      if (!mounted) return;
+      if (!ref.read(transactionsProvider).isLoading) {
+        await notifier.fetchInitial();
+      }
+      if (!mounted || id is! String) return;
+      final transaction = _findTransaction(id);
+      if (transaction != null) {
+        openDetail(
+          context,
+          (_) => TransactionDetailScreen(transaction: transaction),
+        );
+        return;
+      }
+    }
+  }
+
+  RcTransaction? _findTransaction(String storeTransactionId) {
+    final state = ref.read(transactionsProvider);
+    for (final day in [...state.grouped.values, ...state.jumpedDays.values]) {
+      for (final tx in day) {
+        if (tx.storeTransactionIdentifier == storeTransactionId) return tx;
+      }
+    }
+    return null;
   }
 
   void _select(int index) {

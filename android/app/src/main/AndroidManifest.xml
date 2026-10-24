@@ -26,6 +26,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- RevenueCat notifications from Firebase Cloud Messaging. MainActivity
+             creates the channel. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="revenuecat_events" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher_monochrome" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/ic_launcher_background" />
         <!-- PostHog starts from Dart, and only when the build has a project token. -->
         <meta-data
             android:name="com.posthog.posthog.AUTO_INIT"
