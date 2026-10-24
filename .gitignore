@@ -53,3 +53,6 @@ dart_defines/*.json
 
 # Wrangler local state
 .wrangler/
+
+# Local Claude Code launch configs (machine-specific paths)
+.claude/
