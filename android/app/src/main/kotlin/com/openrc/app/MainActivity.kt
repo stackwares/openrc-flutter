@@ -1,9 +1,13 @@
 package com.openrc.app
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
+import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import com.openrc.app.widgets.RevenueInsightsLargeWidgetProvider
 import com.openrc.app.widgets.RevenueInsightsSmallWidgetProvider
@@ -26,6 +30,25 @@ import org.json.JSONObject
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.openrc.app/widgets"
     private val TAG = "MainActivity"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        createNotificationChannel()
+    }
+
+    /**
+     * The channel RevenueCat notifications arrive on (set as FCM's default in
+     * AndroidManifest.xml). Creating it again is a no-op.
+     */
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val channel = NotificationChannel(
+            "revenuecat_events",
+            getString(R.string.notification_channel_events),
+            NotificationManager.IMPORTANCE_HIGH,
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

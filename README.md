@@ -41,6 +41,9 @@ your RevenueCat account and works out the answers on your device:
 - **The charts that matter.** MRR, ARR, revenue, proceeds, subscriptions,
   trials, users, churn and more, over any date range.
 - **At a glance.** Home screen widgets on iOS and Android.
+- **A ping for every sale.** Optional push notifications for purchases,
+  renewals, trials and refunds, from RevenueCat's own webhooks (iPhone, iPad
+  and Android).
 - **Made for every screen.** A floating tab bar on phones, a navigation rail
   on tablets, and a sidebar with side-by-side columns, keyboard shortcuts and
   a native menu bar on desktop.
@@ -66,6 +69,12 @@ Or [build it yourself](#build-from-source) in a few minutes.
   directly. Browsers can't, so the web app goes through a small
   [stateless relay](relay/) that streams requests through without storing or
   logging them. You can run your own.
+- **Notifications pass through; nothing is kept.** If you turn them on,
+  OpenRC adds a webhook for your device to the RevenueCat projects you pick
+  (and removes it when you turn them off or log out). RevenueCat then sends
+  each event to a small [stateless notifier](notifier/), which writes the
+  notification and hands it to Firebase Cloud Messaging to deliver. It
+  stores no events and keeps no list of devices. You can run your own.
 - **Anonymous, optional usage stats.** Official builds send crash reports and
   which screens are used to [PostHog](https://posthog.com), never your
   account, apps or revenue, and you can turn it off in Settings. Builds from
@@ -112,8 +121,11 @@ Everything is optional and set with `--dart-define` (or
 | `OPENRC_RELAY_URL` | Relay the web app uses. Defaults to the official one. |
 | `POSTHOG_PROJECT_TOKEN` | Enables anonymous crash reports and usage stats. Off when empty. |
 | `POSTHOG_HOST` | PostHog ingestion host. Defaults to `https://us.i.posthog.com`. |
+| `FIREBASE_*` | Firebase project for push notifications (Cloud Messaging only). Notifications are off when empty. |
+| `OPENRC_NOTIFIER_URL` | Notifier that turns RevenueCat webhooks into pushes. Defaults to the official one; must send through the same Firebase project. |
 
-`dart_defines/posthog.example.json` shows the file format. Shipping builds
+`dart_defines/posthog.example.json` and `dart_defines/firebase.example.json`
+show the file format. Shipping builds
 to testers and the web is covered in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## How it works
@@ -133,6 +145,7 @@ lib/
   theme/      tokens, colors, typography
   widgets/    shared UI
 relay/        Cloudflare Worker that lets the web app reach RevenueCat
+notifier/     Cloudflare Worker that turns RevenueCat webhooks into pushes
 ```
 
 ## Contributing

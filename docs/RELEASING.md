@@ -9,8 +9,8 @@ same steps with their own accounts.
 | iPhone and iPad | Firebase App Distribution (ad-hoc IPA) |
 | Web | Cloudflare Pages, with the relay on Cloudflare Workers |
 
-The app contains no Firebase SDK. App Distribution only receives the finished
-builds through the `firebase` CLI.
+The app's only Firebase SDK is Cloud Messaging, for push notifications. App
+Distribution receives the finished builds through the `firebase` CLI.
 
 ## One-time setup
 
@@ -44,6 +44,19 @@ and sign release builds with it (never commit the keystore or its passwords).
 2. Register each tester's iPhone or iPad in the Apple Developer account. Ad-hoc
    builds only install on registered devices.
 
+### Push notifications (optional)
+
+1. In the Firebase project, register the Android app (`com.openrc.app`) and
+   the Apple app (`com.openrc.app`) if App Distribution hasn't already, and
+   copy their API keys and app IDs into `dart_defines/firebase.json` (from
+   `dart_defines/firebase.example.json`). It is gitignored. Without it,
+   builds have no notifications.
+2. Upload an APNs authentication key under **Project settings → Cloud
+   Messaging**, and give the app ID `com.openrc.app` the **Push
+   Notifications** capability (Xcode's automatic signing can do this).
+3. Deploy the notifier (`notifier/README.md`) with a service account key from
+   the same project.
+
 ### Telemetry (optional)
 
 Create `dart_defines/posthog.json` from `dart_defines/posthog.example.json`
@@ -68,7 +81,8 @@ debug-only defines.
 ### Android
 
 ```bash
-flutter build apk --release --dart-define-from-file=dart_defines/posthog.json
+flutter build apk --release --dart-define-from-file=dart_defines/posthog.json \
+  --dart-define-from-file=dart_defines/firebase.json
 firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
   --app "$OPENRC_FIREBASE_ANDROID_APP_ID" \
   --groups testers \
@@ -78,7 +92,8 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 ### iPhone and iPad
 
 ```bash
-flutter build ipa --release --export-method ad-hoc --dart-define-from-file=dart_defines/posthog.json
+flutter build ipa --release --export-method ad-hoc --dart-define-from-file=dart_defines/posthog.json \
+  --dart-define-from-file=dart_defines/firebase.json
 firebase appdistribution:distribute build/ios/ipa/*.ipa \
   --app "$OPENRC_FIREBASE_IOS_APP_ID" \
   --groups testers \
@@ -88,7 +103,8 @@ firebase appdistribution:distribute build/ios/ipa/*.ipa \
 ### Web
 
 ```bash
-(cd relay && npm ci && npm run deploy)   # only when relay/ changed
+(cd relay && npm ci && npm run deploy)      # only when relay/ changed
+(cd notifier && npm ci && npm run deploy)   # only when notifier/ changed
 flutter build web --release --dart-define-from-file=dart_defines/posthog.json
 npx wrangler pages deploy build/web --project-name openrc --branch main
 ```

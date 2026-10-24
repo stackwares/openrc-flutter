@@ -7,6 +7,7 @@ import 'package:openrc/app/app.dart';
 import 'package:openrc/app/app_startup.dart';
 import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/core/logging/app_logging.dart';
+import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/telemetry.dart';
 import 'package:openrc/theme/app_tokens.dart';
 
@@ -18,6 +19,8 @@ void main() async {
   await EasyLocalization.ensureInitialized();
   // Crash reports and anonymous usage; a no-op in builds without a token.
   await Telemetry.start();
+  // Push notifications; a no-op in builds without Firebase settings.
+  await PushNotifications.start();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),

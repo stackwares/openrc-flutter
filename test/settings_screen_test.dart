@@ -1,16 +1,22 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/models/rc_me_response.dart';
 import 'package:openrc/models/rc_project.dart';
+import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
+import 'package:openrc/services/rc_api_service.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fake_push_messaging.dart';
+import 'fake_revenuecat.dart';
 
 void main() {
   setUp(() {
@@ -24,13 +30,19 @@ void main() {
     );
   });
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    PushMessaging? push,
+    RcApiService? api,
+  }) async {
     tester.view.physicalSize = const Size(430, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          if (push != null) pushMessagingProvider.overrideWithValue(push),
+          if (api != null) rcApiServiceProvider.overrideWithValue(api),
           rcMeProvider.overrideWith(
             (ref) => const RcMeResponse(
               name: 'Ada Lovelace',
@@ -68,6 +80,20 @@ void main() {
     expect(find.text('Version 1.0.0 (1)'), findsOneWidget);
     // Builds without a PostHog token send nothing, so there is no toggle.
     expect(find.text('Share anonymous usage'), findsNothing);
+    // Nor are there notifications without Firebase settings.
+    expect(find.text('Push notifications'), findsNothing);
+  });
+
+  testWidgets('the notifications row shows its status and opens the screen', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    await pump(tester, push: FakePushMessaging(), api: FakeRevenueCat().api());
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Off'), findsOneWidget);
+    await tester.tap(find.text('Push notifications'));
+    await tester.pumpAndSettle();
+    expect(find.text('Know the moment you make a sale'), findsOneWidget);
   });
 
   testWidgets('store fee rows appear when fees are subtracted', (tester) async {

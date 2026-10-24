@@ -2,13 +2,17 @@
 
 OpenRC is a Flutter app with no backend of its own. It talks to RevenueCat's
 developer API with the signed-in user's session and works out everything else
-on the device. The only server-side piece is the optional web relay.
+on the device. The only server-side pieces are the optional web relay and the
+optional notifier, and neither stores anything.
 
 ```
  iOS / iPadOS / Android / macOS ──────────────► api.revenuecat.com
                                                   /v1/developers/…
  Web (browser) ──► relay (Cloudflare Worker) ──►  /internal/v1/developers/…
                      └─ /icon ──► App Store / Google Play lookups
+
+ RevenueCat webhook ──► notifier (Cloudflare Worker) ──► Firebase Cloud
+                                                         Messaging ──► devices
 ```
 
 ## Layers
@@ -24,6 +28,7 @@ on the device. The only server-side piece is the optional web relay.
 | `lib/widgets/` | Shared UI: cards, grouped lists, badges, side panel, logo |
 | `ios/RevenueWidgets/`, `android/…/widgets/` | Native home-screen widgets |
 | `relay/` | Cloudflare Worker for the web app |
+| `notifier/` | Cloudflare Worker that turns RevenueCat webhooks into push notifications |
 
 State is managed with Riverpod. Notifiers own loading, paging and errors;
 widgets only read providers and call notifier methods.
@@ -53,6 +58,47 @@ widgets only read providers and call notifier methods.
    through the `com.openrc.app/widgets` method channel (an App Group on iOS,
    shared preferences on Android).
 
+## Push notifications
+
+Off unless the build has Firebase settings (`lib/services/push/push_config.dart`)
+and the user turns them on in Settings. iPhone, iPad and Android only for
+now; macOS builds are signed ad hoc, which can't carry the push entitlement.
+
+1. Turning them on (`push_notifications.dart`) asks for permission and makes a
+   random secret, kept in secure storage. The device subscribes to the FCM
+   topic `openrc-<base64url(SHA-256("openrc-topic:" + secret))>`
+   (`push_channel.dart`), and subscribes again on every launch, so a changed
+   FCM registration never breaks delivery.
+2. The device then adds its own webhook to each project the user picks
+   (`push_webhooks.dart`, `push_projects_sheet.dart`), through the dashboard
+   API under `/internal/v1/developers/me/projects/{id}/integrations/webhooks`
+   that RevenueCat's dashboard and Kedi use. The webhook points at the
+   notifier's `/revenuecat/<tag>` URL with `Bearer <secret>` as its authorization
+   header, sends production events by default (sandbox is a switch), and only
+   the event types that notify. RevenueCat masks the header when a webhook is
+   read back, so devices can't share one, and allows one webhook per URL in
+   a project: each device adds its own, with a URL ending in a tag from a
+   hash of the secret (also in its name, `OpenRC · <platform> · <tag>`), so
+   the device can find its webhooks again. RevenueCat's
+   `test_webhook` call then proves the path end to end. Which kinds of
+   event notify (`push_kinds.dart`: new subscriptions, trials, conversions,
+   renewals, refunds…) is a choice for all projects, which each project can
+   replace with its own. It travels in the webhook URL as `?notify=…`, with
+   the webhook's RevenueCat event types narrowed to match, and the notifier
+   drops events of other kinds. Copying the URL and
+   header by hand (`push_setup_sheet.dart`) remains as a fallback.
+3. For each event, the notifier hashes the header to find the topic, writes
+   the notification (`notifier/src/copy.ts`) and sends it through FCM's HTTP
+   v1 API with a service account. It keeps no record of devices or events.
+4. A notification that arrives while the app is open reloads the
+   transactions. Tapping one opens that transaction's details, found by the
+   store transaction id the push carries (`main_shell.dart`).
+
+Turning notifications off removes the device's webhooks; logging out does
+too, before the session ends, and deletes the secret. Webhooks that can't be
+removed (offline, say) are retried on a later launch. An expired session
+keeps everything, since the same person is likely to sign back in.
+
 ## Layouts
 
 `AppBreakpoints` (`lib/theme/app_tokens.dart`) sorts windows into three size
@@ -62,7 +108,11 @@ classes:
 |---|---|---|
 | < 600 | Floating tab bar | Single column |
 | 600–1023 | Navigation rail | Single column, centered |
-| ≥ 1024 | Sidebar with shortcuts | Side-by-side columns; details open in a side panel |
+| ≥ 1024 | Sidebar with shortcuts | Transactions and Revenue become a dashboard; details open in a side panel |
+
+The dashboard starts at 900 pt of content width (`AppBreakpoints.dashboard`):
+one column with a filter bar (projects, stores, countries), the cards in
+rows, and a sortable transactions table underneath.
 
 Screens decide columns from their own width with `LayoutBuilder`, so they
 also work inside split views. Phones are locked to portrait; tablets rotate.

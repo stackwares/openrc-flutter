@@ -10,6 +10,7 @@ import 'package:openrc/models/rc_login_request.dart';
 import 'package:openrc/models/rc_login_response.dart';
 import 'package:openrc/models/rc_me_response.dart';
 import 'package:openrc/services/payout_history_cache.dart';
+import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_api_service.dart';
 import 'package:openrc/services/telemetry.dart';
 import 'package:openrc/services/widget_data_channel.dart';
@@ -128,6 +129,19 @@ class RcAuthService {
   }
 
   Future<void> _signOut() async {
+    // Someone else may sign in next, so this device's webhooks go while the
+    // session can still remove them. An expired session is still this
+    // person's, so notifications keep coming until they log out.
+    if (_pendingReason == null) {
+      try {
+        await _ref
+            .read(pushSettingsProvider.notifier)
+            .clear()
+            .timeout(const Duration(seconds: 20));
+      } catch (e) {
+        _log.warning('Turning off notifications failed: $e');
+      }
+    }
     try {
       await _api.logout();
     } catch (e) {

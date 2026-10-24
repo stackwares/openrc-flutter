@@ -13,6 +13,7 @@ import 'package:openrc/models/rc_project.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/models/rc_transaction_detail.dart';
 import 'package:openrc/models/rc_transaction_detail_activity.dart';
+import 'package:openrc/models/rc_webhook.dart';
 import 'package:openrc/services/demo/demo_adapter.dart';
 
 /// [Options.extra] key: short label for debug logging (e.g. `transactions:scroll`).
@@ -282,6 +283,56 @@ class RcApiService {
       },
     );
     return RcChartResponse.fromJson(requireBody(response));
+  }
+
+  /// A project's webhook integrations (dashboard API, as used by Kedi).
+  Future<List<RcWebhook>> webhooks(String projectId) async {
+    final response = await _internal.get<List<dynamic>>(
+      '/me/projects/$projectId/integrations/webhooks',
+    );
+    return (response.data ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(RcWebhook.fromJson)
+        .toList();
+  }
+
+  Future<RcWebhook> createWebhook(String projectId, RcWebhookInput input) async {
+    final response = await _internal.post<Map<String, dynamic>>(
+      '/me/projects/$projectId/integrations/webhooks',
+      data: input.toJson(),
+    );
+    return RcWebhook.fromJson(requireBody(response));
+  }
+
+  Future<void> updateWebhook(
+    String projectId,
+    String webhookId,
+    RcWebhookInput input,
+  ) async {
+    await _internal.put<dynamic>(
+      '/me/projects/$projectId/integrations/webhooks/$webhookId',
+      data: input.toJson(),
+    );
+  }
+
+  Future<void> deleteWebhook(String projectId, String webhookId) async {
+    await _internal.delete<dynamic>(
+      '/me/projects/$projectId/integrations/webhooks/$webhookId',
+      options: Options(contentType: Headers.jsonContentType),
+    );
+  }
+
+  /// Has RevenueCat send its test event now; the result says how the
+  /// webhook's endpoint answered.
+  Future<RcWebhookTestResult> testWebhook(
+    String projectId,
+    String webhookId,
+  ) async {
+    final response = await _internal.post<Map<String, dynamic>>(
+      '/me/projects/$projectId/integrations/webhooks/$webhookId/test_webhook',
+      options: Options(contentType: Headers.jsonContentType),
+    );
+    return RcWebhookTestResult.fromJson(requireBody(response));
   }
 
   RcErrorResponse? parseError(dynamic error) {
