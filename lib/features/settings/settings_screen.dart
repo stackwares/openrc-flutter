@@ -10,6 +10,7 @@ import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/currency_format.dart';
 import 'package:openrc/features/notifications/widgets/notifications_settings_row.dart';
 import 'package:openrc/features/settings/widgets/accent_scheme_sheet.dart';
+import 'package:openrc/features/settings/widgets/agent_settings_section.dart';
 import 'package:openrc/features/settings/widgets/account_header.dart';
 import 'package:openrc/features/settings/widgets/appearance_pickers.dart';
 import 'package:openrc/features/settings/widgets/currency_sheet.dart';
@@ -392,6 +393,10 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ).appCardEntrance(delay: const Duration(milliseconds: 80)),
+
+          const AgentSettingsSection().appCardEntrance(
+            delay: const Duration(milliseconds: 85),
+          ),
 
           // Only builds with Firebase settings, on platforms that get pushes.
           if (pushAvailable) ...[

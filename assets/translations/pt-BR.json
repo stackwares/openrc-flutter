@@ -643,13 +643,33 @@
     },
     "language": "Idioma",
     "languageSystem": "Sistema",
-    "languageSystemHint": "Igual ao seu dispositivo"
+    "languageSystemHint": "Igual ao seu dispositivo",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "Personalizado"
+      },
+      "apiKey": "Chave de API",
+      "invalidPrefix": "A chave não corresponde ao prefixo usual deste provedor.",
+      "title": "Perguntar",
+      "provider": "Provedor",
+      "recommended": "Recomendado",
+      "faster": "Mais rápido / barato",
+      "customUrl": "URL base",
+      "styleOpenAi": "Estilo OpenAI",
+      "styleAnthropic": "Estilo Anthropic",
+      "clearKey": "Remover chave"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "Transações",
       "revenue": "Receita",
-      "charts": "Gráficos"
+      "charts": "Gráficos",
+      "ask": "Perguntar"
     },
     "settings": "Configurações",
     "menu": {
@@ -848,6 +868,73 @@
       "product": "Produto",
       "expires": "Expira",
       "type": "Tipo"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "Chave de API recusada. Verifique e tente de novo.",
+      "generic": "Algo deu errado. Tente novamente.",
+      "quota": "Provedor limitou a solicitação. Tente mais tarde.",
+      "empty": "O modelo não retornou nada.",
+      "noKey": "Adicione uma chave de API para usar Perguntar.",
+      "network": "Não foi possível alcançar o provedor. Verifique a conexão.",
+      "relay": "Este relay ainda não oferece Perguntar. Os apps nativos continuam funcionando.",
+      "customWeb": "Hosts personalizados não estão disponíveis no relay da web.",
+      "stopped": "Interrompido."
+    },
+    "suggestions": {
+      "payout": "Quando recebo?",
+      "mrr": "Qual a tendência do meu MRR?",
+      "today": "Como foi hoje vs. ontem?",
+      "countries": "Principais países este mês?"
+    },
+    "composerHint": "Pergunte sobre MRR, vendas, repasses…",
+    "empty": {
+      "title": "Pergunte sobre sua receita",
+      "subtitle": "Experimente uma sugestão ou digite sua pergunta."
+    },
+    "status": {
+      "tool": {
+        "get_chart": "Buscando gráfico…",
+        "present": "Preparando visualização…",
+        "get_overview": "Buscando visão geral…",
+        "get_payout_context": "Carregando repasses…",
+        "get_transactions": "Carregando transações…",
+        "list_projects": "Listando projetos…"
+      },
+      "tools": "Executando ferramentas…",
+      "thinking": "Pensando…"
+    },
+    "setup": {
+      "subtitle": "Pergunte sobre dados do RevenueCat com gráficos e tabelas.",
+      "disclosure": "Sua chave fica neste dispositivo. Perguntas sobre receita enviam esses dados ao {provider}.",
+      "chooseProvider": "Escolha um provedor",
+      "save": "Salvar e começar",
+      "title": "Conecte seu LLM",
+      "model": "Modelo",
+      "customWeb": "Hosts personalizados funcionam nos apps nativos. O relay da web só encaminha OpenRouter, OpenAI, Anthropic e DeepSeek."
+    },
+    "clear": "Limpar conversa",
+    "clearMessage": "Isso remove todas as perguntas e respostas salvas neste dispositivo.",
+    "emptyData": "Ainda não há dados.",
+    "date": "Data",
+    "stop": "Parar",
+    "send": "Enviar",
+    "latest": "Ir para o mais recente",
+    "retry": "Tentar de novo",
+    "editKey": "Editar chave",
+    "askAbout": "Perguntar sobre isto",
+    "chartSummary": "{metric}, {count} pontos, último valor {last}",
+    "followUp": {
+      "showTable": "Mostrar como tabela",
+      "last30": "Últimos 30 dias",
+      "last30Prompt": "Mostre isso nos últimos 30 dias.",
+      "openCharts": "Abrir em Gráficos"
+    },
+    "context": {
+      "day": "Explicar {day}",
+      "revenue": "Explicar a receita deste mês",
+      "charts": "Explicar este intervalo {range}"
     }
   }
 }

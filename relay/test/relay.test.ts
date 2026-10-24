@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isAllowedOrigin } from "../src/cors";
+import { parseLlmPath } from "../src/llm";
 import worker from "../src/index";
 
 const APP = "https://openrc-app.pages.dev";
@@ -175,5 +176,40 @@ describe("icons", () => {
 it("has a health check for uptime monitors", async () => {
   const res = await call("/");
   expect(res.status).toBe(200);
-  expect(await res.json()).toEqual({ service: "openrc-relay", ok: true });
+  expect(await res.json()).toEqual({
+    service: "openrc-relay",
+    ok: true,
+    llm: ["openrouter", "openai", "anthropic", "deepseek"],
+  });
+});
+
+describe("LLM pass-through", () => {
+  it("forwards allowlisted presets and rejects traversal", async () => {
+    const fetchSpy = mockUpstream(new Response('{"ok":true}'));
+    const ok = await call("/llm/openai/chat/completions", {
+      method: "POST",
+      headers: {
+        Origin: APP,
+        Authorization: "Bearer sk-test",
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    expect(ok.status).toBe(200);
+    const [target] = fetchSpy.mock.calls[0];
+    expect(String(target)).toBe("https://api.openai.com/v1/chat/completions");
+
+  });
+
+  it("rejects parent segments in LLM paths", () => {
+    expect(parseLlmPath("/llm/openai/chat/../secret", "https://x/llm/openai/chat/../secret")).toBeNull();
+    expect(parseLlmPath("/llm/openai/chat/%2e%2e/secret", "https://x/llm/openai/chat/%2e%2e/secret")).toBeNull();
+  });
+
+  it("refuses unknown LLM presets", async () => {
+    const fetchSpy = mockUpstream(new Response("{}"));
+    const res = await call("/llm/evil/chat/completions", { headers: { Origin: APP } });
+    expect(res.status).toBe(404);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });

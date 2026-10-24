@@ -12,6 +12,8 @@ import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/ask/ask_providers.dart';
+import 'package:openrc/features/ask/ask_screen.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/charts/home_screen.dart';
 import 'package:openrc/features/revenue/revenue_screen.dart';
@@ -32,7 +34,7 @@ import 'package:openrc/widgets/app_logo.dart';
 import 'package:openrc/widgets/side_panel.dart';
 
 /// Selected tab index for [MainShell]
-/// (`0` = transactions, `1` = revenue, `2` = charts).
+/// (`0` = transactions, `1` = revenue, `2` = charts, `3` = ask).
 final mainShellTabIndexProvider = StateProvider<int>((ref) => 0);
 
 const _mainShellTabs = <FloatingTabDestination>[
@@ -53,6 +55,12 @@ const _mainShellTabs = <FloatingTabDestination>[
     telemetryLabel: 'Charts',
     icon: Icons.insights_outlined,
     selectedIcon: Icons.insights_rounded,
+  ),
+  FloatingTabDestination(
+    label: 'shell.tabs.ask',
+    telemetryLabel: 'Ask',
+    icon: Icons.auto_awesome_outlined,
+    selectedIcon: Icons.auto_awesome_rounded,
   ),
 ];
 
@@ -75,15 +83,27 @@ String _shortcutLabel(String key) => _usesCommandKey ? '⌘$key' : 'Ctrl+$key';
 
 /// Reloads what the selected tab shows (keyboard shortcut and menu bar).
 void refreshShellTab(WidgetRef ref) {
-  if (ref.read(mainShellTabIndexProvider) == 2) {
+  final index = ref.read(mainShellTabIndexProvider);
+  // Ask has nothing to reload; a running answer keeps going.
+  if (index == 3) return;
+  if (index == 2) {
     ref.read(homeProvider.notifier).fetchData();
   } else if (!ref.read(transactionsProvider).isLoading) {
     ref.read(transactionsProvider.notifier).fetchInitial();
   }
 }
 
+/// Jump to Ask and optionally prefill the composer (⌘K from other tabs).
+void openAskTab(WidgetRef ref, {String? prefill}) {
+  ref.read(mainShellTabIndexProvider.notifier).state = 3;
+  if (prefill != null && prefill.trim().isNotEmpty) {
+    ref.read(askPrefillProvider.notifier).state = prefill.trim();
+  }
+  ref.read(askFocusTickProvider.notifier).state++;
+}
+
 /// The signed-in app: a floating tab bar on phones, a navigation rail on
-/// tablets and a sidebar on wide windows, around the same three tabs.
+/// tablets and a sidebar on wide windows, around the same four tabs.
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
 
@@ -96,6 +116,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     TransactionsScreen(),
     RealtimeTransactionsScreen(),
     HomeScreen(),
+    AskScreen(),
   ];
 
   /// Moves the tabs between layouts on resize without losing their state.
@@ -247,6 +268,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     return null;
   }
 
+  /// A running Ask answer keeps going on other tabs and is there on return.
   void _select(int index) {
     ref.read(mainShellTabIndexProvider.notifier).state = index;
   }
@@ -259,6 +281,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         withModifier(LogicalKeyboardKey.digit1): () => _select(0),
         withModifier(LogicalKeyboardKey.digit2): () => _select(1),
         withModifier(LogicalKeyboardKey.digit3): () => _select(2),
+        withModifier(LogicalKeyboardKey.digit4): () => _select(3),
+        withModifier(LogicalKeyboardKey.keyK): () => openAskTab(ref),
         withModifier(LogicalKeyboardKey.keyR): () => refreshShellTab(ref),
         withModifier(LogicalKeyboardKey.comma): () =>
             SettingsScreen.open(context),
@@ -294,6 +318,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       // scrollables with [mainShellFloatingTabBarScrollPadding].
       WindowSize.compact => Scaffold(
         extendBody: true,
+        // The floating bar stays under the keyboard, as native tab bars do;
+        // Ask, the only tab with a field on the page, lifts its composer.
+        resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
             Positioned.fill(child: content),

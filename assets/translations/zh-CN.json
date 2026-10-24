@@ -637,13 +637,33 @@
     },
     "language": "语言",
     "languageSystem": "跟随系统",
-    "languageSystemHint": "与设备设置相同"
+    "languageSystemHint": "与设备设置相同",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "自定义"
+      },
+      "apiKey": "API 密钥",
+      "invalidPrefix": "密钥与该提供商的常见前缀不匹配。",
+      "title": "提问",
+      "provider": "提供商",
+      "recommended": "推荐",
+      "faster": "更快 / 更便宜",
+      "customUrl": "基础 URL",
+      "styleOpenAi": "OpenAI 风格",
+      "styleAnthropic": "Anthropic 风格",
+      "clearKey": "移除密钥"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "交易",
       "revenue": "收入",
-      "charts": "图表"
+      "charts": "图表",
+      "ask": "提问"
     },
     "settings": "设置",
     "menu": {
@@ -833,6 +853,73 @@
       "product": "产品",
       "expires": "到期",
       "type": "类型"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "API 密钥被拒绝。请检查后重试。",
+      "generic": "出错了。请重试。",
+      "quota": "提供商限流。请稍后重试。",
+      "empty": "模型未返回内容。",
+      "noKey": "添加 API 密钥以使用提问。",
+      "network": "无法连接提供商。请检查网络。",
+      "relay": "此中继尚不支持提问。原生应用仍可使用。",
+      "customWeb": "网页中继不支持自定义主机。",
+      "stopped": "已停止。"
+    },
+    "suggestions": {
+      "payout": "何时到账？",
+      "mrr": "我的 MRR 趋势如何？",
+      "today": "今天和昨天相比如何？",
+      "countries": "本月主要国家？"
+    },
+    "composerHint": "询问 MRR、销售、付款…",
+    "empty": {
+      "title": "询问您的收入",
+      "subtitle": "试试建议或输入问题。"
+    },
+    "status": {
+      "tool": {
+        "get_chart": "正在获取图表…",
+        "present": "正在准备视图…",
+        "get_overview": "正在获取概览…",
+        "get_payout_context": "正在加载付款…",
+        "get_transactions": "正在加载交易…",
+        "list_projects": "正在列出项目…"
+      },
+      "tools": "正在运行工具…",
+      "thinking": "思考中…"
+    },
+    "setup": {
+      "subtitle": "用图表和表格询问 RevenueCat 数据。",
+      "disclosure": "密钥仅保存在本设备。有关收入的问题会将数据发送至 {provider}。",
+      "chooseProvider": "选择提供商",
+      "save": "保存并开始",
+      "title": "连接 LLM",
+      "model": "模型",
+      "customWeb": "自定义主机可在原生应用中使用。网页中继仅转发 OpenRouter、OpenAI、Anthropic 和 DeepSeek。"
+    },
+    "clear": "清空对话",
+    "clearMessage": "这将删除此设备上保存的所有问题和回答。",
+    "emptyData": "暂无数据。",
+    "date": "日期",
+    "stop": "停止",
+    "send": "发送",
+    "latest": "跳到最新",
+    "retry": "重试",
+    "editKey": "编辑密钥",
+    "askAbout": "询问此项",
+    "chartSummary": "{metric}，{count} 个点，最后值为 {last}",
+    "followUp": {
+      "showTable": "以表格显示",
+      "last30": "近 30 天",
+      "last30Prompt": "按近 30 天显示这个。",
+      "openCharts": "在图表中打开"
+    },
+    "context": {
+      "day": "解释 {day}",
+      "revenue": "解释本月收入",
+      "charts": "解释此区间 {range}"
     }
   }
 }

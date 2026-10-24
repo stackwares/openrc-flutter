@@ -20,8 +20,8 @@ optional notifier, and neither stores anything.
 | Folder | What lives there |
 |---|---|
 | `lib/app/` | App root, sign-in gate, the adaptive shell (tab bar, rail, sidebar), macOS menu bar, keyboard shortcuts |
-| `lib/features/` | One folder per area: `transactions`, `revenue`, `charts`, `settings`, `sign_in`. Screens, their notifiers and widgets |
-| `lib/services/` | RevenueCat API client and auth, local stores (fees, currency, icons, sort), exchange rates, telemetry, the home-screen widget channel |
+| `lib/features/` | One folder per area: `transactions`, `revenue`, `charts`, `ask`, `settings`, `sign_in`. Screens, their notifiers and widgets |
+| `lib/services/` | RevenueCat API client and auth, local stores (fees, currency, icons, sort), exchange rates, telemetry, the home-screen widget channel, optional Ask LLM client and tools |
 | `lib/models/` | API response models |
 | `lib/core/` | Constants, extensions, formatting and date utilities, motion helpers |
 | `lib/theme/` | Design tokens, colors, typography, breakpoints |
@@ -57,6 +57,19 @@ widgets only read providers and call notifier methods.
 7. **Widgets**: after loading, a summary is handed to the native widgets
    through the `com.openrc.app/widgets` method channel (an App Group on iOS,
    shared preferences on Android).
+
+## Ask
+
+The fourth tab answers RevenueCat questions with OpenRC cards. The model
+does not invent widget trees: tools return typed JSON, `present` chooses a
+card type, and a repair compositor builds the same cards if `present` is
+skipped.
+
+Keys stay in secure storage (`agent_key_<provider>`). Prefs keep the
+provider and model. Native apps call the provider directly. Web calls
+`{OPENRC_RELAY_URL}/llm/{preset}/…`. Custom unknown hosts are native-only.
+The RevenueCat session never goes to the LLM; subscriber ids are masked the
+same way as the table.
 
 ## Push notifications
 
@@ -132,8 +145,9 @@ also work inside split views. Phones are locked to portrait; tablets rotate.
 
 Browsers can't call RevenueCat's API (it allows only its own dashboard as a
 CORS origin), so web builds send API calls to the relay, set by
-`OPENRC_RELAY_URL`. See [relay/README.md](../relay/README.md). The app is
-otherwise the same code; home-screen widgets are skipped.
+`OPENRC_RELAY_URL`. Ask on web uses the same relay's allowlisted `/llm/*`
+paths. See [relay/README.md](../relay/README.md). The app is otherwise the
+same code; home-screen widgets are skipped.
 
 ## Telemetry
 

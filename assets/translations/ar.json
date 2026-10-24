@@ -667,13 +667,33 @@
     },
     "language": "اللغة",
     "languageSystem": "النظام",
-    "languageSystemHint": "مثل لغة جهازك"
+    "languageSystemHint": "مثل لغة جهازك",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "مخصص"
+      },
+      "apiKey": "مفتاح API",
+      "invalidPrefix": "المفتاح لا يطابق البادئة المعتادة لهذا المزود.",
+      "title": "اسأل",
+      "provider": "المزوّد",
+      "recommended": "موصى به",
+      "faster": "أسرع / أقل تكلفة",
+      "customUrl": "عنوان الأساس",
+      "styleOpenAi": "نمط OpenAI",
+      "styleAnthropic": "نمط Anthropic",
+      "clearKey": "إزالة المفتاح"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "المعاملات",
       "revenue": "الإيرادات",
-      "charts": "الرسوم البيانية"
+      "charts": "الرسوم البيانية",
+      "ask": "اسأل"
     },
     "settings": "الإعدادات",
     "menu": {
@@ -908,6 +928,73 @@
       "product": "المنتج",
       "expires": "ينتهي",
       "type": "النوع"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "تم رفض مفتاح API. تحقق منه وحاول مجددًا.",
+      "generic": "حدث خطأ. حاول مجددًا.",
+      "quota": "المزود حدّ الطلبات. حاول لاحقًا.",
+      "empty": "لم يرجع النموذج شيئًا.",
+      "noKey": "أضف مفتاح API لاستخدام اسأل.",
+      "network": "تعذّر الوصول إلى المزود. تحقق من الاتصال.",
+      "relay": "هذا المرحّل لا يدعم اسأل بعد. التطبيقات الأصلية ما زالت تعمل.",
+      "customWeb": "المضيفون المخصصون غير متاحين عبر مرحّل الويب.",
+      "stopped": "توقف."
+    },
+    "suggestions": {
+      "payout": "متى أتقاضى؟",
+      "mrr": "ما اتجاه MRR لدي؟",
+      "today": "كيف كان اليوم مقارنة بالأمس؟",
+      "countries": "أفضل الدول هذا الشهر؟"
+    },
+    "composerHint": "اسأل عن MRR والمبيعات والمدفوعات…",
+    "empty": {
+      "title": "اسأل عن إيراداتك",
+      "subtitle": "جرّب اقتراحًا أو اكتب سؤالك."
+    },
+    "status": {
+      "tool": {
+        "get_chart": "جاري جلب الرسم…",
+        "present": "جاري تجهيز العرض…",
+        "get_overview": "جاري جلب النظرة العامة…",
+        "get_payout_context": "جاري تحميل المدفوعات…",
+        "get_transactions": "جاري تحميل المعاملات…",
+        "list_projects": "جاري سرد المشاريع…"
+      },
+      "tools": "تشغيل الأدوات…",
+      "thinking": "يفكر…"
+    },
+    "setup": {
+      "subtitle": "اسأل عن بيانات RevenueCat مع رسوم بيانية وجداول.",
+      "disclosure": "مفتاحك يبقى على هذا الجهاز. أسئلة الإيرادات ترسل تلك البيانات إلى {provider}.",
+      "chooseProvider": "اختر مزودًا",
+      "save": "حفظ والبدء",
+      "title": "اربط نموذج اللغة",
+      "model": "النموذج",
+      "customWeb": "المضيفون المخصصون يعملون في التطبيقات الأصلية. مرحّل الويب يمرّر فقط OpenRouter وOpenAI وAnthropic وDeepSeek."
+    },
+    "clear": "مسح المحادثة",
+    "clearMessage": "سيؤدي هذا إلى إزالة جميع الأسئلة والإجابات المحفوظة على هذا الجهاز.",
+    "emptyData": "لا توجد بيانات للعرض بعد.",
+    "date": "التاريخ",
+    "stop": "إيقاف",
+    "send": "إرسال",
+    "latest": "الانتقال إلى الأحدث",
+    "retry": "إعادة المحاولة",
+    "editKey": "تعديل المفتاح",
+    "askAbout": "اسأل عن هذا",
+    "chartSummary": "{metric}، {count} نقاط، آخر قيمة {last}",
+    "followUp": {
+      "showTable": "عرض كجدول",
+      "last30": "آخر 30 يومًا",
+      "last30Prompt": "اعرض هذا لآخر 30 يومًا.",
+      "openCharts": "فتح في الرسوم"
+    },
+    "context": {
+      "day": "اشرح {day}",
+      "revenue": "اشرح إيرادات هذا الشهر",
+      "charts": "اشرح هذا النطاق {range}"
     }
   }
 }

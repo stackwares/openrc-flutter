@@ -637,13 +637,33 @@
     },
     "language": "Bahasa",
     "languageSystem": "Sistem",
-    "languageSystemHint": "Sama seperti perangkat Anda"
+    "languageSystemHint": "Sama seperti perangkat Anda",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "Kustom"
+      },
+      "apiKey": "Kunci API",
+      "invalidPrefix": "Kunci tidak cocok dengan awalan umum penyedia ini.",
+      "title": "Tanya",
+      "provider": "Penyedia",
+      "recommended": "Disarankan",
+      "faster": "Lebih cepat / murah",
+      "customUrl": "URL dasar",
+      "styleOpenAi": "Gaya OpenAI",
+      "styleAnthropic": "Gaya Anthropic",
+      "clearKey": "Hapus kunci"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "Transaksi",
       "revenue": "Pendapatan",
-      "charts": "Grafik"
+      "charts": "Grafik",
+      "ask": "Tanya"
     },
     "settings": "Pengaturan",
     "menu": {
@@ -833,6 +853,73 @@
       "product": "Produk",
       "expires": "Berakhir",
       "type": "Jenis"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "Kunci API ditolak. Periksa dan coba lagi.",
+      "generic": "Terjadi kesalahan. Coba lagi.",
+      "quota": "Penyedia membatasi permintaan. Coba lagi nanti.",
+      "empty": "Model tidak mengembalikan apa pun.",
+      "noKey": "Tambahkan kunci API untuk Tanya.",
+      "network": "Tidak dapat menjangkau penyedia. Periksa koneksi.",
+      "relay": "Relay ini belum mendukung Tanya. Aplikasi native tetap berfungsi.",
+      "customWeb": "Host kustom tidak tersedia di relay web.",
+      "stopped": "Dihentikan."
+    },
+    "suggestions": {
+      "payout": "Kapan saya dibayar?",
+      "mrr": "Bagaimana tren MRR saya?",
+      "today": "Bagaimana hari ini vs kemarin?",
+      "countries": "Negara teratas bulan ini?"
+    },
+    "composerHint": "Tanya MRR, penjualan, payout…",
+    "empty": {
+      "title": "Tanyakan tentang pendapatan Anda",
+      "subtitle": "Coba saran atau ketik pertanyaan Anda."
+    },
+    "status": {
+      "tool": {
+        "get_chart": "Mengambil grafik…",
+        "present": "Menyiapkan tampilan…",
+        "get_overview": "Mengambil ringkasan…",
+        "get_payout_context": "Memuat payout…",
+        "get_transactions": "Memuat transaksi…",
+        "list_projects": "Mendaftar proyek…"
+      },
+      "tools": "Menjalankan alat…",
+      "thinking": "Berpikir…"
+    },
+    "setup": {
+      "subtitle": "Tanyakan data RevenueCat dengan grafik dan tabel.",
+      "disclosure": "Kunci Anda tetap di perangkat ini. Pertanyaan pendapatan mengirim data itu ke {provider}.",
+      "chooseProvider": "Pilih penyedia",
+      "save": "Simpan dan mulai",
+      "title": "Hubungkan LLM Anda",
+      "model": "Model",
+      "customWeb": "Host kustom berfungsi di aplikasi native. Relay web hanya meneruskan OpenRouter, OpenAI, Anthropic, dan DeepSeek."
+    },
+    "clear": "Hapus thread",
+    "clearMessage": "Ini akan menghapus semua pertanyaan dan jawaban yang tersimpan di perangkat ini.",
+    "emptyData": "Belum ada data.",
+    "date": "Tanggal",
+    "stop": "Berhenti",
+    "send": "Kirim",
+    "latest": "Lompat ke terbaru",
+    "retry": "Coba lagi",
+    "editKey": "Edit kunci",
+    "askAbout": "Tanya tentang ini",
+    "chartSummary": "{metric}, {count} titik, nilai terakhir {last}",
+    "followUp": {
+      "showTable": "Tampilkan sebagai tabel",
+      "last30": "30 hari terakhir",
+      "last30Prompt": "Tampilkan ini untuk 30 hari terakhir.",
+      "openCharts": "Buka di Grafik"
+    },
+    "context": {
+      "day": "Jelaskan {day}",
+      "revenue": "Jelaskan pendapatan bulan ini",
+      "charts": "Jelaskan rentang {range} ini"
     }
   }
 }

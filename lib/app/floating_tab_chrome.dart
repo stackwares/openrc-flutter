@@ -22,7 +22,7 @@ class FloatingTabChrome extends StatelessWidget {
   static const double barHeight = 64;
 
   /// Same slot for every destination so the pill wraps with even spacing.
-  static const double tabSlotWidth = 100;
+  static const double tabSlotWidth = 80;
 
   /// Matches Baeble: tab-switch duration and curve.
   static const Duration motionDuration = Duration(milliseconds: 250);

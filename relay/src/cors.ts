@@ -1,3 +1,5 @@
+import { isLlmPath, LLM_ALLOWED_HEADERS } from "./llm";
+
 /** Headers the web app sends; anything else fails the preflight. */
 const ALLOWED_HEADERS = "Authorization, Content-Type, X-Requested-With";
 const ALLOWED_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS";
@@ -39,13 +41,17 @@ function matches(origin: URL, entry: string): boolean {
 }
 
 /** Answers a CORS preflight from an allowed origin. */
-export function preflight(origin: string): Response {
+export function preflight(origin: string, requestUrl?: string): Response {
+  const pathname = requestUrl ? new URL(requestUrl).pathname : "";
+  const headers = isLlmPath(pathname)
+    ? `${ALLOWED_HEADERS}, ${LLM_ALLOWED_HEADERS}`
+    : ALLOWED_HEADERS;
   return new Response(null, {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Methods": ALLOWED_METHODS,
-      "Access-Control-Allow-Headers": ALLOWED_HEADERS,
+      "Access-Control-Allow-Headers": headers,
       "Access-Control-Max-Age": "86400",
       Vary: "Origin",
     },

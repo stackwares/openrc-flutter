@@ -637,13 +637,33 @@
     },
     "language": "言語",
     "languageSystem": "システム",
-    "languageSystemHint": "デバイスの設定に合わせます"
+    "languageSystemHint": "デバイスの設定に合わせます",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "カスタム"
+      },
+      "apiKey": "APIキー",
+      "invalidPrefix": "キーがこのプロバイダーの一般的なプレフィックスと一致しません。",
+      "title": "質問",
+      "provider": "プロバイダー",
+      "recommended": "推奨",
+      "faster": "高速 / 低コスト",
+      "customUrl": "ベースURL",
+      "styleOpenAi": "OpenAI形式",
+      "styleAnthropic": "Anthropic形式",
+      "clearKey": "キーを削除"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "取引",
       "revenue": "売上",
-      "charts": "グラフ"
+      "charts": "グラフ",
+      "ask": "質問"
     },
     "settings": "設定",
     "menu": {
@@ -833,6 +853,73 @@
       "product": "製品",
       "expires": "有効期限",
       "type": "種類"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "APIキーが拒否されました。確認して再試行してください。",
+      "generic": "問題が発生しました。再試行してください。",
+      "quota": "プロバイダーが制限しました。後で再試行してください。",
+      "empty": "モデルから応答がありませんでした。",
+      "noKey": "質問にはAPIキーが必要です。",
+      "network": "プロバイダーに接続できません。接続を確認してください。",
+      "relay": "このリレーはまだ質問に対応していません。ネイティブアプリは使えます。",
+      "customWeb": "カスタムホストはWebリレーでは使えません。",
+      "stopped": "停止しました。"
+    },
+    "suggestions": {
+      "payout": "入金日はいつ？",
+      "mrr": "MRRの推移は？",
+      "today": "今日は昨日と比べてどう？",
+      "countries": "今月のトップ国は？"
+    },
+    "composerHint": "MRR、売上、入金について…",
+    "empty": {
+      "title": "収益について質問",
+      "subtitle": "提案を試すか、質問を入力してください。"
+    },
+    "status": {
+      "tool": {
+        "get_chart": "グラフを取得…",
+        "present": "表示を準備…",
+        "get_overview": "概要を取得…",
+        "get_payout_context": "入金を読み込み…",
+        "get_transactions": "取引を読み込み…",
+        "list_projects": "プロジェクト一覧…"
+      },
+      "tools": "ツール実行中…",
+      "thinking": "考え中…"
+    },
+    "setup": {
+      "subtitle": "RevenueCatデータをグラフと表で質問できます。",
+      "disclosure": "キーはこの端末に保存されます。収益に関する質問はそのデータを{provider}に送信します。",
+      "chooseProvider": "プロバイダーを選択",
+      "save": "保存して開始",
+      "title": "LLMを接続",
+      "model": "モデル",
+      "customWeb": "カスタムホストはネイティブアプリで使えます。Webリレーは OpenRouter、OpenAI、Anthropic、DeepSeek のみ転送します。"
+    },
+    "clear": "スレッドを消去",
+    "clearMessage": "このデバイスに保存されたすべての質問と回答が削除されます。",
+    "emptyData": "表示するデータがまだありません。",
+    "date": "日付",
+    "stop": "停止",
+    "send": "送信",
+    "latest": "最新へ移動",
+    "retry": "再試行",
+    "editKey": "キーを編集",
+    "askAbout": "これについて質問",
+    "chartSummary": "{metric}、{count} ポイント、最終値 {last}",
+    "followUp": {
+      "showTable": "表で表示",
+      "last30": "過去30日",
+      "last30Prompt": "過去30日でこれを表示して。",
+      "openCharts": "グラフで開く"
+    },
+    "context": {
+      "day": "{day} を説明",
+      "revenue": "今月の売上を説明",
+      "charts": "この期間 {range} を説明"
     }
   }
 }

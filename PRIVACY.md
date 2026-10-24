@@ -49,6 +49,21 @@ On **web**, requests go through a small **relay** that forwards traffic to
 RevenueCat without storing or logging request or response bodies, tokens, or
 headers. You may self-host this relay.
 
+## 4a. Optional Ask (bring your own LLM key)
+
+Ask is off until you paste a provider key in the Ask tab. The key stays in
+this device's secure storage (one key per provider). Signing out of
+RevenueCat does **not** delete LLM keys.
+
+When you ask a question, OpenRC fetches RevenueCat data on device, redacts
+subscriber ids, and sends those **tool results** (not your RevenueCat
+session) to the provider you chose. On **web**, that call also goes through
+the same stateless relay (`/llm/{provider}/…`). The relay does not store or
+log bodies, tokens, or headers. Custom unknown hosts work only in the native
+apps.
+
+Telemetry is unchanged: Ask reports the screen name `"Ask"` only.
+
 ## 5. Optional push notifications
 
 Notifications are off until you turn them on in **Settings → Notifications**.
@@ -112,7 +127,8 @@ We do not send to PostHog (or other analytics in this app):
 |--------|---------|----------------|
 | **RevenueCat** | Authentication and dashboard API | [revenuecat.com/privacy](https://www.revenuecat.com/privacy) |
 | **PostHog** (optional) | Anonymous usage and crash reporting | [posthog.com/privacy](https://posthog.com/privacy) |
-| **Cloudflare** (web relay, notifier, hosting) | Stateless relay and notifier, static web hosting | [cloudflare.com/privacypolicy](https://www.cloudflare.com/privacypolicy/) |
+| **Cloudflare** (web relay, notifier, hosting) | Stateless relay (RevenueCat + optional LLM pass-through) and notifier, static web hosting | [cloudflare.com/privacypolicy](https://www.cloudflare.com/privacypolicy/) |
+| **Your chosen LLM provider** (optional Ask) | Answers questions you type in Ask, using tool results you asked about | That provider's privacy policy (OpenRouter, OpenAI, Anthropic, DeepSeek, or a host you enter) |
 | **Google Firebase Cloud Messaging** (optional) | Delivering notifications you turn on | [firebase.google.com/support/privacy](https://firebase.google.com/support/privacy) |
 | **Apple Push Notification service** (optional) | Delivering notifications to iPhone and iPad | [apple.com/legal/privacy](https://www.apple.com/legal/privacy/) |
 | **Your browser's push service** (optional, web) | Delivering notifications to the web app; run by your browser's maker | Your browser maker's privacy policy |
@@ -130,7 +146,8 @@ We do not send to PostHog (or other analytics in this app):
 
 ## 10. Security
 
-We use HTTPS for network traffic and platform secure storage for session tokens.
+We use HTTPS for network traffic and platform secure storage for session
+tokens and, if you use Ask, your LLM keys.
 Report security issues privately: see [SECURITY.md](SECURITY.md).
 
 ## 11. Children

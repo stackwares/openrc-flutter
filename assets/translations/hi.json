@@ -643,13 +643,33 @@
     },
     "language": "भाषा",
     "languageSystem": "सिस्टम",
-    "languageSystemHint": "आपके डिवाइस के अनुसार"
+    "languageSystemHint": "आपके डिवाइस के अनुसार",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "कस्टम"
+      },
+      "apiKey": "API कुंजी",
+      "invalidPrefix": "यह कुंजी चयनित प्रदाता के सामान्य उपसर्ग से मेल नहीं खाती।",
+      "title": "पूछें",
+      "provider": "प्रदाता",
+      "recommended": "अनुशंसित",
+      "faster": "तेज़ / सस्ता",
+      "customUrl": "बेस URL",
+      "styleOpenAi": "OpenAI शैली",
+      "styleAnthropic": "Anthropic शैली",
+      "clearKey": "कुंजी हटाएँ"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "लेनदेन",
       "revenue": "राजस्व",
-      "charts": "चार्ट"
+      "charts": "चार्ट",
+      "ask": "पूछें"
     },
     "settings": "सेटिंग्स",
     "menu": {
@@ -848,6 +868,73 @@
       "product": "प्रोडक्ट",
       "expires": "समाप्ति",
       "type": "प्रकार"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "API कुंजी अस्वीकृत। जाँचें और पुनः प्रयास करें।",
+      "generic": "कुछ गलत हुआ। पुनः प्रयास करें।",
+      "quota": "प्रदाता ने सीमा लगाई। बाद में प्रयास करें।",
+      "empty": "मॉडल ने कुछ नहीं लौटाया।",
+      "noKey": "पूछें के लिए API कुंजी जोड़ें।",
+      "network": "प्रदाता तक नहीं पहुँचा। कनेक्शन जाँचें।",
+      "relay": "यह रिले अभी पूछें को सपोर्ट नहीं करता। नेटिव ऐप चलते रहेंगे।",
+      "customWeb": "कस्टम होस्ट वेब रिले पर उपलब्ध नहीं हैं।",
+      "stopped": "रोका गया।"
+    },
+    "suggestions": {
+      "payout": "मुझे भुगतान कब मिलेगा?",
+      "mrr": "मेरा MRR रुझान क्या है?",
+      "today": "आज बनाम कल कैसा रहा?",
+      "countries": "इस महीने शीर्ष देश?"
+    },
+    "composerHint": "MRR, बिक्री, भुगतान…",
+    "empty": {
+      "title": "अपने राजस्व के बारे में पूछें",
+      "subtitle": "कोई सुझाव आज़माएँ या अपना प्रश्न लिखें।"
+    },
+    "status": {
+      "tool": {
+        "get_chart": "चार्ट लोड…",
+        "present": "दृश्य तैयार…",
+        "get_overview": "ओवरव्यू लोड…",
+        "get_payout_context": "भुगतान लोड…",
+        "get_transactions": "लेनदेन लोड…",
+        "list_projects": "प्रोजेक्ट सूची…"
+      },
+      "tools": "टूल चल रहे हैं…",
+      "thinking": "सोच रहा है…"
+    },
+    "setup": {
+      "subtitle": "RevenueCat डेटा के बारे में ग्राफ और तालिकाओं के साथ पूछें।",
+      "disclosure": "आपकी कुंजी इस डिवाइस पर रहती है। राजस्व से जुड़े प्रश्न {provider} को वह डेटा भेजते हैं।",
+      "chooseProvider": "प्रदाता चुनें",
+      "save": "सहेजें और शुरू करें",
+      "title": "अपना LLM कनेक्ट करें",
+      "model": "मॉडल",
+      "customWeb": "कस्टम होस्ट नेटिव ऐप में चलते हैं। वेब रिले केवल OpenRouter, OpenAI, Anthropic और DeepSeek भेजता है।"
+    },
+    "clear": "थ्रेड साफ़ करें",
+    "clearMessage": "इससे इस डिवाइस पर सहेजे गए सभी प्रश्न और उत्तर हट जाएँगे।",
+    "emptyData": "अभी दिखाने के लिए डेटा नहीं।",
+    "date": "तारीख",
+    "stop": "रोकें",
+    "send": "भेजें",
+    "latest": "नवीनतम पर जाएँ",
+    "retry": "फिर कोशिश करें",
+    "editKey": "कुंजी संपादित करें",
+    "askAbout": "इसके बारे में पूछें",
+    "chartSummary": "{metric}, {count} बिंदु, अंतिम मान {last}",
+    "followUp": {
+      "showTable": "तालिका में दिखाएँ",
+      "last30": "पिछले 30 दिन",
+      "last30Prompt": "इसे पिछले 30 दिनों के लिए दिखाएँ।",
+      "openCharts": "चार्ट में खोलें"
+    },
+    "context": {
+      "day": "{day} समझाएँ",
+      "revenue": "इस महीने की आय समझाएँ",
+      "charts": "इस अवधि {range} को समझाएँ"
     }
   }
 }

@@ -44,6 +44,9 @@ your RevenueCat account and works out the answers on your device:
 - **A ping for every sale.** Optional push notifications for purchases,
   renewals, trials and refunds, from RevenueCat's own webhooks (iPhone, iPad,
   Android and the web).
+- **Ask about the numbers.** A fourth tab that answers RevenueCat questions
+  with the same charts and cards as the rest of the app. You bring your own
+  LLM key; it stays on the device.
 - **Made for every screen.** A floating tab bar on phones, a navigation rail
   on tablets, and a sidebar with side-by-side columns, keyboard shortcuts and
   a native menu bar on desktop.
@@ -68,7 +71,11 @@ Or [build it yourself](#build-from-source) in a few minutes.
 - **No OpenRC server holds your data.** Native apps talk to RevenueCat
   directly. Browsers can't, so the web app goes through a small
   [stateless relay](relay/) that streams requests through without storing or
-  logging them. You can run your own.
+  logging them. You can run your own. Ask on web uses the same relay for
+  allowlisted LLM providers only.
+- **Ask keys stay on the device.** They leave only to the provider you chose
+  (and on web, through the relay). Asking about revenue sends those tool
+  results to that provider, never your RevenueCat session.
 - **Notifications pass through; nothing is kept.** If you turn them on,
   OpenRC adds a webhook for your device to the RevenueCat projects you pick
   (and removes it when you turn them off or log out). RevenueCat then sends

@@ -5,7 +5,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
+import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/models/rc_me_response.dart';
+import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/models/rc_project.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
@@ -54,6 +56,7 @@ void main() {
           rcAccountProjectsProvider.overrideWith(
             (ref) async => const [RcProject(name: 'A'), RcProject(name: 'B')],
           ),
+          agentSettingsProvider.overrideWith(_FakeAgentSettings.new),
         ],
         child: MaterialApp(
           theme: AppTheme.dark(
@@ -166,4 +169,16 @@ void main() {
     );
     expect(container.read(colorSchemeProvider), FlexScheme.blueM3);
   });
+}
+
+class _FakeAgentSettings extends AgentSettingsNotifier {
+  @override
+  Future<AgentSettings> build() async => const AgentSettings(
+        providerId: AgentProviderId.openrouter,
+        model: '',
+        customBaseUrl: '',
+        customStyle: AgentApiStyle.openAi,
+        useFasterModel: false,
+        hasKey: false,
+      );
 }

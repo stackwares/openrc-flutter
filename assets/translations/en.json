@@ -816,7 +816,26 @@
     },
     "language": "Language",
     "languageSystem": "System",
-    "languageSystemHint": "Same as your device"
+    "languageSystemHint": "Same as your device",
+    "agent": {
+      "title": "Ask",
+      "provider": "Provider",
+      "apiKey": "API key",
+      "invalidPrefix": "This key doesn’t match the selected provider’s usual prefix.",
+      "recommended": "Recommended",
+      "faster": "Faster / cheaper",
+      "customUrl": "Base URL",
+      "styleOpenAi": "OpenAI style",
+      "styleAnthropic": "Anthropic style",
+      "clearKey": "Remove key",
+      "providers": {
+        "openrouter": "OpenRouter",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "deepseek": "DeepSeek",
+        "custom": "Custom"
+      }
+    }
   },
   "common": {
     "yesterday": "yesterday",
@@ -837,7 +856,8 @@
     "tabs": {
       "transactions": "Transactions",
       "revenue": "Revenue",
-      "charts": "Charts"
+      "charts": "Charts",
+      "ask": "Ask"
     },
     "settings": "Settings",
     "menu": {
@@ -1016,6 +1036,73 @@
       "product": "Product",
       "expires": "Expires",
       "type": "Type"
+    }
+  },
+  "agent": {
+    "setup": {
+      "title": "Connect your LLM",
+      "subtitle": "Ask questions about your RevenueCat data with charts and tables.",
+      "chooseProvider": "Choose a provider",
+      "model": "Model",
+      "customWeb": "Custom hosts work in the native apps. The web relay only forwards OpenRouter, OpenAI, Anthropic and DeepSeek.",
+      "disclosure": "Your key stays on this device. Questions about revenue send that data to {provider}.",
+      "save": "Save and start"
+    },
+    "empty": {
+      "title": "Ask about your revenue",
+      "subtitle": "Try a suggestion or type your own question."
+    },
+    "emptyData": "No data to show yet.",
+    "date": "Date",
+    "composerHint": "Ask about MRR, sales, payouts…",
+    "clear": "Clear thread",
+    "clearMessage": "This removes every question and answer saved on this device.",
+    "stop": "Stop",
+    "send": "Send",
+    "latest": "Jump to latest",
+    "retry": "Retry",
+    "editKey": "Edit key",
+    "askAbout": "Ask about this",
+    "chartSummary": "{metric}, {count} points, last value {last}",
+    "suggestions": {
+      "today": "How was today vs yesterday?",
+      "mrr": "What is my MRR trend?",
+      "countries": "Top countries this month?",
+      "payout": "When do I get paid?"
+    },
+    "followUp": {
+      "showTable": "Show as table",
+      "last30": "Last 30 days",
+      "last30Prompt": "Show this for the last 30 days.",
+      "openCharts": "Open in Charts"
+    },
+    "context": {
+      "day": "Explain {day}",
+      "revenue": "Explain this month’s revenue",
+      "charts": "Explain this {range} range"
+    },
+    "status": {
+      "thinking": "Thinking…",
+      "tools": "Running tools…",
+      "tool": {
+        "list_projects": "Listing projects…",
+        "get_overview": "Fetching overview…",
+        "get_chart": "Fetching chart…",
+        "get_transactions": "Loading transactions…",
+        "get_payout_context": "Loading payouts…",
+        "present": "Preparing view…"
+      }
+    },
+    "errors": {
+      "noKey": "Add an API key to use Ask.",
+      "badKey": "That API key was rejected. Check the key and try again.",
+      "quota": "The provider rate-limited this request. Try again later.",
+      "network": "Couldn’t reach the provider. Check your connection.",
+      "generic": "Something went wrong. Try again.",
+      "empty": "The model returned nothing.",
+      "relay": "This relay doesn’t support Ask yet. Native apps still work.",
+      "customWeb": "Custom hosts aren’t available on the web relay.",
+      "stopped": "Stopped."
     }
   }
 }

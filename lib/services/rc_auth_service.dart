@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 import 'package:openrc/core/constants/app_constants.dart';
+import 'package:openrc/features/ask/ask_notifier.dart';
 import 'package:openrc/models/rc_login_request.dart';
 import 'package:openrc/models/rc_login_response.dart';
 import 'package:openrc/models/rc_me_response.dart';
@@ -157,6 +158,12 @@ class RcAuthService {
       await PayoutHistoryCache.clear();
     } catch (e) {
       _log.warning('Clearing saved payouts failed: $e');
+    }
+    // Ask answers hold this account's revenue; the next account mustn't see them.
+    try {
+      await _ref.read(askNotifierProvider.notifier).clearThread();
+    } catch (e) {
+      _log.warning('Clearing the Ask thread failed: $e');
     }
     try {
       await _clearToken();

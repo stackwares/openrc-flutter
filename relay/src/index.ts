@@ -6,6 +6,11 @@
 
 import { isAllowedOrigin, preflight, withCors } from "./cors";
 import { iconResponse } from "./icons";
+import {
+  forwardLlm,
+  LLM_PRESET_LIST,
+  parseLlmPath,
+} from "./llm";
 
 const UPSTREAM = "https://api.revenuecat.com";
 
@@ -28,7 +33,11 @@ export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/" && request.method === "GET") {
-      return Response.json({ service: "openrc-relay", ok: true });
+      return Response.json({
+        service: "openrc-relay",
+        ok: true,
+        llm: LLM_PRESET_LIST,
+      });
     }
 
     // Only the OpenRC web app's own pages may use the relay.
@@ -36,12 +45,19 @@ export default {
     if (!origin || !isAllowedOrigin(origin, env.ALLOWED_ORIGINS)) {
       return Response.json({ error: "origin_not_allowed" }, { status: 403 });
     }
-    if (request.method === "OPTIONS") return preflight(origin);
+    if (request.method === "OPTIONS") return preflight(origin, request.url);
     return withCors(await route(request, url), origin);
   },
 } satisfies ExportedHandler<Env>;
 
 async function route(request: Request, url: URL): Promise<Response> {
+  const llm = parseLlmPath(url.pathname, request.url);
+  if (llm != null) {
+    if (request.method !== "POST" && request.method !== "GET") {
+      return methodNotAllowed();
+    }
+    return forwardLlm(request, llm.preset, llm.rest);
+  }
   if (url.pathname === "/icon") {
     return request.method === "GET" ? iconResponse(url) : methodNotAllowed();
   }

@@ -8,7 +8,9 @@ import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/sign_in/sign_in_screen.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/models/rc_me_response.dart';
+import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/services/exchange_rate_provider.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/services/rc_auth_service.dart';
@@ -32,6 +34,18 @@ class _IdleHome extends HomeNotifier {
 
   @override
   Future<void> fetchData() async {}
+}
+
+class _FakeAgentSettings extends AgentSettingsNotifier {
+  @override
+  Future<AgentSettings> build() async => const AgentSettings(
+        providerId: AgentProviderId.openrouter,
+        model: '',
+        customBaseUrl: '',
+        customStyle: AgentApiStyle.openAi,
+        useFasterModel: false,
+        hasKey: true,
+      );
 }
 
 void main() {
@@ -62,6 +76,7 @@ void main() {
           homeProvider.overrideWith((ref) => _IdleHome(ref)),
           rcAccountProjectsProvider.overrideWith((ref) async => const []),
           usdExchangeRatesProvider.overrideWith((ref) async => const {}),
+          agentSettingsProvider.overrideWith(_FakeAgentSettings.new),
         ],
         child: const OpenRcApp(),
       ),

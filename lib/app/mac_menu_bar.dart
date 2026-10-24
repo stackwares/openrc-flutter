@@ -104,6 +104,11 @@ class MacMenuBar extends ConsumerWidget {
                   LogicalKeyboardKey.digit3,
                   () => showTab(2),
                 ),
+                item(
+                  'shell.tabs.ask'.tr(),
+                  LogicalKeyboardKey.digit4,
+                  () => showTab(3),
+                ),
               ],
             ),
             PlatformMenuItemGroup(

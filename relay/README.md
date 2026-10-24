@@ -7,6 +7,9 @@ It is deliberately small and stateless:
 
 - Forwards only RevenueCat's developer API: `/v1/developers/*` and
   `/internal/v1/developers/*`, to `https://api.revenuecat.com`.
+- Optionally forwards Ask's BYOK calls: `/llm/{openrouter|openai|anthropic|deepseek}/*`
+  to those providers only. Path traversal, unknown presets, and absolute
+  upstream URLs are rejected. Request bodies stream through unread.
 - Answers only pages from `ALLOWED_ORIGINS`; anything else, including requests
   with no `Origin`, gets `403`. It is not an open proxy.
 - Sends RevenueCat only the headers it needs (`Authorization`,
@@ -17,7 +20,7 @@ It is deliberately small and stateless:
   from Cloudflare's logs and traces.
 - `GET /icon?bundleId=…&hint=apple|google` looks up an app's App Store or
   Google Play icon, which browsers can't fetch either.
-- `GET /` is a health check.
+- `GET /` is a health check and lists `llm` presets when Ask is available.
 
 ## Develop
 

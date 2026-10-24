@@ -643,13 +643,33 @@
     },
     "language": "Langue",
     "languageSystem": "Système",
-    "languageSystemHint": "Comme sur votre appareil"
+    "languageSystemHint": "Comme sur votre appareil",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "Personnalisé"
+      },
+      "apiKey": "Clé API",
+      "invalidPrefix": "La clé ne correspond pas au préfixe habituel de ce fournisseur.",
+      "title": "Demander",
+      "provider": "Fournisseur",
+      "recommended": "Recommandé",
+      "faster": "Plus rapide / moins cher",
+      "customUrl": "URL de base",
+      "styleOpenAi": "Style OpenAI",
+      "styleAnthropic": "Style Anthropic",
+      "clearKey": "Supprimer la clé"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "Transactions",
       "revenue": "Revenus",
-      "charts": "Graphiques"
+      "charts": "Graphiques",
+      "ask": "Demander"
     },
     "settings": "Réglages",
     "menu": {
@@ -848,6 +868,73 @@
       "product": "Produit",
       "expires": "Expire",
       "type": "Type"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "Clé API refusée. Vérifiez-la et réessayez.",
+      "generic": "Une erreur s’est produite. Réessayez.",
+      "quota": "Le fournisseur a limité la requête. Réessayez plus tard.",
+      "empty": "Le modèle n’a rien renvoyé.",
+      "noKey": "Ajoutez une clé API pour utiliser Demander.",
+      "network": "Impossible de joindre le fournisseur. Vérifiez la connexion.",
+      "relay": "Ce relais ne prend pas encore en charge Demander. Les apps natives fonctionnent toujours.",
+      "customWeb": "Les hôtes personnalisés ne sont pas disponibles via le relais web.",
+      "stopped": "Arrêté."
+    },
+    "suggestions": {
+      "payout": "Quand suis-je payé ?",
+      "mrr": "Quelle est la tendance de mon MRR ?",
+      "today": "Comment s’est passée aujourd’hui vs hier ?",
+      "countries": "Meilleurs pays ce mois-ci ?"
+    },
+    "composerHint": "MRR, ventes, paiements…",
+    "empty": {
+      "title": "Interrogez vos revenus",
+      "subtitle": "Essayez une suggestion ou saisissez votre question."
+    },
+    "status": {
+      "tool": {
+        "get_chart": "Chargement du graphique…",
+        "present": "Préparation de l’affichage…",
+        "get_overview": "Chargement de l’aperçu…",
+        "get_payout_context": "Chargement des paiements…",
+        "get_transactions": "Chargement des transactions…",
+        "list_projects": "Liste des projets…"
+      },
+      "tools": "Exécution des outils…",
+      "thinking": "Réflexion…"
+    },
+    "setup": {
+      "subtitle": "Posez des questions sur RevenueCat avec graphiques et tableaux.",
+      "disclosure": "Votre clé reste sur cet appareil. Les questions sur les revenus envoient ces données à {provider}.",
+      "chooseProvider": "Choisir un fournisseur",
+      "save": "Enregistrer et commencer",
+      "title": "Connecter votre LLM",
+      "model": "Modèle",
+      "customWeb": "Les hôtes personnalisés fonctionnent dans les apps natives. Le relais web ne transmet que OpenRouter, OpenAI, Anthropic et DeepSeek."
+    },
+    "clear": "Effacer le fil",
+    "clearMessage": "Toutes les questions et réponses enregistrées sur cet appareil seront supprimées.",
+    "emptyData": "Pas encore de données.",
+    "date": "Date",
+    "stop": "Arrêter",
+    "send": "Envoyer",
+    "latest": "Aller au plus récent",
+    "retry": "Réessayer",
+    "editKey": "Modifier la clé",
+    "askAbout": "Demander à propos de ceci",
+    "chartSummary": "{metric}, {count} points, dernière valeur {last}",
+    "followUp": {
+      "showTable": "Afficher en tableau",
+      "last30": "30 derniers jours",
+      "last30Prompt": "Montre cela pour les 30 derniers jours.",
+      "openCharts": "Ouvrir dans Graphiques"
+    },
+    "context": {
+      "day": "Expliquer {day}",
+      "revenue": "Expliquer le revenu de ce mois",
+      "charts": "Expliquer cette période {range}"
     }
   }
 }

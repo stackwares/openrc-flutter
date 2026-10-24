@@ -643,13 +643,33 @@
     },
     "language": "Sprache",
     "languageSystem": "System",
-    "languageSystemHint": "Wie auf deinem Gerät"
+    "languageSystemHint": "Wie auf deinem Gerät",
+    "agent": {
+      "providers": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "openrouter": "OpenRouter",
+        "custom": "Eigener"
+      },
+      "apiKey": "API-Schlüssel",
+      "invalidPrefix": "Der Schlüssel passt nicht zur üblichen Prefix dieses Anbieters.",
+      "title": "Fragen",
+      "provider": "Anbieter",
+      "recommended": "Empfohlen",
+      "faster": "Schneller / günstiger",
+      "customUrl": "Basis-URL",
+      "styleOpenAi": "OpenAI-Stil",
+      "styleAnthropic": "Anthropic-Stil",
+      "clearKey": "Schlüssel entfernen"
+    }
   },
   "shell": {
     "tabs": {
       "transactions": "Transaktionen",
       "revenue": "Umsatz",
-      "charts": "Diagramme"
+      "charts": "Diagramme",
+      "ask": "Fragen"
     },
     "settings": "Einstellungen",
     "menu": {
@@ -848,6 +868,73 @@
       "product": "Produkt",
       "expires": "Läuft ab",
       "type": "Typ"
+    }
+  },
+  "agent": {
+    "errors": {
+      "badKey": "API-Schlüssel abgelehnt. Prüfen und erneut versuchen.",
+      "generic": "Etwas ist schiefgelaufen. Erneut versuchen.",
+      "quota": "Anbieter hat limitiert. Später erneut versuchen.",
+      "empty": "Das Modell lieferte nichts.",
+      "noKey": "API-Schlüssel für Fragen hinzufügen.",
+      "network": "Anbieter nicht erreichbar. Verbindung prüfen.",
+      "relay": "Dieser Relay unterstützt Fragen noch nicht. Native Apps funktionieren weiter.",
+      "customWeb": "Eigene Hosts sind über den Web-Relay nicht verfügbar.",
+      "stopped": "Gestoppt."
+    },
+    "suggestions": {
+      "payout": "Wann werde ich ausgezahlt?",
+      "mrr": "Wie ist mein MRR-Trend?",
+      "today": "Wie war heute vs. gestern?",
+      "countries": "Top-Länder diesen Monat?"
+    },
+    "composerHint": "Fragen zu MRR, Verkäufen, Auszahlungen…",
+    "empty": {
+      "title": "Fragen Sie zu Ihrem Umsatz",
+      "subtitle": "Probieren Sie einen Vorschlag oder tippen Sie Ihre Frage."
+    },
+    "status": {
+      "tool": {
+        "get_chart": "Diagramm wird geladen…",
+        "present": "Ansicht wird vorbereitet…",
+        "get_overview": "Übersicht wird geladen…",
+        "get_payout_context": "Auszahlungen werden geladen…",
+        "get_transactions": "Transaktionen werden geladen…",
+        "list_projects": "Projekte werden geladen…"
+      },
+      "tools": "Tools werden ausgeführt…",
+      "thinking": "Denkt nach…"
+    },
+    "setup": {
+      "subtitle": "Fragen Sie RevenueCat-Daten mit Diagrammen und Tabellen ab.",
+      "disclosure": "Ihr Schlüssel bleibt auf diesem Gerät. Umsatzfragen senden diese Daten an {provider}.",
+      "chooseProvider": "Anbieter wählen",
+      "save": "Speichern und starten",
+      "title": "LLM verbinden",
+      "model": "Modell",
+      "customWeb": "Eigene Hosts funktionieren in den nativen Apps. Der Web-Relay leitet nur OpenRouter, OpenAI, Anthropic und DeepSeek weiter."
+    },
+    "clear": "Verlauf löschen",
+    "clearMessage": "Dadurch werden alle auf diesem Gerät gespeicherten Fragen und Antworten entfernt.",
+    "emptyData": "Noch keine Daten.",
+    "date": "Datum",
+    "stop": "Stopp",
+    "send": "Senden",
+    "latest": "Zum Neuesten springen",
+    "retry": "Erneut versuchen",
+    "editKey": "Schlüssel bearbeiten",
+    "askAbout": "Danach fragen",
+    "chartSummary": "{metric}, {count} Punkte, letzter Wert {last}",
+    "followUp": {
+      "showTable": "Als Tabelle",
+      "last30": "Letzte 30 Tage",
+      "last30Prompt": "Zeige das für die letzten 30 Tage.",
+      "openCharts": "In Diagrammen öffnen"
+    },
+    "context": {
+      "day": "{day} erklären",
+      "revenue": "Den Umsatz dieses Monats erklären",
+      "charts": "Diesen Zeitraum {range} erklären"
     }
   }
 }

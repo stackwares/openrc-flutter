@@ -56,3 +56,6 @@ dart_defines/*.json
 
 # Local Claude Code launch configs (machine-specific paths)
 .claude/
+
+# Local agent screenshots (not store marketing)
+.agent-captures/
