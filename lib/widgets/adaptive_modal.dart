@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/dialog_navigator.dart';
 
 const double _dialogMaxWidth = 560;
 const double _dialogMaxHeight = 680;
@@ -16,6 +17,9 @@ const double _dialogMaxHeight = 680;
 ///
 /// [dialogMaxWidth] and [dialogMaxHeight] let content with a wide layout
 /// (columns side by side) use more of a large window.
+///
+/// Inside a [DialogNavigator] (Settings on larger windows) it slides in as a
+/// page with a back button instead of opening a dialog over the dialog.
 Future<T?> showAdaptiveSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
@@ -23,6 +27,16 @@ Future<T?> showAdaptiveSheet<T>({
   double dialogMaxWidth = _dialogMaxWidth,
   double dialogMaxHeight = _dialogMaxHeight,
 }) {
+  if (DialogNavigator.contains(context)) {
+    return Navigator.of(context).push<T>(
+      MaterialPageRoute<T>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(),
+          body: SafeArea(top: false, child: builder(context)),
+        ),
+      ),
+    );
+  }
   if (context.windowSize == WindowSize.compact) {
     return showModalBottomSheet<T>(
       context: context,
