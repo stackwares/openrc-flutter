@@ -11,6 +11,7 @@ import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
 import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
+import 'package:openrc/services/push/push_names.dart';
 import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/rc_api_service.dart';
 
@@ -45,12 +46,14 @@ class PushWebhooks {
 
   /// This device's webhook URL. The notifier ignores the tag, and only sends
   /// the [kinds] named in `notify` (every kind when it's left out). The
-  /// [projectName] lets the notifier name the project in the notification.
+  /// [projectName] lets the notifier name the project in the notification,
+  /// and [names] the products it names in the app.
   static String urlFor(
     String secret, [
     Set<PushKind>? kinds,
     PushDisplay display = const PushDisplay(),
     String? projectName,
+    PushNames names = const PushNames.empty(),
   ]) {
     final base = '${PushConfig.webhookUrl}/${tagFor(secret)}';
     final notify = kinds == null ? null : PushKind.queryFor(kinds);
@@ -58,6 +61,7 @@ class PushWebhooks {
     final query = {
       'notify': ?notify,
       ...display.query,
+      ...names.query,
       if (name != null && name.isNotEmpty)
         'project': Uri.encodeQueryComponent(name),
     };
@@ -80,9 +84,10 @@ class PushWebhooks {
     required Set<PushKind> kinds,
     PushDisplay display = const PushDisplay(),
     String? projectName,
+    PushNames names = const PushNames.empty(),
   }) => RcWebhookInput(
     name: nameFor(secret),
-    url: urlFor(secret, kinds, display, projectName),
+    url: urlFor(secret, kinds, display, projectName, names),
     authorizationHeader: PushChannel.authorizationHeader(secret),
     environment: sandbox ? null : 'production',
     eventTypes: PushKind.eventTypesFor(kinds),
@@ -109,6 +114,7 @@ class PushWebhooks {
     required Set<PushKind> kinds,
     PushDisplay display = const PushDisplay(),
     String? projectName,
+    PushNames names = const PushNames.empty(),
   }) async {
     final input = inputFor(
       secret,
@@ -116,6 +122,7 @@ class PushWebhooks {
       kinds: kinds,
       display: display,
       projectName: projectName,
+      names: names,
     );
     final existing = await find(projectId, secret);
     if (existing != null) {
@@ -135,6 +142,7 @@ class PushWebhooks {
     required Set<PushKind> kinds,
     PushDisplay display = const PushDisplay(),
     String? projectName,
+    PushNames names = const PushNames.empty(),
   }) => _api.updateWebhook(
     projectId,
     webhookId,
@@ -144,6 +152,7 @@ class PushWebhooks {
       kinds: kinds,
       display: display,
       projectName: projectName,
+      names: names,
     ),
   );
 
@@ -425,14 +434,19 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
             id,
             (p) => PushProject(project: p.project, webhookId: webhookId),
           );
-          // Webhooks from before URLs named their project pick the name up
-          // here, so existing devices see it without changing a setting.
+          // Webhooks from before URLs named their project or carried product
+          // names pick them up here, so existing devices read right without
+          // changing a setting. Names the settings haven't loaded yet are
+          // left alone rather than removed.
           final name = names[id];
           final query = Uri.tryParse(webhook?.url ?? '')?.queryParameters;
-          if (webhookId != null &&
-              name != null &&
-              name.isNotEmpty &&
-              query?['project'] != name) {
+          final wanted = settings.names.encoded;
+          final stale =
+              (name != null &&
+                  name.isNotEmpty &&
+                  query?['project'] != name) ||
+              (wanted != null && query?[PushNames.key] != wanted);
+          if (webhookId != null && stale) {
             try {
               await webhooks.update(
                 id,
@@ -442,6 +456,7 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
                 kinds: settings.kindsFor(id),
                 display: settings.display,
                 projectName: name,
+                names: settings.names,
               );
             } catch (e) {
               _log.warning('Refreshing a webhook failed: $e');

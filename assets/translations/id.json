@@ -517,7 +517,7 @@
       "other": "{} hari"
     },
     "title": "Nama produk",
-    "intro": "Beri produk toko nama yang Anda kenali. Nama tetap di perangkat ini dan muncul di seluruh aplikasi. Jumlah dan hitungan tidak pernah berubah.",
+    "intro": "Beri produk toko nama yang Anda kenali. Nama tetap di perangkat ini dan muncul di seluruh aplikasi, termasuk di notifikasi. Jumlah dan hitungan tidak pernah berubah.",
     "search": "Cari produk",
     "emptyTitle": "Tidak ada produk dimuat",
     "emptyBody": "Buka daftar transaksi dulu: nama dibuat dari penjualan yang sudah dimuat.",

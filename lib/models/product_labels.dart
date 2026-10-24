@@ -1,8 +1,10 @@
 /// Product names a developer gave to store product ids, per app.
 ///
 /// RevenueCat product ids are technical (`com.acme.pro.sub.annual.false`).
-/// These labels are chosen on the device, never stored on a server, and only
-/// change what the app shows: amounts, dates and counts are unaffected.
+/// These labels are chosen on the device and kept there; the only thing that
+/// leaves it is this device's own webhook URL, so its notifications can use
+/// the same names ([PushNames](`../services/push/push_names.dart`)). Nothing
+/// reaches a server of ours, and amounts, dates and counts are unaffected.
 library;
 
 /// A plan family inside one app, e.g. `pro` → "Pro", so a monthly and an

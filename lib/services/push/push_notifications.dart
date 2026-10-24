@@ -13,6 +13,7 @@ import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
 import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
+import 'package:openrc/services/push/push_names.dart';
 import 'package:openrc/features/ask/ask_launch.dart';
 import 'package:openrc/services/push/push_web_stub.dart'
     if (dart.library.js_interop) 'package:openrc/services/push/push_web.dart';
@@ -220,6 +221,7 @@ class PushSettings {
     Set<PushKind>? kinds,
     this.projectKinds = const {},
     this.display = const PushDisplay(),
+    this.names = const PushNames.empty(),
   }) : kinds = kinds ?? const {...PushKind.values};
 
   /// This device is subscribed to [secret]'s notifications.
@@ -246,6 +248,10 @@ class PushSettings {
   /// The currency and fees notifications show amounts with.
   final PushDisplay display;
 
+  /// The names Settings gave to store products, so a push calls a product
+  /// what the app calls it.
+  final PushNames names;
+
   Set<PushKind> kindsFor(String projectId) => projectKinds[projectId] ?? kinds;
 
   PushSettings copyWith({
@@ -257,6 +263,7 @@ class PushSettings {
     Set<PushKind>? kinds,
     Map<String, Set<PushKind>>? projectKinds,
     PushDisplay? display,
+    PushNames? names,
   }) => PushSettings(
     enabled: enabled ?? this.enabled,
     secret: secret ?? this.secret,
@@ -266,6 +273,7 @@ class PushSettings {
     kinds: kinds ?? this.kinds,
     projectKinds: projectKinds ?? this.projectKinds,
     display: display ?? this.display,
+    names: names ?? this.names,
   );
 }
 
@@ -295,6 +303,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
   static const _kindsKey = 'push_kinds_v1';
   static const _projectKindsKey = 'push_project_kinds_v1';
   static const _displayKey = 'push_display_v1';
+  static const _namesKey = 'push_names_v1';
   static const _secretKey = 'push_secret_v1';
 
   /// Secrets whose webhooks couldn't all be removed (offline, say), retried
@@ -324,6 +333,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
         kinds: savedKinds.isEmpty ? null : savedKinds,
         projectKinds: _decodeProjectKinds(prefs.getString(_projectKindsKey)),
         display: _decodeDisplay(prefs.getString(_displayKey)),
+        names: _decodeNames(prefs.getString(_namesKey)),
       );
       // A topic subscription belongs to the device's FCM registration, which
       // can change (a restore, a reinstall); subscribing on each launch keeps
@@ -400,6 +410,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
       await prefs.remove(_kindsKey);
       await prefs.remove(_projectKindsKey);
       await prefs.remove(_displayKey);
+      await prefs.remove(_namesKey);
     } catch (e, st) {
       _log.warning('Forgetting notification settings failed', e, st);
     }
@@ -472,12 +483,38 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
     return changed ? _updateWebhooks((_) => true) : true;
   }
 
+  /// Follows Settings' product names, which the app sends with every label
+  /// change. Updates this device's webhooks when they changed; false when
+  /// some couldn't be.
+  Future<bool> setNames(PushNames names) async {
+    if (_messaging == null) return true;
+    await _hydrated;
+    if (names.sameAs(state.names)) return true;
+    state = state.copyWith(names: names);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_namesKey, jsonEncode(names.toJson()));
+    } catch (e, st) {
+      _log.warning('Saving product names for notifications failed', e, st);
+    }
+    return _updateWebhooks((_) => true);
+  }
+
   static PushDisplay _decodeDisplay(String? raw) {
     if (raw == null || raw.isEmpty) return const PushDisplay();
     try {
       return PushDisplay.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return const PushDisplay();
+    }
+  }
+
+  static PushNames _decodeNames(String? raw) {
+    if (raw == null || raw.isEmpty) return const PushNames.empty();
+    try {
+      return PushNames.fromJson(jsonDecode(raw));
+    } catch (_) {
+      return const PushNames.empty();
     }
   }
 
@@ -502,6 +539,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
             kinds: state.kindsFor(entry.key),
             display: state.display,
             projectName: entry.value.projectName,
+            names: state.names,
           );
         } catch (e) {
           _log.warning('Updating a webhook failed: $e');

@@ -518,7 +518,7 @@
       "other": "{} jours"
     },
     "title": "Noms des produits",
-    "intro": "Donnez aux produits du store des noms que vous reconnaissez. Les noms restent sur cet appareil et apparaissent partout dans l’app. Les montants et les comptes ne changent jamais.",
+    "intro": "Donnez aux produits du store des noms que vous reconnaissez. Les noms restent sur cet appareil et apparaissent partout dans l’app, notifications comprises. Les montants et les comptes ne changent jamais.",
     "search": "Rechercher des produits",
     "emptyTitle": "Aucun produit chargé",
     "emptyBody": "Ouvrez d’abord la liste des transactions : les noms viennent des ventes déjà chargées.",

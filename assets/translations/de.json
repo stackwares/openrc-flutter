@@ -518,7 +518,7 @@
       "other": "{} Tage"
     },
     "title": "Produktnamen",
-    "intro": "Gib Store-Produkten Namen, die du wiedererkennst. Namen bleiben auf diesem Gerät und erscheinen überall in der App. Beträge und Zahlen ändern sich nie.",
+    "intro": "Gib Store-Produkten Namen, die du wiedererkennst. Namen bleiben auf diesem Gerät und erscheinen überall in der App, auch in Benachrichtigungen. Beträge und Zahlen ändern sich nie.",
     "search": "Produkte suchen",
     "emptyTitle": "Keine Produkte geladen",
     "emptyBody": "Öffne zuerst die Transaktionsliste: Namen entstehen aus den bereits geladenen Verkäufen.",

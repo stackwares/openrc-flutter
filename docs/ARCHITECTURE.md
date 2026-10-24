@@ -56,8 +56,10 @@ widgets only read providers and call notifier methods.
    cached locally, and overridable per app.
 7. **Product names**: `product_labels_store.dart` keeps per-app labels for
    store product ids on the device only, and `plan_display.dart` reads them
-   wherever a product is shown. Names never touch amounts, filters or
-   notifications, which keep using the raw id. The naming screen can suggest
+   wherever a product is shown. Names never touch amounts or filters. They
+   reach notifications through this device's own webhook URL only
+   (`push_names.dart`), so each device's pushes read its names and nothing
+   naming-specific reaches any server of ours. The naming screen can suggest
    labels with the connected Ask model, sending product ids only.
 8. **Widgets**: after loading, a summary is handed to the native widgets
    through the `com.openrc.app/widgets` method channel (an App Group on iOS,
@@ -118,15 +120,22 @@ on a click, focuses an open tab (which opens the transaction) or opens
    the webhook's RevenueCat event types narrowed to match, and the notifier
    drops events of other kinds. The URL also carries the display currency,
    store fees (when subtracted), the app's last saved exchange rate
-   (`push_display.dart`) and the project's name, so the notifier shows
-   amounts as Settings does and names the project the event came from; the
-   shell keeps the webhooks in step when those settings change. Copying the URL and
-   header by hand (`push_setup_sheet.dart`) remains as a fallback.
+   (`push_display.dart`), the product names Settings gave (`push_names.dart`)
+   and the project's name, so the notifier shows amounts as Settings does,
+   calls a product what the app calls it, and names the project the event
+   came from; the shell keeps the webhooks in step when those settings
+   change. Names ride along as `?names=<id>%0A<name>%09…`, capped so the URL
+   stays short, and are the one thing here that is the developer's own text:
+   they sit in that device's webhook inside their RevenueCat project.
+   Copying the URL and header by hand (`push_setup_sheet.dart`) remains as a
+   fallback.
 3. For each event, the notifier hashes the header to find the topic, writes
-   the notification (`notifier/src/copy.ts`) — including the plan's length
-   (`Weekly`, `Monthly`, `Annual`, `3 months`) read from the store's own
-   purchase and expiration dates — and sends it through FCM's HTTP
-   v1 API with a service account. It keeps no record of devices or events.
+   the notification (`notifier/src/copy.ts`) — the product's name from the
+   URL or the store's id, the plan's length (`Weekly`, `Monthly`, `Annual`,
+   `3 months`) read from the store's own purchase and expiration dates, and
+   neither repeated when the name already says it — and sends it through
+   FCM's HTTP v1 API with a service account. It keeps no record of devices
+   or events.
 4. A notification that arrives while the app is open reloads the
    transactions. Tapping one opens that transaction's details, found by the
    store transaction id the push carries (`main_shell.dart`).
