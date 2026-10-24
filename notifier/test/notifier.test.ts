@@ -148,8 +148,8 @@ describe("webhook", () => {
     const { message } = JSON.parse(String(init.body));
     expect(message.topic).toBe(TOPIC);
     expect(message.notification).toEqual({
-      title: "🔵 New subscription · $10.83",
-      body: "pro_monthly · €9.99 · 🇩🇪 DE · 🍎",
+      title: "🔵 New Subscription · $10.83",
+      body: "pro_monthly · €9.99 · 🇩🇪 DE · iOS",
     });
     // Only the store's transaction id, so a tap can open the transaction.
     expect(message.data).toEqual({
@@ -345,46 +345,46 @@ describe("display currency and fees", () => {
     const spy = mockWithRates({ eur: 0.9, jpy: 150 });
     await send("?currency=EUR&fees=15,30");
     // $10.83, less the App Store's 15%, at 0.9.
-    expect(title(spy)).toBe("🔵 New subscription · €8.28");
+    expect(title(spy)).toBe("🔵 New Subscription · €8.28");
     // Paid in euros, the currency shown: not repeated.
-    expect(body(spy)).toBe("pro_monthly · 🇩🇪 DE · 🍎");
+    expect(body(spy)).toBe("pro_monthly · 🇩🇪 DE · iOS");
   });
 
   it("applies Google Play's fee to Play purchases, and none to others", async () => {
     let spy = mockWithRates({ eur: 0.9 });
     await send("?fees=15,30", { ...PURCHASE, store: "PLAY_STORE" });
-    expect(title(spy)).toBe("🔵 New subscription · $7.58");
+    expect(title(spy)).toBe("🔵 New Subscription · $7.58");
     vi.restoreAllMocks();
     spy = mockWithRates({ eur: 0.9 });
     await send("?fees=15,30", { ...PURCHASE, store: "STRIPE" });
-    expect(title(spy)).toBe("🔵 New subscription · $10.83");
+    expect(title(spy)).toBe("🔵 New Subscription · $10.83");
   });
 
   it("falls back to the last rate it had, then the app's saved one", async () => {
     let spy = mockWithRates({ eur: 0.9 });
     await send("?currency=EUR");
-    expect(title(spy)).toBe("🔵 New subscription · €9.75");
+    expect(title(spy)).toBe("🔵 New Subscription · €9.75");
 
     // The source goes down: the last rate it fetched still works.
     vi.restoreAllMocks();
     spy = mockWithRates(null);
     vi.spyOn(Date, "now").mockReturnValue(Date.now() + 7 * 3600_000);
     await send("?currency=EUR&rate=0.5");
-    expect(title(spy)).toBe("🔵 New subscription · €9.75");
+    expect(title(spy)).toBe("🔵 New Subscription · €9.75");
 
     // With nothing fetched yet, the rate saved in the URL.
     vi.restoreAllMocks();
     forgetRates();
     spy = mockWithRates(null);
     await send("?currency=EUR&rate=0.5");
-    expect(title(spy)).toBe("🔵 New subscription · €5.42");
+    expect(title(spy)).toBe("🔵 New Subscription · €5.42");
 
     // And with no rate at all, US dollars.
     vi.restoreAllMocks();
     forgetRates();
     spy = mockWithRates(null);
     await send("?currency=EUR");
-    expect(title(spy)).toBe("🔵 New subscription · $10.83");
+    expect(title(spy)).toBe("🔵 New Subscription · $10.83");
   });
 });
 
@@ -446,19 +446,19 @@ describe("topics", () => {
 describe("notification copy", () => {
   it("names each kind of event", () => {
     const title = (event: object) => notificationFor(event)?.title;
-    expect(title({ type: "INITIAL_PURCHASE", period_type: "TRIAL", price: 0 })).toBe("🟠 Trial started");
-    expect(title({ type: "RENEWAL", is_trial_conversion: true, price: 4.99 })).toBe("🔵 Trial converted · $4.99");
+    expect(title({ type: "INITIAL_PURCHASE", period_type: "TRIAL", price: 0 })).toBe("🟠 Trial Started");
+    expect(title({ type: "RENEWAL", is_trial_conversion: true, price: 4.99 })).toBe("🔵 Trial Converted · $4.99");
     expect(title({ type: "RENEWAL", price: 4.99 })).toBe("🟢 Renewal · $4.99");
     expect(title({ type: "NON_RENEWING_PURCHASE", price: 19.99 })).toBe("🟣 Purchase · $19.99");
     expect(title({ type: "CANCELLATION", cancel_reason: "CUSTOMER_SUPPORT", price: -4.99 })).toBe(
       "🔴 Refund · -$4.99",
     );
     expect(title({ type: "CANCELLATION", cancel_reason: "UNSUBSCRIBE" })).toBe("🟡 Cancellation");
-    expect(title({ type: "CANCELLATION", period_type: "TRIAL" })).toBe("🟡 Trial cancelled");
+    expect(title({ type: "CANCELLATION", period_type: "TRIAL" })).toBe("🟡 Trial Cancelled");
     expect(title({ type: "UNCANCELLATION" })).toBe("🟢 Resubscribed");
     expect(title({ type: "EXPIRATION" })).toBe("🔴 Expired");
-    expect(title({ type: "BILLING_ISSUE" })).toBe("🔴 Billing issue");
-    expect(title({ type: "PRODUCT_CHANGE" })).toBe("⚪ Plan change");
+    expect(title({ type: "BILLING_ISSUE" })).toBe("🔴 Billing Issue");
+    expect(title({ type: "PRODUCT_CHANGE" })).toBe("⚪ Plan Change");
     expect(title({ type: "TEMPORARY_ENTITLEMENT_GRANT" })).toBeUndefined();
   });
 
@@ -474,7 +474,7 @@ describe("notification copy", () => {
         currency: "USD",
         price_in_purchased_currency: 49.99,
       })?.body,
-    ).toBe("pro_monthly → pro_yearly · 🇺🇸 US · 🤖 · Sandbox");
+    ).toBe("pro_monthly → pro_yearly · 🇺🇸 US · 👾Android · Sandbox");
     expect(notificationFor({ type: "RENEWAL", store: "SOME_NEW_STORE", country_code: "XYZ" })?.body).toBe(
       "Some new store",
     );
@@ -487,7 +487,7 @@ describe("notification copy", () => {
 
   it("confirms RevenueCat's test event", () => {
     expect(notificationFor({ type: "TEST" })).toEqual({
-      title: "⚪ Test notification",
+      title: "⚪ Test Notification",
       body: "RevenueCat can reach this device.",
     });
   });
@@ -564,7 +564,7 @@ describe("notification language", () => {
       display("lang=de"),
     );
     expect(copy?.title).toBe("🟢 Verlängerung · 1.234,50\u00a0$");
-    expect(copy?.body).toBe("🇩🇪 DE · 🍎 · Sandbox");
+    expect(copy?.body).toBe("🇩🇪 DE · iOS · Sandbox");
     expect(notificationFor({ type: "TEST" }, display("lang=ja"))?.body).toBe(
       "RevenueCat からこのデバイスに届きます。",
     );

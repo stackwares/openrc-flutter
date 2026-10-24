@@ -140,6 +140,11 @@ function label(event: WebhookEvent, s: Strings): string | null {
   }
 }
 
+/** Capitalizes each word (“New Subscription”), leaving emojis untouched. */
+function titleCase(value: string, language: Language): string {
+  return value.replace(/(^|\s)(\p{L})/gu, (_, pre: string, ch: string) => pre + ch.toLocaleUpperCase(language));
+}
+
 function text(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
@@ -162,11 +167,11 @@ function country(code: unknown): string | undefined {
   return `${flag} ${cc}`;
 }
 
-/** Apple's and Google's stores as their emojis; others keep their names. */
+/** Apple's and Google's stores with their platforms; others keep their names. */
 const STORE_EMOJI: Record<string, string> = {
-  APP_STORE: "🍎",
-  MAC_APP_STORE: "🍎",
-  PLAY_STORE: "🤖",
+  APP_STORE: "iOS",
+  MAC_APP_STORE: "macOS",
+  PLAY_STORE: "👾Android",
 };
 
 function store(value: unknown): string | undefined {
@@ -238,8 +243,9 @@ export function notificationFor(
   const s = STRINGS[language];
   const name = label(event, s);
   if (!name) return null;
+  const titleName = titleCase(name, language);
   if (event.type === "TEST") {
-    return { title: name, body: display.project ? `${display.project} · ${s.testBody}` : s.testBody };
+    return { title: titleName, body: display.project ? `${display.project} · ${s.testBody}` : s.testBody };
   }
 
   const net = typeof event.price === "number" ? afterFees(event.price, event.store, display) : undefined;
@@ -270,7 +276,7 @@ export function notificationFor(
   ].filter(Boolean).join(" · ");
 
   return {
-    title: shown ? `${name} · ${shown}` : name,
+    title: shown ? `${titleName} · ${shown}` : titleName,
     body: body || s.fallbackBody,
   };
 }
