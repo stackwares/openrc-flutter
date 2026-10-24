@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/charts/home_screen.dart';
 import 'package:openrc/models/rc_overview_response.dart';
@@ -63,7 +64,7 @@ void main() {
     expect(find.text('MRR'), findsOneWidget);
     expect(find.text('\$1.2K'), findsOneWidget);
     expect(find.text('4'), findsWidgets);
-    expect(find.text('Ask about this range'), findsOneWidget);
+    expect(find.widgetWithText(AskContextChip, 'Ask'), findsOneWidget);
   });
 
   testWidgets('error state retries the overview load', (tester) async {

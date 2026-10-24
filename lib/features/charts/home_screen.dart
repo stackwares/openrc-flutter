@@ -112,6 +112,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               tooltip: 'charts.refresh'.tr(),
               onPressed: state.isLoading ? null : () => notifier.fetchData(),
             ),
+          AskContextChip(
+            label: 'agent.askAboutRange'.tr(),
+            onPressed: () => openAskTab(
+              ref,
+              context: AskPrefills.chartRange(range: rangeLabel),
+            ),
+          ),
           const SettingsAppBarAction(),
         ],
       ),
@@ -125,7 +132,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildRangeChips(
     HomeState state, {
     double inset = 0,
-    required String rangeLabel,
   }) {
     final selected = _matchingPreset(state);
     final notifier = ref.read(homeProvider.notifier);
@@ -151,14 +157,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icons.calendar_today_rounded,
             selected: selected == null,
             onTap: state.isLoading ? null : _pickChartRange,
-          ),
-          const SizedBox(width: 8),
-          AskContextChip(
-            label: 'agent.askAboutRange'.tr(),
-            onPressed: () => openAskTab(
-              ref,
-              context: AskPrefills.chartRange(range: rangeLabel),
-            ),
           ),
         ],
       ),
@@ -224,7 +222,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: _buildRangeChips(
                 state,
                 inset: inset,
-                rangeLabel: rangeLabel,
               ),
             ),
             SliverPadding(

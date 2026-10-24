@@ -1,7 +1,7 @@
 // OpenRC push service worker. The web app registers it (as push/sw.js, so its
 // scope stays clear of Flutter's own worker) to receive notifications from
 // Firebase Cloud Messaging while no tab is open. It shows each one; the
-// default tap opens the sale, and “Ask about this” jumps to Ask.
+// default tap opens the sale, and “Ask” jumps to Ask.
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -27,7 +27,7 @@ self.addEventListener('push', (event) => {
       actions: transaction
         ? [
             { action: 'open', title: 'Open' },
-            { action: 'ask', title: 'Ask about this' },
+            { action: 'ask', title: 'Ask' },
           ]
         : [],
     }),

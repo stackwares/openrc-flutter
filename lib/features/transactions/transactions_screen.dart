@@ -1560,12 +1560,22 @@ class _DayHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: context.textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: context.textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              AskContextChip(
+                label: 'agent.askAboutDay'.tr(),
+                onPressed: onAsk,
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           if (loading)
@@ -1606,14 +1616,6 @@ class _DayHeroCard extends StatelessWidget {
             ),
           const SizedBox(height: 16),
           strip,
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: AskContextChip(
-              label: 'agent.askAboutDay'.tr(),
-              onPressed: onAsk,
-            ),
-          ),
         ],
       ),
     );

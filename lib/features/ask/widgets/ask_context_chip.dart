@@ -18,7 +18,7 @@ class AskContextChip extends StatelessWidget {
     return TextButton.icon(
       onPressed: onPressed,
       icon: Icon(
-        Icons.chat_bubble_outline_rounded,
+        Icons.auto_awesome_outlined,
         size: 16,
         color: scheme.primary,
       ),

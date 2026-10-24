@@ -6,6 +6,7 @@ import 'package:openrc/app/app.dart';
 import 'package:openrc/app/floating_tab_chrome.dart';
 import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/features/ask/ask_providers.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
@@ -167,7 +168,7 @@ void main() {
     tester,
   ) async {
     final container = await pumpAt(tester, const Size(390, 844));
-    await tester.tap(find.text('Ask about this day'));
+    await tester.tap(find.widgetWithText(AskContextChip, 'Ask'));
     await tester.pumpAndSettle();
     expect(container.read(mainShellTabIndexProvider), 3);
     expect(container.read(askPrefillProvider), isNull);
