@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,8 @@ import 'package:logging/logging.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
 import 'package:openrc/services/push/push_kinds.dart';
+import 'package:openrc/services/push/push_web_stub.dart'
+    if (dart.library.js_interop) 'package:openrc/services/push/push_web.dart';
 import 'package:openrc/services/push/push_webhooks.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,22 +24,31 @@ final _log = Logger('PushNotifications');
 /// database or analytics.
 abstract final class PushNotifications {
   static bool _started = false;
+  static bool _supported = true;
 
   /// True once Firebase is up; Settings offers notifications only then.
   static bool get isAvailable => _started;
+
+  /// False in browsers that can't receive pushes, such as Safari on iPhone
+  /// outside a Home Screen app.
+  static bool get isSupported => _supported;
 
   static Future<void> start() async {
     final options = PushConfig.firebaseOptions;
     if (options == null || _started) return;
     try {
       await Firebase.initializeApp(options: options);
-      // iOS and macOS also show banners while the app is open. Android
-      // doesn't, so the app reloads its list instead.
-      await FirebaseMessaging.instance
-          .setForegroundNotificationPresentationOptions(
-            alert: true,
-            sound: true,
-          );
+      if (kIsWeb) {
+        _supported = await FirebaseMessaging.instance.isSupported();
+      } else {
+        // iOS and macOS also show banners while the app is open. Android
+        // doesn't, so the app reloads its list instead.
+        await FirebaseMessaging.instance
+            .setForegroundNotificationPresentationOptions(
+              alert: true,
+              sound: true,
+            );
+      }
       _started = true;
     } catch (e, st) {
       _log.warning('Firebase setup failed', e, st);
@@ -45,15 +57,16 @@ abstract final class PushNotifications {
 
   /// Notifications that arrive while the app is open.
   static Stream<RemoteMessage> get onMessage =>
-      _started ? FirebaseMessaging.onMessage : const Stream.empty();
+      _started && !kIsWeb ? FirebaseMessaging.onMessage : const Stream.empty();
 
   /// Notifications tapped while the app was in the background.
-  static Stream<RemoteMessage> get onMessageOpenedApp =>
-      _started ? FirebaseMessaging.onMessageOpenedApp : const Stream.empty();
+  static Stream<RemoteMessage> get onMessageOpenedApp => _started && !kIsWeb
+      ? FirebaseMessaging.onMessageOpenedApp
+      : const Stream.empty();
 
   /// The notification tapped to launch the app, if any.
   static Future<RemoteMessage?> initialMessage() async {
-    if (!_started) return null;
+    if (!_started || kIsWeb) return null;
     try {
       return await FirebaseMessaging.instance.getInitialMessage();
     } catch (e) {
@@ -61,16 +74,26 @@ abstract final class PushNotifications {
       return null;
     }
   }
+
+  /// On the web: the transaction ids of notifications clicked while a tab
+  /// was open (the service worker, `web/push/sw.js`, passes them on).
+  static Stream<String> get webOpens =>
+      _started && kIsWeb ? webPushOpens() : const Stream.empty();
+
+  /// On the web: the transaction a notification click opened a new tab for.
+  static String? get webLaunchTransaction =>
+      kIsWeb && _started ? Uri.base.queryParameters['transaction'] : null;
 }
 
-/// What the app needs from Cloud Messaging; tests use a fake.
+/// What the app needs from Cloud Messaging; tests use a fake. Subscribing
+/// puts this device on [secret]'s topic (see [PushChannel]).
 abstract class PushMessaging {
   /// Asks to show notifications. True when the system allows them.
   Future<bool> requestPermission();
 
-  Future<void> subscribe(String topic);
+  Future<void> subscribe(String secret);
 
-  Future<void> unsubscribe(String topic);
+  Future<void> unsubscribe(String secret);
 }
 
 class FirebasePushMessaging implements PushMessaging {
@@ -84,15 +107,15 @@ class FirebasePushMessaging implements PushMessaging {
   }
 
   @override
-  Future<void> subscribe(String topic) async {
+  Future<void> subscribe(String secret) async {
     await _waitForApns();
-    await _messaging.subscribeToTopic(topic);
+    await _messaging.subscribeToTopic(PushChannel.topicFor(secret));
   }
 
   @override
-  Future<void> unsubscribe(String topic) async {
+  Future<void> unsubscribe(String secret) async {
     await _waitForApns();
-    await _messaging.unsubscribeFromTopic(topic);
+    await _messaging.unsubscribeFromTopic(PushChannel.topicFor(secret));
   }
 
   /// On Apple platforms FCM can't subscribe until APNs has given the device
@@ -110,10 +133,77 @@ class FirebasePushMessaging implements PushMessaging {
   }
 }
 
+/// Browsers can't join FCM topics themselves, so the notifier does it: the
+/// browser registers the push service worker (`web/push/sw.js`) and sends its
+/// registration id with the device's secret.
+class WebPushMessaging extends FirebasePushMessaging {
+  WebPushMessaging([Dio? dio])
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: PushConfig.notifierUrl,
+              connectTimeout: const Duration(seconds: 15),
+              receiveTimeout: const Duration(seconds: 20),
+            ),
+          );
+
+  final Dio _dio;
+  String? _registration;
+
+  static const _serviceWorker = 'push/sw.js';
+
+  @override
+  Future<void> subscribe(String secret) => _send('/subscribe', secret);
+
+  @override
+  Future<void> unsubscribe(String secret) => _send('/unsubscribe', secret);
+
+  Future<void> _send(String path, String secret) async {
+    await _dio.post<void>(
+      path,
+      data: {'registration': await _register()},
+      options: Options(
+        headers: {'Authorization': PushChannel.authorizationHeader(secret)},
+      ),
+    );
+  }
+
+  /// This browser's Firebase installation id, or failing that its FCM token.
+  Future<String> _register() async {
+    final known = _registration;
+    if (known != null) return known;
+    final messaging = FirebaseMessaging.instance;
+    final registered = messaging.onRegistered.first.timeout(
+      const Duration(seconds: 20),
+    );
+    try {
+      await messaging.register(
+        vapidKey: PushConfig.vapidKey,
+        serviceWorkerScriptPath: _serviceWorker,
+      );
+      return _registration = await registered;
+    } catch (e) {
+      registered.ignore();
+      _log.fine('Registering failed, using a token instead: $e');
+      // ignore: deprecated_member_use
+      final token = await messaging.getToken(
+        vapidKey: PushConfig.vapidKey,
+        serviceWorkerScriptPath: _serviceWorker,
+      );
+      if (token == null) throw StateError('The browser gave no push token');
+      return _registration = token;
+    }
+  }
+}
+
 /// Cloud Messaging for this build, or null when it has no notifications.
-final pushMessagingProvider = Provider<PushMessaging?>(
-  (ref) => PushNotifications.isAvailable ? FirebasePushMessaging() : null,
-);
+final pushMessagingProvider = Provider<PushMessaging?>((ref) {
+  if (!PushNotifications.isAvailable || !PushNotifications.isSupported) {
+    return null;
+  }
+  return kIsWeb ? WebPushMessaging() : FirebasePushMessaging();
+});
 
 class PushSettings {
   const PushSettings({
@@ -228,7 +318,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
       if (enabled) {
         unawaited(
           _messaging!
-              .subscribe(PushChannel.topicFor(secret))
+              .subscribe(secret)
               .catchError((Object e) => _log.warning('Resubscribing: $e')),
         );
       }
@@ -250,7 +340,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
       }
       final secret = state.secret ?? PushChannel.newSecret();
       await _secureStorage.write(key: _secretKey, value: secret);
-      await messaging.subscribe(PushChannel.topicFor(secret));
+      await messaging.subscribe(secret);
       await _saveBool(_enabledKey, true);
       // Its webhooks are about to be added again, not removed.
       await _updatePending((secrets) => secrets..remove(secret));
@@ -273,7 +363,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
     if (secret == null) return;
     if (enabled) {
       try {
-        await _messaging?.unsubscribe(PushChannel.topicFor(secret));
+        await _messaging?.unsubscribe(secret);
       } catch (e, st) {
         _log.warning('Unsubscribing failed', e, st);
       }

@@ -20,7 +20,9 @@ class NotificationsSettingsRow extends ConsumerWidget {
         : projects
               .where((p) => p.id != null && !push.knownProjects.contains(p.id))
               .length;
-    final status = !push.enabled
+    final status = !PushNotifications.isSupported
+        ? 'notifications.statusUnsupported'.tr()
+        : !push.enabled
         ? (push.blocked
               ? 'notifications.statusBlocked'.tr()
               : 'notifications.statusOff'.tr())

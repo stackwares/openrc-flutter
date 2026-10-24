@@ -101,11 +101,40 @@ async function accessToken(account: ServiceAccount): Promise<string> {
 /** A failed call to Google, by stage and HTTP status only. */
 export class FcmError extends Error {
   constructor(
-    readonly stage: "token" | "send",
+    readonly stage: "token" | "send" | "subscription",
     readonly status: number,
   ) {
     super(`FCM ${stage} failed with ${status}`);
   }
+}
+
+/**
+ * Adds [registration] (a browser's Firebase installation id or FCM token)
+ * to [topic], or with [subscribe] false removes it, through FCM's topic
+ * subscription API. Browsers can't do this themselves.
+ */
+export async function setTopicSubscription(
+  account: ServiceAccount,
+  registration: string,
+  topic: string,
+  subscribe: boolean,
+): Promise<void> {
+  const token = await accessToken(account);
+  const base =
+    `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(account.project_id)}` +
+    `/registrations/${encodeURIComponent(registration)}/topicSubscriptions`;
+  const response = await fetch(
+    subscribe ? `${base}?topic_name=${encodeURIComponent(topic)}` : `${base}/${encodeURIComponent(topic)}`,
+    {
+      method: subscribe ? "POST" : "DELETE",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: "{}",
+    },
+  );
+  if (response.status === 401) forgetAccessToken();
+  // Already subscribed, or already gone: the outcome asked for.
+  const settled = subscribe ? response.status === 409 : response.status === 404;
+  if (!response.ok && !settled) throw new FcmError("subscription", response.status);
 }
 
 export async function sendToTopic(account: ServiceAccount, message: TopicMessage): Promise<void> {
@@ -123,11 +152,14 @@ export async function sendToTopic(account: ServiceAccount, message: TopicMessage
           data: {
             source: "revenuecat",
             ...(message.transactionId ? { transaction_id: message.transactionId } : {}),
+            // Lets a browser replace a retried event's notification.
+            ...(collapse ? { event_id: collapse } : {}),
           },
           android: {
             priority: "HIGH",
             ...(collapse ? { notification: { tag: collapse } } : {}),
           },
+          webpush: { headers: { Urgency: "high" } },
           apns: {
             headers: {
               "apns-priority": "10",

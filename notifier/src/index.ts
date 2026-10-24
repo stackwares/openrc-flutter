@@ -6,11 +6,25 @@
  */
 
 import { kindOf, notificationFor, parseKinds, type Kind, type WebhookEvent } from "./copy";
-import { FcmError, parseServiceAccount, sendToTopic } from "./fcm";
+import { FcmError, parseServiceAccount, sendToTopic, setTopicSubscription } from "./fcm";
 import { parseSecret, topicFor } from "./topic";
 
 /** `/revenuecat`, or `/revenuecat/<device tag>`. */
 const WEBHOOK_PATH = /^\/revenuecat(?:\/[A-Za-z0-9_-]{1,64})?$/;
+
+/** A Firebase installation id or FCM registration token. */
+const REGISTRATION = /^[A-Za-z0-9_:-]{10,4096}$/;
+
+/**
+ * Browsers call `/subscribe` from the web app. Its authorization is the
+ * device's secret, not a cookie, so any origin may ask.
+ */
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+  "Access-Control-Max-Age": "86400",
+};
 
 /** Webhook events are a few kilobytes; anything far bigger isn't one. */
 const MAX_BODY_BYTES = 64 * 1024;
@@ -20,6 +34,15 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/" && request.method === "GET") {
       return Response.json({ service: "openrc-notifier", ok: true });
+    }
+    if (url.pathname === "/subscribe" || url.pathname === "/unsubscribe") {
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+      if (request.method !== "POST") {
+        return Response.json({ error: "method_not_allowed" }, { status: 405, headers: CORS });
+      }
+      const response = await subscription(request, env, url.pathname === "/subscribe");
+      for (const [name, value] of Object.entries(CORS)) response.headers.set(name, value);
+      return response;
     }
     // Each device's webhook has its own URL (RevenueCat allows one webhook
     // per URL in a project); the last segment is only a label.
@@ -91,6 +114,44 @@ async function webhook(request: Request, env: Env, kinds: Set<Kind> | null): Pro
     return Response.json({ error: "delivery_failed" }, { status: 502 });
   }
   return Response.json({ sent: true });
+}
+
+/**
+ * Puts a browser on its device's topic, or takes it off. Phones subscribe
+ * themselves; browsers can't, so they ask here with their secret.
+ */
+async function subscription(request: Request, env: Env, subscribe: boolean): Promise<Response> {
+  const secret = parseSecret(request.headers.get("Authorization"));
+  if (!secret) return Response.json({ error: "unauthorized" }, { status: 401 });
+  const account = parseServiceAccount(env.FCM_SERVICE_ACCOUNT);
+  if (!account) {
+    console.error(JSON.stringify({ message: "FCM_SERVICE_ACCOUNT is missing or invalid" }));
+    return Response.json({ error: "not_configured" }, { status: 500 });
+  }
+  let registration: unknown;
+  try {
+    const raw = await request.text();
+    if (raw.length > 8 * 1024) return tooLarge();
+    registration = (JSON.parse(raw) as { registration?: unknown }).registration;
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+  if (typeof registration !== "string" || !REGISTRATION.test(registration)) {
+    return Response.json({ error: "invalid_registration" }, { status: 400 });
+  }
+  try {
+    await setTopicSubscription(account, registration, await topicFor(secret), subscribe);
+  } catch (error) {
+    console.error(
+      JSON.stringify(
+        error instanceof FcmError
+          ? { message: "FCM call failed", stage: error.stage, status: error.status }
+          : { message: "FCM unreachable" },
+      ),
+    );
+    return Response.json({ error: "subscription_failed" }, { status: 502 });
+  }
+  return Response.json({ subscribed: subscribe });
 }
 
 function tooLarge(): Response {

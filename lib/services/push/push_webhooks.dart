@@ -29,12 +29,14 @@ class PushWebhooks {
       PushChannel.topicFor(secret).substring('openrc-'.length).substring(0, 6);
 
   static String nameFor(String secret) {
-    final device = switch (defaultTargetPlatform) {
-      TargetPlatform.iOS => 'iOS',
-      TargetPlatform.android => 'Android',
-      TargetPlatform.macOS => 'macOS',
-      _ => 'device',
-    };
+    final device = kIsWeb
+        ? 'Web'
+        : switch (defaultTargetPlatform) {
+            TargetPlatform.iOS => 'iOS',
+            TargetPlatform.android => 'Android',
+            TargetPlatform.macOS => 'macOS',
+            _ => 'device',
+          };
     return 'OpenRC · $device · ${tagFor(secret)}';
   }
 

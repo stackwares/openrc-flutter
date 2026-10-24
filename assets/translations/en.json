@@ -600,6 +600,7 @@
     "statusOff": "Off",
     "statusOn": "On for this device",
     "statusBlocked": "Blocked in your device’s settings",
+    "statusUnsupported": "Not available in this browser",
     "statusNew": {
       "one": "On · {} new project to set up",
       "other": "On · {} new projects to set up"
@@ -620,6 +621,8 @@
     "benefitPrivateBody": "Events pass through OpenRC’s notifier without being stored or logged.",
     "blocked": "Notifications are turned off for OpenRC in your device’s settings. Turn them on there, then come back.",
     "openSettings": "Open Settings",
+    "blockedWeb": "Notifications are blocked for this site. Allow them in your browser’s site settings, then try again.",
+    "unsupported": "This browser can’t receive notifications. On iPhone or iPad, add OpenRC to your Home Screen from Safari’s Share menu, then open it from there.",
     "turnOn": "Turn on notifications",
     "turnOnFailed": "Couldn’t turn on notifications. Check your connection and try again.",
     "chooseTitle": "Which projects?",

@@ -42,8 +42,8 @@ your RevenueCat account and works out the answers on your device:
   trials, users, churn and more, over any date range.
 - **At a glance.** Home screen widgets on iOS and Android.
 - **A ping for every sale.** Optional push notifications for purchases,
-  renewals, trials and refunds, from RevenueCat's own webhooks (iPhone, iPad
-  and Android).
+  renewals, trials and refunds, from RevenueCat's own webhooks (iPhone, iPad,
+  Android and the web).
 - **Made for every screen.** A floating tab bar on phones, a navigation rail
   on tablets, and a sidebar with side-by-side columns, keyboard shortcuts and
   a native menu bar on desktop.

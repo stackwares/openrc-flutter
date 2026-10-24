@@ -61,8 +61,16 @@ widgets only read providers and call notifier methods.
 ## Push notifications
 
 Off unless the build has Firebase settings (`lib/services/push/push_config.dart`)
-and the user turns them on in Settings. iPhone, iPad and Android only for
-now; macOS builds are signed ad hoc, which can't carry the push entitlement.
+and the user turns them on in Settings. iPhone, iPad, Android and the web;
+macOS builds are signed ad hoc, which can't carry the push entitlement.
+
+Browsers can't join FCM topics themselves. The web app registers its own
+push service worker (`web/push/sw.js`, scoped away from Flutter's) with the
+project's web push key, then sends the browser's registration id and the
+device's secret to the notifier's `/subscribe`, which adds it to the topic
+through FCM's topic subscription API. The service worker shows each push and,
+on a click, focuses an open tab (which opens the transaction) or opens
+`/?transaction=<id>`.
 
 1. Turning them on (`push_notifications.dart`) asks for permission and makes a
    random secret, kept in secure storage. The device subscribes to the FCM

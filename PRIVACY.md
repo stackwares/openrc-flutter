@@ -56,7 +56,9 @@ Then:
 
 - **On your device**, OpenRC creates a random key, kept in the device's secure
   storage. Firebase Cloud Messaging gives the install a registration token,
-  and the device subscribes to a channel named after a hash of the key.
+  and the device subscribes to a channel named after a hash of the key. In a
+  browser, the notifier does that subscribing for it, given the browser's
+  registration id and the key, and keeps neither.
 - **In your RevenueCat projects**, OpenRC uses your RevenueCat session to add a
   webhook for this device to each project you pick, with the key as its
   authorization header. You can also add the webhook yourself instead.
@@ -111,6 +113,7 @@ We do not send to PostHog (or other analytics in this app):
 | **Cloudflare** (web relay, notifier, hosting) | Stateless relay and notifier, static web hosting | [cloudflare.com/privacypolicy](https://www.cloudflare.com/privacypolicy/) |
 | **Google Firebase Cloud Messaging** (optional) | Delivering notifications you turn on | [firebase.google.com/support/privacy](https://firebase.google.com/support/privacy) |
 | **Apple Push Notification service** (optional) | Delivering notifications to iPhone and iPad | [apple.com/legal/privacy](https://www.apple.com/legal/privacy/) |
+| **Your browser's push service** (optional, web) | Delivering notifications to the web app; run by your browser's maker | Your browser maker's privacy policy |
 
 ## 9. Data retention and deletion
 

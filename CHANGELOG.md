@@ -26,7 +26,7 @@ All notable changes to OpenRC are listed here. The format follows
 - Optional, anonymous crash reports and usage stats through PostHog, with a
   switch in Settings. Off in builds without a PostHog key.
 - Push notifications for RevenueCat events (purchases, renewals, trials,
-  refunds and more) on iPhone, iPad and Android, through a stateless
+  refunds and more) on iPhone, iPad, Android and the web, through a stateless
   Cloudflare notifier (`notifier/`) and Firebase Cloud Messaging. Turning them
   on adds a webhook for the device to the RevenueCat projects you pick, and
   turning them off or logging out removes it. Choose which kinds of event

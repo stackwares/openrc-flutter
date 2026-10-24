@@ -56,6 +56,10 @@ and sign release builds with it (never commit the keystore or its passwords).
    Notifications** capability (Xcode's automatic signing can do this).
 3. Deploy the notifier (`notifier/README.md`) with a service account key from
    the same project.
+4. For the web app, register a web app in the same Firebase project and
+   generate a web push key under **Project settings → Cloud Messaging → Web
+   Push certificates**, then add `FIREBASE_WEB_API_KEY`,
+   `FIREBASE_WEB_APP_ID` and `FIREBASE_VAPID_KEY` to `firebase.json`.
 
 ### Telemetry (optional)
 
@@ -105,7 +109,8 @@ firebase appdistribution:distribute build/ios/ipa/*.ipa \
 ```bash
 (cd relay && npm ci && npm run deploy)      # only when relay/ changed
 (cd notifier && npm ci && npm run deploy)   # only when notifier/ changed
-flutter build web --release --dart-define-from-file=dart_defines/posthog.json
+flutter build web --release --dart-define-from-file=dart_defines/posthog.json \
+  --dart-define-from-file=dart_defines/firebase.json
 npx wrangler pages deploy build/web --project-name openrc --branch main
 ```
 
