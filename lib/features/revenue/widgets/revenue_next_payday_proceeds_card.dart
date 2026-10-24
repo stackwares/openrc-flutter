@@ -118,7 +118,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
                 label: 'agent.askAboutPayout'.tr(),
                 onPressed: () => openAskTab(
                   ref,
-                  prefill: AskPrefills.payout(),
+                  context: AskPrefills.payout(),
                 ),
               ),
             ),

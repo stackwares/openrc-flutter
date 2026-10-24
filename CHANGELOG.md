@@ -54,6 +54,8 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Fixed
 
+- “Ask about this” now shows what it attached above the Ask composer, with a
+  close button to detach it.
 - “Ask about this” now opens Ask from transaction and metric details, side
   panels and other pushed screens instead of switching the tab behind them.
 - The Ask message field centers its text and hint vertically.

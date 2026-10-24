@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/shell_insets.dart';
+import 'package:openrc/features/ask/ask_context.dart';
 import 'package:openrc/features/ask/ask_notifier.dart';
 import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/ask/widgets/ask_composer.dart';
@@ -173,9 +174,18 @@ class _AskScreenState extends ConsumerState<AskScreen> {
     final notifier = ref.read(askNotifierProvider.notifier);
     if (text.isEmpty || notifier.isRunning) return;
     _composer.clear();
+    ref.read(askContextProvider.notifier).state = null;
     HapticFeedback.lightImpact();
     if (_touchFirst) _focusNode.unfocus();
     notifier.submit(text);
+  }
+
+  /// Takes the attachment off the next question. The question text stays
+  /// unless it is exactly the prompt the attachment came with.
+  void _detachContext(AskContext attached) {
+    ref.read(askContextProvider.notifier).state = null;
+    ref.read(askFocusTransactionIdProvider.notifier).state = null;
+    if (_composer.text.trim() == attached.prompt) _composer.clear();
   }
 
   void _ask(String prompt) {
@@ -415,6 +425,17 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                   ],
                 ),
               ),
+              if (ref.watch(askContextProvider) case final attached?)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(side, 0, side, AppSpace.xxs),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: _AskContextBadge(
+                      attachment: attached,
+                      onRemove: () => _detachContext(attached),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, bottom),
                 child: AskComposer(
@@ -781,6 +802,62 @@ class _AskConsentGate extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// The thing the next question is about, as a removable chip above the
+/// composer.
+class _AskContextBadge extends StatelessWidget {
+  const _AskContextBadge({required this.attachment, required this.onRemove});
+
+  final AskContext attachment;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final icon = switch (attachment.kind) {
+      AskContextKind.sale => Icons.receipt_long_rounded,
+      AskContextKind.day => Icons.today_rounded,
+      AskContextKind.metric => Icons.insights_rounded,
+      AskContextKind.charts => Icons.show_chart_rounded,
+      AskContextKind.payout => Icons.account_balance_wallet_rounded,
+    };
+    return Container(
+      key: const Key('ask-context'),
+      padding: const EdgeInsets.fromLTRB(10, 4, 4, 4),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: context.appColors.hairline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: scheme.primary),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              attachment.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.labelMedium?.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: onRemove,
+            icon: const Icon(Icons.close_rounded, size: 15),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+          ),
+        ],
+      ),
     );
   }
 }

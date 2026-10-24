@@ -1035,7 +1035,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             ),
             onAsk: () => openAskTab(
               ref,
-              prefill: AskPrefills.selectedDay(selectedKey),
+              context: AskPrefills.selectedDay(selectedKey),
             ),
           ).appCardEntrance(),
         ),
@@ -1198,7 +1198,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         ),
         onAsk: () => openAskTab(
           ref,
-          prefill: AskPrefills.selectedDay(selectedKey),
+          context: AskPrefills.selectedDay(selectedKey),
         ),
       );
       final showBreakdown =

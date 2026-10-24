@@ -258,8 +258,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             label: 'agent.askAbout'.tr(),
             onPressed: () => openAskTab(
               ref,
-              prefill: AskPrefills.transaction(transaction),
-              transactionId: transaction.storeTransactionIdentifier,
+              context: AskPrefills.transaction(transaction),
             ),
           ),
           IconButton(

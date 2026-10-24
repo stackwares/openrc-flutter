@@ -157,7 +157,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'agent.askAboutRange'.tr(),
             onPressed: () => openAskTab(
               ref,
-              prefill: AskPrefills.chartRange(range: rangeLabel),
+              context: AskPrefills.chartRange(range: rangeLabel),
             ),
           ),
         ],

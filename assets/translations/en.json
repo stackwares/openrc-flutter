@@ -1198,6 +1198,10 @@
       "transaction": "What's going on with this {type}?",
       "sale": "What's going on with this sale?"
     },
+    "contextLabels": {
+      "sale": "Sale",
+      "payout": "Next payout"
+    },
     "status": {
       "thinking": "Thinking…",
       "tools": "Running tools…",

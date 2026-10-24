@@ -91,7 +91,7 @@ class _OverviewMetricDetailScreenState
             label: 'agent.askAbout'.tr(),
             onPressed: () => openAskTab(
               ref,
-              prefill: AskPrefills.chartRange(
+              context: AskPrefills.chartRange(
                 metric: widget.metric.label,
                 range: rangeLabel,
               ),

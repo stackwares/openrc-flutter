@@ -99,20 +99,26 @@ void refreshShellTab(WidgetRef ref) {
   }
 }
 
-/// Jump to Ask and optionally prefill the composer (⌘K from other tabs).
+/// Jump to Ask with an optional [context] and prompt (⌘K from other tabs).
 ///
 /// Anything pushed over the shell (a transaction, a metric detail, a side
 /// panel) is closed first: switching the tab underneath it would otherwise
 /// look like nothing happened.
-void openAskTab(WidgetRef ref, {String? prefill, String? transactionId}) {
+void openAskTab(
+  WidgetRef ref, {
+  AskContext? context,
+  String? prefill,
+  String? transactionId,
+}) {
   ref.read(mainShellTabIndexProvider.notifier).state = 3;
-  final prompt = prefill?.trim();
+  final prompt = prefill?.trim() ?? context?.prompt;
   if (prompt != null && prompt.isNotEmpty) {
     ref.read(askPrefillProvider.notifier).state = prompt;
   }
-  final id = transactionId?.trim();
+  final id = context?.transactionId ?? transactionId?.trim();
   ref.read(askFocusTransactionIdProvider.notifier).state =
       (id != null && id.isNotEmpty) ? id : null;
+  ref.read(askContextProvider.notifier).state = context;
   ref.read(askFocusTickProvider.notifier).state++;
   appNavigatorKey.currentState?.popUntil((route) => route.isFirst);
 }
@@ -120,7 +126,7 @@ void openAskTab(WidgetRef ref, {String? prefill, String? transactionId}) {
 void openAskAboutSelectedDay(WidgetRef ref) {
   openAskTab(
     ref,
-    prefill: AskPrefills.selectedDay(
+    context: AskPrefills.selectedDay(
       ref.read(transactionsProvider).selectedDayKey,
     ),
   );
@@ -280,8 +286,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           ? null
           : () => openAskTab(
               ref,
-              prefill: AskPrefills.sale(),
-              transactionId: id,
+              context: AskPrefills.sale(transactionId: id),
             ),
     );
   }
@@ -296,8 +301,10 @@ class _MainShellState extends ConsumerState<MainShell> {
     if (launch.openAsk) {
       openAskTab(
         ref,
-        prefill: launch.prompt ?? AskPrefills.sale(),
-        transactionId: launch.transactionId,
+        prefill: launch.prompt,
+        context: launch.transactionId == null
+            ? null
+            : AskPrefills.sale(transactionId: launch.transactionId),
       );
       if (launch.transactionId != null) _reloadTransactions();
       return;

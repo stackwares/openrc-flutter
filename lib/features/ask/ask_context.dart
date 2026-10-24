@@ -2,31 +2,77 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/models/rc_transaction.dart';
 
+/// What a jump into Ask is about. The chip above the composer shows [label];
+/// the composer starts with [prompt]; tools focus on [transactionId].
+class AskContext {
+  const AskContext({
+    required this.kind,
+    required this.label,
+    required this.prompt,
+    this.transactionId,
+  });
+
+  final AskContextKind kind;
+  final String label;
+  final String prompt;
+  final String? transactionId;
+}
+
+enum AskContextKind { sale, day, metric, charts, payout }
+
 /// Prefills for jumping to Ask from another screen. The tab stays one thread.
 abstract final class AskPrefills {
-  static String selectedDay(String dayKey, {DateTime? now}) {
-    return 'agent.context.day'.tr(namedArgs: {'day': _dayLabel(dayKey, now: now)});
-  }
-
-  static String chartRange({String? metric, required String range}) {
-    if (metric != null && metric.trim().isNotEmpty) {
-      return 'agent.context.metric'.tr(
-        namedArgs: {'metric': metric.trim(), 'range': range},
-      );
-    }
-    return 'agent.context.charts'.tr(namedArgs: {'range': range});
-  }
-
-  static String payout() => 'agent.context.payout'.tr();
-
-  static String transaction(RcTransaction? tx) {
-    if (tx == null) return sale();
-    return 'agent.context.transaction'.tr(
-      namedArgs: {'type': _typeLabel(tx)},
+  static AskContext selectedDay(String dayKey, {DateTime? now}) {
+    final day = _dayLabel(dayKey, now: now);
+    return AskContext(
+      kind: AskContextKind.day,
+      label: day,
+      prompt: 'agent.context.day'.tr(namedArgs: {'day': day}),
     );
   }
 
-  static String sale() => 'agent.context.sale'.tr();
+  static AskContext chartRange({String? metric, required String range}) {
+    final name = metric?.trim();
+    if (name != null && name.isNotEmpty) {
+      return AskContext(
+        kind: AskContextKind.metric,
+        label: '$name · $range',
+        prompt: 'agent.context.metric'.tr(
+          namedArgs: {'metric': name, 'range': range},
+        ),
+      );
+    }
+    return AskContext(
+      kind: AskContextKind.charts,
+      label: range,
+      prompt: 'agent.context.charts'.tr(namedArgs: {'range': range}),
+    );
+  }
+
+  static AskContext payout() => AskContext(
+    kind: AskContextKind.payout,
+    label: 'agent.contextLabels.payout'.tr(),
+    prompt: 'agent.context.payout'.tr(),
+  );
+
+  static AskContext transaction(RcTransaction? tx) {
+    if (tx == null) return sale();
+    return AskContext(
+      kind: AskContextKind.sale,
+      label: 'agent.contextLabels.sale'.tr(),
+      prompt: 'agent.context.transaction'.tr(
+        namedArgs: {'type': _typeLabel(tx)},
+      ),
+      transactionId: tx.storeTransactionIdentifier,
+    );
+  }
+
+  static AskContext sale({String? transactionId}) => AskContext(
+    kind: AskContextKind.sale,
+    label: 'agent.contextLabels.sale'.tr(),
+    prompt: 'agent.context.sale'.tr(),
+    transactionId: transactionId,
+  );
 
   static String _dayLabel(String dayKey, {DateTime? now}) {
     final today = now == null

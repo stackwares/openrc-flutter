@@ -172,6 +172,20 @@ void main() {
     expect(container.read(mainShellTabIndexProvider), 3);
     expect(container.read(askPrefillProvider), isNull);
     expect(find.widgetWithText(TextField, 'Explain Today'), findsOneWidget);
+
+    final badge = find.byKey(const Key('ask-context'));
+    expect(badge, findsOneWidget);
+    expect(
+      find.descendant(of: badge, matching: find.text('Today')),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.descendant(of: badge, matching: find.byIcon(Icons.close_rounded)),
+    );
+    await tester.pumpAndSettle();
+    expect(badge, findsNothing);
+    expect(find.widgetWithText(TextField, 'Explain Today'), findsNothing);
   });
 
   testWidgets('keyboard shortcuts switch tabs', (tester) async {
