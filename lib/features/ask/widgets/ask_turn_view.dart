@@ -7,9 +7,9 @@ import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/ask/ask_notifier.dart';
-import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/ask/ask_thread_store.dart';
 import 'package:openrc/features/ask/widgets/agent_block_view.dart';
+import 'package:openrc/features/settings/widgets/agent_settings_section.dart';
 import 'package:openrc/models/agent_block.dart';
 import 'package:openrc/models/agent_block_payload.dart';
 import 'package:openrc/theme/app_tokens.dart';
@@ -40,7 +40,7 @@ class AskTurnView extends ConsumerWidget {
         errorKey: error,
         onRetry: isLast ? notifier.retryLast : null,
         onEditKey: isLast && keyProblem
-            ? () => ref.read(askEditingKeyProvider.notifier).state = true
+            ? () => showAgentSettingsSheet(context)
             : null,
       );
     } else {
@@ -51,9 +51,9 @@ class AskTurnView extends ConsumerWidget {
             Padding(
               padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.md),
               child: isLast
-                  ? AgentBlockView(block: turn.blocks[i]).appCardEntrance(
-                      delay: AppMotion.staggerDelay(i * 4),
-                    )
+                  ? AgentBlockView(
+                      block: turn.blocks[i],
+                    ).appCardEntrance(delay: AppMotion.staggerDelay(i * 4))
                   : AgentBlockView(block: turn.blocks[i]),
             ),
           _AnswerFooter(turn: turn, isLast: isLast),
@@ -73,9 +73,7 @@ class AskTurnView extends ConsumerWidget {
             children: [...previous, ?current],
           ),
           child: KeyedSubtree(
-            key: ValueKey(
-              turn.isRunning ? 'running' : (error ?? 'answer'),
-            ),
+            key: ValueKey(turn.isRunning ? 'running' : (error ?? 'answer')),
             child: answer,
           ),
         ),
@@ -155,13 +153,22 @@ class _Working extends StatelessWidget {
     if (!still) {
       sparkle = sparkle
           .animate(onPlay: (c) => c.repeat(reverse: true))
-          .scaleXY(begin: 0.8, end: 1.1, duration: 700.ms, curve: Curves.easeInOut)
+          .scaleXY(
+            begin: 0.8,
+            end: 1.1,
+            duration: 700.ms,
+            curve: Curves.easeInOut,
+          )
           .fade(begin: 0.55, end: 1, duration: 700.ms);
-      status = status.animate(onPlay: (c) => c.repeat()).shimmer(
+      status = status
+          .animate(onPlay: (c) => c.repeat())
+          .shimmer(
             duration: 1600.ms,
             color: scheme.primary.withValues(alpha: 0.7),
           );
-      placeholder = placeholder.animate(onPlay: (c) => c.repeat()).shimmer(
+      placeholder = placeholder
+          .animate(onPlay: (c) => c.repeat())
+          .shimmer(
             duration: 1600.ms,
             color: scheme.surface.withValues(alpha: 0.6),
           );
@@ -212,16 +219,16 @@ class _AnswerPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double widthFactor) => FractionallySizedBox(
-          widthFactor: widthFactor,
-          child: Container(
-            height: 12,
-            margin: const EdgeInsets.only(bottom: AppSpace.xs),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
-        );
+      widthFactor: widthFactor,
+      child: Container(
+        height: 12,
+        margin: const EdgeInsets.only(bottom: AppSpace.xs),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [bar(0.92), bar(0.74), bar(0.48)],
@@ -270,14 +277,12 @@ class _ErrorPanel extends StatelessWidget {
   final VoidCallback? onEditKey;
 
   IconData get _icon => switch (errorKey) {
-        'agent.errors.badKey' || 'agent.errors.noKey' => Icons.key_off_rounded,
-        'agent.errors.network' => Icons.wifi_off_rounded,
-        'agent.errors.quota' => Icons.hourglass_bottom_rounded,
-        'agent.errors.relay' ||
-        'agent.errors.customWeb' =>
-          Icons.cloud_off_rounded,
-        _ => Icons.error_outline_rounded,
-      };
+    'agent.errors.badKey' || 'agent.errors.noKey' => Icons.key_off_rounded,
+    'agent.errors.network' => Icons.wifi_off_rounded,
+    'agent.errors.quota' => Icons.hourglass_bottom_rounded,
+    'agent.errors.relay' || 'agent.errors.customWeb' => Icons.cloud_off_rounded,
+    _ => Icons.error_outline_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {

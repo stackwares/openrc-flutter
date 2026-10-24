@@ -19,13 +19,13 @@ class _Settings extends AgentSettingsNotifier {
 
   @override
   Future<AgentSettings> build() async => AgentSettings(
-        providerId: AgentProviderId.openrouter,
-        model: '',
-        customBaseUrl: '',
-        customStyle: AgentApiStyle.openAi,
-        useFasterModel: false,
-        hasKey: hasKey,
-      );
+    providerId: AgentProviderId.openrouter,
+    model: '',
+    customBaseUrl: '',
+    customStyle: AgentApiStyle.openAi,
+    useFasterModel: false,
+    hasKey: hasKey,
+  );
 
   @override
   Future<Set<AgentProviderId>> providersWithKeys() async => {};
@@ -70,11 +70,11 @@ void main() {
               ref,
               reply ??
                   (_) async => const [
-                        AgentBlock(
-                          type: AgentPresentationType.markdown,
-                          payload: {'markdown': r'MRR is **$10K**, up 12%.'},
-                        ),
-                      ],
+                    AgentBlock(
+                      type: AgentPresentationType.markdown,
+                      payload: {'markdown': r'MRR is **$10K**, up 12%.'},
+                    ),
+                  ],
             ),
           ),
         ],
@@ -88,10 +88,20 @@ void main() {
     return runner;
   }
 
-  testWidgets('without a key, Ask asks for a provider and key first', (
+  testWidgets('without a key, Ask stays a chat and opens setup in a sheet', (
     tester,
   ) async {
     await pump(tester, hasKey: false);
+    expect(find.text('Connect a model'), findsOneWidget);
+    expect(find.text('Add API key'), findsOneWidget);
+    expect(find.text('Not connected'), findsOneWidget);
+    expect(find.text('Add a key to ask'), findsOneWidget);
+    expect(find.text('What is my MRR trend?'), findsNothing);
+    expect(find.text('Save and start'), findsNothing);
+
+    await tester.tap(find.text('Add API key'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Connect your LLM'), findsOneWidget);
     final save = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Save and start'),
@@ -133,7 +143,8 @@ void main() {
     );
     await tester.tap(find.text('Edit key'));
     await tester.pumpAndSettle();
-    expect(find.text('Connect your LLM'), findsOneWidget);
-    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Save and start'), findsOneWidget);
+    expect(find.text('Remove key'), findsOneWidget);
+    expect(find.text('Cancel'), findsNothing);
   });
 }

@@ -7,8 +7,8 @@ import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
 
-/// Provider, model and API key for Ask: the first-run setup in the Ask tab
-/// and the sheet in Settings. Nothing is saved until the user taps Save.
+/// Provider, model and API key for Ask. Shown in the settings sheet
+/// (first-run and later edits). Nothing is saved until the user taps Save.
 class AgentConnectionForm extends ConsumerStatefulWidget {
   const AgentConnectionForm({
     super.key,
@@ -43,9 +43,7 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
         : '',
   );
   final _key = TextEditingController();
-  late var _withKeys = {
-    if (widget.initial.hasKey) widget.initial.providerId,
-  };
+  late var _withKeys = {if (widget.initial.hasKey) widget.initial.providerId};
   var _obscure = true;
   var _consent = false;
   var _saving = false;
@@ -69,7 +67,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
   }
 
   Future<void> _loadSavedKeys() async {
-    final ids = await ref.read(agentSettingsProvider.notifier).providersWithKeys();
+    final ids = await ref
+        .read(agentSettingsProvider.notifier)
+        .providersWithKeys();
     if (mounted) setState(() => _withKeys = {..._withKeys, ...ids});
   }
 
@@ -119,7 +119,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
       _keyError = null;
     });
     try {
-      await ref.read(agentSettingsProvider.notifier).saveConnection(
+      await ref
+          .read(agentSettingsProvider.notifier)
+          .saveConnection(
             provider: _provider,
             useFasterModel: _useFaster,
             customBaseUrl: _url.text,
@@ -127,7 +129,6 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
             model: _model.text,
             apiKey: key,
           );
-      // The Ask tab swaps this form for the thread once a key exists.
       if (!mounted) return;
       HapticFeedback.lightImpact();
       widget.onSaved();
@@ -184,9 +185,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
                 onSelected: _saving
                     ? null
                     : (_) => setState(() {
-                          _provider = p.id;
-                          _keyError = null;
-                        }),
+                        _provider = p.id;
+                        _keyError = null;
+                      }),
               ),
           ],
         ),
@@ -239,8 +240,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
                 : preset.keyPrefix.isEmpty
                 ? null
                 : '${preset.keyPrefix}…',
-            floatingLabelBehavior:
-                _hasSavedKey ? FloatingLabelBehavior.always : null,
+            floatingLabelBehavior: _hasSavedKey
+                ? FloatingLabelBehavior.always
+                : null,
             errorText: _keyError,
             errorMaxLines: 3,
             prefixIcon: const Icon(Icons.key_rounded, size: 20),
@@ -413,9 +415,9 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpace.xs),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

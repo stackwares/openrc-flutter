@@ -24,6 +24,7 @@ class AskComposer extends StatelessWidget {
     required this.running,
     required this.onSend,
     required this.onStop,
+    this.onLocked,
   });
 
   final TextEditingController controller;
@@ -32,15 +33,23 @@ class AskComposer extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onStop;
 
+  /// When set, the field is read-only and taps / send open this instead.
+  final VoidCallback? onLocked;
+
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     if (!_enterSends || event is! KeyDownEvent) return KeyEventResult.ignored;
-    final enter = event.logicalKey == LogicalKeyboardKey.enter ||
+    final enter =
+        event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!enter || HardwareKeyboard.instance.isShiftPressed) {
       return KeyEventResult.ignored;
     }
     // An input method still composing (Japanese, Chinese…) owns Enter.
     if (controller.value.composing.isValid) return KeyEventResult.ignored;
+    if (onLocked != null) {
+      onLocked!();
+      return KeyEventResult.handled;
+    }
     if (!running) onSend();
     return KeyEventResult.handled;
   }
@@ -53,12 +62,15 @@ class AskComposer extends StatelessWidget {
       listenable: Listenable.merge([controller, focusNode]),
       builder: (context, _) {
         final hasText = controller.text.trim().isNotEmpty;
-        final focused = focusNode.hasFocus;
+        final locked = onLocked != null;
+        final focused = focusNode.hasFocus && !locked;
         return AnimatedContainer(
           duration: AppMotion.of(context, AppMotion.fast),
           curve: AppMotion.curve,
           decoration: BoxDecoration(
-            color: dark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest,
+            color: dark
+                ? scheme.surfaceContainerHigh
+                : scheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(26),
             border: Border.all(
               color: focused
@@ -86,6 +98,9 @@ class AskComposer extends StatelessWidget {
                   child: TextField(
                     controller: controller,
                     focusNode: focusNode,
+                    readOnly: locked,
+                    enableInteractiveSelection: !locked,
+                    onTap: locked ? onLocked : null,
                     minLines: 1,
                     maxLines: 6,
                     textCapitalization: TextCapitalization.sentences,
@@ -93,7 +108,9 @@ class AskComposer extends StatelessWidget {
                     textInputAction: TextInputAction.newline,
                     style: context.textTheme.bodyLarge,
                     decoration: InputDecoration(
-                      hintText: 'agent.composerHint'.tr(),
+                      hintText: locked
+                          ? 'agent.setup.composerHint'.tr()
+                          : 'agent.composerHint'.tr(),
                       hintStyle: context.textTheme.bodyLarge?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -135,7 +152,11 @@ class AskComposer extends StatelessWidget {
                           icon: Icons.arrow_upward_rounded,
                           background: scheme.primary,
                           foreground: scheme.onPrimary,
-                          onPressed: hasText ? onSend : null,
+                          onPressed: locked
+                              ? onLocked
+                              : hasText
+                              ? onSend
+                              : null,
                         ),
                 ),
               ),

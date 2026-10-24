@@ -69,7 +69,9 @@ class _AgentSettingsSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'settings.agent.title'.tr(),
+            settings.hasKey
+                ? 'settings.agent.title'.tr()
+                : 'agent.setup.title'.tr(),
             style: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -77,7 +79,8 @@ class _AgentSettingsSheet extends ConsumerWidget {
           const SizedBox(height: 16),
           AgentConnectionForm(
             initial: settings,
-            allowRemoveKey: true,
+            requireConsent: !settings.hasKey,
+            allowRemoveKey: settings.hasKey,
             onSaved: () => Navigator.of(context).pop(),
           ),
         ],

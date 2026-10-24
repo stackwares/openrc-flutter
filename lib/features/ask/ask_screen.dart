@@ -10,7 +10,6 @@ import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/shell_insets.dart';
 import 'package:openrc/features/ask/ask_notifier.dart';
 import 'package:openrc/features/ask/ask_providers.dart';
-import 'package:openrc/features/ask/ask_setup_flow.dart';
 import 'package:openrc/features/ask/widgets/ask_composer.dart';
 import 'package:openrc/features/ask/widgets/ask_turn_view.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
@@ -161,6 +160,10 @@ class _AskScreenState extends ConsumerState<AskScreen> {
     });
   }
 
+  void _openProvider() {
+    showAgentSettingsSheet(context);
+  }
+
   void _send() {
     final text = _composer.text.trim();
     final notifier = ref.read(askNotifierProvider.notifier);
@@ -205,15 +208,22 @@ class _AskScreenState extends ConsumerState<AskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<int>(askFocusTickProvider, (_, _) => _focusNode.requestFocus());
+    ref.listen<int>(askFocusTickProvider, (_, _) {
+      if (ref.read(agentSettingsProvider).value?.hasKey ?? false) {
+        _focusNode.requestFocus();
+        return;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openProvider();
+      });
+    });
     ref.listen<String?>(askPrefillProvider, (_, next) => _applyPrefill(next));
     ref.listen<List<AgentTurn>>(askNotifierProvider, _onTurnsChanged);
 
     final settingsAsync = ref.watch(agentSettingsProvider);
     final settings = settingsAsync.value;
-    final editing = ref.watch(askEditingKeyProvider);
     final turns = ref.watch(askNotifierProvider);
-    final connected = (settings?.hasKey ?? false) && !editing;
+    final connected = settings?.hasKey ?? false;
 
     // The shell leaves the keyboard to this tab on phones: the floating tab
     // bar stays under it and the composer rides on top.
@@ -230,24 +240,17 @@ class _AskScreenState extends ConsumerState<AskScreen> {
               onRetry: () => ref.invalidate(agentSettingsProvider),
             )
           : const Center(child: CircularProgressIndicator());
-    } else if (!connected) {
-      void doneEditing() =>
-          ref.read(askEditingKeyProvider.notifier).state = false;
-      body = AskSetupFlow(
-        settings: settings,
-        bottomPadding: bottom,
-        onComplete: doneEditing,
-        onCancel: editing && settings.hasKey ? doneEditing : null,
-      );
     } else {
-      body = _thread(turns, bottom);
+      body = _thread(turns, bottom, connected: connected);
     }
 
     return Column(
       children: [
         ShellHeader(
           title: 'shell.tabs.ask'.tr(),
-          subtitle: connected ? settings!.displayName : null,
+          subtitle: !connected && settings != null
+              ? 'agent.setup.notConnected'.tr()
+              : settings?.displayName,
           actions: [
             if (connected && turns.isNotEmpty)
               HeaderIconButton(
@@ -255,11 +258,11 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                 tooltip: 'agent.clear'.tr(),
                 onPressed: _confirmClear,
               ),
-            if (connected)
+            if (settings != null)
               HeaderIconButton(
                 icon: Icons.tune_rounded,
                 tooltip: 'settings.agent.provider'.tr(),
-                onPressed: () => showAgentSettingsSheet(context),
+                onPressed: _openProvider,
               ),
             const SettingsAppBarAction(),
           ],
@@ -274,7 +277,11 @@ class _AskScreenState extends ConsumerState<AskScreen> {
     );
   }
 
-  Widget _thread(List<AgentTurn> turns, double bottom) {
+  Widget _thread(
+    List<AgentTurn> turns,
+    double bottom, {
+    required bool connected,
+  }) {
     final relayOk = ref.watch(relayLlmCapabilityProvider).value ?? true;
     final running = turns.any((t) => t.isRunning);
     final scheme = context.colorScheme;
@@ -282,7 +289,8 @@ class _AskScreenState extends ConsumerState<AskScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final side =
-            AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth);
+            AppSpace.gutter +
+            AppBreakpoints.centeringInset(constraints.maxWidth);
         return Column(
           children: [
             if (kIsWeb && !relayOk)
@@ -298,7 +306,12 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                 children: [
                   Positioned.fill(
                     child: turns.isEmpty
-                        ? _EmptyThread(side: side, onAsk: _ask)
+                        ? _EmptyThread(
+                            side: side,
+                            onAsk: _ask,
+                            needsSetup: !connected,
+                            onConnect: _openProvider,
+                          )
                         : ListView.builder(
                             controller: _scroll,
                             padding: EdgeInsets.fromLTRB(
@@ -390,6 +403,7 @@ class _AskScreenState extends ConsumerState<AskScreen> {
                 running: running,
                 onSend: _send,
                 onStop: ref.read(askNotifierProvider.notifier).cancel,
+                onLocked: connected ? null : _openProvider,
               ),
             ),
           ],
@@ -399,13 +413,20 @@ class _AskScreenState extends ConsumerState<AskScreen> {
   }
 }
 
-/// First open: one sentence of what Ask is for, and questions parked
-/// above the composer — where the thread will grow.
+/// First open: a connect CTA when there is no key, otherwise one sentence
+/// of what Ask is for and questions parked above the composer.
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({required this.side, required this.onAsk});
+  const _EmptyThread({
+    required this.side,
+    required this.onAsk,
+    required this.needsSetup,
+    required this.onConnect,
+  });
 
   final double side;
   final ValueChanged<String> onAsk;
+  final bool needsSetup;
+  final VoidCallback onConnect;
 
   @override
   Widget build(BuildContext context) {
@@ -426,7 +447,8 @@ class _EmptyThread extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'agent.empty.title'.tr(),
+                (needsSetup ? 'agent.setup.connectTitle' : 'agent.empty.title')
+                    .tr(),
                 style: context.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
@@ -434,14 +456,26 @@ class _EmptyThread extends StatelessWidget {
               ).appCardEntrance(),
               const SizedBox(height: AppSpace.xs),
               Text(
-                'agent.empty.subtitle'.tr(),
+                (needsSetup
+                        ? 'agent.setup.connectMessage'
+                        : 'agent.empty.subtitle')
+                    .tr(),
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                   height: 1.4,
                 ),
               ),
               const SizedBox(height: AppSpace.lg),
-              _Suggestions(onAsk: onAsk),
+              if (needsSetup)
+                FilledButton(
+                  onPressed: onConnect,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  child: Text('agent.setup.addKey'.tr()),
+                )
+              else
+                _Suggestions(onAsk: onAsk),
             ],
           ),
         ),
@@ -484,12 +518,7 @@ class _SuggestionRow extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       radius: AppRadius.tile,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpace.md,
-        14,
-        AppSpace.sm,
-        14,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
       child: Row(
         children: [
           Expanded(
@@ -535,9 +564,7 @@ class _Notice extends StatelessWidget {
           children: [
             Icon(icon, size: 20, color: scheme.error),
             const SizedBox(width: AppSpace.xs),
-            Expanded(
-              child: Text(text, style: context.textTheme.bodyMedium),
-            ),
+            Expanded(child: Text(text, style: context.textTheme.bodyMedium)),
           ],
         ),
       ),

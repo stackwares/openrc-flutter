@@ -1047,7 +1047,12 @@
       "model": "Model",
       "customWeb": "Custom hosts work in the native apps. The web relay only forwards OpenRouter, OpenAI, Anthropic and DeepSeek.",
       "disclosure": "Your key stays on this device. Questions about revenue send that data to {provider}.",
-      "save": "Save and start"
+      "save": "Save and start",
+      "connectTitle": "Connect a model",
+      "connectMessage": "Add a provider API key to ask about revenue, charts, and payouts.",
+      "addKey": "Add API key",
+      "notConnected": "Not connected",
+      "composerHint": "Add a key to ask"
     },
     "empty": {
       "title": "Nothing asked yet",
