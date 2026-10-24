@@ -39,3 +39,9 @@ All notable changes to OpenRC are listed here. The format follows
 - The old Firebase backend (anonymous sign-in, Firestore, Cloud Functions),
   including the unfinished push-alert backend. Notifications now use Cloud
   Messaging alone.
+
+### Fixed
+
+- The loader under a day's transactions no longer spins on and on: it shows
+  only while that day is still loading, and scrolling to the end no longer
+  pages through your whole history.
