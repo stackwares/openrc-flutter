@@ -20,10 +20,14 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
   final List<RcTransaction> allLoadedTransactions;
   final int loadedTransactionCount;
 
+  /// Outer margin around the card.
+  final EdgeInsetsGeometry margin;
+
   const RealtimeNextPaydayProceedsCard({
     super.key,
     required this.allLoadedTransactions,
     required this.loadedTransactionCount,
+    this.margin = const EdgeInsets.fromLTRB(16, 0, 16, 12),
   });
 
   @override
@@ -64,7 +68,7 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
     );
 
     return AppCard(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      margin: margin,
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

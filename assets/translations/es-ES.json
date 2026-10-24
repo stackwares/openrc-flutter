@@ -578,7 +578,8 @@
       "splitUnavailableMessage": "RevenueCat no devolvió los ingresos por tienda, así que no se pueden calcular los pagos.",
       "estimateNote": "Estimado a partir de los ingresos netos de RevenueCat, tras las comisiones de la tienda y los impuestos estimados. Los pagos reales pueden variar por los tipos de cambio, las retenciones fiscales y los importes mínimos de pago.",
       "savedNote": "Cada pago se guarda una vez abonado y ya no cambia. RevenueCat descuenta un reembolso del mes de la compra, mientras que las tiendas lo restan de un pago posterior, así que los totales pueden variar ligeramente."
-    }
+    },
+    "monthTransactions": "Transacciones de este mes"
   },
   "settings": {
     "title": "Ajustes",
@@ -827,6 +828,20 @@
     "sortNewest": "Más recientes",
     "sortOldest": "Más antiguas",
     "sortHighest": "Mayor",
-    "sortLowest": "Menor"
+    "sortLowest": "Menor",
+    "filterBar": {
+      "allProjects": "Todos los proyectos",
+      "allStores": "Todas las tiendas",
+      "allCountriesMenu": "Todos los países…",
+      "pickSeveralMac": "⌘-clic para elegir varios",
+      "pickSeveral": "Ctrl-clic para elegir varios"
+    },
+    "table": {
+      "customer": "Cliente",
+      "project": "Proyecto",
+      "product": "Producto",
+      "expires": "Vence",
+      "type": "Tipo"
+    }
   }
 }

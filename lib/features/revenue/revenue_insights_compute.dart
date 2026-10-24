@@ -119,12 +119,8 @@ String _txAppLabel(RcTransaction tx) {
   return 'revenue.unknownApp'.tr();
 }
 
-String _countryFlagEmoji(String code) {
-  if (code.length != 2) return '🏳️';
-  return String.fromCharCodes(
-    code.toUpperCase().codeUnits.map((c) => c + 127397),
-  );
-}
+String _countryFlagEmoji(String code) =>
+    code.length != 2 ? '🏳️' : countryFlagEmoji(code);
 
 /// Flag / region glyph for insights (`__` → globe).
 String countryInsightLeadingEmoji(String countryKey) {

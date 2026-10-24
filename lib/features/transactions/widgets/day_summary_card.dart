@@ -83,6 +83,9 @@ class DayTypeCountSummary extends StatelessWidget {
   final void Function(TransactionDaySectionFilter filter) onFilterCellTap;
   final bool enableFilterTaps;
 
+  /// All six tiles in one row once there's room (dashboard layouts).
+  final bool singleRow;
+
   const DayTypeCountSummary({
     super.key,
     required this.transactions,
@@ -90,7 +93,11 @@ class DayTypeCountSummary extends StatelessWidget {
     required this.selectedFilters,
     required this.onFilterCellTap,
     this.enableFilterTaps = true,
+    this.singleRow = false,
   });
+
+  /// Narrowest width that fits six tiles across.
+  static const double singleRowMinWidth = 960;
 
   @override
   Widget build(BuildContext context) {
@@ -133,13 +140,18 @@ class DayTypeCountSummary extends StatelessWidget {
     );
 
     const f = TransactionDaySectionFilter.values;
-    return Column(
+    final grid = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         row(f.sublist(0, 3)),
         const SizedBox(height: AppSpace.xs),
         row(f.sublist(3, 6)),
       ],
+    );
+    if (!singleRow) return grid;
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          constraints.maxWidth >= singleRowMinWidth ? row(f) : grid,
     );
   }
 }

@@ -72,6 +72,9 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
   /// instead of compact ($5.1K).
   final bool compactRevenueAmounts;
 
+  /// 2 lays the sections out in pairs side by side (dashboard layouts).
+  final int columns;
+
   const RealtimeRevenueInsightsList({
     super.key,
     required this.transactions,
@@ -79,6 +82,7 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
     this.cardMargin = const EdgeInsets.fromLTRB(16, 0, 16, 12),
     this.showInsightsHeader = true,
     this.compactRevenueAmounts = true,
+    this.columns = 1,
   });
 
   @override
@@ -251,10 +255,29 @@ class RealtimeRevenueInsightsList extends ConsumerWidget {
                 ),
               ),
             ),
-          for (var i = 0; i < sections.length; i++) ...[
-            if (i > 0) const Divider(),
-            sections[i],
-          ],
+          if (columns < 2)
+            for (var i = 0; i < sections.length; i++) ...[
+              if (i > 0) const Divider(),
+              sections[i],
+            ]
+          else
+            for (var i = 0; i < sections.length; i += 2) ...[
+              if (i > 0) const Divider(),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: sections[i]),
+                    const VerticalDivider(width: 1),
+                    Expanded(
+                      child: i + 1 < sections.length
+                          ? sections[i + 1]
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           const SizedBox(height: 4),
         ],
       ),

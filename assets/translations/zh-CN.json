@@ -573,7 +573,8 @@
       "splitUnavailableMessage": "RevenueCat 未返回按商店划分的收入，因此无法计算到账金额。",
       "estimateNote": "根据 RevenueCat 的到账金额估算，已扣除商店手续费和预估税费。实际付款可能因汇率、预扣税和最低付款额而有所不同。",
       "savedNote": "每笔到账在付款后保存，之后不再变动。RevenueCat 将退款计入购买所在月份，而商店会从之后的付款中扣除，因此合计可能略有差异。"
-    }
+    },
+    "monthTransactions": "本月交易"
   },
   "settings": {
     "title": "设置",
@@ -812,6 +813,20 @@
     "sortNewest": "最新",
     "sortOldest": "最早",
     "sortHighest": "最高",
-    "sortLowest": "最低"
+    "sortLowest": "最低",
+    "filterBar": {
+      "allProjects": "所有项目",
+      "allStores": "所有商店",
+      "allCountriesMenu": "所有国家/地区…",
+      "pickSeveralMac": "⌘ 点按可多选",
+      "pickSeveral": "Ctrl 点按可多选"
+    },
+    "table": {
+      "customer": "客户",
+      "project": "项目",
+      "product": "产品",
+      "expires": "到期",
+      "type": "类型"
+    }
   }
 }

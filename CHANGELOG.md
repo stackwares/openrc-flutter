@@ -12,8 +12,11 @@ All notable changes to OpenRC are listed here. The format follows
 - Web app, with a stateless Cloudflare relay (`relay/`) to reach RevenueCat's
   API from the browser.
 - macOS app with a native menu bar, keyboard shortcuts and a resizable window.
-- Layouts for every screen size: navigation rail on tablets, sidebar and
-  side-by-side columns on wide windows, transaction details in a side panel.
+- Layouts for every screen size: navigation rail on tablets, sidebar on
+  wide windows, transaction details in a side panel.
+- On wide windows, Transactions and Revenue read like a dashboard: project,
+  store and country filters on top, the cards in rows, and a sortable table
+  of transactions underneath (Revenue now lists the month's transactions).
 - Tablets rotate and support Split View; phones stay in portrait.
 - New brand: the OpenRC cat, with a Pink Sakura accent by default.
 - Android themed (monochrome) icon.

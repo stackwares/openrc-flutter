@@ -49,6 +49,15 @@ String regionDisplayNameEnglish(String? alpha2Code) {
   return _regionNameAtMostTwoWords(_formalCountryDisplayBase(trimmed));
 }
 
+/// Flag emoji for an ISO alpha-2 code (`US` → 🇺🇸); other values come back
+/// unchanged.
+String countryFlagEmoji(String code) {
+  if (code.length != 2) return code;
+  return String.fromCharCodes(
+    code.toUpperCase().codeUnits.map((c) => c + 127397),
+  );
+}
+
 /// Alias for call sites that previously used a shorter badge variant; behavior
 /// matches [regionDisplayNameEnglish].
 String regionDisplayNameForCompactBadge(String? alpha2Code) {

@@ -578,7 +578,8 @@
       "splitUnavailableMessage": "RevenueCat hat den Umsatz nicht nach Store geliefert, daher lassen sich die Auszahlungen nicht berechnen.",
       "estimateNote": "Geschätzt aus den Erlösen in RevenueCat, nach Store-Gebühren und geschätzten Steuern. Tatsächliche Zahlungen können durch Wechselkurse, Quellensteuer und Mindestauszahlungsbeträge abweichen.",
       "savedNote": "Jede Auszahlung wird gespeichert, sobald sie erfolgt ist, und bleibt danach unverändert. RevenueCat rechnet eine Rückerstattung dem Monat des Kaufs zu, die Stores ziehen sie dagegen von einer späteren Zahlung ab. Daher können die Summen leicht abweichen."
-    }
+    },
+    "monthTransactions": "Transaktionen in diesem Monat"
   },
   "settings": {
     "title": "Einstellungen",
@@ -827,6 +828,20 @@
     "sortNewest": "Neueste",
     "sortOldest": "Älteste",
     "sortHighest": "Höchste",
-    "sortLowest": "Niedrigste"
+    "sortLowest": "Niedrigste",
+    "filterBar": {
+      "allProjects": "Alle Projekte",
+      "allStores": "Alle Stores",
+      "allCountriesMenu": "Alle Länder…",
+      "pickSeveralMac": "⌘-Klick, um mehrere auszuwählen",
+      "pickSeveral": "Strg-Klick, um mehrere auszuwählen"
+    },
+    "table": {
+      "customer": "Kunde",
+      "project": "Projekt",
+      "product": "Produkt",
+      "expires": "Läuft ab",
+      "type": "Typ"
+    }
   }
 }

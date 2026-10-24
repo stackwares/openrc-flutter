@@ -573,7 +573,8 @@
       "splitUnavailableMessage": "RevenueCat からストア別の売上が返されなかったため、入金額を算出できません。",
       "estimateNote": "RevenueCat の受取額から、ストア手数料と推定税額を差し引いた推定値です。実際の入金額は、為替レート、源泉徴収、最低支払額によって異なる場合があります。",
       "savedNote": "各入金は支払い後に保存され、その後は変わりません。RevenueCat は返金を購入月に計上しますが、ストアは後の支払いから差し引くため、合計がわずかに異なることがあります。"
-    }
+    },
+    "monthTransactions": "今月の取引"
   },
   "settings": {
     "title": "設定",
@@ -812,6 +813,20 @@
     "sortNewest": "新しい順",
     "sortOldest": "古い順",
     "sortHighest": "高い順",
-    "sortLowest": "低い順"
+    "sortLowest": "低い順",
+    "filterBar": {
+      "allProjects": "すべてのプロジェクト",
+      "allStores": "すべてのストア",
+      "allCountriesMenu": "すべての国…",
+      "pickSeveralMac": "⌘クリックで複数選択",
+      "pickSeveral": "Ctrlクリックで複数選択"
+    },
+    "table": {
+      "customer": "顧客",
+      "project": "プロジェクト",
+      "product": "製品",
+      "expires": "有効期限",
+      "type": "種類"
+    }
   }
 }

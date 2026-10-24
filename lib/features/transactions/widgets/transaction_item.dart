@@ -18,6 +18,21 @@ import 'package:openrc/widgets/status_label.dart';
 /// Leading inset of the hairline between rows (avatar + gaps).
 const double kTransactionRowDividerIndent = 64;
 
+/// Icon for a transaction's store name (`App Store`, `Play Store`, …).
+IconData? transactionStoreIcon(String? store) {
+  if (store == null) return null;
+  switch (store) {
+    case 'App Store':
+      return Icons.apple;
+    case 'Play Store':
+      return Icons.android;
+    case 'Stripe':
+      return Icons.credit_card;
+    default:
+      return Icons.store;
+  }
+}
+
 /// One transaction row. Place it inside a grouped card
 /// ([GroupedSliverList] / [GroupedCard]); it draws no background of its own.
 class TransactionItem extends ConsumerWidget {
@@ -72,7 +87,7 @@ class TransactionItem extends ConsumerWidget {
     final cc = transaction.subscriberCountryCode;
     final country = cc == null
         ? null
-        : '${_countryFlag(cc)} ${regionDisplayNameEnglish(cc)}';
+        : '${countryFlagEmoji(cc)} ${regionDisplayNameEnglish(cc)}';
     final subtitle = [if (hasAppName) product, ?country].join('  ·  ');
     final meta = [
       ?tenureSubtitle,
@@ -114,7 +129,7 @@ class TransactionItem extends ConsumerWidget {
                 imageUrl: iconUrl,
                 tintColor: statusColor,
                 fallback: Icon(_typeIcon(type), color: statusColor, size: 20),
-                platformIcon: _storeIcon(transaction.store),
+                platformIcon: transactionStoreIcon(transaction.store),
                 platformIconColor: storeBrandIconTint(transaction.store),
               ),
             ),
@@ -208,25 +223,5 @@ class TransactionItem extends ConsumerWidget {
       case RcTransactionType.unknown:
         return Icons.help_outline;
     }
-  }
-
-  IconData? _storeIcon(String? store) {
-    if (store == null) return null;
-    switch (store) {
-      case 'App Store':
-        return Icons.apple;
-      case 'Play Store':
-        return Icons.android;
-      case 'Stripe':
-        return Icons.credit_card;
-      default:
-        return Icons.store;
-    }
-  }
-
-  String _countryFlag(String code) {
-    if (code.length != 2) return code;
-    final upper = code.toUpperCase();
-    return String.fromCharCodes(upper.codeUnits.map((c) => c + 127397));
   }
 }

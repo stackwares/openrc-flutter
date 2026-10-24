@@ -583,7 +583,8 @@
       "splitUnavailableMessage": "RevenueCat didn’t return revenue by store, so payouts can’t be worked out.",
       "estimateNote": "Estimated from RevenueCat proceeds, after store fees and estimated taxes. Actual payments can differ with exchange rates, tax withholding and payment minimums.",
       "savedNote": "Each payout is saved once it’s paid and stays as it was. RevenueCat counts a refund against the month of the purchase, while the stores take it from a later payment, so totals can differ slightly."
-    }
+    },
+    "monthTransactions": "This month’s transactions"
   },
   "notifications": {
     "title": "Notifications",
@@ -969,6 +970,20 @@
     "sortNewest": "Newest",
     "sortOldest": "Oldest",
     "sortHighest": "Highest",
-    "sortLowest": "Lowest"
+    "sortLowest": "Lowest",
+    "filterBar": {
+      "allProjects": "All projects",
+      "allStores": "All stores",
+      "allCountriesMenu": "All countries…",
+      "pickSeveralMac": "⌘-click to pick several",
+      "pickSeveral": "Ctrl-click to pick several"
+    },
+    "table": {
+      "customer": "Customer",
+      "project": "Project",
+      "product": "Product",
+      "expires": "Expires",
+      "type": "Type"
+    }
   }
 }
