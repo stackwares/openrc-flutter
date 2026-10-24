@@ -150,7 +150,11 @@ describe("webhook", () => {
       body: "pro_monthly · €9.99 · 🇩🇪 Germany · App Store",
     });
     // Only the store's transaction id, so a tap can open the transaction.
-    expect(message.data).toEqual({ source: "revenuecat", transaction_id: "2000000123456789" });
+    expect(message.data).toEqual({
+      source: "revenuecat",
+      transaction_id: "2000000123456789",
+      event_id: PURCHASE.id,
+    });
     expect(message.android.notification.tag).toBe(PURCHASE.id);
     expect(message.apns.headers["apns-collapse-id"]).toBe(PURCHASE.id);
   });
@@ -238,6 +242,66 @@ describe("webhook", () => {
     spy = mockGoogle();
     expect((await webhook(PURCHASE)).status).toBe(200);
     expect(requestsTo(spy, "https://oauth2.googleapis.com/")).toHaveLength(1);
+  });
+});
+
+describe("browser subscriptions", () => {
+  const FID = "cXk2bTdEZ1RreFdQ_x";
+  const sub = (path: string, body: object, auth: string | null = `Bearer ${SECRET}`) =>
+    call(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(auth ? { Authorization: auth } : {}) },
+      body: JSON.stringify(body),
+    });
+
+  it("answers the browser's preflight", async () => {
+    const res = await call("/subscribe", { method: "OPTIONS" });
+    expect(res.status).toBe(204);
+    expect(res.headers.get("Access-Control-Allow-Headers")).toContain("Authorization");
+  });
+
+  it("puts a browser on its device's topic", async () => {
+    const spy = mockGoogle();
+    const res = await sub("/subscribe", { registration: FID });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    const [call0] = requestsTo(spy, "https://fcm.googleapis.com/");
+    expect(String(call0[0])).toBe(
+      `https://fcm.googleapis.com/v1/projects/openrc-test/registrations/${FID}/topicSubscriptions?topic_name=${TOPIC}`,
+    );
+    expect(call0[1]!.method).toBe("POST");
+  });
+
+  it("treats already subscribed and already gone as done", async () => {
+    mockGoogle(409);
+    expect((await sub("/subscribe", { registration: FID })).status).toBe(200);
+    vi.restoreAllMocks();
+    const spy = mockGoogle(404);
+    expect((await sub("/unsubscribe", { registration: FID })).status).toBe(200);
+    const [call0] = requestsTo(spy, "https://fcm.googleapis.com/");
+    expect(String(call0[0])).toBe(
+      `https://fcm.googleapis.com/v1/projects/openrc-test/registrations/${FID}/topicSubscriptions/${TOPIC}`,
+    );
+    expect(call0[1]!.method).toBe("DELETE");
+  });
+
+  it("refuses requests without the secret or a registration", async () => {
+    const spy = mockGoogle();
+    expect((await sub("/subscribe", { registration: FID }, null)).status).toBe(401);
+    expect((await sub("/subscribe", { registration: "x" })).status).toBe(400);
+    expect((await sub("/subscribe", { registration: "bad/../id1234" })).status).toBe(400);
+    expect((await call("/subscribe")).status).toBe(405);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed subscription by status only", async () => {
+    mockGoogle(503);
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await sub("/subscribe", { registration: FID })).status).toBe(502);
+    const logged = error.mock.calls.flat().join(" ");
+    expect(logged).toContain("503");
+    expect(logged).not.toContain(FID);
+    expect(logged).not.toContain(SECRET);
   });
 });
 

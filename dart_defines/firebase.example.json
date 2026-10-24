@@ -5,5 +5,8 @@
   "FIREBASE_ANDROID_APP_ID": "1:123456789012:android:...",
   "FIREBASE_APPLE_API_KEY": "AIza...",
   "FIREBASE_APPLE_APP_ID": "1:123456789012:ios:...",
+  "FIREBASE_WEB_API_KEY": "AIza...",
+  "FIREBASE_WEB_APP_ID": "1:123456789012:web:...",
+  "FIREBASE_VAPID_KEY": "B...",
   "OPENRC_NOTIFIER_URL": "https://openrc-notifier.your-account.workers.dev"
 }

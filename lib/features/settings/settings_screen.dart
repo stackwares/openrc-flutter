@@ -162,7 +162,10 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final colorScheme = ref.watch(colorSchemeProvider);
     final telemetryEnabled = ref.watch(telemetryEnabledProvider);
-    final pushAvailable = ref.watch(pushMessagingProvider) != null;
+    // A browser that can't get pushes still shows the row, to say why.
+    final pushAvailable =
+        ref.watch(pushMessagingProvider) != null ||
+        (PushNotifications.isAvailable && !PushNotifications.isSupported);
     final language = ref.watch(appLanguageProvider);
     final scheme = context.colorScheme;
     final tt = context.textTheme;

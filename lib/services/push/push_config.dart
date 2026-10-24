@@ -21,6 +21,12 @@ abstract final class PushConfig {
   );
   static const _appleApiKey = String.fromEnvironment('FIREBASE_APPLE_API_KEY');
   static const _appleAppId = String.fromEnvironment('FIREBASE_APPLE_APP_ID');
+  static const _webApiKey = String.fromEnvironment('FIREBASE_WEB_API_KEY');
+  static const _webAppId = String.fromEnvironment('FIREBASE_WEB_APP_ID');
+
+  /// The project's web push key (Firebase console → Cloud Messaging → Web
+  /// Push certificates). Browsers need it to receive pushes.
+  static const vapidKey = String.fromEnvironment('FIREBASE_VAPID_KEY');
 
   /// The notifier (`notifier/`) that turns RevenueCat webhooks into pushes.
   /// It must send through the same Firebase project as this build.
@@ -33,19 +39,21 @@ abstract final class PushConfig {
   static String get webhookUrl => '$notifierUrl/revenuecat';
 
   /// Firebase settings for this platform, or null when the build has none
-  /// or the platform gets no notifications (the web, Windows, Linux).
+  /// or the platform gets no notifications (Windows, Linux).
   ///
   /// macOS waits too: its builds are signed ad hoc, and the push entitlement
   /// (`com.apple.developer.aps-environment`) needs a team's provisioning
   /// profile. Once they're signed with one, add the entitlement to both
   /// `macos/Runner/*.entitlements` and macOS here.
   static FirebaseOptions? get firebaseOptions {
-    if (kIsWeb || AppConstants.demoMode) return null;
-    final (apiKey, appId) = switch (defaultTargetPlatform) {
-      TargetPlatform.android => (_androidApiKey, _androidAppId),
-      TargetPlatform.iOS => (_appleApiKey, _appleAppId),
-      _ => ('', ''),
-    };
+    if (AppConstants.demoMode) return null;
+    final (apiKey, appId) = kIsWeb
+        ? (vapidKey.isEmpty ? ('', '') : (_webApiKey, _webAppId))
+        : switch (defaultTargetPlatform) {
+            TargetPlatform.android => (_androidApiKey, _androidAppId),
+            TargetPlatform.iOS => (_appleApiKey, _appleAppId),
+            _ => ('', ''),
+          };
     if ([apiKey, appId, _projectId, _senderId].any((v) => v.isEmpty)) {
       return null;
     }

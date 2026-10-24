@@ -96,7 +96,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// Moves the tabs between layouts on resize without losing their state.
   final _contentKey = GlobalKey();
 
-  late final List<StreamSubscription<RemoteMessage>> _pushSubscriptions;
+  late final List<StreamSubscription<Object>> _pushSubscriptions;
 
   @override
   void initState() {
@@ -111,10 +111,13 @@ class _MainShellState extends ConsumerState<MainShell> {
     _pushSubscriptions = [
       PushNotifications.onMessage.listen(_onPushWhileOpen),
       PushNotifications.onMessageOpenedApp.listen(_openFromPush),
+      PushNotifications.webOpens.listen(_openTransaction),
     ];
     PushNotifications.initialMessage().then((message) {
       if (message != null && mounted) _openFromPush(message);
     });
+    final webLaunch = PushNotifications.webLaunchTransaction;
+    if (webLaunch != null) _openTransaction(webLaunch);
     // Starts notifications (re-subscribing this device) and finishes removing
     // webhooks that an earlier turn-off or log-out couldn't.
     ref.read(pushSettingsProvider.notifier).retryPendingRemovals();
@@ -144,11 +147,15 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
   }
 
+  void _openFromPush(RemoteMessage message) {
+    final id = message.data['transaction_id'];
+    _openTransaction(id is String ? id : null);
+  }
+
   /// Tapping a notification opens the transaction it's about, once the
   /// list has it: RevenueCat's list can trail its webhooks by a few seconds.
-  Future<void> _openFromPush(RemoteMessage message) async {
+  Future<void> _openTransaction(String? id) async {
     _select(0);
-    final id = message.data['transaction_id'];
     final notifier = ref.read(transactionsProvider.notifier);
     for (var attempt = 0; attempt < 3; attempt++) {
       if (attempt > 0) await Future<void>.delayed(const Duration(seconds: 3));
@@ -156,7 +163,7 @@ class _MainShellState extends ConsumerState<MainShell> {
       if (!ref.read(transactionsProvider).isLoading) {
         await notifier.fetchInitial();
       }
-      if (!mounted || id is! String) return;
+      if (!mounted || id == null) return;
       final transaction = _findTransaction(id);
       if (transaction != null) {
         openDetail(

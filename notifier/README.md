@@ -30,6 +30,11 @@ It is deliberately small and stateless:
   currency, invoices) get `200` without a notification. A failed delivery
   gets `502`, so RevenueCat retries it; retried events replace their
   notification instead of adding another.
+- `POST /subscribe` and `POST /unsubscribe` put a browser on its device's
+  topic, or take it off, with `{"registration": "<installation id or token>"}`
+  and the secret as `Authorization`. Phones subscribe themselves; browsers
+  can't, so the web app asks here. They answer any origin, since the secret,
+  not a cookie, is the authorization.
 - `GET /` is a health check.
 
 Notification text is English for now.

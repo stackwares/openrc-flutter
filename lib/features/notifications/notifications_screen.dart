@@ -226,6 +226,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       body = _OffView(
         padding: padding,
         blocked: push.blocked,
+        unsupported: !PushNotifications.isSupported,
         busy: _busy,
         onTurnOn: _turnOn,
       );
@@ -321,12 +322,16 @@ class _OffView extends StatelessWidget {
   const _OffView({
     required this.padding,
     required this.blocked,
+    required this.unsupported,
     required this.busy,
     required this.onTurnOn,
   });
 
   final EdgeInsets padding;
   final bool blocked;
+
+  /// This browser can't receive pushes at all.
+  final bool unsupported;
   final bool busy;
   final VoidCallback onTurnOn;
 
@@ -374,7 +379,7 @@ class _OffView extends StatelessWidget {
           body: 'notifications.benefitPrivateBody'.tr(),
         ),
         const SizedBox(height: 8),
-        if (blocked)
+        if (blocked || unsupported)
           AppCard(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +394,11 @@ class _OffView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'notifications.blocked'.tr(),
+                        unsupported
+                            ? 'notifications.unsupported'.tr()
+                            : kIsWeb
+                            ? 'notifications.blockedWeb'.tr()
+                            : 'notifications.blocked'.tr(),
                         style: tt.bodyMedium?.copyWith(height: 1.4),
                       ),
                       if (!kIsWeb &&
@@ -407,18 +416,19 @@ class _OffView extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 16),
-        FilledButton(
-          onPressed: busy ? null : onTurnOn,
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+        if (!unsupported)
+          FilledButton(
+            onPressed: busy ? null : onTurnOn,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: busy
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text('notifications.turnOn'.tr()),
           ),
-          child: busy
-              ? const SizedBox.square(
-                  dimension: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text('notifications.turnOn'.tr()),
-        ),
       ],
     );
   }
