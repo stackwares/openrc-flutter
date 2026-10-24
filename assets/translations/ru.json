@@ -497,9 +497,7 @@
     "unknown": "Неизвестно",
     "weekly": "Недельная",
     "monthly": "Месячная",
-    "annual": "Годовая",
-    "lifetime": "Пожизненная",
-    "offer": "Предложение · {period}"
+    "annual": "Годовая"
   },
   "revenue": {
     "title": "Выручка",

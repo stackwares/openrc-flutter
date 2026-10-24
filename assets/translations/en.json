@@ -501,8 +501,20 @@
     "weekly": "Weekly",
     "monthly": "Monthly",
     "annual": "Annual",
-    "lifetime": "Lifetime",
-    "offer": "{period} Offer"
+    "oneTime": "One-time",
+    "introOffer": "Intro offer",
+    "trialDays": {
+      "one": "{}-day trial",
+      "other": "{}-day trial"
+    },
+    "months": {
+      "one": "{} month",
+      "other": "{} months"
+    },
+    "days": {
+      "one": "{} day",
+      "other": "{} days"
+    }
   },
   "revenue": {
     "title": "Revenue",

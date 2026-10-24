@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/theme/store_brand_icon_colors.dart';
-import 'package:openrc/core/utils/product_identifier_display.dart';
+import 'package:openrc/core/utils/plan_display.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
 import 'package:openrc/core/utils/relative_time_format.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
@@ -112,7 +112,10 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
       );
     } catch (e) {
       if (!mounted) return;
-      state = state.copyWith(isLoading: false, error: friendlyApiErrorMessage(e));
+      state = state.copyWith(
+        isLoading: false,
+        error: friendlyApiErrorMessage(e),
+      );
     }
   }
 }
@@ -120,12 +123,8 @@ class TransactionDetailNotifier extends StateNotifier<TransactionDetailState> {
 /// Disposed when its screen closes: keyed by the transaction object, a
 /// kept-alive family would hold every opened customer's history for the
 /// whole session.
-final transactionDetailProvider =
-    StateNotifierProvider.autoDispose.family<
-      TransactionDetailNotifier,
-      TransactionDetailState,
-      RcTransaction
-    >(
+final transactionDetailProvider = StateNotifierProvider.autoDispose
+    .family<TransactionDetailNotifier, TransactionDetailState, RcTransaction>(
       (ref, transaction) => TransactionDetailNotifier(
         ref,
         TransactionDetailState(transaction: transaction),
@@ -135,10 +134,7 @@ final transactionDetailProvider =
 String _transactionDetailAppBarTitle(RcTransaction transaction) {
   final name = transaction.app?.name?.trim();
   if (name != null && name.isNotEmpty) return name;
-  return productIdentifierDisplayTitle(
-    transaction.productIdentifier,
-    ifEmpty: 'detail.transaction'.tr(),
-  );
+  return planProductId(transaction, ifEmpty: 'detail.transaction'.tr());
 }
 
 /// `name v1.2.3` when [version] is known, otherwise just [base].
@@ -457,7 +453,7 @@ class TransactionDetailScreen extends ConsumerWidget {
 
     final scheme = context.colorScheme;
     final appTitle = appName?.trim();
-    final productTitle = productIdentifierDisplayTitle(tx.productIdentifier);
+    final productTitle = planDescription(tx);
     final purchased = DateTime.tryParse(tx.purchaseDate ?? '')?.toLocal();
     final muted = context.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
@@ -1352,7 +1348,8 @@ class _HistoryTimelineEntry extends ConsumerWidget {
       height: dotSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Color.lerp(scheme.surfaceContainerLow, accent, 0.18) ??
+        color:
+            Color.lerp(scheme.surfaceContainerLow, accent, 0.18) ??
             scheme.surfaceContainerLow,
         border: Border.all(color: accent, width: 2),
       ),
@@ -1473,7 +1470,8 @@ class _HistoryTimelineEntry extends ConsumerWidget {
     'SUBSCRIPTION_PAUSED': 'detail.eventTypes.subscriptionPaused',
     'TRANSFER': 'detail.eventTypes.transfer',
     'REFUND': 'detail.eventTypes.refund',
-    'TEMPORARY_ENTITLEMENT_GRANT': 'detail.eventTypes.temporaryEntitlementGrant',
+    'TEMPORARY_ENTITLEMENT_GRANT':
+        'detail.eventTypes.temporaryEntitlementGrant',
     'SUBSCRIBER_ALIAS': 'detail.eventTypes.subscriberAlias',
     'CONVERTED FROM A TRIAL': 'detail.eventTypes.convertedFromATrial',
     'EVENT': 'detail.eventTypes.event',

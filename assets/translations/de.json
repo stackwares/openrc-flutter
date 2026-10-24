@@ -495,9 +495,7 @@
     "unknown": "Unbekannt",
     "weekly": "Wöchentlich",
     "monthly": "Monatlich",
-    "annual": "Jährlich",
-    "lifetime": "Lebenslang",
-    "offer": "{period}-Angebot"
+    "annual": "Jährlich"
   },
   "revenue": {
     "title": "Umsatz",

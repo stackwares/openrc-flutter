@@ -495,9 +495,7 @@
     "unknown": "Desconocido",
     "weekly": "Semanal",
     "monthly": "Mensual",
-    "annual": "Anual",
-    "lifetime": "De por vida",
-    "offer": "Oferta de {period}"
+    "annual": "Anual"
   },
   "revenue": {
     "title": "Ingresos",

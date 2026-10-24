@@ -494,9 +494,7 @@
     "unknown": "Tidak diketahui",
     "weekly": "Mingguan",
     "monthly": "Bulanan",
-    "annual": "Tahunan",
-    "lifetime": "Seumur hidup",
-    "offer": "Penawaran {period}"
+    "annual": "Tahunan"
   },
   "revenue": {
     "title": "Pendapatan",

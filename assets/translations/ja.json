@@ -494,9 +494,7 @@
     "unknown": "不明",
     "weekly": "週額",
     "monthly": "月額",
-    "annual": "年額",
-    "lifetime": "買い切り",
-    "offer": "{period} のオファー"
+    "annual": "年額"
   },
   "revenue": {
     "title": "売上",

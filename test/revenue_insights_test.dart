@@ -145,8 +145,9 @@ void main() {
       ('DE', 1),
     ]);
     expect(data.topPlans.map((e) => (e.label, e.count)), [
-      ('Annual', 2),
-      ('Monthly', 1),
+      ('orly.pro.sub.annual.false', 1),
+      ('stein.pro.sub.annual.false', 1),
+      ('stein.pro.sub.monthly.false', 1),
     ]);
     expect(data.pctOf(data.autoRenewing), closeTo(66.67, 0.01));
   });
@@ -179,7 +180,7 @@ void main() {
     expect(find.text('3 trials'), findsOneWidget);
     expect(find.text('Auto-renew on'), findsOneWidget);
     expect(find.text('Top plans'), findsOneWidget);
-    expect(find.text('Annual'), findsOneWidget);
+    expect(find.text('orly.pro.sub.annual.false'), findsOneWidget);
     expect(find.text('0.0%'), findsNothing);
 
     // A sale among them brings back the revenue breakdown.

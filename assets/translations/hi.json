@@ -495,9 +495,7 @@
     "unknown": "अज्ञात",
     "weekly": "साप्ताहिक",
     "monthly": "मासिक",
-    "annual": "वार्षिक",
-    "lifetime": "लाइफ़टाइम",
-    "offer": "{period} ऑफ़र"
+    "annual": "वार्षिक"
   },
   "revenue": {
     "title": "राजस्व",
