@@ -580,7 +580,9 @@
     "nameLifetime": "買い切り",
     "nameOneYear": "1 年",
     "nameOneMonth": "1 か月",
-    "nameOneWeek": "1 週間"
+    "nameOneWeek": "1 週間",
+    "namedOf": "{total} 件中 {named} 件に名前あり",
+    "noMatches": "一致する商品がありません。"
   },
   "revenue": {
     "title": "売上",
@@ -669,6 +671,60 @@
     "trialStatus": "ステータス",
     "autoRenewOn": "自動更新オン",
     "topPlans": "上位のプラン"
+  },
+  "webhooks": {
+    "title": "Webhook",
+    "rowHint": "このプロジェクトの Webhook を表示して削除します",
+    "count": {
+      "one": "{} 件の Webhook",
+      "other": "{} 件の Webhook"
+    },
+    "none": "このプロジェクトに Webhook はありません。",
+    "sectionDevice": "このデバイス",
+    "sectionOtherOpenRc": "他の OpenRC Webhook",
+    "sectionOther": "その他の Webhook",
+    "environmentProduction": "本番環境",
+    "environmentSandbox": "サンドボックス",
+    "events": {
+      "one": "{} 種類のイベント",
+      "other": "{} 種類のイベント"
+    },
+    "delete": "削除",
+    "deleteCount": {
+      "one": "{} 件の Webhook を削除",
+      "other": "{} 件の Webhook を削除"
+    },
+    "deleteTitle": "「{name}」を削除しますか？",
+    "deleteBody": "RevenueCat はこの送信先へのイベント送信を停止します。元に戻せません。",
+    "deleteOwnBody": "このデバイスが通知を受け取っている Webhook です。削除するとこのプロジェクトの通知が止まります。元に戻せません。",
+    "deleteAllOpenRc": "他の OpenRC Webhook を削除",
+    "deleteAllOpenRcBody": {
+      "one": "このデバイスが作成していない {} 件の Webhook を削除します。このデバイスへの通知は続きます。",
+      "other": "このデバイスが作成していない {} 件の Webhook を削除します。このデバイスへの通知は続きます。"
+    },
+    "deleteFailed": "一部の Webhook を削除できませんでした。接続を確認してやり直してください。",
+    "loadFailed": "このプロジェクトの Webhook を読み込めませんでした。",
+    "noProjects": "この RevenueCat アカウントにはプロジェクトがありません。",
+    "sweepTitle": "すべての Webhook",
+    "sweepBody": "すべてのプロジェクトで、このデバイス以外が作成した Webhook を削除します。他のデバイスやサービスにはイベントが届かなくなります。元に戻せません。",
+    "sweepSummary": "このデバイスの {mine} 件を残す · 他 {other} 件",
+    "sweepProject": "このデバイス {mine} 件 · 他 {other} 件",
+    "sweepConfirmTitle": "他の Webhook をすべて削除しますか？",
+    "sweepConfirmBody": {
+      "one": "プロジェクト内の、このデバイスが作成していない {} 件の Webhook を削除します。このデバイスへの通知は続きます。",
+      "other": "プロジェクト内の、このデバイスが作成していない {} 件の Webhook を削除します。このデバイスへの通知は続きます。"
+    },
+    "sweepAction": {
+      "one": "他の {} 件を削除",
+      "other": "他の {} 件を削除"
+    },
+    "sweeping": "削除中… {count} 件完了",
+    "sweepDone": {
+      "one": "{} 件の Webhook を削除しました。",
+      "other": "{} 件の Webhook を削除しました。"
+    },
+    "sweepFailed": "一部の Webhook を削除できませんでした。接続を確認してやり直してください。",
+    "sweepNothing": "削除するものはありません"
   },
   "settings": {
     "title": "設定",

@@ -581,7 +581,9 @@
     "nameLifetime": "De por vida",
     "nameOneYear": "1 año",
     "nameOneMonth": "1 mes",
-    "nameOneWeek": "1 semana"
+    "nameOneWeek": "1 semana",
+    "namedOf": "{named} de {total} con nombre",
+    "noMatches": "Sin productos coincidentes."
   },
   "revenue": {
     "title": "Ingresos",
@@ -674,6 +676,60 @@
     "trialStatus": "Estado",
     "autoRenewOn": "Renovación automática activada",
     "topPlans": "Planes principales"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "rowHint": "Ver los webhooks de este proyecto y eliminarlos",
+    "count": {
+      "one": "{} webhook",
+      "other": "{} webhooks"
+    },
+    "none": "Este proyecto no tiene webhooks.",
+    "sectionDevice": "Este dispositivo",
+    "sectionOtherOpenRc": "Otros webhooks de OpenRC",
+    "sectionOther": "Otros webhooks",
+    "environmentProduction": "Producción",
+    "environmentSandbox": "Sandbox",
+    "events": {
+      "one": "{} tipo de evento",
+      "other": "{} tipos de evento"
+    },
+    "delete": "Eliminar",
+    "deleteCount": {
+      "one": "Eliminar {} webhook",
+      "other": "Eliminar {} webhooks"
+    },
+    "deleteTitle": "¿Eliminar «{name}»?",
+    "deleteBody": "RevenueCat dejará de enviar eventos a este destino. No se puede deshacer.",
+    "deleteOwnBody": "Es el webhook por el que este dispositivo recibe avisos, así que dejarás de recibirlos en este proyecto. No se puede deshacer.",
+    "deleteAllOpenRc": "Eliminar otros webhooks de OpenRC",
+    "deleteAllOpenRcBody": {
+      "one": "Quita {} webhook que este dispositivo no creó. Este dispositivo seguirá recibiendo avisos.",
+      "other": "Quita {} webhooks que este dispositivo no creó. Este dispositivo seguirá recibiendo avisos."
+    },
+    "deleteFailed": "No se pudieron eliminar todos los webhooks. Comprueba tu conexión e inténtalo de nuevo.",
+    "loadFailed": "No se pudieron cargar los webhooks de este proyecto.",
+    "noProjects": "Esta cuenta de RevenueCat no tiene proyectos.",
+    "sweepTitle": "Todos los webhooks",
+    "sweepBody": "Elimina todos los webhooks que no son de este dispositivo, en todos los proyectos. Otros dispositivos y servicios dejarán de recibir eventos. No se puede deshacer.",
+    "sweepSummary": "{mine} de este dispositivo se quedan · {other} otros",
+    "sweepProject": "{mine} de este dispositivo · {other} otros",
+    "sweepConfirmTitle": "¿Eliminar todos los demás webhooks?",
+    "sweepConfirmBody": {
+      "one": "Quita {} webhook de tus proyectos que este dispositivo no creó. Este dispositivo seguirá recibiendo avisos.",
+      "other": "Quita {} webhooks de tus proyectos que este dispositivo no creó. Este dispositivo seguirá recibiendo avisos."
+    },
+    "sweepAction": {
+      "one": "Eliminar {} webhook más",
+      "other": "Eliminar {} webhooks más"
+    },
+    "sweeping": "Eliminando… {count} hechos",
+    "sweepDone": {
+      "one": "{} webhook eliminado.",
+      "other": "{} webhooks eliminados."
+    },
+    "sweepFailed": "No se pudieron eliminar algunos webhooks. Comprueba tu conexión e inténtalo de nuevo.",
+    "sweepNothing": "No queda nada que eliminar"
   },
   "settings": {
     "title": "Ajustes",

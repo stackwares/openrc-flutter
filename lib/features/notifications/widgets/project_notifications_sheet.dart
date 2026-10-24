@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/notifications/widgets/kind_list.dart';
+import 'package:openrc/features/notifications/widgets/project_webhooks_sheet.dart';
 import 'package:openrc/features/settings/widgets/settings_rows.dart';
 import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:openrc/services/push/push_kinds.dart';
@@ -141,6 +142,17 @@ class _ProjectNotificationsSheetState
                           },
                         ),
                   showChevron: false,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: SettingsRow(
+                  icon: Icons.webhook_rounded,
+                  title: 'webhooks.title'.tr(),
+                  subtitle: 'webhooks.rowHint'.tr(),
+                  onTap: () =>
+                      showProjectWebhooksSheet(context, widget.projectId),
                 ),
               ),
               const SizedBox(height: 20),

@@ -9,6 +9,7 @@ import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/notifications/widgets/kind_list.dart';
 import 'package:openrc/features/notifications/widgets/notification_preview.dart';
 import 'package:openrc/features/notifications/widgets/project_notifications_sheet.dart';
+import 'package:openrc/features/notifications/widgets/webhook_sweep_sheet.dart';
 import 'package:openrc/features/settings/widgets/push_setup_sheet.dart';
 import 'package:openrc/features/settings/widgets/settings_rows.dart';
 import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
@@ -308,7 +309,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('notifications.title'.tr())),
+      appBar: AppBar(
+        title: Text('notifications.title'.tr()),
+        actions: [
+          // Reachable from every step, including before a project can be set
+          // up: a project RevenueCat is full for can then be cleared.
+          if (push.enabled)
+            IconButton(
+              onPressed: () => showWebhookSweepSheet(context),
+              tooltip: 'webhooks.sweepTitle'.tr(),
+              icon: const Icon(Icons.webhook_rounded),
+            ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: AnimatedSwitcher(
         duration: AppMotion.of(context, const Duration(milliseconds: 220)),
         child: KeyedSubtree(key: ValueKey(body.runtimeType), child: body),

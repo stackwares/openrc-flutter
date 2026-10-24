@@ -9,12 +9,16 @@ class ProductUsage {
   const ProductUsage({
     required this.appKey,
     required this.appLabel,
+    this.appId,
     required this.productId,
     required this.sales,
   });
 
   final String appKey;
   final String appLabel;
+
+  /// RevenueCat app id, when the transactions carried one.
+  final String? appId;
   final String productId;
 
   /// Transactions in the loaded window that carry this product id.
@@ -28,10 +32,14 @@ class ProductInventory {
   const ProductInventory({
     this.products = const [],
     this.appLabels = const {},
+    this.appIds = const {},
   });
 
   final List<ProductUsage> products;
   final Map<String, String> appLabels;
+
+  /// First RevenueCat app id seen per app key, if any.
+  final Map<String, String> appIds;
 
   bool get isEmpty => products.isEmpty;
 
@@ -57,6 +65,7 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
   final productIds = <String, String>{};
   final appKeys = <String, String>{};
   final appLabels = <String, String>{};
+  final appIds = <String, String>{};
 
   for (final tx in txs) {
     final productId = tx.productIdentifier?.trim();
@@ -69,6 +78,10 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
     if (!appLabels.containsKey(appKey)) {
       appLabels[appKey] = appLabelForTransaction(tx);
     }
+    final appId = tx.app?.id?.trim();
+    if (appId != null && appId.isNotEmpty) {
+      appIds.putIfAbsent(appKey, () => appId);
+    }
   }
 
   final products =
@@ -77,6 +90,7 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
           ProductUsage(
             appKey: appKeys[entry.key]!,
             appLabel: appLabels[appKeys[entry.key]!] ?? '',
+            appId: appIds[appKeys[entry.key]],
             productId: productIds[entry.key]!,
             sales: entry.value,
           ),
@@ -90,5 +104,9 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
         return a.productId.compareTo(b.productId);
       });
 
-  return ProductInventory(products: products, appLabels: appLabels);
+  return ProductInventory(
+    products: products,
+    appLabels: appLabels,
+    appIds: appIds,
+  );
 }

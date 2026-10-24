@@ -154,6 +154,47 @@ void main() {
     expect(find.text('Own choice · 1 kind'), findsOneWidget);
   });
 
+  testWidgets('the app bar opens the sweep for every project', (
+    tester,
+  ) async {
+    final rc = FakeRevenueCat();
+    rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+    await pump(tester, push: FakePushMessaging(), api: rc.api());
+    await tester.tap(find.text('Turn on notifications'));
+    await tester.pumpAndSettle();
+    // Still choosing projects, which is where a full project leaves you: the
+    // sweep is reachable from here, before any webhook of this device's
+    // exists.
+    expect(find.text('Which projects?'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('All webhooks'));
+    await tester.pumpAndSettle();
+    expect(find.text('All webhooks'), findsWidgets);
+    expect(find.text('0 for this device stay · 1 other'), findsOneWidget);
+    expect(find.text('Delete 1 other webhook'), findsOneWidget);
+  });
+
+  testWidgets('a project opens its webhook manager', (tester) async {
+    final rc = FakeRevenueCat();
+    await pump(tester, push: FakePushMessaging(), api: rc.api());
+    await tester.tap(find.text('Turn on notifications'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Turn on for 2 projects'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Project p1'), -200);
+    await tester.tap(find.text('Project p1'));
+    await tester.pumpAndSettle();
+    expect(find.text('See and delete the webhooks in this project'), findsOneWidget);
+
+    await tester.tap(find.text('Webhooks'));
+    await tester.pumpAndSettle();
+    expect(find.text('This device'), findsOneWidget);
+    expect(find.text('1 webhook'), findsOneWidget);
+  });
+
   testWidgets('turning off asks first, then removes the webhooks', (
     tester,
   ) async {

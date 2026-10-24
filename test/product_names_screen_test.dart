@@ -38,6 +38,12 @@ const _acme = RcTransactionApp(
   bundleId: 'com.acme.app',
 );
 
+const _orly = RcTransactionApp(
+  id: 'app2',
+  name: 'Orly',
+  bundleId: 'com.orly.app',
+);
+
 final _transactions = [
   const RcTransaction(
     app: _acme,
@@ -62,16 +68,24 @@ Future<ProviderContainer> _pump(
   WidgetTester tester, {
   Size size = const Size(430, 900),
   bool hasKey = false,
+  bool multiApp = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
+  final txs = [
+    ..._transactions,
+    if (multiApp)
+      const RcTransaction(
+        app: _orly,
+        productIdentifier: 'com.orly.pro_yearly',
+        store: 'Play Store',
+      ),
+  ];
   final container = ProviderContainer(
     overrides: [
-      productInventoryProvider.overrideWithValue(
-        buildProductInventory(_transactions),
-      ),
+      productInventoryProvider.overrideWithValue(buildProductInventory(txs)),
       agentSettingsProvider.overrideWith(() => _FakeSettings(hasKey: hasKey)),
     ],
   );
@@ -93,13 +107,58 @@ Future<ProviderContainer> _pump(
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('lists products per app with their sales', (tester) async {
+  testWidgets('lists products with their sales and naming progress', (
+    tester,
+  ) async {
     await _pump(tester);
 
-    expect(find.textContaining('Acme'), findsWidgets);
-    expect(find.textContaining('2 products'), findsOneWidget);
+    // One app means no tabs: its icon, name and progress head the list.
+    expect(find.text('Acme'), findsOneWidget);
+    expect(find.text('0 of 2 named'), findsOneWidget);
     expect(find.textContaining('com.acme.pro_monthly'), findsWidgets);
     expect(find.textContaining('2 sales'), findsOneWidget);
+    expect(find.byType(TabBar), findsNothing);
+  });
+
+  testWidgets('two apps get icon tabs that switch lists', (tester) async {
+    final container = await _pump(tester, multiApp: true);
+
+    // Tabs carry the app name and the unnamed count.
+    expect(find.text('Acme'), findsOneWidget);
+    expect(find.text('Orly'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+
+    // Naming progress is per app.
+    expect(find.text('0 of 2 named'), findsOneWidget);
+
+    // The second tab's list is one tap away; the first tab stays mounted
+    // but offstage, so assertions target what is actually visible.
+    await tester.tap(find.text('Orly'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('0 of 1 named').hitTestable(), findsOneWidget);
+    expect(
+      find.textContaining('com.orly.pro_yearly').hitTestable(),
+      findsNWidgets(2),
+    );
+    expect(
+      find.textContaining('com.acme.pro_monthly').hitTestable(),
+      findsNothing,
+    );
+
+    // Search filters the visible tab only.
+    await tester.enterText(find.byType(TextField), 'lifetime');
+    await tester.pumpAndSettle();
+    expect(find.text('No matching products.').hitTestable(), findsOneWidget);
+
+    // Clearing the query brings the tab's rows back.
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('com.orly.pro_yearly').hitTestable(),
+      findsNWidgets(2),
+    );
+    expect(container.read(productLabelsProvider).namedCount, 0);
   });
 
   testWidgets('the sheet is titled in title case and offers both paths', (
@@ -117,10 +176,7 @@ void main() {
     expect(find.text('Built-in names'), findsOneWidget);
     expect(find.text('Offline'), findsOneWidget);
     // The privacy line sits on the AI card, above the built-in option.
-    expect(
-      find.textContaining('Only product IDs are sent'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Only product IDs are sent'), findsOneWidget);
   });
 
   testWidgets('without a key the sheet offers to connect a model', (

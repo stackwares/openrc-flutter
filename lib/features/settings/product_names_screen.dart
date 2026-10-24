@@ -7,10 +7,12 @@ import 'package:openrc/core/utils/product_label_suggest.dart';
 import 'package:openrc/features/onboarding/onboarding_steps.dart';
 import 'package:openrc/features/settings/product_inventory.dart';
 import 'package:openrc/features/settings/widgets/agent_settings_section.dart';
+import 'package:openrc/features/transactions/widgets/transaction_leading_avatar.dart';
 import 'package:openrc/models/product_labels.dart';
 import 'package:openrc/services/agent/agent_llm_client.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/services/agent/product_label_suggester.dart';
+import 'package:openrc/services/auto_app_icons_store.dart';
 import 'package:openrc/services/onboarding_prefs_store.dart';
 import 'package:openrc/services/product_labels_store.dart';
 import 'package:openrc/services/utilities_service.dart';
@@ -19,7 +21,6 @@ import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/app_state_message.dart';
 import 'package:openrc/widgets/search_field_decoration.dart';
-import 'package:openrc/widgets/section_header.dart';
 
 /// Names the store product ids seen in the loaded transactions, per app.
 ///
@@ -60,7 +61,7 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
   Widget build(BuildContext context) {
     final inventory = ref.watch(productInventoryProvider);
     final labels = ref.watch(productLabelsProvider);
-    final visible = _filtered(inventory, labels);
+    final icons = ref.watch(resolvedAppIconsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -81,171 +82,27 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
               title: 'products.emptyTitle'.tr(),
               message: 'products.emptyBody'.tr(),
             )
-          : ListView(
-              padding: EdgeInsets.fromLTRB(
-                AppSpace.gutter,
-                AppSpace.xs,
-                AppSpace.gutter,
-                AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
-              ),
-              children: [
-                _intro(context),
-                const SizedBox(height: AppSpace.sm),
-                TextField(
-                  controller: _search,
-                  onChanged: (value) => setState(() => _query = value),
-                  decoration: searchFieldDecoration(
-                    context.colorScheme,
-                    'products.search'.tr(),
-                  ),
-                ),
-                const SizedBox(height: AppSpace.sm),
-                if (_running) _progressCard(context),
-                if (_suggestions.isNotEmpty) _applyAllCard(context, inventory),
-                for (final entry in visible.entries) ...[
-                  SectionHeader(
-                    title: entry.value.first.appLabel,
-                    count: 'products.count'.plural(entry.value.length),
-                    trailing: labels.forApp(entry.key).isEmpty
-                        ? null
-                        : IconButton(
-                            tooltip: 'products.clear'.tr(),
-                            icon: const Icon(Icons.delete_sweep_outlined),
-                            onPressed: () => _clearApp(
-                              entry.key,
-                              entry.value.first.appLabel,
-                            ),
-                          ),
-                  ),
-                  AppCard(
-                    padding: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < entry.value.length; i++) ...[
-                          if (i > 0) const Divider(height: 1, indent: 56),
-                          _ProductRow(
-                            usage: entry.value[i],
-                            label: labels.forApp(entry.key),
-                            suggestion: _suggestions[entry.value[i].key],
-                            onTap: () => _editProduct(entry.value[i]),
-                            onAccept: () => _applySuggestion(entry.value[i]),
-                            onDismiss: () => setState(
-                              () => _suggestions.remove(entry.value[i].key),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ],
+          : _ProductNamesBody(
+              inventory: inventory,
+              labels: labels,
+              icons: icons,
+              query: _query,
+              running: _running,
+              done: _done,
+              total: _total,
+              suggestions: _suggestions,
+              searchController: _search,
+              onQueryChanged: (value) => setState(() => _query = value),
+              onStop: () => _cancel?.cancel(),
+              onDismissSuggestions: () => setState(_suggestions.clear),
+              onApplyAll: () => _applyAll(inventory),
+              onEdit: _editProduct,
+              onAccept: _applySuggestion,
+              onDismissSuggestion: (usage) =>
+                  setState(() => _suggestions.remove(usage.key)),
+              onClearApp: _clearApp,
             ),
     );
-  }
-
-  Widget _intro(BuildContext context) {
-    final scheme = context.colorScheme;
-    return Text(
-      'products.intro'.tr(),
-      style: context.textTheme.bodySmall?.copyWith(
-        color: scheme.onSurfaceVariant,
-        height: 1.35,
-      ),
-    );
-  }
-
-  Widget _progressCard(BuildContext context) {
-    final scheme = context.colorScheme;
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: AppSpace.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'products.aiProgress'.tr(
-              namedArgs: {'done': '$_done', 'total': '$_total'},
-            ),
-            style: context.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpace.xs),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: _total == 0 ? null : _done / _total,
-              minHeight: 6,
-              backgroundColor: scheme.surfaceContainerHighest,
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => _cancel?.cancel(),
-              child: Text('products.stop'.tr()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _applyAllCard(BuildContext context, ProductInventory inventory) {
-    final count = _suggestions.length;
-    return AppCard(
-      margin: const EdgeInsets.only(bottom: AppSpace.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome_rounded, size: 20),
-              const SizedBox(width: AppSpace.sm),
-              Expanded(
-                child: Text(
-                  'products.suggestionsReady'.plural(count),
-                  style: context.textTheme.bodyMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.xs),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpace.xs,
-            children: [
-              TextButton(
-                onPressed: () => setState(_suggestions.clear),
-                child: Text('products.dismiss'.tr()),
-              ),
-              FilledButton(
-                onPressed: () => _applyAll(inventory),
-                child: Text('products.applyAll'.tr()),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Map<String, List<ProductUsage>> _filtered(
-    ProductInventory inventory,
-    ProductLabels labels,
-  ) {
-    final query = _query.trim().toLowerCase();
-    final out = <String, List<ProductUsage>>{};
-    for (final usage in inventory.products) {
-      final name = labels.displayName(usage.appKey, usage.productId) ?? '';
-      final matches =
-          query.isEmpty ||
-          usage.productId.toLowerCase().contains(query) ||
-          name.toLowerCase().contains(query) ||
-          usage.appLabel.toLowerCase().contains(query) ||
-          (_suggestions[usage.key]?.name?.toLowerCase().contains(query) ??
-              false);
-      if (!matches) continue;
-      out.putIfAbsent(usage.appKey, () => []).add(usage);
-    }
-    return out;
   }
 
   Future<void> _editProduct(ProductUsage usage) async {
@@ -423,7 +280,6 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
   }
 }
 
-
 /// How to name the products: with the connected model, with the parser, or
 /// by connecting a model first.
 class _SuggestSheet extends StatelessWidget {
@@ -539,11 +395,7 @@ class _SheetBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
-      child: Icon(
-        Icons.auto_awesome_rounded,
-        size: 21,
-        color: scheme.primary,
-      ),
+      child: Icon(Icons.auto_awesome_rounded, size: 21, color: scheme.primary),
     );
   }
 }
@@ -602,7 +454,8 @@ class _OptionCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: accent?.withValues(alpha: 0.14) ??
+                    color:
+                        accent?.withValues(alpha: 0.14) ??
                         scheme.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -781,6 +634,522 @@ class _Pill extends StatelessWidget {
           color: scheme.onSurfaceVariant,
         ),
       ),
+    );
+  }
+}
+
+/// One app in the tab bar: its rows, icon and naming progress.
+class _AppTab {
+  const _AppTab({
+    required this.appKey,
+    required this.label,
+    required this.appId,
+    required this.rows,
+    required this.total,
+    required this.named,
+    required this.unnamed,
+  });
+
+  final String appKey;
+  final String label;
+  final String? appId;
+
+  /// Rows after the search query, in display order.
+  final List<ProductUsage> rows;
+
+  /// Every loaded product in the app, before the search query.
+  final int total;
+
+  /// Loaded products that already have a name.
+  final int named;
+
+  /// Visible rows that still need a name.
+  final int unnamed;
+}
+
+/// The tabbed screen body: search, status cards, app tabs, one list per app.
+///
+/// One app means no tabs, just its list with the app's icon and name on top.
+class _ProductNamesBody extends StatelessWidget {
+  const _ProductNamesBody({
+    required this.inventory,
+    required this.labels,
+    required this.icons,
+    required this.query,
+    required this.running,
+    required this.done,
+    required this.total,
+    required this.suggestions,
+    required this.searchController,
+    required this.onQueryChanged,
+    required this.onStop,
+    required this.onDismissSuggestions,
+    required this.onApplyAll,
+    required this.onEdit,
+    required this.onAccept,
+    required this.onDismissSuggestion,
+    required this.onClearApp,
+  });
+
+  final ProductInventory inventory;
+  final ProductLabels labels;
+  final Map<String, String> icons;
+  final String query;
+  final bool running;
+  final int done;
+  final int total;
+  final Map<String, ProductLabelSuggestion> suggestions;
+  final TextEditingController searchController;
+  final ValueChanged<String> onQueryChanged;
+  final VoidCallback onStop;
+  final VoidCallback onDismissSuggestions;
+  final VoidCallback onApplyAll;
+  final ValueChanged<ProductUsage> onEdit;
+  final ValueChanged<ProductUsage> onAccept;
+  final ValueChanged<ProductUsage> onDismissSuggestion;
+  final void Function(String appKey, String appLabel) onClearApp;
+
+  /// Apps in display order, each with its query-filtered rows.
+  List<_AppTab> _tabs() {
+    final q = query.trim().toLowerCase();
+    final rowsByApp = <String, List<ProductUsage>>{};
+    for (final usage in inventory.products) {
+      if (q.isNotEmpty && !_matches(usage, q)) continue;
+      rowsByApp.putIfAbsent(usage.appKey, () => []).add(usage);
+    }
+    final order = <String>[];
+    for (final usage in inventory.products) {
+      if (!order.contains(usage.appKey)) order.add(usage.appKey);
+    }
+    final tabs = <_AppTab>[];
+    for (final appKey in order) {
+      final rows = rowsByApp[appKey] ?? const <ProductUsage>[];
+      var named = 0;
+      var unnamed = 0;
+      for (final p in inventory.forApp(appKey)) {
+        if (labels.displayName(p.appKey, p.productId) != null) {
+          named++;
+        }
+      }
+      for (final r in rows) {
+        if (labels.displayName(r.appKey, r.productId) == null) unnamed++;
+      }
+      tabs.add(
+        _AppTab(
+          appKey: appKey,
+          label: inventory.appLabels[appKey] ?? appKey,
+          appId: inventory.appIds[appKey],
+          rows: rows,
+          total: inventory.forApp(appKey).length,
+          named: named,
+          unnamed: unnamed,
+        ),
+      );
+    }
+    return tabs;
+  }
+
+  bool _matches(ProductUsage usage, String q) {
+    final name = labels.displayName(usage.appKey, usage.productId) ?? '';
+    return usage.productId.toLowerCase().contains(q) ||
+        name.toLowerCase().contains(q) ||
+        usage.appLabel.toLowerCase().contains(q) ||
+        (suggestions[usage.key]?.name?.toLowerCase().contains(q) ?? false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = _tabs();
+    final multi = tabs.length > 1;
+    return DefaultTabController(
+      length: tabs.length,
+      // A new app set (e.g. more history loaded) starts back on the first tab.
+      key: ValueKey(tabs.map((t) => t.appKey).join('|')),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.gutter,
+              AppSpace.xs,
+              AppSpace.gutter,
+              0,
+            ),
+            child: TextField(
+              controller: searchController,
+              onChanged: onQueryChanged,
+              decoration: searchFieldDecoration(
+                context.colorScheme,
+                'products.search'.tr(),
+              ),
+            ),
+          ),
+          if (running)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.gutter,
+                AppSpace.sm,
+                AppSpace.gutter,
+                0,
+              ),
+              child: _ProgressCard(done: done, total: total, onStop: onStop),
+            ),
+          if (suggestions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.gutter,
+                AppSpace.sm,
+                AppSpace.gutter,
+                0,
+              ),
+              child: _ApplyAllCard(
+                count: suggestions.length,
+                onDismiss: onDismissSuggestions,
+                onApply: onApplyAll,
+              ),
+            ),
+          if (multi) ...[
+            const SizedBox(height: AppSpace.xs),
+            _AppTabBar(tabs: tabs, icons: icons),
+          ],
+          Expanded(
+            child: TabBarView(
+              children: [
+                for (final tab in tabs)
+                  _AppTabList(
+                    tab: tab,
+                    iconUrl: icons[tab.appId],
+                    showAppIdentity: !multi,
+                    labels: labels,
+                    suggestions: suggestions,
+                    onEdit: onEdit,
+                    onAccept: onAccept,
+                    onDismissSuggestion: onDismissSuggestion,
+                    onClearApp: onClearApp,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The AI run's progress, with a way to stop it.
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({
+    required this.done,
+    required this.total,
+    required this.onStop,
+  });
+
+  final int done;
+  final int total;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'products.aiProgress'.tr(
+              namedArgs: {'done': '$done', 'total': '$total'},
+            ),
+            style: context.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpace.xs),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: total == 0 ? null : done / total,
+              minHeight: 6,
+              backgroundColor: scheme.surfaceContainerHighest,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: onStop,
+              child: Text('products.stop'.tr()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Pending suggestions, with apply-everything in one tap.
+class _ApplyAllCard extends StatelessWidget {
+  const _ApplyAllCard({
+    required this.count,
+    required this.onDismiss,
+    required this.onApply,
+  });
+
+  final int count;
+  final VoidCallback onDismiss;
+  final VoidCallback onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome_rounded, size: 20),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Text(
+                  'products.suggestionsReady'.plural(count),
+                  style: context.textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.xs),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: AppSpace.xs,
+            children: [
+              TextButton(
+                onPressed: onDismiss,
+                child: Text('products.dismiss'.tr()),
+              ),
+              FilledButton(
+                onPressed: onApply,
+                child: Text('products.applyAll'.tr()),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Scrollable app tabs: icon, name, and how many products still need a name.
+class _AppTabBar extends StatelessWidget {
+  const _AppTabBar({required this.tabs, required this.icons});
+
+  final List<_AppTab> tabs;
+  final Map<String, String> icons;
+
+  @override
+  Widget build(BuildContext context) {
+    return TabBar(
+      isScrollable: true,
+      tabAlignment: TabAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+      labelPadding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+      tabs: [
+        for (final tab in tabs)
+          Tab(
+            height: 48,
+            child: _AppTabLabel(
+              label: tab.label,
+              iconUrl: icons[tab.appId],
+              unnamed: tab.unnamed,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// One tab's content: icon and name, with the unnamed count as a pill.
+///
+/// The pill duplicates the list header below, so screen readers skip it and
+/// hear the full sentence instead of a bare number.
+class _AppTabLabel extends StatelessWidget {
+  const _AppTabLabel({
+    required this.label,
+    required this.iconUrl,
+    required this.unnamed,
+  });
+
+  final String label;
+  final String? iconUrl;
+  final int unnamed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ExcludeSemantics(
+          child: TransactionLeadingAvatar(
+            imageUrl: iconUrl,
+            size: 26,
+            borderRadius: 7,
+            tintColor: scheme.primary,
+            fallback: Icon(Icons.apps_rounded, color: scheme.primary, size: 14),
+          ),
+        ),
+        const SizedBox(width: AppSpace.xs),
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        if (unnamed > 0) ...[
+          const SizedBox(width: AppSpace.xs),
+          ExcludeSemantics(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$unnamed',
+                style: context.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: AppText.tabular,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// One app's products: naming progress, then a card per product.
+class _AppTabList extends StatelessWidget {
+  const _AppTabList({
+    required this.tab,
+    required this.iconUrl,
+    required this.showAppIdentity,
+    required this.labels,
+    required this.suggestions,
+    required this.onEdit,
+    required this.onAccept,
+    required this.onDismissSuggestion,
+    required this.onClearApp,
+  });
+
+  final _AppTab tab;
+  final String? iconUrl;
+  final bool showAppIdentity;
+  final ProductLabels labels;
+  final Map<String, ProductLabelSuggestion> suggestions;
+  final ValueChanged<ProductUsage> onEdit;
+  final ValueChanged<ProductUsage> onAccept;
+  final ValueChanged<ProductUsage> onDismissSuggestion;
+  final void Function(String appKey, String appLabel) onClearApp;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final app = labels.forApp(tab.appKey);
+    final total = tab.total;
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        AppSpace.gutter,
+        AppSpace.xs,
+        AppSpace.gutter,
+        AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, AppSpace.xs, 0, AppSpace.xs),
+          child: Row(
+            children: [
+              if (showAppIdentity) ...[
+                TransactionLeadingAvatar(
+                  imageUrl: iconUrl,
+                  size: 36,
+                  borderRadius: 10,
+                  tintColor: scheme.primary,
+                  fallback: Icon(
+                    Icons.apps_rounded,
+                    color: scheme.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: AppSpace.sm),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showAppIdentity)
+                      Text(
+                        tab.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    Text(
+                      'products.namedOf'.tr(
+                        namedArgs: {'named': '${tab.named}', 'total': '$total'},
+                      ),
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: total == 0 ? 0 : tab.named / total,
+                        minHeight: 4,
+                        backgroundColor: scheme.surfaceContainerHighest,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!app.isEmpty)
+                IconButton(
+                  tooltip: 'products.clear'.tr(),
+                  icon: const Icon(Icons.delete_sweep_outlined),
+                  onPressed: () => onClearApp(tab.appKey, tab.label),
+                ),
+            ],
+          ),
+        ),
+        if (tab.rows.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.xl),
+            child: Text(
+              'products.noMatches'.tr(),
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < tab.rows.length; i++) ...[
+                  if (i > 0) const Divider(height: 1, indent: 56),
+                  _ProductRow(
+                    usage: tab.rows[i],
+                    label: app,
+                    suggestion: suggestions[tab.rows[i].key],
+                    onTap: () => onEdit(tab.rows[i]),
+                    onAccept: () => onAccept(tab.rows[i]),
+                    onDismiss: () => onDismissSuggestion(tab.rows[i]),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

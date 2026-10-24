@@ -580,7 +580,9 @@
     "nameLifetime": "Seumur hidup",
     "nameOneYear": "1 tahun",
     "nameOneMonth": "1 bulan",
-    "nameOneWeek": "1 minggu"
+    "nameOneWeek": "1 minggu",
+    "namedOf": "{named} dari {total} dinamai",
+    "noMatches": "Tidak ada produk yang cocok."
   },
   "revenue": {
     "title": "Pendapatan",
@@ -669,6 +671,60 @@
     "trialStatus": "Status",
     "autoRenewOn": "Perpanjangan otomatis aktif",
     "topPlans": "Paket teratas"
+  },
+  "webhooks": {
+    "title": "Webhook",
+    "rowHint": "Lihat dan hapus webhook di proyek ini",
+    "count": {
+      "one": "{} webhook",
+      "other": "{} webhook"
+    },
+    "none": "Proyek ini tidak punya webhook.",
+    "sectionDevice": "Perangkat ini",
+    "sectionOtherOpenRc": "Webhook OpenRC lain",
+    "sectionOther": "Webhook lain",
+    "environmentProduction": "Produksi",
+    "environmentSandbox": "Sandbox",
+    "events": {
+      "one": "{} jenis peristiwa",
+      "other": "{} jenis peristiwa"
+    },
+    "delete": "Hapus",
+    "deleteCount": {
+      "one": "Hapus {} webhook",
+      "other": "Hapus {} webhook"
+    },
+    "deleteTitle": "Hapus “{name}”?",
+    "deleteBody": "RevenueCat berhenti mengirim peristiwa ke alamat ini. Tidak bisa dibatalkan.",
+    "deleteOwnBody": "Ini webhook yang dipakai perangkat ini untuk notifikasi, jadi notifikasi berhenti untuk proyek ini. Tidak bisa dibatalkan.",
+    "deleteAllOpenRc": "Hapus webhook OpenRC lain",
+    "deleteAllOpenRcBody": {
+      "one": "Menghapus {} webhook yang tidak dibuat perangkat ini. Perangkat ini tetap menerima notifikasi.",
+      "other": "Menghapus {} webhook yang tidak dibuat perangkat ini. Perangkat ini tetap menerima notifikasi."
+    },
+    "deleteFailed": "Tidak semua webhook bisa dihapus. Periksa koneksi lalu coba lagi.",
+    "loadFailed": "Webhook proyek ini gagal dimuat.",
+    "noProjects": "Akun RevenueCat ini tidak punya proyek.",
+    "sweepTitle": "Semua webhook",
+    "sweepBody": "Menghapus setiap webhook yang bukan milik perangkat ini, di semua proyek. Perangkat dan layanan lain berhenti menerima peristiwa. Tidak bisa dibatalkan.",
+    "sweepSummary": "{mine} milik perangkat ini tetap · {other} lainnya",
+    "sweepProject": "{mine} milik perangkat ini · {other} lainnya",
+    "sweepConfirmTitle": "Hapus semua webhook lainnya?",
+    "sweepConfirmBody": {
+      "one": "Menghapus {} webhook di proyek kamu yang tidak dibuat perangkat ini. Perangkat ini tetap menerima notifikasi.",
+      "other": "Menghapus {} webhook di proyek kamu yang tidak dibuat perangkat ini. Perangkat ini tetap menerima notifikasi."
+    },
+    "sweepAction": {
+      "one": "Hapus {} webhook lain",
+      "other": "Hapus {} webhook lain"
+    },
+    "sweeping": "Menghapus… {count} selesai",
+    "sweepDone": {
+      "one": "{} webhook dihapus.",
+      "other": "{} webhook dihapus."
+    },
+    "sweepFailed": "Beberapa webhook gagal dihapus. Periksa koneksi lalu coba lagi.",
+    "sweepNothing": "Tidak ada yang perlu dihapus"
   },
   "settings": {
     "title": "Pengaturan",

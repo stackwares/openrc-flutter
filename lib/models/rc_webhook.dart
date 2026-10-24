@@ -24,6 +24,12 @@ class RcWebhook {
         ?.whereType<String>()
         .toList(),
   );
+
+  /// The endpoint's host, when the URL parses. Never the query or headers.
+  String? get host => Uri.tryParse(url ?? '')?.host;
+
+  /// The endpoint's path, when the URL parses.
+  String? get path => Uri.tryParse(url ?? '')?.path;
 }
 
 /// What a webhook is created or updated with.

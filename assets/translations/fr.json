@@ -581,7 +581,9 @@
     "nameLifetime": "À vie",
     "nameOneYear": "1 an",
     "nameOneMonth": "1 mois",
-    "nameOneWeek": "1 semaine"
+    "nameOneWeek": "1 semaine",
+    "namedOf": "{named} sur {total} nommés",
+    "noMatches": "Aucun produit correspondant."
   },
   "revenue": {
     "title": "Revenus",
@@ -674,6 +676,60 @@
     "trialStatus": "Statut",
     "autoRenewOn": "Renouvellement auto activé",
     "topPlans": "Meilleures formules"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "rowHint": "Voir et supprimer les webhooks de ce projet",
+    "count": {
+      "one": "{} webhook",
+      "other": "{} webhooks"
+    },
+    "none": "Ce projet n’a aucun webhook.",
+    "sectionDevice": "Cet appareil",
+    "sectionOtherOpenRc": "Autres webhooks OpenRC",
+    "sectionOther": "Autres webhooks",
+    "environmentProduction": "Production",
+    "environmentSandbox": "Sandbox",
+    "events": {
+      "one": "{} type d’événement",
+      "other": "{} types d’événement"
+    },
+    "delete": "Supprimer",
+    "deleteCount": {
+      "one": "Supprimer {} webhook",
+      "other": "Supprimer {} webhooks"
+    },
+    "deleteTitle": "Supprimer « {name} » ?",
+    "deleteBody": "RevenueCat cessera d’envoyer des événements à cette adresse. Cette action est irréversible.",
+    "deleteOwnBody": "C’est le webhook par lequel cet appareil reçoit ses notifications : elles cesseront donc pour ce projet. Cette action est irréversible.",
+    "deleteAllOpenRc": "Supprimer les autres webhooks OpenRC",
+    "deleteAllOpenRcBody": {
+      "one": "Retire {} webhook que cet appareil n’a pas créé. Cet appareil continuera d’être notifié.",
+      "other": "Retire {} webhooks que cet appareil n’a pas créés. Cet appareil continuera d’être notifié."
+    },
+    "deleteFailed": "Tous les webhooks n’ont pas pu être supprimés. Vérifiez votre connexion et réessayez.",
+    "loadFailed": "Impossible de charger les webhooks de ce projet.",
+    "noProjects": "Ce compte RevenueCat n’a aucun projet.",
+    "sweepTitle": "Tous les webhooks",
+    "sweepBody": "Supprime tous les webhooks qui ne viennent pas de cet appareil, dans tous les projets. Les autres appareils et services cesseront de recevoir des événements. Cette action est irréversible.",
+    "sweepSummary": "{mine} pour cet appareil conservés · {other} autres",
+    "sweepProject": "{mine} pour cet appareil · {other} autres",
+    "sweepConfirmTitle": "Supprimer tous les autres webhooks ?",
+    "sweepConfirmBody": {
+      "one": "Retire {} webhook de vos projets que cet appareil n’a pas créé. Cet appareil continuera d’être notifié.",
+      "other": "Retire {} webhooks de vos projets que cet appareil n’a pas créés. Cet appareil continuera d’être notifié."
+    },
+    "sweepAction": {
+      "one": "Supprimer {} autre webhook",
+      "other": "Supprimer {} autres webhooks"
+    },
+    "sweeping": "Suppression… {count} faits",
+    "sweepDone": {
+      "one": "{} webhook supprimé.",
+      "other": "{} webhooks supprimés."
+    },
+    "sweepFailed": "Certains webhooks n’ont pas pu être supprimés. Vérifiez votre connexion et réessayez.",
+    "sweepNothing": "Plus rien à supprimer"
   },
   "settings": {
     "title": "Réglages",

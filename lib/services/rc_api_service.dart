@@ -322,6 +322,11 @@ class RcApiService {
     );
   }
 
+  /// Whether [error] is RevenueCat saying a resource is already gone, which
+  /// for a deletion is the outcome asked for.
+  bool isNotFound(Object error) =>
+      error is DioException && error.response?.statusCode == 404;
+
   /// Has RevenueCat send its test event now; the result says how the
   /// webhook's endpoint answered.
   Future<RcWebhookTestResult> testWebhook(

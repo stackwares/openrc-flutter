@@ -522,7 +522,7 @@
       "one": "{} day",
       "other": "{} days"
     },
-    "title": "Product names",
+    "title": "Product Names",
     "intro": "Give store products names you recognise. Names stay on this device and appear everywhere in the app. Amounts and counts never change.",
     "search": "Search products",
     "emptyTitle": "No products loaded",
@@ -586,7 +586,9 @@
     "nameLifetime": "Lifetime",
     "nameOneYear": "1 Year",
     "nameOneMonth": "1 Month",
-    "nameOneWeek": "1 Week"
+    "nameOneWeek": "1 Week",
+    "namedOf": "{named} of {total} named",
+    "noMatches": "No matching products."
   },
   "revenue": {
     "title": "Revenue",
@@ -824,6 +826,60 @@
       "secretHint": "Anyone with this header can send notifications to your devices. Paste it only into RevenueCat.",
       "openRevenueCat": "Open RevenueCat"
     }
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "rowHint": "See and delete the webhooks in this project",
+    "count": {
+      "one": "{} webhook",
+      "other": "{} webhooks"
+    },
+    "none": "This project has no webhooks.",
+    "sectionDevice": "This device",
+    "sectionOtherOpenRc": "Other OpenRC webhooks",
+    "sectionOther": "Other webhooks",
+    "environmentProduction": "Production",
+    "environmentSandbox": "Sandbox",
+    "events": {
+      "one": "{} event type",
+      "other": "{} event types"
+    },
+    "delete": "Delete",
+    "deleteCount": {
+      "one": "Delete {} webhook",
+      "other": "Delete {} webhooks"
+    },
+    "deleteTitle": "Delete “{name}”?",
+    "deleteBody": "RevenueCat stops sending events to this endpoint. This can’t be undone.",
+    "deleteOwnBody": "This is the webhook this device notifies through, so notifications stop for this project. This can’t be undone.",
+    "deleteAllOpenRc": "Delete other OpenRC webhooks",
+    "deleteAllOpenRcBody": {
+      "one": "Removes {} webhook this device didn’t create. This device keeps notifying.",
+      "other": "Removes {} webhooks this device didn’t create. This device keeps notifying."
+    },
+    "deleteFailed": "Couldn’t delete every webhook. Check your connection and try again.",
+    "loadFailed": "Couldn’t load this project’s webhooks.",
+    "noProjects": "This RevenueCat account has no projects.",
+    "sweepTitle": "All webhooks",
+    "sweepBody": "Deletes every webhook that isn’t this device’s, in every project. Other devices and services stop receiving events. This can’t be undone.",
+    "sweepSummary": "{mine} for this device stay · {other} other",
+    "sweepProject": "{mine} for this device · {other} other",
+    "sweepConfirmTitle": "Delete every other webhook?",
+    "sweepConfirmBody": {
+      "one": "Removes {} webhook in your projects that this device didn’t make. This device keeps notifying.",
+      "other": "Removes {} webhooks in your projects that this device didn’t make. This device keeps notifying."
+    },
+    "sweepAction": {
+      "one": "Delete {} other webhook",
+      "other": "Delete {} other webhooks"
+    },
+    "sweeping": "Deleting… {count} done",
+    "sweepDone": {
+      "one": "Deleted {} webhook.",
+      "other": "Deleted {} webhooks."
+    },
+    "sweepFailed": "Some webhooks couldn’t be deleted. Check your connection and try again.",
+    "sweepNothing": "Nothing left to delete"
   },
   "settings": {
     "title": "Settings",

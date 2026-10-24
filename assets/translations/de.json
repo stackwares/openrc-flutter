@@ -581,7 +581,9 @@
     "nameLifetime": "Lebenslang",
     "nameOneYear": "1 Jahr",
     "nameOneMonth": "1 Monat",
-    "nameOneWeek": "1 Woche"
+    "nameOneWeek": "1 Woche",
+    "namedOf": "{named} von {total} benannt",
+    "noMatches": "Keine passenden Produkte."
   },
   "revenue": {
     "title": "Umsatz",
@@ -674,6 +676,60 @@
     "trialStatus": "Status",
     "autoRenewOn": "Automatische Verlängerung an",
     "topPlans": "Top-Tarife"
+  },
+  "webhooks": {
+    "title": "Webhooks",
+    "rowHint": "Die Webhooks in diesem Projekt ansehen und löschen",
+    "count": {
+      "one": "{} Webhook",
+      "other": "{} Webhooks"
+    },
+    "none": "Dieses Projekt hat keine Webhooks.",
+    "sectionDevice": "Dieses Gerät",
+    "sectionOtherOpenRc": "Andere OpenRC-Webhooks",
+    "sectionOther": "Andere Webhooks",
+    "environmentProduction": "Produktion",
+    "environmentSandbox": "Sandbox",
+    "events": {
+      "one": "{} Ereignistyp",
+      "other": "{} Ereignistypen"
+    },
+    "delete": "Löschen",
+    "deleteCount": {
+      "one": "{} Webhook löschen",
+      "other": "{} Webhooks löschen"
+    },
+    "deleteTitle": "„{name}“ löschen?",
+    "deleteBody": "RevenueCat sendet dann keine Ereignisse mehr an diesen Endpunkt. Das lässt sich nicht rückgängig machen.",
+    "deleteOwnBody": "Über diesen Webhook erhält dieses Gerät seine Benachrichtigungen. Sie enden also für dieses Projekt. Das lässt sich nicht rückgängig machen.",
+    "deleteAllOpenRc": "Andere OpenRC-Webhooks löschen",
+    "deleteAllOpenRcBody": {
+      "one": "Entfernt {} Webhook, den dieses Gerät nicht erstellt hat. Dieses Gerät wird weiter benachrichtigt.",
+      "other": "Entfernt {} Webhooks, die dieses Gerät nicht erstellt hat. Dieses Gerät wird weiter benachrichtigt."
+    },
+    "deleteFailed": "Nicht alle Webhooks konnten gelöscht werden. Prüfe deine Verbindung und versuche es erneut.",
+    "loadFailed": "Die Webhooks dieses Projekts konnten nicht geladen werden.",
+    "noProjects": "Dieses RevenueCat-Konto hat keine Projekte.",
+    "sweepTitle": "Alle Webhooks",
+    "sweepBody": "Löscht jeden Webhook, der nicht von diesem Gerät stammt, in allen Projekten. Andere Geräte und Dienste erhalten dann keine Ereignisse mehr. Das lässt sich nicht rückgängig machen.",
+    "sweepSummary": "{mine} für dieses Gerät bleiben · {other} andere",
+    "sweepProject": "{mine} für dieses Gerät · {other} andere",
+    "sweepConfirmTitle": "Alle anderen Webhooks löschen?",
+    "sweepConfirmBody": {
+      "one": "Entfernt {} Webhook in deinen Projekten, den dieses Gerät nicht erstellt hat. Dieses Gerät wird weiter benachrichtigt.",
+      "other": "Entfernt {} Webhooks in deinen Projekten, die dieses Gerät nicht erstellt hat. Dieses Gerät wird weiter benachrichtigt."
+    },
+    "sweepAction": {
+      "one": "{} anderen Webhook löschen",
+      "other": "{} andere Webhooks löschen"
+    },
+    "sweeping": "Wird gelöscht… {count} fertig",
+    "sweepDone": {
+      "one": "{} Webhook gelöscht.",
+      "other": "{} Webhooks gelöscht."
+    },
+    "sweepFailed": "Einige Webhooks konnten nicht gelöscht werden. Prüfe deine Verbindung und versuche es erneut.",
+    "sweepNothing": "Nichts mehr zu löschen"
   },
   "settings": {
     "title": "Einstellungen",

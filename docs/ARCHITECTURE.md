@@ -136,6 +136,16 @@ too, before the session ends, and deletes the secret. Webhooks that can't be
 removed (offline, say) are retried on a later launch. An expired session
 keeps everything, since the same person is likely to sign back in.
 
+RevenueCat caps the webhooks a project can hold, and a reinstall adds one the
+old secret can no longer find. Each project's sheet therefore opens its
+webhook list (`project_webhooks_sheet.dart`), marking this device's own from
+other OpenRC ones and from other services by URL shape, so stale entries can
+be deleted there: one by one, or all of OpenRC's at once, never this device's
+by accident. The Notifications screen's webhook action sweeps all projects at
+once (`webhook_sweep_sheet.dart`), deleting every webhook the device didn't
+make, so a project RevenueCat is full for can be cleared before this device
+has a webhook of its own in it.
+
 ## Layouts
 
 `AppBreakpoints` (`lib/theme/app_tokens.dart`) sorts windows into three size

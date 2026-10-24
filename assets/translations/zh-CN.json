@@ -580,7 +580,9 @@
     "nameLifetime": "一次性",
     "nameOneYear": "1 年",
     "nameOneMonth": "1 个月",
-    "nameOneWeek": "1 周"
+    "nameOneWeek": "1 周",
+    "namedOf": "{total} 个产品中已命名 {named} 个",
+    "noMatches": "没有匹配的产品。"
   },
   "revenue": {
     "title": "收入",
@@ -669,6 +671,60 @@
     "trialStatus": "状态",
     "autoRenewOn": "已开启自动续订",
     "topPlans": "热门方案"
+  },
+  "webhooks": {
+    "title": "Webhook",
+    "rowHint": "查看并删除此项目的 Webhook",
+    "count": {
+      "one": "{} 个 Webhook",
+      "other": "{} 个 Webhook"
+    },
+    "none": "此项目没有 Webhook。",
+    "sectionDevice": "此设备",
+    "sectionOtherOpenRc": "其他 OpenRC Webhook",
+    "sectionOther": "其他 Webhook",
+    "environmentProduction": "生产环境",
+    "environmentSandbox": "沙盒",
+    "events": {
+      "one": "{} 种事件",
+      "other": "{} 种事件"
+    },
+    "delete": "删除",
+    "deleteCount": {
+      "one": "删除 {} 个 Webhook",
+      "other": "删除 {} 个 Webhook"
+    },
+    "deleteTitle": "删除“{name}”？",
+    "deleteBody": "RevenueCat 将停止向此地址发送事件。此操作无法撤销。",
+    "deleteOwnBody": "此设备通过这个 Webhook 接收通知，删除后此项目的通知将停止。此操作无法撤销。",
+    "deleteAllOpenRc": "删除其他 OpenRC Webhook",
+    "deleteAllOpenRcBody": {
+      "one": "移除此设备未创建的 {} 个 Webhook。此设备仍会收到通知。",
+      "other": "移除此设备未创建的 {} 个 Webhook。此设备仍会收到通知。"
+    },
+    "deleteFailed": "未能删除全部 Webhook。请检查网络连接后重试。",
+    "loadFailed": "无法加载此项目的 Webhook。",
+    "noProjects": "此 RevenueCat 账户没有项目。",
+    "sweepTitle": "全部 Webhook",
+    "sweepBody": "在所有项目中删除不属于此设备的 Webhook。其他设备和服务将停止接收事件。此操作无法撤销。",
+    "sweepSummary": "保留此设备的 {mine} 个 · 其他 {other} 个",
+    "sweepProject": "此设备 {mine} 个 · 其他 {other} 个",
+    "sweepConfirmTitle": "删除所有其他 Webhook？",
+    "sweepConfirmBody": {
+      "one": "将移除你项目中此设备未创建的 {} 个 Webhook。此设备仍会收到通知。",
+      "other": "将移除你项目中此设备未创建的 {} 个 Webhook。此设备仍会收到通知。"
+    },
+    "sweepAction": {
+      "one": "删除 {} 个其他 Webhook",
+      "other": "删除 {} 个其他 Webhook"
+    },
+    "sweeping": "正在删除…已完成 {count}",
+    "sweepDone": {
+      "one": "已删除 {} 个 Webhook。",
+      "other": "已删除 {} 个 Webhook。"
+    },
+    "sweepFailed": "部分 Webhook 未能删除。请检查网络连接后重试。",
+    "sweepNothing": "没有可删除的内容"
   },
   "settings": {
     "title": "设置",

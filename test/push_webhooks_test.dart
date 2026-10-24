@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:openrc/models/rc_webhook.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
 import 'package:openrc/services/push/push_kinds.dart';
@@ -86,6 +87,150 @@ void main() {
       expect(found.keys, ['p2']);
       expect(found['p2']!.id, id);
       expect(found['p2']!.projectName, 'Project p2');
+    });
+
+    test('tells this device\'s webhooks from OpenRC\'s and other services',
+        () {
+      final own = RcWebhook(
+        id: 'wh1',
+        name: PushWebhooks.nameFor(secret),
+        url: PushWebhooks.urlFor(secret),
+      );
+      final legacy = RcWebhook(
+        id: 'wh2',
+        name: 'OpenRC · Android · ${PushWebhooks.tagFor(secret)}',
+        url: PushConfig.webhookUrl,
+      );
+      final otherDevice = RcWebhook(
+        id: 'wh3',
+        name: 'OpenRC · iOS · ${PushWebhooks.tagFor('B' * 43)}',
+        url: '${PushConfig.webhookUrl}/${PushWebhooks.tagFor('B' * 43)}',
+      );
+      // An earlier notifier deployment: same path shape, another host.
+      final olderDeployment = RcWebhook(
+        id: 'wh4',
+        name: 'OpenRC · Android · abcdef',
+        url: 'https://old-notifier.example.workers.dev/revenuecat/abcdef',
+      );
+      final foreign = RcWebhook(
+        id: 'wh5',
+        name: 'Slack',
+        url: 'https://hooks.example.com/x',
+      );
+      final nameless = RcWebhook(id: 'wh6');
+
+      expect(PushWebhooks.ownerOf(own, secret), WebhookOwner.thisDevice);
+      expect(PushWebhooks.ownerOf(legacy, secret), WebhookOwner.thisDevice);
+      expect(PushWebhooks.ownerOf(otherDevice, secret), WebhookOwner.openRcOther);
+      expect(
+        PushWebhooks.ownerOf(olderDeployment, secret),
+        WebhookOwner.openRcOther,
+      );
+      expect(PushWebhooks.ownerOf(foreign, secret), WebhookOwner.foreign);
+      expect(PushWebhooks.ownerOf(nameless, secret), WebhookOwner.foreign);
+    });
+
+    test('lists every webhook in a project, marked with who made it', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      rc.addForeign(
+        'p1',
+        name: 'OpenRC · iOS · abcdef',
+        url: 'https://old-notifier.example.com/revenuecat/abcdef',
+      );
+      final webhooks = PushWebhooks(rc.api());
+      await webhooks.add('p1', secret, sandbox: false, kinds: PushKind.all);
+
+      final found = await webhooks.allFor('p1', secret);
+      expect(
+        found.map((w) => w.owner),
+        [WebhookOwner.foreign, WebhookOwner.openRcOther, WebhookOwner.thisDevice],
+      );
+      expect(found.first.title, 'Slack');
+      expect(found.first.webhook.host, 'hooks.example.com');
+      // The one this device made sends every kind.
+      expect(found.last.eventTypeCount, greaterThan(0));
+    });
+
+    test('deletes a set of webhooks, counting a gone one as done', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      rc.addForeign('p1', name: 'Zapier', url: 'https://zapier.com/y');
+      final webhooks = PushWebhooks(rc.api());
+      final ids = [for (final w in rc.webhooks['p1']!) w['id'] as String];
+
+      expect(await webhooks.removeMany('p1', ids), isEmpty);
+      expect(rc.webhooks['p1'], isEmpty);
+
+      // Already gone: the outcome asked for, not a failure.
+      expect(await webhooks.removeMany('p1', ids), isEmpty);
+    });
+
+    test('reports the webhooks it could not delete', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      final webhooks = PushWebhooks(rc.api());
+      rc.offline = true;
+      final ids = [for (final w in rc.webhooks['p1']!) w['id'] as String];
+      expect(await webhooks.removeMany('p1', ids), ids);
+    });
+
+    test('sweeps every webhook but this device\'s, in every project',
+        () async {
+      final rc = FakeRevenueCat(projects: ['p1', 'p2']);
+      for (final id in ['p1', 'p2']) {
+        rc.addForeign(id, name: 'Slack', url: 'https://hooks.example.com/x');
+        rc.addForeign(
+          id,
+          name: 'OpenRC · iOS · abcdef',
+          url: 'https://old.example.com/revenuecat/abcdef',
+        );
+      }
+      final webhooks = PushWebhooks(rc.api());
+      for (final id in ['p1', 'p2']) {
+        await webhooks.add(id, secret, sandbox: false, kinds: PushKind.all);
+      }
+
+      final result = await webhooks.sweep(
+        secret,
+        projects: await webhooks.projects(),
+      );
+      expect(result.deleted, 4);
+      expect(result.failed, 0);
+      expect(result.ok, isTrue);
+      // Only this device's webhook is left in each project.
+      for (final id in ['p1', 'p2']) {
+        expect(rc.webhooks[id], hasLength(1));
+        expect(rc.webhooks[id]!.single['url'], PushWebhooks.urlFor(secret));
+      }
+    });
+
+    test('a sweep leaves a project with nothing to delete alone', () async {
+      final rc = FakeRevenueCat(projects: ['p1', 'p2']);
+      final webhooks = PushWebhooks(rc.api());
+      await webhooks.add('p1', secret, sandbox: false, kinds: PushKind.all);
+
+      final result = await webhooks.sweep(
+        secret,
+        projects: await webhooks.projects(),
+      );
+      expect(result.deleted, 0);
+      expect(result.failed, 0);
+      expect(rc.requests.where((r) => r.startsWith('DELETE')), isEmpty);
+    });
+
+    test('a sweep counts what RevenueCat refused to delete', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      final webhooks = PushWebhooks(rc.api());
+      final projects = await webhooks.projects();
+      // The projects are known, but reading their webhooks fails.
+      rc.offline = true;
+      final result = await webhooks.sweep(secret, projects: projects);
+      // The project couldn't even be read, so it counts as failed.
+      expect(result.deleted, 0);
+      expect(result.failed, greaterThan(0));
+      expect(result.ok, isFalse);
     });
 
     test('two devices get separate webhooks in one project', () async {
@@ -266,6 +411,249 @@ void main() {
           .map((p) => p.id);
       expect(connected, ['p2']);
       expect(PushChannel.parse(secret), secret);
+    });
+  });
+
+  group('project webhooks manager', () {
+    late FakeRevenueCat rc;
+    late ProviderContainer container;
+
+    setUp(() async {
+      rc = FakeRevenueCat(projects: ['p1', 'p2']);
+      container = ProviderContainer(
+        overrides: [
+          pushMessagingProvider.overrideWithValue(FakePushMessaging()),
+          rcApiServiceProvider.overrideWithValue(rc.api()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(pushSettingsProvider.notifier).enable();
+    });
+
+    Future<ProjectWebhooksNotifier> opened() async {
+      container.listen(projectWebhooksProvider('p1'), (_, _) {});
+      final notifier = container.read(projectWebhooksProvider('p1').notifier);
+      await notifier.firstLoad;
+      return notifier;
+    }
+
+    test('lists a project\'s webhooks by owner', () async {
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      rc.addForeign(
+        'p1',
+        name: 'OpenRC · iOS · abcdef',
+        url: 'https://old.example.com/revenuecat/abcdef',
+      );
+      final secret = container.read(pushSettingsProvider).secret!;
+      await PushWebhooks(
+        rc.api(),
+      ).add('p1', secret, sandbox: false, kinds: PushKind.all);
+
+      await opened();
+      final state = container.read(projectWebhooksProvider('p1'));
+      expect(state.loading, isFalse);
+      expect(state.ownedBy(WebhookOwner.thisDevice), hasLength(1));
+      expect(state.ownedBy(WebhookOwner.openRcOther), hasLength(1));
+      expect(state.ownedBy(WebhookOwner.foreign), hasLength(1));
+    });
+
+    test('deletes one webhook and drops it from the list', () async {
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      final notifier = await opened();
+      final id = container
+          .read(projectWebhooksProvider('p1'))
+          .webhooks
+          .single
+          .id;
+
+      expect(await notifier.delete(id), isTrue);
+      expect(rc.webhooks['p1'], isEmpty);
+      expect(container.read(projectWebhooksProvider('p1')).webhooks, isEmpty);
+      expect(
+        rc.requests,
+        contains('DELETE /me/projects/p1/integrations/webhooks/$id'),
+      );
+    });
+
+    test('deletes other OpenRC webhooks and keeps the rest', () async {
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      rc.addForeign(
+        'p1',
+        name: 'OpenRC · iOS · abcdef',
+        url: 'https://old.example.com/revenuecat/abcdef',
+      );
+      final secret = container.read(pushSettingsProvider).secret!;
+      await PushWebhooks(
+        rc.api(),
+      ).add('p1', secret, sandbox: false, kinds: PushKind.all);
+
+      final notifier = await opened();
+      expect(
+        await notifier.deleteOwnedBy(WebhookOwner.openRcOther),
+        isTrue,
+      );
+      final names = rc.webhooks['p1']!.map((w) => w['name']).toList();
+      expect(names, hasLength(2));
+      expect(names, isNot(contains('OpenRC · iOS · abcdef')));
+      expect(
+        container
+            .read(projectWebhooksProvider('p1'))
+            .ownedBy(WebhookOwner.openRcOther),
+        isEmpty,
+      );
+    });
+
+    test('losing this device\'s webhook makes the project read as off',
+        () async {
+      final secret = container.read(pushSettingsProvider).secret!;
+      await PushWebhooks(
+        rc.api(),
+      ).add('p1', secret, sandbox: false, kinds: PushKind.all);
+      container.listen(pushProjectsProvider, (_, _) {});
+      await container.read(pushProjectsProvider.notifier).firstLoad;
+      expect(
+        container.read(pushProjectsProvider).projects.first.connected,
+        isTrue,
+      );
+
+      final notifier = await opened();
+      await notifier.deleteOwnedBy(WebhookOwner.thisDevice);
+      // The notification list refreshes itself, so let that finish.
+      for (var i = 0; i < 200; i++) {
+        final projects = container.read(pushProjectsProvider);
+        if (!projects.loading && projects.projects.isNotEmpty) break;
+        await Future<void>.delayed(Duration.zero);
+      }
+      expect(
+        container.read(pushProjectsProvider).projects.first.connected,
+        isFalse,
+      );
+    });
+
+    test('says when a deletion failed and keeps the row', () async {
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      final notifier = await opened();
+      final id = container
+          .read(projectWebhooksProvider('p1'))
+          .webhooks
+          .single
+          .id;
+
+      rc.offline = true;
+      expect(await notifier.delete(id), isFalse);
+      final state = container.read(projectWebhooksProvider('p1'));
+      expect(state.deleteFailed, isTrue);
+      expect(state.webhooks, hasLength(1));
+      expect(state.deleting, isEmpty);
+      expect(rc.webhooks['p1'], hasLength(1));
+    });
+
+    test('says when the webhooks can\'t be read', () async {
+      rc.offline = true;
+      await opened();
+      final state = container.read(projectWebhooksProvider('p1'));
+      expect(state.failed, isTrue);
+      expect(state.loading, isFalse);
+    });
+  });
+
+  group('webhook sweep', () {
+    late FakeRevenueCat rc;
+    late ProviderContainer container;
+
+    setUp(() async {
+      rc = FakeRevenueCat(projects: ['p1', 'p2']);
+      container = ProviderContainer(
+        overrides: [
+          pushMessagingProvider.overrideWithValue(FakePushMessaging()),
+          rcApiServiceProvider.overrideWithValue(rc.api()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(pushSettingsProvider.notifier).enable();
+    });
+
+    Future<WebhookSweepNotifier> opened() async {
+      container.listen(webhookSweepProvider, (_, _) {});
+      final notifier = container.read(webhookSweepProvider.notifier);
+      await notifier.firstLoad;
+      return notifier;
+    }
+
+    /// This device's webhook, written straight in: a request would wait on
+    /// the test's fake clock.
+    void addOwn(String projectId) {
+      final secret = container.read(pushSettingsProvider).secret!;
+      rc.webhooks[projectId]!.add({
+        ...PushWebhooks.inputFor(
+          secret,
+          sandbox: false,
+          kinds: PushKind.all,
+        ).toJson(),
+        'id': 'own-$projectId',
+      });
+    }
+
+    test('counts what a sweep would delete, project by project', () async {
+      addOwn('p1');
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      rc.addForeign(
+        'p1',
+        name: 'OpenRC · iOS · abcdef',
+        url: 'https://old.example.com/revenuecat/abcdef',
+      );
+
+      await opened();
+      final state = container.read(webhookSweepProvider);
+      expect(state.loading, isFalse);
+      expect(state.mine, 1);
+      expect(state.others, 2);
+      final p1 = state.projects.firstWhere((p) => p.id == 'p1');
+      expect(p1.mine, 1);
+      expect(p1.others, 2);
+    });
+
+    test('sweeps and keeps this device\'s webhooks', () async {
+      addOwn('p1');
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      rc.addForeign('p2', name: 'Zapier', url: 'https://zapier.com/y');
+
+      final notifier = await opened();
+      expect(container.read(webhookSweepProvider).others, 2);
+      await notifier.sweep();
+
+      expect(rc.webhooks['p1']!.single['id'], 'own-p1');
+      expect(rc.webhooks['p2'], isEmpty);
+      final result = container.read(webhookSweepProvider).result;
+      expect(result?.deleted, 2);
+      expect(result?.ok, isTrue);
+      // The counts are read again after a sweep; let that land.
+      for (var i = 0; i < 200; i++) {
+        final state = container.read(webhookSweepProvider);
+        if (!state.loading && state.others == 0) break;
+        await Future<void>.delayed(Duration.zero);
+      }
+      expect(container.read(webhookSweepProvider).others, 0);
+    });
+
+    test('says when a sweep could not delete everything', () async {
+      rc.addForeign('p1', name: 'Slack', url: 'https://hooks.example.com/x');
+      final notifier = await opened();
+      rc.offline = true;
+      await notifier.sweep();
+
+      final state = container.read(webhookSweepProvider);
+      expect(state.result?.ok, isFalse);
+      expect(rc.webhooks['p1'], hasLength(1));
+    });
+
+    test('a sweep with nothing to delete asks RevenueCat nothing', () async {
+      addOwn('p1');
+      final notifier = await opened();
+      expect(container.read(webhookSweepProvider).others, 0);
+      await notifier.sweep();
+      expect(container.read(webhookSweepProvider).result?.deleted, 0);
+      expect(rc.requests.where((r) => r.startsWith('DELETE')), isEmpty);
     });
   });
 }

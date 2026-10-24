@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -148,6 +150,91 @@ class PushWebhooks {
   Future<void> remove(String projectId, String webhookId) =>
       _api.deleteWebhook(projectId, webhookId);
 
+  /// Every webhook in [projectId], marked with who made it.
+  Future<List<ProjectWebhook>> allFor(
+    String projectId,
+    String secret,
+  ) async {
+    final hooks = await _api.webhooks(projectId);
+    final seen = <String>{};
+    return [
+      for (final hook in hooks)
+        if (hook.id == null || seen.add(hook.id!))
+          ProjectWebhook(hook, ownerOf(hook, secret)),
+    ];
+  }
+
+  /// Deletes [ids], counting one RevenueCat no longer has as done. Returns
+  /// the ids it couldn't delete.
+  Future<List<String>> removeMany(
+    String projectId,
+    Iterable<String> ids,
+  ) async {
+    final failed = <String>[];
+    await forEachLimited(ids, (id) async {
+      try {
+        await remove(projectId, id);
+      } catch (e) {
+        if (!_api.isNotFound(e)) failed.add(id);
+      }
+    });
+    return failed;
+  }
+
+  /// Deletes every webhook that isn't [secret]'s, across [projects], leaving
+  /// this device's own in place. [onProgress] hears how many went so far.
+  Future<SweepResult> sweep(
+    String secret, {
+    required List<RcProject> projects,
+    void Function(int deleted)? onProgress,
+  }) async {
+    var deleted = 0;
+    var failed = 0;
+    await forEachLimited(projects, (project) async {
+      final id = project.id;
+      if (id == null) return;
+      final List<ProjectWebhook> hooks;
+      try {
+        hooks = await allFor(id, secret);
+      } catch (e) {
+        _log.warning('Reading a project\'s webhooks failed: $e');
+        failed++;
+        return;
+      }
+      final others = [
+        for (final hook in hooks)
+          if (hook.owner != WebhookOwner.thisDevice && hook.id.isNotEmpty)
+            hook.id,
+      ];
+      if (others.isEmpty) return;
+      final kept = await removeMany(id, others);
+      deleted += others.length - kept.length;
+      failed += kept.length;
+      onProgress?.call(deleted);
+    });
+    return SweepResult(deleted: deleted, failed: failed);
+  }
+
+  /// Who created [webhook], as far as its URL tells.
+  static WebhookOwner ownerOf(RcWebhook webhook, String secret) {
+    if (isOwn(webhook, secret)) return WebhookOwner.thisDevice;
+    return openRcTagOf(webhook) == null
+        ? WebhookOwner.foreign
+        : WebhookOwner.openRcOther;
+  }
+
+  /// The device tag in an OpenRC notifier URL, or null when it isn't one.
+  ///
+  /// Matched by path rather than by [PushConfig.webhookUrl]'s host, so
+  /// webhooks made against an earlier notifier deployment still count as
+  /// OpenRC's: those are the orphans a swept project needs to lose.
+  static String? openRcTagOf(RcWebhook webhook) {
+    final match = _notifierPath.firstMatch(webhook.path ?? '');
+    return match?.group(1);
+  }
+
+  static final _notifierPath = RegExp(r'/revenuecat/([A-Za-z0-9_-]{1,64})$');
+
   Future<RcWebhookTestResult> test(String projectId, String webhookId) =>
       _api.testWebhook(projectId, webhookId);
 
@@ -193,6 +280,50 @@ class DeviceWebhook {
 
   final String id;
   final String? projectName;
+}
+
+/// What a sweep across projects did.
+class SweepResult {
+  const SweepResult({required this.deleted, required this.failed});
+
+  final int deleted;
+
+  /// Webhooks RevenueCat refused to delete.
+  final int failed;
+
+  bool get ok => failed == 0;
+}
+
+/// Who created a webhook, as far as its URL tells.
+enum WebhookOwner {
+  /// Made by this device, for the secret it holds.
+  thisDevice,
+
+  /// Made by OpenRC, by a device whose secret this one doesn't have: an
+  /// earlier install, or a changed notifier deployment.
+  openRcOther,
+
+  /// Anything else: another service, or a URL added by hand.
+  foreign,
+}
+
+/// One webhook in a project, ready to show.
+class ProjectWebhook {
+  const ProjectWebhook(this.webhook, this.owner);
+
+  final RcWebhook webhook;
+  final WebhookOwner owner;
+
+  String get id => webhook.id ?? '';
+
+  /// The webhook's name, or where it points when it has none.
+  String get title {
+    final name = webhook.name?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    return webhook.host ?? webhook.url ?? '—';
+  }
+
+  int get eventTypeCount => webhook.eventTypes?.length ?? 0;
 }
 
 /// RevenueCat for this device's webhooks, or null in builds without
@@ -297,11 +428,11 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
           // Webhooks from before URLs named their project pick the name up
           // here, so existing devices see it without changing a setting.
           final name = names[id];
-          final url = Uri.tryParse(webhook?.url ?? '');
+          final query = Uri.tryParse(webhook?.url ?? '')?.queryParameters;
           if (webhookId != null &&
               name != null &&
               name.isNotEmpty &&
-              url?.queryParameters['project'] != name) {
+              query?['project'] != name) {
             try {
               await webhooks.update(
                 id,
@@ -313,7 +444,7 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
                 projectName: name,
               );
             } catch (e) {
-              _log.warning('Naming a webhook failed: $e');
+              _log.warning('Refreshing a webhook failed: $e');
             }
           }
         } catch (e) {
@@ -419,4 +550,327 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
       projects: [for (final p in state.projects) p.id == id ? change(p) : p],
     );
   }
+}
+
+/// One project's webhooks, for the manager sheet.
+final projectWebhooksProvider = StateNotifierProvider.autoDispose
+    .family<ProjectWebhooksNotifier, ProjectWebhooksState, String>(
+      (ref, projectId) => ProjectWebhooksNotifier(ref, projectId),
+    );
+
+class ProjectWebhooksState {
+  const ProjectWebhooksState({
+    this.loading = true,
+    this.failed = false,
+    this.error,
+    this.webhooks = const [],
+    this.deleting = const {},
+    this.deleteFailed = false,
+  });
+
+  final bool loading;
+
+  /// The list couldn't be read.
+  final bool failed;
+
+  /// Why the read failed: RevenueCat's message, or null when it gave none.
+  final String? error;
+
+  final List<ProjectWebhook> webhooks;
+
+  /// Ids being deleted.
+  final Set<String> deleting;
+
+  /// The last deletion failed.
+  final bool deleteFailed;
+
+  List<ProjectWebhook> ownedBy(WebhookOwner owner) => [
+    for (final w in webhooks)
+      if (w.owner == owner) w,
+  ];
+
+  ProjectWebhooksState copyWith({
+    bool? loading,
+    bool? failed,
+    String? error,
+    List<ProjectWebhook>? webhooks,
+    Set<String>? deleting,
+    bool? deleteFailed,
+  }) => ProjectWebhooksState(
+    loading: loading ?? this.loading,
+    failed: failed ?? this.failed,
+    error: error ?? this.error,
+    webhooks: webhooks ?? this.webhooks,
+    deleting: deleting ?? this.deleting,
+    deleteFailed: deleteFailed ?? this.deleteFailed,
+  );
+}
+
+/// Reading and deleting one project's webhooks.
+class ProjectWebhooksNotifier extends StateNotifier<ProjectWebhooksState> {
+  ProjectWebhooksNotifier(this._ref, this.projectId)
+    : super(const ProjectWebhooksState()) {
+    firstLoad = load();
+  }
+
+  final Ref _ref;
+  final String projectId;
+
+  /// The sheet's first read; [load] runs again only when asked.
+  late final Future<void> firstLoad;
+
+  PushWebhooks? get _webhooks => _ref.read(pushWebhooksProvider);
+
+  String? get _secret => _ref.read(pushSettingsProvider).secret;
+
+  Future<void> load() async {
+    final webhooks = _webhooks;
+    final secret = _secret;
+    if (webhooks == null || secret == null) {
+      state = const ProjectWebhooksState(loading: false);
+      return;
+    }
+    state = state.copyWith(loading: true, failed: false, deleteFailed: false);
+    try {
+      final found = await webhooks.allFor(projectId, secret);
+      if (!mounted) return;
+      state = ProjectWebhooksState(webhooks: found, loading: false);
+    } catch (e) {
+      _log.warning('Reading a project\'s webhooks failed: $e');
+      if (mounted) {
+        state = state.copyWith(
+          loading: false,
+          failed: true,
+          error: _webhooks?.errorMessage(e),
+        );
+      }
+    }
+  }
+
+  /// Deletes one webhook. True when it went.
+  Future<bool> delete(String id) async {
+    final owner = state.webhooks
+        .firstWhereOrNull((w) => w.id == id)
+        ?.owner;
+    return _delete([id], owner);
+  }
+
+  /// Deletes every webhook [owner] made. True when all of them went.
+  Future<bool> deleteOwnedBy(WebhookOwner owner) async {
+    final ids = [for (final w in state.ownedBy(owner)) w.id];
+    return _delete(ids, owner);
+  }
+
+  Future<bool> _delete(List<String> ids, WebhookOwner? owner) async {
+    final webhooks = _webhooks;
+    if (webhooks == null || ids.isEmpty) return false;
+    state = state.copyWith(
+      deleting: {...state.deleting, ...ids},
+      deleteFailed: false,
+    );
+    List<String> failed;
+    try {
+      failed = await webhooks.removeMany(projectId, ids);
+    } catch (e) {
+      _log.warning('Deleting a webhook failed: $e');
+      failed = ids;
+    }
+    if (!mounted) return failed.isEmpty;
+    final gone = {for (final id in ids) if (!failed.contains(id)) id};
+    state = state.copyWith(
+      webhooks: [
+        for (final w in state.webhooks)
+          if (!gone.contains(w.id)) w,
+      ],
+      deleting: {...state.deleting}..removeAll(ids),
+      deleteFailed: failed.isNotEmpty,
+    );
+    // The notification list reads webhooks live, so losing this device's
+    // must make it read them again.
+    if (gone.isNotEmpty && owner == WebhookOwner.thisDevice) {
+      unawaited(_ref.read(pushProjectsProvider.notifier).load());
+    }
+    return failed.isEmpty;
+  }
+}
+
+/// Every project's webhooks, for deleting the ones this device didn't make.
+final webhookSweepProvider = StateNotifierProvider.autoDispose<
+  WebhookSweepNotifier,
+  WebhookSweepState
+>((ref) => WebhookSweepNotifier(ref));
+
+/// One project, counted for the sweep.
+class SweptProject {
+  const SweptProject({
+    required this.project,
+    required this.mine,
+    required this.others,
+  });
+
+  final RcProject project;
+
+  /// Webhooks this device made, which a sweep keeps.
+  final int mine;
+
+  /// Webhooks a sweep deletes.
+  final int others;
+
+  String get id => project.id ?? '';
+  String get name => project.name ?? id;
+}
+
+class WebhookSweepState {
+  const WebhookSweepState({
+    this.loading = true,
+    this.failed = false,
+    this.error,
+    this.projects = const [],
+    this.running = false,
+    this.result,
+    this.progress = 0,
+  });
+
+  final bool loading;
+
+  /// The projects' webhooks couldn't be read.
+  final bool failed;
+
+  /// Why the read failed: RevenueCat's message, or null when it gave none.
+  final String? error;
+
+  final List<SweptProject> projects;
+
+  /// A sweep is running; [progress] is how many webhooks it has deleted.
+  final bool running;
+  final int progress;
+
+  /// What the last sweep did.
+  final SweepResult? result;
+
+  int get mine =>
+      projects.fold(0, (total, project) => total + project.mine);
+
+  int get others =>
+      projects.fold(0, (total, project) => total + project.others);
+}
+
+/// Counts what a sweep would delete, then deletes it.
+class WebhookSweepNotifier extends StateNotifier<WebhookSweepState> {
+  WebhookSweepNotifier(this._ref) : super(const WebhookSweepState()) {
+    firstLoad = load();
+  }
+
+  final Ref _ref;
+
+  /// The sheet's first read; [load] runs again only when asked.
+  late final Future<void> firstLoad;
+
+  PushWebhooks? get _webhooks => _ref.read(pushWebhooksProvider);
+
+  String? get _secret => _ref.read(pushSettingsProvider).secret;
+
+  Future<void> load() async {
+    final webhooks = _webhooks;
+    final secret = _secret;
+    if (webhooks == null || secret == null) {
+      state = const WebhookSweepState(loading: false);
+      return;
+    }
+    // What the last sweep did, and the counts it left, stay on screen while
+    // they're read again, so a refresh can't erase them.
+    final result = state.result;
+    final known = state.projects;
+    state = WebhookSweepState(
+      loading: known.isEmpty,
+      projects: known,
+      result: result,
+    );
+    final List<RcProject> projects;
+    try {
+      projects = await webhooks.projects();
+    } catch (e) {
+      _log.warning('Loading projects for a sweep failed: $e');
+      if (mounted) {
+        state = WebhookSweepState(
+          loading: false,
+          failed: true,
+          error: webhooks.errorMessage(e),
+          projects: known,
+          result: result,
+        );
+      }
+      return;
+    }
+    final counted = <SweptProject>[];
+    await forEachLimited(projects, (project) async {
+      final id = project.id;
+      if (id == null) return;
+      try {
+        final hooks = await webhooks.allFor(id, secret);
+        counted.add(
+          SweptProject(
+            project: project,
+            mine: hooks
+                .where((h) => h.owner == WebhookOwner.thisDevice)
+                .length,
+            others: hooks
+                .where((h) => h.owner != WebhookOwner.thisDevice)
+                .length,
+          ),
+        );
+      } catch (e) {
+        _log.warning('Counting a project\'s webhooks failed: $e');
+      }
+    });
+    if (!mounted) return;
+    counted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    state = WebhookSweepState(
+      loading: false,
+      projects: counted,
+      result: result,
+    );
+  }
+
+  /// Deletes every webhook that isn't this device's, in every project.
+  Future<void> sweep() async {
+    final webhooks = _webhooks;
+    final secret = _secret;
+    if (webhooks == null || secret == null || state.running) return;
+    state = WebhookSweepState(
+      loading: false,
+      projects: state.projects,
+      running: true,
+    );
+    SweepResult result;
+    try {
+      result = await webhooks.sweep(
+        secret,
+        projects: [for (final p in state.projects) p.project],
+        onProgress: (deleted) {
+          if (mounted) state = _running(deleted);
+        },
+      );
+    } catch (e) {
+      _log.warning('Sweeping webhooks failed: $e');
+      result = const SweepResult(deleted: 0, failed: 1);
+    }
+    if (!mounted) return;
+    state = WebhookSweepState(
+      loading: false,
+      projects: state.projects,
+      result: result,
+    );
+    // Counts are stale once webhooks are gone, and the project list reads
+    // which of them notify this device.
+    unawaited(load());
+    unawaited(_ref.read(pushProjectsProvider.notifier).load());
+  }
+
+  WebhookSweepState _running(int progress) => WebhookSweepState(
+    loading: false,
+    projects: state.projects,
+    running: true,
+    progress: progress,
+  );
 }
