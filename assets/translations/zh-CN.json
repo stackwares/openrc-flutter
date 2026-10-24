@@ -673,6 +673,7 @@
       "settings": "设置…",
       "previousDay": "前一天",
       "nextDay": "后一天",
+      "askAboutDay": "询问所选日期",
       "refresh": "刷新",
       "onGitHub": "GitHub 上的 {app}",
       "reportIssue": "报告问题"
@@ -884,6 +885,7 @@
         "present": "正在准备视图…",
         "get_overview": "正在获取概览…",
         "get_payout_context": "正在加载付款…",
+        "get_transaction": "正在加载这笔销售…",
         "get_transactions": "正在加载交易…",
         "list_projects": "正在列出项目…"
       },
@@ -909,6 +911,9 @@
     "retry": "重试",
     "editKey": "编辑密钥",
     "askAbout": "询问此项",
+    "askAboutDay": "询问这一天",
+    "askAboutRange": "询问此区间",
+    "askAboutPayout": "询问这笔付款",
     "chartSummary": "{metric}，{count} 个点，最后值为 {last}",
     "followUp": {
       "showTable": "以表格显示",
@@ -919,7 +924,11 @@
     "context": {
       "day": "解释 {day}",
       "revenue": "解释本月收入",
-      "charts": "解释此区间 {range}"
+      "charts": "解释此区间 {range}",
+      "metric": "解释 {range} 的 {metric}",
+      "payout": "为什么下一次付款是这个金额，何时到账？",
+      "transaction": "这笔{type}是怎么回事？",
+      "sale": "这笔销售是怎么回事？"
     }
   }
 }

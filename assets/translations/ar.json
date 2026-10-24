@@ -703,6 +703,7 @@
       "settings": "الإعدادات…",
       "previousDay": "اليوم السابق",
       "nextDay": "اليوم التالي",
+      "askAboutDay": "اسأل عن اليوم المحدد",
       "refresh": "تحديث",
       "onGitHub": "{app} على GitHub",
       "reportIssue": "الإبلاغ عن مشكلة"
@@ -959,6 +960,7 @@
         "present": "جاري تجهيز العرض…",
         "get_overview": "جاري جلب النظرة العامة…",
         "get_payout_context": "جاري تحميل المدفوعات…",
+        "get_transaction": "جارٍ تحميل هذا البيع…",
         "get_transactions": "جاري تحميل المعاملات…",
         "list_projects": "جاري سرد المشاريع…"
       },
@@ -984,6 +986,9 @@
     "retry": "إعادة المحاولة",
     "editKey": "تعديل المفتاح",
     "askAbout": "اسأل عن هذا",
+    "askAboutDay": "اسأل عن هذا اليوم",
+    "askAboutRange": "اسأل عن هذا النطاق",
+    "askAboutPayout": "اسأل عن هذه الدفعة",
     "chartSummary": "{metric}، {count} نقاط، آخر قيمة {last}",
     "followUp": {
       "showTable": "عرض كجدول",
@@ -994,7 +999,11 @@
     "context": {
       "day": "اشرح {day}",
       "revenue": "اشرح إيرادات هذا الشهر",
-      "charts": "اشرح هذا النطاق {range}"
+      "charts": "اشرح هذا النطاق {range}",
+      "metric": "اشرح {metric} خلال {range}",
+      "payout": "لماذا هذا مبلغ الدفعة التالية، ومتى تصل؟",
+      "transaction": "ما الذي يحدث مع هذا {type}؟",
+      "sale": "ما الذي يحدث مع هذا البيع؟"
     }
   }
 }

@@ -63,6 +63,7 @@ void main() {
     expect(find.text('MRR'), findsOneWidget);
     expect(find.text('\$1.2K'), findsOneWidget);
     expect(find.text('4'), findsWidgets);
+    expect(find.text('Ask about this range'), findsOneWidget);
   });
 
   testWidgets('error state retries the overview load', (tester) async {

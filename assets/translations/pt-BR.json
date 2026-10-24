@@ -679,6 +679,7 @@
       "settings": "Configurações…",
       "previousDay": "Dia anterior",
       "nextDay": "Próximo dia",
+      "askAboutDay": "Perguntar sobre o dia selecionado",
       "refresh": "Atualizar",
       "onGitHub": "{app} no GitHub",
       "reportIssue": "Relatar um problema"
@@ -899,6 +900,7 @@
         "present": "Preparando visualização…",
         "get_overview": "Buscando visão geral…",
         "get_payout_context": "Carregando repasses…",
+        "get_transaction": "Carregando esta venda…",
         "get_transactions": "Carregando transações…",
         "list_projects": "Listando projetos…"
       },
@@ -924,6 +926,9 @@
     "retry": "Tentar de novo",
     "editKey": "Editar chave",
     "askAbout": "Perguntar sobre isto",
+    "askAboutDay": "Perguntar sobre este dia",
+    "askAboutRange": "Perguntar sobre este período",
+    "askAboutPayout": "Perguntar sobre este repasse",
     "chartSummary": "{metric}, {count} pontos, último valor {last}",
     "followUp": {
       "showTable": "Mostrar como tabela",
@@ -934,7 +939,11 @@
     "context": {
       "day": "Explicar {day}",
       "revenue": "Explicar a receita deste mês",
-      "charts": "Explicar este intervalo {range}"
+      "charts": "Explicar este intervalo {range}",
+      "metric": "Explicar {metric} em {range}",
+      "payout": "Por que este é o valor do próximo repasse e quando ele cai?",
+      "transaction": "O que está acontecendo com este {type}?",
+      "sale": "O que está acontecendo com esta venda?"
     }
   }
 }

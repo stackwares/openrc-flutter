@@ -867,6 +867,7 @@
       "settings": "Settings…",
       "previousDay": "Previous Day",
       "nextDay": "Next Day",
+      "askAboutDay": "Ask about Selected Day",
       "refresh": "Refresh",
       "onGitHub": "{app} on GitHub",
       "reportIssue": "Report an Issue"
@@ -1049,8 +1050,8 @@
       "save": "Save and start"
     },
     "empty": {
-      "title": "Ask about your revenue",
-      "subtitle": "Try a suggestion or type your own question."
+      "title": "Nothing asked yet",
+      "subtitle": "Ask about today, MRR, countries, or when you get paid."
     },
     "emptyData": "No data to show yet.",
     "date": "Date",
@@ -1063,6 +1064,9 @@
     "retry": "Retry",
     "editKey": "Edit key",
     "askAbout": "Ask about this",
+    "askAboutDay": "Ask about this day",
+    "askAboutRange": "Ask about this range",
+    "askAboutPayout": "Ask about this payout",
     "chartSummary": "{metric}, {count} points, last value {last}",
     "suggestions": {
       "today": "How was today vs yesterday?",
@@ -1079,7 +1083,11 @@
     "context": {
       "day": "Explain {day}",
       "revenue": "Explain this month’s revenue",
-      "charts": "Explain this {range} range"
+      "charts": "Explain this {range} range",
+      "metric": "Explain {metric} over {range}",
+      "payout": "Why is this the next payout amount, and when does it land?",
+      "transaction": "What's going on with this {type}?",
+      "sale": "What's going on with this sale?"
     },
     "status": {
       "thinking": "Thinking…",
@@ -1090,6 +1098,7 @@
         "get_chart": "Fetching chart…",
         "get_transactions": "Loading transactions…",
         "get_payout_context": "Loading payouts…",
+        "get_transaction": "Loading this sale…",
         "present": "Preparing view…"
       }
     },

@@ -679,6 +679,7 @@
       "settings": "सेटिंग्स…",
       "previousDay": "पिछला दिन",
       "nextDay": "अगला दिन",
+      "askAboutDay": "चयनित दिन के बारे में पूछें",
       "refresh": "रीफ़्रेश",
       "onGitHub": "GitHub पर {app}",
       "reportIssue": "समस्या रिपोर्ट करें"
@@ -899,6 +900,7 @@
         "present": "दृश्य तैयार…",
         "get_overview": "ओवरव्यू लोड…",
         "get_payout_context": "भुगतान लोड…",
+        "get_transaction": "यह बिक्री लोड हो रही है…",
         "get_transactions": "लेनदेन लोड…",
         "list_projects": "प्रोजेक्ट सूची…"
       },
@@ -924,6 +926,9 @@
     "retry": "फिर कोशिश करें",
     "editKey": "कुंजी संपादित करें",
     "askAbout": "इसके बारे में पूछें",
+    "askAboutDay": "इस दिन के बारे में पूछें",
+    "askAboutRange": "इस अवधि के बारे में पूछें",
+    "askAboutPayout": "इस भुगतान के बारे में पूछें",
     "chartSummary": "{metric}, {count} बिंदु, अंतिम मान {last}",
     "followUp": {
       "showTable": "तालिका में दिखाएँ",
@@ -934,7 +939,11 @@
     "context": {
       "day": "{day} समझाएँ",
       "revenue": "इस महीने की आय समझाएँ",
-      "charts": "इस अवधि {range} को समझाएँ"
+      "charts": "इस अवधि {range} को समझाएँ",
+      "metric": "{range} में {metric} समझाएँ",
+      "payout": "अगला भुगतान इतना क्यों है, और कब मिलेगा?",
+      "transaction": "इस {type} का क्या हाल है?",
+      "sale": "इस बिक्री का क्या हाल है?"
     }
   }
 }

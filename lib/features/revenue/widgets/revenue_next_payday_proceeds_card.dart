@@ -1,7 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/features/ask/ask_context.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
 import 'package:openrc/features/revenue/payout_history.dart';
@@ -105,6 +108,19 @@ class RealtimeNextPaydayProceedsCard extends ConsumerWidget {
                 },
               ),
               style: muted,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: AskContextChip(
+                label: 'agent.askAboutPayout'.tr(),
+                onPressed: () => openAskTab(
+                  ref,
+                  prefill: AskPrefills.payout(),
+                ),
+              ),
             ),
           ),
           _NextPayoutPlatformRow(

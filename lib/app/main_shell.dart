@@ -12,6 +12,8 @@ import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/ask/ask_context.dart';
+import 'package:openrc/features/ask/ask_launch.dart';
 import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/ask/ask_screen.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
@@ -94,12 +96,25 @@ void refreshShellTab(WidgetRef ref) {
 }
 
 /// Jump to Ask and optionally prefill the composer (⌘K from other tabs).
-void openAskTab(WidgetRef ref, {String? prefill}) {
+void openAskTab(WidgetRef ref, {String? prefill, String? transactionId}) {
   ref.read(mainShellTabIndexProvider.notifier).state = 3;
-  if (prefill != null && prefill.trim().isNotEmpty) {
-    ref.read(askPrefillProvider.notifier).state = prefill.trim();
+  final prompt = prefill?.trim();
+  if (prompt != null && prompt.isNotEmpty) {
+    ref.read(askPrefillProvider.notifier).state = prompt;
   }
+  final id = transactionId?.trim();
+  ref.read(askFocusTransactionIdProvider.notifier).state =
+      (id != null && id.isNotEmpty) ? id : null;
   ref.read(askFocusTickProvider.notifier).state++;
+}
+
+void openAskAboutSelectedDay(WidgetRef ref) {
+  openAskTab(
+    ref,
+    prefill: AskPrefills.selectedDay(
+      ref.read(transactionsProvider).selectedDayKey,
+    ),
+  );
 }
 
 /// The signed-in app: a floating tab bar on phones, a navigation rail on
@@ -137,13 +152,17 @@ class _MainShellState extends ConsumerState<MainShell> {
     _pushSubscriptions = [
       PushNotifications.onMessage.listen(_onPushWhileOpen),
       PushNotifications.onMessageOpenedApp.listen(_openFromPush),
-      PushNotifications.webOpens.listen(_openTransaction),
+      PushNotifications.webOpens.listen(_applyAskLaunch),
     ];
     PushNotifications.initialMessage().then((message) {
       if (message != null && mounted) _openFromPush(message);
     });
-    final webLaunch = PushNotifications.webLaunchTransaction;
-    if (webLaunch != null) _openTransaction(webLaunch);
+    final webLaunch = PushNotifications.webLaunch;
+    if (webLaunch != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyAskLaunch(webLaunch);
+      });
+    }
     // Starts notifications (re-subscribing this device) and finishes removing
     // webhooks that an earlier turn-off or log-out couldn't.
     ref.read(pushSettingsProvider.notifier).retryPendingRemovals();
@@ -225,14 +244,46 @@ class _MainShellState extends ConsumerState<MainShell> {
   void _onPushWhileOpen(RemoteMessage message) {
     _reloadTransactions();
     final title = message.notification?.title;
-    if (defaultTargetPlatform == TargetPlatform.android && title != null) {
-      context.showSnackBar(title);
+    if (defaultTargetPlatform != TargetPlatform.android || title == null) {
+      return;
     }
+    final id = AskLaunch.boundedId(
+      message.data['transaction_id'] is String
+          ? message.data['transaction_id'] as String
+          : null,
+    );
+    context.showSnackBar(
+      title,
+      actionLabel: id == null ? null : 'agent.askAbout'.tr(),
+      onAction: id == null
+          ? null
+          : () => openAskTab(
+              ref,
+              prefill: AskPrefills.sale(),
+              transactionId: id,
+            ),
+    );
   }
 
   void _openFromPush(RemoteMessage message) {
     final id = message.data['transaction_id'];
     _openTransaction(id is String ? id : null);
+  }
+
+  void _applyAskLaunch(AskLaunch launch) {
+    if (launch.isEmpty) return;
+    if (launch.openAsk) {
+      openAskTab(
+        ref,
+        prefill: launch.prompt ?? AskPrefills.sale(),
+        transactionId: launch.transactionId,
+      );
+      if (launch.transactionId != null) _reloadTransactions();
+      return;
+    }
+    if (launch.transactionId != null) {
+      _openTransaction(launch.transactionId);
+    }
   }
 
   /// Tapping a notification opens the transaction it's about, once the
@@ -283,6 +334,12 @@ class _MainShellState extends ConsumerState<MainShell> {
         withModifier(LogicalKeyboardKey.digit3): () => _select(2),
         withModifier(LogicalKeyboardKey.digit4): () => _select(3),
         withModifier(LogicalKeyboardKey.keyK): () => openAskTab(ref),
+        SingleActivator(
+          LogicalKeyboardKey.keyK,
+          meta: _usesCommandKey,
+          control: !_usesCommandKey,
+          shift: true,
+        ): () => openAskAboutSelectedDay(ref),
         withModifier(LogicalKeyboardKey.keyR): () => refreshShellTab(ref),
         withModifier(LogicalKeyboardKey.comma): () =>
             SettingsScreen.open(context),

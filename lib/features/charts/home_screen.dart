@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/shell_insets.dart';
+import 'package:openrc/app/main_shell.dart';
+import 'package:openrc/features/ask/ask_context.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/charts/overview_metric_detail_screen.dart';
@@ -119,11 +122,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildRangeChips(HomeState state, {double inset = 0}) {
+  Widget _buildRangeChips(
+    HomeState state, {
+    double inset = 0,
+    required String rangeLabel,
+  }) {
     final selected = _matchingPreset(state);
     final notifier = ref.read(homeProvider.notifier);
     return SizedBox(
-      height: 48,
+      height: 52,
       child: ListView(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.fromLTRB(16 + inset, 4, 16 + inset, 4),
@@ -144,6 +151,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icons.calendar_today_rounded,
             selected: selected == null,
             onTap: state.isLoading ? null : _pickChartRange,
+          ),
+          const SizedBox(width: 8),
+          AskContextChip(
+            label: 'agent.askAboutRange'.tr(),
+            onPressed: () => openAskTab(
+              ref,
+              prefill: AskPrefills.chartRange(range: rangeLabel),
+            ),
           ),
         ],
       ),
@@ -205,7 +220,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(child: _buildRangeChips(state, inset: inset)),
+            SliverToBoxAdapter(
+              child: _buildRangeChips(
+                state,
+                inset: inset,
+                rangeLabel: rangeLabel,
+              ),
+            ),
             SliverPadding(
               padding: EdgeInsets.fromLTRB(16 + inset, 4, 16 + inset, 0),
               sliver: SliverToBoxAdapter(

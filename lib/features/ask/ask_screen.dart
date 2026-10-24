@@ -30,10 +30,10 @@ bool get _touchFirst =>
     defaultTargetPlatform == TargetPlatform.android;
 
 const _suggestions = [
-  ('agent.suggestions.today', Icons.today_rounded),
-  ('agent.suggestions.mrr', Icons.trending_up_rounded),
-  ('agent.suggestions.countries', Icons.public_rounded),
-  ('agent.suggestions.payout', Icons.payments_outlined),
+  'agent.suggestions.today',
+  'agent.suggestions.mrr',
+  'agent.suggestions.countries',
+  'agent.suggestions.payout',
 ];
 
 class AskScreen extends ConsumerStatefulWidget {
@@ -56,6 +56,19 @@ class _AskScreenState extends ConsumerState<AskScreen> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applyPrefill(ref.read(askPrefillProvider));
+    });
+  }
+
+  void _applyPrefill(String? next) {
+    if (next == null || next.isEmpty) return;
+    _composer.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+    ref.read(askPrefillProvider.notifier).state = null;
   }
 
   @override
@@ -193,14 +206,7 @@ class _AskScreenState extends ConsumerState<AskScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<int>(askFocusTickProvider, (_, _) => _focusNode.requestFocus());
-    ref.listen<String?>(askPrefillProvider, (_, next) {
-      if (next == null || next.isEmpty) return;
-      _composer.value = TextEditingValue(
-        text: next,
-        selection: TextSelection.collapsed(offset: next.length),
-      );
-      ref.read(askPrefillProvider.notifier).state = null;
-    });
+    ref.listen<String?>(askPrefillProvider, (_, next) => _applyPrefill(next));
     ref.listen<List<AgentTurn>>(askNotifierProvider, _onTurnsChanged);
 
     final settingsAsync = ref.watch(agentSettingsProvider);
@@ -393,7 +399,8 @@ class _AskScreenState extends ConsumerState<AskScreen> {
   }
 }
 
-/// First open: what Ask is for, and questions to start with.
+/// First open: one sentence of what Ask is for, and questions parked
+/// above the composer — where the thread will grow.
 class _EmptyThread extends StatelessWidget {
   const _EmptyThread({required this.side, required this.onAsk});
 
@@ -406,62 +413,34 @@ class _EmptyThread extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, AppSpace.md),
+        padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, AppSpace.md),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            minHeight: math.max(0, constraints.maxHeight - AppSpace.md * 2),
+            minHeight: math.max(
+              0,
+              constraints.maxHeight - AppSpace.lg - AppSpace.md,
+            ),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        scheme.primary,
-                        Color.lerp(scheme.primary, scheme.tertiary, 0.6)!,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: scheme.primary.withValues(alpha: 0.3),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 30,
-                    color: scheme.onPrimary,
-                  ),
-                ),
-              ).appCardEntrance(),
-              const SizedBox(height: AppSpace.lg),
               Text(
                 'agent.empty.title'.tr(),
-                textAlign: TextAlign.center,
-                style: context.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
+                style: context.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
                 ),
-              ),
+              ).appCardEntrance(),
               const SizedBox(height: AppSpace.xs),
               Text(
                 'agent.empty.subtitle'.tr(),
-                textAlign: TextAlign.center,
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
+                  height: 1.4,
                 ),
               ),
-              const SizedBox(height: AppSpace.xl),
+              const SizedBox(height: AppSpace.lg),
               _Suggestions(onAsk: onAsk),
             ],
           ),
@@ -478,54 +457,25 @@ class _Suggestions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 340 ? 2 : 1;
-        final cards = [
-          for (var i = 0; i < _suggestions.length; i++)
-            _SuggestionCard(
-              label: _suggestions[i].$1.tr(),
-              icon: _suggestions[i].$2,
-              onTap: () => onAsk(_suggestions[i].$1.tr()),
+    return Column(
+      children: [
+        for (var i = 0; i < _suggestions.length; i++)
+          Padding(
+            padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs),
+            child: _SuggestionRow(
+              label: _suggestions[i].tr(),
+              onTap: () => onAsk(_suggestions[i].tr()),
             ).appListItemEntrance(i + 1),
-        ];
-        return Column(
-          children: [
-            for (var row = 0; row < cards.length; row += columns)
-              Padding(
-                padding: EdgeInsets.only(top: row == 0 ? 0 : AppSpace.xs),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var c = row; c < row + columns; c++) ...[
-                        if (c > row) const SizedBox(width: AppSpace.xs),
-                        Expanded(
-                          child: c < cards.length
-                              ? cards[c]
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
+          ),
+      ],
     );
   }
 }
 
-class _SuggestionCard extends StatelessWidget {
-  const _SuggestionCard({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
+class _SuggestionRow extends StatelessWidget {
+  const _SuggestionRow({required this.label, required this.onTap});
 
   final String label;
-  final IconData icon;
   final VoidCallback onTap;
 
   @override
@@ -534,18 +484,28 @@ class _SuggestionCard extends StatelessWidget {
     return AppCard(
       onTap: onTap,
       radius: AppRadius.tile,
-      padding: const EdgeInsets.all(AppSpace.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.md,
+        14,
+        AppSpace.sm,
+        14,
+      ),
+      child: Row(
         children: [
-          Icon(icon, size: 22, color: scheme.primary),
-          const SizedBox(height: AppSpace.sm),
-          Text(
-            label,
-            style: context.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              height: 1.3,
+          Expanded(
+            child: Text(
+              label,
+              style: context.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
             ),
+          ),
+          const SizedBox(width: AppSpace.sm),
+          Icon(
+            Icons.arrow_upward_rounded,
+            size: 18,
+            color: scheme.onSurfaceVariant,
           ),
         ],
       ),

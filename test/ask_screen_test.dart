@@ -101,7 +101,11 @@ void main() {
 
   testWidgets('a suggestion is asked and its answer drawn', (tester) async {
     await pump(tester, hasKey: true);
-    expect(find.text('Ask about your revenue'), findsOneWidget);
+    expect(find.text('Nothing asked yet'), findsOneWidget);
+    expect(
+      find.text('Ask about today, MRR, countries, or when you get paid.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.text('What is my MRR trend?'));
     await tester.pumpAndSettle();

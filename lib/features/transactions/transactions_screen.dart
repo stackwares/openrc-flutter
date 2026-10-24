@@ -11,6 +11,9 @@ import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/api_error_message.dart';
 import 'package:openrc/core/shell_insets.dart';
 import 'package:openrc/core/utils/subscriber_tenure_format.dart';
+import 'package:openrc/app/main_shell.dart';
+import 'package:openrc/features/ask/ask_context.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/features/settings/settings_screen.dart';
 import 'package:openrc/features/revenue/revenue_next_payday_proceeds.dart';
 import 'package:openrc/features/revenue/widgets/revenue_insights_list.dart';
@@ -1030,6 +1033,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               formatAmount: _formatAmountForSemantics,
               onDaySelected: state.isLoading ? null : _goToDay,
             ),
+            onAsk: () => openAskTab(
+              ref,
+              prefill: AskPrefills.selectedDay(selectedKey),
+            ),
           ).appCardEntrance(),
         ),
       ),
@@ -1188,6 +1195,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           selectedDayKey: selectedKey,
           formatAmount: _formatAmountForSemantics,
           onDaySelected: state.isLoading ? null : _goToDay,
+        ),
+        onAsk: () => openAskTab(
+          ref,
+          prefill: AskPrefills.selectedDay(selectedKey),
         ),
       );
       final showBreakdown =
@@ -1501,6 +1512,7 @@ class _DayHeroCard extends StatelessWidget {
     required this.total,
     required this.previousTotal,
     required this.strip,
+    required this.onAsk,
     this.loading = false,
   });
 
@@ -1513,6 +1525,7 @@ class _DayHeroCard extends StatelessWidget {
   /// Null when the previous day isn't loaded yet.
   final double? previousTotal;
   final Widget strip;
+  final VoidCallback onAsk;
 
   /// Cross-fades when the change moves to a new value or direction.
   Widget _changeBadge(BuildContext context, double prev) {
@@ -1593,6 +1606,14 @@ class _DayHeroCard extends StatelessWidget {
             ),
           const SizedBox(height: 16),
           strip,
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: AskContextChip(
+              label: 'agent.askAboutDay'.tr(),
+              onPressed: onAsk,
+            ),
+          ),
         ],
       ),
     );

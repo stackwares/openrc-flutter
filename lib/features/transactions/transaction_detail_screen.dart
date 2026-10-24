@@ -6,7 +6,10 @@ import 'package:openrc/widgets/app_state_message.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/core/animations/app_motion.dart';
+import 'package:openrc/features/ask/ask_context.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/core/constants/app_constants.dart';
 import 'package:openrc/core/theme/store_brand_icon_colors.dart';
 import 'package:openrc/core/utils/plan_display.dart';
@@ -251,6 +254,14 @@ class TransactionDetailScreen extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          AskContextChip(
+            label: 'agent.askAbout'.tr(),
+            onPressed: () => openAskTab(
+              ref,
+              prefill: AskPrefills.transaction(transaction),
+              transactionId: transaction.storeTransactionIdentifier,
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'detail.refresh'.tr(),

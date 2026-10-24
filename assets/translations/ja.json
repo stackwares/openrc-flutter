@@ -673,6 +673,7 @@
       "settings": "設定…",
       "previousDay": "前の日",
       "nextDay": "次の日",
+      "askAboutDay": "選択した日について質問",
       "refresh": "更新",
       "onGitHub": "GitHub の {app}",
       "reportIssue": "問題を報告"
@@ -884,6 +885,7 @@
         "present": "表示を準備…",
         "get_overview": "概要を取得…",
         "get_payout_context": "入金を読み込み…",
+        "get_transaction": "この売上を読み込み…",
         "get_transactions": "取引を読み込み…",
         "list_projects": "プロジェクト一覧…"
       },
@@ -909,6 +911,9 @@
     "retry": "再試行",
     "editKey": "キーを編集",
     "askAbout": "これについて質問",
+    "askAboutDay": "この日について質問",
+    "askAboutRange": "この期間について質問",
+    "askAboutPayout": "この入金について質問",
     "chartSummary": "{metric}、{count} ポイント、最終値 {last}",
     "followUp": {
       "showTable": "表で表示",
@@ -919,7 +924,11 @@
     "context": {
       "day": "{day} を説明",
       "revenue": "今月の売上を説明",
-      "charts": "この期間 {range} を説明"
+      "charts": "この期間 {range} を説明",
+      "metric": "{range} の {metric} を説明",
+      "payout": "次の入金がこの金額になる理由と、入金日はいつ？",
+      "transaction": "この{type}はどうなっていますか？",
+      "sale": "この売上はどうなっていますか？"
     }
   }
 }

@@ -679,6 +679,7 @@
       "settings": "Einstellungen…",
       "previousDay": "Vorheriger Tag",
       "nextDay": "Nächster Tag",
+      "askAboutDay": "Ausgewählten Tag fragen",
       "refresh": "Aktualisieren",
       "onGitHub": "{app} auf GitHub",
       "reportIssue": "Problem melden"
@@ -899,6 +900,7 @@
         "present": "Ansicht wird vorbereitet…",
         "get_overview": "Übersicht wird geladen…",
         "get_payout_context": "Auszahlungen werden geladen…",
+        "get_transaction": "Dieser Verkauf wird geladen…",
         "get_transactions": "Transaktionen werden geladen…",
         "list_projects": "Projekte werden geladen…"
       },
@@ -924,6 +926,9 @@
     "retry": "Erneut versuchen",
     "editKey": "Schlüssel bearbeiten",
     "askAbout": "Danach fragen",
+    "askAboutDay": "Diesen Tag fragen",
+    "askAboutRange": "Diesen Zeitraum fragen",
+    "askAboutPayout": "Diese Auszahlung fragen",
     "chartSummary": "{metric}, {count} Punkte, letzter Wert {last}",
     "followUp": {
       "showTable": "Als Tabelle",
@@ -934,7 +939,11 @@
     "context": {
       "day": "{day} erklären",
       "revenue": "Den Umsatz dieses Monats erklären",
-      "charts": "Diesen Zeitraum {range} erklären"
+      "charts": "Diesen Zeitraum {range} erklären",
+      "metric": "{metric} über {range} erklären",
+      "payout": "Warum ist das der nächste Auszahlungsbetrag, und wann kommt er?",
+      "transaction": "Was ist mit diesem {type}?",
+      "sale": "Was ist mit diesem Verkauf?"
     }
   }
 }

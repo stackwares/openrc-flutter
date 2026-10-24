@@ -42,10 +42,11 @@ class MacMenuBar extends ConsumerWidget {
     PlatformMenuItem item(
       String label,
       LogicalKeyboardKey key,
-      VoidCallback action,
-    ) => PlatformMenuItem(
+      VoidCallback action, {
+      bool shift = false,
+    }) => PlatformMenuItem(
       label: label,
-      shortcut: SingleActivator(key, meta: true),
+      shortcut: SingleActivator(key, meta: true, shift: shift),
       onSelected: whenSignedIn(action),
     );
 
@@ -124,6 +125,12 @@ class MacMenuBar extends ConsumerWidget {
                   () {
                     stepDay(1);
                   },
+                ),
+                item(
+                  'shell.menu.askAboutDay'.tr(),
+                  LogicalKeyboardKey.keyK,
+                  () => openAskAboutSelectedDay(ref),
+                  shift: true,
                 ),
               ],
             ),

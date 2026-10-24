@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/region_display_name.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
 import 'package:openrc/features/ask/widgets/agent_markdown.dart';
 import 'package:openrc/features/charts/overview_metric_detail_screen.dart';
@@ -323,13 +324,17 @@ class _PayoutList extends StatelessWidget {
     );
   }
 
-  /// Older answers saved the enum name (`apple`); newer ones the label.
+  /// Older answers saved the enum name (`apple`) or English label.
   static String _storeLabel(Object? store) {
     final name = '${store ?? ''}';
     for (final s in PayoutStore.values) {
-      if (s.name == name) return s.label;
+      if (s.name == name || s.displayLabel == name) return s.displayLabel;
     }
-    return name;
+    return switch (name) {
+      'App Store' => PayoutStore.apple.displayLabel,
+      'Google Play' => PayoutStore.google.displayLabel,
+      _ => name,
+    };
   }
 
   static DateTime? _day(Object? raw) {
@@ -372,9 +377,13 @@ class _PayoutRow extends StatelessWidget {
             child: Icon(
               upcoming
                   ? Icons.event_available_rounded
-                  : store == PayoutStore.apple.label
+                  : store == PayoutStore.apple.displayLabel ||
+                        store == PayoutStore.apple.name ||
+                        store == 'App Store'
                   ? Icons.apple
-                  : store == PayoutStore.google.label
+                  : store == PayoutStore.google.displayLabel ||
+                        store == PayoutStore.google.name ||
+                        store == 'Google Play'
                   ? Icons.android
                   : Icons.account_balance_outlined,
               size: 18,

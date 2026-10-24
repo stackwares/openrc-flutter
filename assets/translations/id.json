@@ -673,6 +673,7 @@
       "settings": "Pengaturan…",
       "previousDay": "Hari Sebelumnya",
       "nextDay": "Hari Berikutnya",
+      "askAboutDay": "Tanya hari yang dipilih",
       "refresh": "Muat Ulang",
       "onGitHub": "{app} di GitHub",
       "reportIssue": "Laporkan Masalah"
@@ -884,6 +885,7 @@
         "present": "Menyiapkan tampilan…",
         "get_overview": "Mengambil ringkasan…",
         "get_payout_context": "Memuat payout…",
+        "get_transaction": "Memuat penjualan ini…",
         "get_transactions": "Memuat transaksi…",
         "list_projects": "Mendaftar proyek…"
       },
@@ -909,6 +911,9 @@
     "retry": "Coba lagi",
     "editKey": "Edit kunci",
     "askAbout": "Tanya tentang ini",
+    "askAboutDay": "Tanya hari tersebut",
+    "askAboutRange": "Tanya rentang ini",
+    "askAboutPayout": "Tanya payout ini",
     "chartSummary": "{metric}, {count} titik, nilai terakhir {last}",
     "followUp": {
       "showTable": "Tampilkan sebagai tabel",
@@ -919,7 +924,11 @@
     "context": {
       "day": "Jelaskan {day}",
       "revenue": "Jelaskan pendapatan bulan ini",
-      "charts": "Jelaskan rentang {range} ini"
+      "charts": "Jelaskan rentang {range} ini",
+      "metric": "Jelaskan {metric} selama {range}",
+      "payout": "Mengapa jumlah payout berikutnya seperti ini, dan kapan cair?",
+      "transaction": "Ada apa dengan {type} ini?",
+      "sale": "Ada apa dengan penjualan ini?"
     }
   }
 }

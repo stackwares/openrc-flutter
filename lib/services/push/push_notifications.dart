@@ -13,6 +13,7 @@ import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
 import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
+import 'package:openrc/features/ask/ask_launch.dart';
 import 'package:openrc/services/push/push_web_stub.dart'
     if (dart.library.js_interop) 'package:openrc/services/push/push_web.dart';
 import 'package:openrc/services/push/push_webhooks.dart';
@@ -76,14 +77,17 @@ abstract final class PushNotifications {
     }
   }
 
-  /// On the web: the transaction ids of notifications clicked while a tab
-  /// was open (the service worker, `web/push/sw.js`, passes them on).
-  static Stream<String> get webOpens =>
+  /// On the web: notification clicks while a tab was open (the service
+  /// worker, `web/push/sw.js`, passes them on).
+  static Stream<AskLaunch> get webOpens =>
       _started && kIsWeb ? webPushOpens() : const Stream.empty();
 
-  /// On the web: the transaction a notification click opened a new tab for.
-  static String? get webLaunchTransaction =>
-      kIsWeb && _started ? Uri.base.queryParameters['transaction'] : null;
+  /// On the web: `?ask=` / `?transaction=` from a notification or bookmark.
+  static AskLaunch? get webLaunch {
+    if (!kIsWeb) return null;
+    final launch = AskLaunch.fromQuery(Uri.base.queryParameters);
+    return launch.isEmpty ? null : launch;
+  }
 }
 
 /// What the app needs from Cloud Messaging; tests use a fake. Subscribing

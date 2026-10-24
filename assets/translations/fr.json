@@ -679,6 +679,7 @@
       "settings": "Réglages…",
       "previousDay": "Jour précédent",
       "nextDay": "Jour suivant",
+      "askAboutDay": "Demander le jour sélectionné",
       "refresh": "Actualiser",
       "onGitHub": "{app} sur GitHub",
       "reportIssue": "Signaler un problème"
@@ -899,6 +900,7 @@
         "present": "Préparation de l’affichage…",
         "get_overview": "Chargement de l’aperçu…",
         "get_payout_context": "Chargement des paiements…",
+        "get_transaction": "Chargement de cette vente…",
         "get_transactions": "Chargement des transactions…",
         "list_projects": "Liste des projets…"
       },
@@ -924,6 +926,9 @@
     "retry": "Réessayer",
     "editKey": "Modifier la clé",
     "askAbout": "Demander à propos de ceci",
+    "askAboutDay": "Demander ce jour",
+    "askAboutRange": "Demander cette période",
+    "askAboutPayout": "Demander ce paiement",
     "chartSummary": "{metric}, {count} points, dernière valeur {last}",
     "followUp": {
       "showTable": "Afficher en tableau",
@@ -934,7 +939,11 @@
     "context": {
       "day": "Expliquer {day}",
       "revenue": "Expliquer le revenu de ce mois",
-      "charts": "Expliquer cette période {range}"
+      "charts": "Expliquer cette période {range}",
+      "metric": "Expliquer {metric} sur {range}",
+      "payout": "Pourquoi ce montant pour le prochain paiement, et quand arrive-t-il ?",
+      "transaction": "Que se passe-t-il avec ce {type} ?",
+      "sale": "Que se passe-t-il avec cette vente ?"
     }
   }
 }

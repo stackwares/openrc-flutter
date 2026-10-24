@@ -2,12 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:openrc/core/utils/store_display_name.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
 import 'package:openrc/core/utils/subscriber_id_mask.dart';
+import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/features/revenue/payout_history.dart';
 import 'package:openrc/features/revenue/payout_history_provider.dart';
 import 'package:openrc/features/transactions/transactions_screen.dart';
+import 'package:openrc/models/rc_transaction_detail.dart';
+import 'package:openrc/models/rc_transaction_detail_activity.dart';
 import 'package:openrc/models/overview_metric_type.dart';
 import 'package:openrc/models/rc_chart_response.dart';
 import 'package:openrc/models/rc_overview_response.dart';
@@ -25,9 +29,12 @@ const kAgentToolNames = {
   'get_overview',
   'get_chart',
   'get_transactions',
+  'get_transaction',
   'get_payout_context',
   'present',
 };
+
+const kAgentActivityLimit = 12;
 
 final agentToolExecutorProvider = Provider<AgentToolExecutor>(
   (ref) => AgentToolExecutor(ref),
@@ -51,6 +58,8 @@ class AgentToolExecutor {
         return _cap(await _getChart(args));
       case 'get_transactions':
         return _cap(await _getTransactions(args, allowRefetch: true));
+      case 'get_transaction':
+        return _cap(await _getTransaction(args));
       case 'get_payout_context':
         return _cap(await _getPayoutContext());
       case 'present':
@@ -75,6 +84,9 @@ class AgentToolExecutor {
         'start': _fmtDate(home.chartRangeStart),
         'end': _fmtDate(home.chartRangeEnd),
       },
+      if (_ref.read(askFocusTransactionIdProvider) case final focus?
+          when focus.isNotEmpty)
+        'focus_store_transaction_id': focus,
       if (projects != null)
         'projects': [
           for (final p in projects.take(12)) p.name,
@@ -258,7 +270,152 @@ class AgentToolExecutor {
       'purchase_date': tx.purchaseDate,
       'subscriber_id': sub == null ? null : maskSubscriberId(sub),
       'store_transaction_id': tx.storeTransactionIdentifier,
+      'type': tx.type.name,
     };
+  }
+
+  RcTransaction? _findLoadedTransaction(String storeTransactionId) {
+    final state = _ref.read(transactionsProvider);
+    for (final day in [...state.grouped.values, ...state.jumpedDays.values]) {
+      for (final tx in day) {
+        if (tx.storeTransactionIdentifier == storeTransactionId) return tx;
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _getTransaction(Map<String, dynamic> args) async {
+    final id = _string(args['store_transaction_id']) ??
+        _string(args['transaction_id']) ??
+        _ref.read(askFocusTransactionIdProvider);
+    if (id == null || id.isEmpty) {
+      return {'error': 'missing_store_transaction_id'};
+    }
+    var tx = _findLoadedTransaction(id);
+    if (tx == null && !_ref.read(transactionsProvider).isLoading) {
+      await _ref.read(transactionsProvider.notifier).fetchInitial();
+      tx = _findLoadedTransaction(id);
+    }
+    if (tx == null) {
+      return {'error': 'not_found', 'store_transaction_id': id};
+    }
+
+    final money = AgentDisplayMoney.fromRef(_ref);
+    final row = _transactionRow(tx, money);
+    final projectId = tx.app?.id;
+    final subscriberId = tx.subscriberId;
+    if (projectId == null ||
+        projectId.isEmpty ||
+        subscriberId == null ||
+        subscriberId.isEmpty) {
+      return {
+        ...money.meta(),
+        'transaction': row,
+        'transactions': [row],
+      };
+    }
+
+    try {
+      final api = _ref.read(rcApiServiceProvider);
+      final detail = await api.transactionDetail(
+        projectId: projectId,
+        subscriberId: subscriberId,
+      );
+      final activity = await api.transactionDetailActivity(
+        projectId: projectId,
+        subscriberId: subscriberId,
+      );
+      return {
+        ...money.meta(),
+        'transaction': row,
+        'transactions': [row],
+        'subscriber': _subscriberMap(detail, money, subscriberId),
+        'activity': _activityRows(activity.events, money),
+      };
+    } catch (_) {
+      return {
+        ...money.meta(),
+        'transaction': row,
+        'transactions': [row],
+        'detail_error': 'unavailable',
+      };
+    }
+  }
+
+  Map<String, dynamic> _subscriberMap(
+    RcTransactionDetailResponse detail,
+    AgentDisplayMoney money,
+    String subscriberId,
+  ) {
+    final spent = detail.dollarsSpent;
+    return {
+      'subscriber_id': maskSubscriberId(subscriberId),
+      'created_at': detail.createdAt,
+      'last_seen': detail.lastSeen,
+      'last_seen_country': detail.lastSeenCountry,
+      'last_seen_platform': detail.lastSeenPlatform,
+      'dollars_spent_usd': ?spent,
+      if (spent != null) 'dollars_spent': money.convert(spent),
+      'subscriptions': [
+        for (final status in (detail.subscriptionStatuses ?? const []).take(
+          kAgentActivityLimit,
+        ))
+          {
+            'product': status.productIdentifier,
+            'purchase_date': status.purchaseDate,
+            'expires_date': status.expiresDate,
+            'is_auto_renewing': status.isAutoRenewing,
+            'is_trial': status.isTrial,
+            'cancelled_at': status.cancellationDate,
+            'unsubscribed_at': status.unsubscribeDetectedAt,
+            'refunded_at': status.refundedAt,
+          },
+      ],
+      'history': [
+        for (final item in (detail.history ?? const []).take(kAgentActivityLimit))
+          {
+            'at': item.at,
+            'event': item.event,
+            'product': item.product,
+            if (item.alias != null) 'alias': maskSubscriberId(item.alias!),
+            'price_usd': ?item.priceInUsd,
+            if (item.priceInUsd != null)
+              'price': money.convert(item.priceInUsd!),
+          },
+      ],
+    };
+  }
+
+  List<Map<String, dynamic>> _activityRows(
+    List<RcTransactionDetailEvent>? events,
+    AgentDisplayMoney money,
+  ) {
+    return [
+      for (final event in (events ?? const []).take(kAgentActivityLimit))
+        {
+          'type': event.type,
+          'product': event.productId,
+          'new_product': event.newProductId,
+          'period': event.periodType,
+          'cancel_reason': event.cancelReason,
+          'is_trial_conversion': event.isTrialConversion,
+          'price_usd': ?event.price,
+          if (event.price != null) 'price': money.convert(event.price!),
+          if (event.purchasedAtMs != null)
+            'purchased_at': DateTime.fromMillisecondsSinceEpoch(
+              event.purchasedAtMs!,
+              isUtc: true,
+            ).toIso8601String(),
+          if (event.transferredFrom != null)
+            'transferred_from': [
+              for (final id in event.transferredFrom!) maskSubscriberId(id),
+            ],
+          if (event.transferredTo != null)
+            'transferred_to': [
+              for (final id in event.transferredTo!) maskSubscriberId(id),
+            ],
+        },
+    ];
   }
 
   Future<Map<String, dynamic>> _getPayoutContext() async {
@@ -298,7 +455,7 @@ class AgentToolExecutor {
               final usd = amounts[p.id];
               return {
                 'id': p.id,
-                'store': p.store.label,
+                'store': p.store.displayLabel,
                 'payment_date': _fmtDate(p.paymentDate),
                 'earnings_start': _fmtDate(p.earningsStart),
                 'earnings_end': _fmtDate(p.earningsEnd),
@@ -318,7 +475,7 @@ class AgentToolExecutor {
     DateTime earningsEnd,
   ) =>
       {
-        'store': store.label,
+        'store': store.displayLabel,
         'payment_date': _fmtDate(paymentDate),
         'earnings_start': _fmtDate(earningsStart),
         'earnings_end': _fmtDate(earningsEnd),
@@ -388,6 +545,25 @@ List<Map<String, dynamic>> agentToolDefinitions() => [
               },
               'start_date': {'type': 'string', 'description': 'yyyy-MM-dd'},
               'end_date': {'type': 'string', 'description': 'yyyy-MM-dd'},
+            },
+          },
+        },
+      },
+      {
+        'type': 'function',
+        'function': {
+          'name': 'get_transaction',
+          'description':
+              'One sale already in the app, plus masked subscriber '
+              'history. Use store_transaction_id from the question or '
+              'focus_store_transaction_id in the snapshot.',
+          'parameters': {
+            'type': 'object',
+            'properties': {
+              'store_transaction_id': {
+                'type': 'string',
+                'description': 'Store transaction identifier',
+              },
             },
           },
         },

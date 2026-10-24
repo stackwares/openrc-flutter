@@ -23,6 +23,7 @@ class AgentRepairCompositor {
       'get_overview': AgentPresentationType.metricCards,
       'get_chart': AgentPresentationType.lineChart,
       'get_transactions': AgentPresentationType.transactionList,
+      'get_transaction': AgentPresentationType.transactionList,
       'get_payout_context': AgentPresentationType.barChart,
     };
     for (final MapEntry(key: tool, value: type) in views.entries) {

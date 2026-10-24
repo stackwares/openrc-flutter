@@ -71,6 +71,11 @@ provider and model. Native apps call the provider directly. Web calls
 The RevenueCat session never goes to the LLM; subscriber ids are masked the
 same way as the table.
 
+Other tabs jump into this same thread with a prefilled question (the selected
+day, a chart range, the next payout, or one sale). Web also honors `?ask=`
+and a notification “Ask about this” action. `get_transaction` loads that
+sale and its masked subscriber history.
+
 ## Push notifications
 
 Off unless the build has Firebase settings (`lib/services/push/push_config.dart`)

@@ -1,7 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrc/app/main_shell.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
+import 'package:openrc/features/ask/ask_context.dart';
+import 'package:openrc/features/ask/widgets/ask_context_chip.dart';
 import 'package:openrc/features/charts/home_notifier.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/features/charts/widgets/overview_detail_line_chart.dart';
@@ -81,7 +84,21 @@ class _OverviewMetricDetailScreenState
       maxWidth: 992,
     );
     return Scaffold(
-      appBar: AppBar(title: Text(widget.metric.label)),
+      appBar: AppBar(
+        title: Text(widget.metric.label),
+        actions: [
+          AskContextChip(
+            label: 'agent.askAbout'.tr(),
+            onPressed: () => openAskTab(
+              ref,
+              prefill: AskPrefills.chartRange(
+                metric: widget.metric.label,
+                range: rangeLabel,
+              ),
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
           16 + inset,
