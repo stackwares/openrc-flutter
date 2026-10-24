@@ -501,7 +501,21 @@
     "unknown": "未知",
     "weekly": "每周",
     "monthly": "每月",
-    "annual": "每年"
+    "annual": "每年",
+    "oneTime": "一次性",
+    "introOffer": "推介优惠",
+    "trialDays": {
+      "one": "{} 天免费试用",
+      "other": "{} 天免费试用"
+    },
+    "months": {
+      "one": "{} 个月",
+      "other": "{} 个月"
+    },
+    "days": {
+      "one": "{} 天",
+      "other": "{} 天"
+    }
   },
   "revenue": {
     "title": "收入",
@@ -577,9 +591,19 @@
       "splitUnavailableTitle": "无法按商店显示到账",
       "splitUnavailableMessage": "RevenueCat 未返回按商店划分的收入，因此无法计算到账金额。",
       "estimateNote": "根据 RevenueCat 的到账金额估算，已扣除商店手续费和预估税费。实际付款可能因汇率、预扣税和最低付款额而有所不同。",
-      "savedNote": "每笔到账在付款后保存，之后不再变动。RevenueCat 将退款计入购买所在月份，而商店会从之后的付款中扣除，因此合计可能略有差异。"
+      "savedNote": "每笔到账在付款后保存，之后不再变动。RevenueCat 将退款计入购买所在月份，而商店会从之后的付款中扣除，因此合计可能略有差异。",
+      "couldntLoadDetail": "无法加载这笔到账",
+      "detailNote": "合计来自本次收益时间范围内已加载的交易；若开启了相应设置，则已扣除商店手续费。可能与已保存的到账金额有所不同。"
     },
-    "monthTransactions": "本月交易"
+    "monthTransactions": "本月交易",
+    "trialsBreakdown": "试用明细",
+    "trialCount": {
+      "one": "{} 次试用",
+      "other": "{} 次试用"
+    },
+    "trialStatus": "状态",
+    "autoRenewOn": "已开启自动续订",
+    "topPlans": "热门方案"
   },
   "settings": {
     "title": "设置",
@@ -658,7 +682,8 @@
       "styleOpenAi": "OpenAI 风格",
       "styleAnthropic": "Anthropic 风格",
       "clearKey": "移除密钥"
-    }
+    },
+    "help": "帮助"
   },
   "shell": {
     "tabs": {
@@ -901,7 +926,12 @@
       "save": "保存并开始",
       "title": "连接 LLM",
       "model": "模型",
-      "customWeb": "自定义主机可在原生应用中使用。网页中继仅转发 OpenRouter、OpenAI、Anthropic 和 DeepSeek。"
+      "customWeb": "自定义主机可在原生应用中使用。网页中继仅转发 OpenRouter、OpenAI、Anthropic 和 DeepSeek。",
+      "connectTitle": "连接模型",
+      "connectMessage": "添加提供商 API 密钥，即可询问收入、图表和到账情况。",
+      "addKey": "添加 API 密钥",
+      "notConnected": "未连接",
+      "composerHint": "添加密钥即可提问"
     },
     "clear": "清空对话",
     "clearMessage": "这将删除此设备上保存的所有问题和回答。",
@@ -931,6 +961,10 @@
       "payout": "为什么下一次付款是这个金额，何时到账？",
       "transaction": "这笔{type}是怎么回事？",
       "sale": "这笔销售是怎么回事？"
+    },
+    "contextLabels": {
+      "sale": "销售",
+      "payout": "下次到账"
     }
   },
   "onboarding": {
@@ -1031,6 +1065,151 @@
       "title": "提问暂时关闭",
       "body": "提问会把你的问题和图表结果发送到你选择的模型服务商。密钥留在这台设备上。打开后即可开始对话。交易、收入和图表不受影响。",
       "allow": "允许提问"
+    }
+  },
+  "notifications": {
+    "title": "通知",
+    "rowTitle": "推送通知",
+    "statusOff": "关闭",
+    "statusOn": "已在此设备开启",
+    "statusBlocked": "已在设备设置中屏蔽",
+    "statusUnsupported": "此浏览器不支持",
+    "statusNew": {
+      "one": "已开启 · {} 个新项目待设置",
+      "other": "已开启 · {} 个新项目待设置"
+    },
+    "preview": {
+      "now": "现在",
+      "title": "🔵 新订阅 · $9.99",
+      "body": "pro_monthly · 🇺🇸 美国 · App Store",
+      "semantics": "示例通知：新订阅，9.99 美元，来自美国的 App Store"
+    },
+    "headline": "销售一发生就知道",
+    "subhead": "每一次购买、续订和退款，都会通过你的 RevenueCat 项目收到通知。",
+    "benefitInstantTitle": "实时送达",
+    "benefitInstantBody": "销售、试用、续订和退款在 RevenueCat 收到后几秒内送达。",
+    "benefitSetupTitle": "为你自动设置",
+    "benefitSetupBody": "OpenRC 会为你选中的项目添加 webhook。无需复制粘贴。",
+    "benefitPrivateTitle": "默认私密",
+    "benefitPrivateBody": "事件经由 OpenRC 的通知服务中转，不会被存储或记录日志。",
+    "blocked": "此设备设置中已关闭 OpenRC 的通知。请在设置中开启，然后返回。",
+    "openSettings": "打开设置",
+    "blockedWeb": "此网站的通知已被阻止。请在浏览器的网站设置中允许通知，然后重试。",
+    "unsupported": "此浏览器无法接收通知。在 iPhone 或 iPad 上，请从 Safari 的分享菜单将 OpenRC 添加到主屏幕，然后从那里打开。",
+    "turnOn": "开启通知",
+    "turnOnFailed": "无法开启通知。请检查网络连接后重试。",
+    "chooseTitle": "选择哪些项目？",
+    "chooseBody": "OpenRC 会为每个所选项目添加一个用于此设备的 webhook。之后可随时更改。",
+    "projects": "项目",
+    "selectedCount": "已选择 {selected} / {total}",
+    "selectAll": "全选",
+    "selectNone": "全不选",
+    "turnOnFor": {
+      "one": "为 {} 个项目开启",
+      "other": "为 {} 个项目开启"
+    },
+    "someFailed": {
+      "one": "{} 个项目未能设置。请重试。",
+      "other": "{} 个项目未能设置。请重试。"
+    },
+    "projectOn": "正在通知此设备",
+    "projectOff": "关闭",
+    "projectWorking": "正在更新…",
+    "projectFailed": "无法连接 RevenueCat",
+    "new": "新",
+    "noProjects": "此 RevenueCat 账户没有项目。",
+    "loadFailed": "无法加载你的项目。请检查网络连接后重试。",
+    "doneTitle": "全部设置完成",
+    "doneBody": {
+      "one": "现在，{} 个项目的每笔销售都会通知此设备。",
+      "other": "现在，{} 个项目的每笔销售都会通知此设备。"
+    },
+    "done": "完成",
+    "onTitle": "通知已开启",
+    "onBody": "正在为 {total} 个项目中的 {connected} 个通知此设备",
+    "checking": "正在检查项目…",
+    "options": "选项",
+    "sandbox": "沙盒购买",
+    "sandboxHint": "测试购买也会通知",
+    "sandboxFailed": "无法更新所有项目。请重试。",
+    "sendTest": "发送测试通知",
+    "sendAgain": "重新发送",
+    "sendTestHint": "检查从 RevenueCat 到此设备的完整链路",
+    "testSending": "正在发送测试通知…",
+    "testSent": "测试已发送，应该马上就到。",
+    "testFailed": "RevenueCat 无法连接 OpenRC 的通知服务（{code}）。",
+    "testUnreachable": "无法连接 RevenueCat。请检查网络连接后重试。",
+    "notifyAbout": "通知内容",
+    "notifyAboutHint": "默认应用于所有项目，也可为单个项目单独设置。点按项目即可单独设置。",
+    "presetAll": "全部事件",
+    "presetSales": "仅销售",
+    "presetNew": "新客户",
+    "groupSales": "销售",
+    "groupChurn": "流失与问题",
+    "groupOther": "其他",
+    "saving": "正在保存…",
+    "saved": "已保存到你的项目",
+    "saveFailed": "无法更新所有项目。请重试。",
+    "projectCustom": {
+      "one": "自定义 · {} 类事件",
+      "other": "自定义 · {} 类事件"
+    },
+    "kind": {
+      "new": "新订阅",
+      "trial": "试用开始",
+      "conversion": "试用转化",
+      "renewal": "续订",
+      "purchase": "一次性购买",
+      "resubscribe": "重新订阅",
+      "cancel": "取消",
+      "refund": "退款",
+      "billing": "账单问题",
+      "expire": "到期",
+      "change": "方案变更"
+    },
+    "kindHint": {
+      "new": "从第一天起付费",
+      "trial": "有人开始免费试用",
+      "conversion": "试用转为付费",
+      "renewal": "订阅续订",
+      "purchase": "买断、消耗型商品等",
+      "resubscribe": "重新开启自动续订",
+      "cancel": "关闭自动续订，包含试用",
+      "refund": "已退款，或退款被撤销",
+      "billing": "续订付款失败",
+      "expire": "订阅结束",
+      "change": "升级、降级、暂停和延期"
+    },
+    "projectSheet": {
+      "notify": "通知此设备",
+      "what": "此项目的通知内容",
+      "same": "与所有项目相同",
+      "custom": "自定义",
+      "sameHint": {
+        "one": "使用你对所有项目的选择：{} 类事件。",
+        "other": "使用你对所有项目的选择：{} 类事件。"
+      },
+      "customHint": "仅这些事件会为此项目发送通知。",
+      "save": "保存",
+      "saveFailed": "无法更新此项目。请重试。"
+    },
+    "manual": "手动设置",
+    "manualHint": "自行复制 webhook 地址和请求头",
+    "turnOff": "关闭通知",
+    "turnOffTitle": "关闭通知？",
+    "turnOffBody": "OpenRC 会从你的 RevenueCat 项目中移除此设备的 webhook。之后可随时重新开启。",
+    "manualSheet": {
+      "title": "手动设置",
+      "body": "如需自行添加 webhook，请在每个想要接收通知的项目中执行以下操作。RevenueCat 会将每个事件发送到 OpenRC 的通知服务，再由其转发到此设备，全程不存储。",
+      "step1": "在 RevenueCat 中打开项目的“集成”，选择 Webhooks，然后添加一个新的 webhook。",
+      "step2": "将下面的 URL 和授权请求头粘贴进去。",
+      "step3": "选择要发送的环境和事件，保存，然后使用“发送测试事件”。这里会收到一条测试通知。",
+      "webhookUrl": "Webhook 地址",
+      "authorizationHeader": "授权请求头",
+      "copy": "复制{label}",
+      "copied": "已复制",
+      "secretHint": "持有此请求头的任何人都能向你的设备发送通知。请仅粘贴到 RevenueCat 中。",
+      "openRevenueCat": "打开 RevenueCat"
     }
   }
 }

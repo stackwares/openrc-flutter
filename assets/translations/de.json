@@ -502,7 +502,21 @@
     "unknown": "Unbekannt",
     "weekly": "Wöchentlich",
     "monthly": "Monatlich",
-    "annual": "Jährlich"
+    "annual": "Jährlich",
+    "oneTime": "Einmalig",
+    "introOffer": "Einführungsangebot",
+    "trialDays": {
+      "one": "{}-tägige Testphase",
+      "other": "{}-tägige Testphase"
+    },
+    "months": {
+      "one": "{} Monat",
+      "other": "{} Monate"
+    },
+    "days": {
+      "one": "{} Tag",
+      "other": "{} Tage"
+    }
   },
   "revenue": {
     "title": "Umsatz",
@@ -582,9 +596,19 @@
       "splitUnavailableTitle": "Auszahlungen nach Store nicht verfügbar",
       "splitUnavailableMessage": "RevenueCat hat den Umsatz nicht nach Store geliefert, daher lassen sich die Auszahlungen nicht berechnen.",
       "estimateNote": "Geschätzt aus den Erlösen in RevenueCat, nach Store-Gebühren und geschätzten Steuern. Tatsächliche Zahlungen können durch Wechselkurse, Quellensteuer und Mindestauszahlungsbeträge abweichen.",
-      "savedNote": "Jede Auszahlung wird gespeichert, sobald sie erfolgt ist, und bleibt danach unverändert. RevenueCat rechnet eine Rückerstattung dem Monat des Kaufs zu, die Stores ziehen sie dagegen von einer späteren Zahlung ab. Daher können die Summen leicht abweichen."
+      "savedNote": "Jede Auszahlung wird gespeichert, sobald sie erfolgt ist, und bleibt danach unverändert. RevenueCat rechnet eine Rückerstattung dem Monat des Kaufs zu, die Stores ziehen sie dagegen von einer späteren Zahlung ab. Daher können die Summen leicht abweichen.",
+      "couldntLoadDetail": "Diese Auszahlung konnte nicht geladen werden",
+      "detailNote": "Die Summen stammen aus den geladenen Transaktionen in diesem Einnahmenzeitraum, nach Store-Gebühren, wenn diese Einstellung aktiv ist. Sie können von der gespeicherten Auszahlungssumme abweichen."
     },
-    "monthTransactions": "Transaktionen in diesem Monat"
+    "monthTransactions": "Transaktionen in diesem Monat",
+    "trialsBreakdown": "Aufschlüsselung der Testphasen",
+    "trialCount": {
+      "one": "{} Testphase",
+      "other": "{} Testphasen"
+    },
+    "trialStatus": "Status",
+    "autoRenewOn": "Automatische Verlängerung an",
+    "topPlans": "Top-Tarife"
   },
   "settings": {
     "title": "Einstellungen",
@@ -664,7 +688,8 @@
       "styleOpenAi": "OpenAI-Stil",
       "styleAnthropic": "Anthropic-Stil",
       "clearKey": "Schlüssel entfernen"
-    }
+    },
+    "help": "Hilfe"
   },
   "shell": {
     "tabs": {
@@ -916,7 +941,12 @@
       "save": "Speichern und starten",
       "title": "LLM verbinden",
       "model": "Modell",
-      "customWeb": "Eigene Hosts funktionieren in den nativen Apps. Der Web-Relay leitet nur OpenRouter, OpenAI, Anthropic und DeepSeek weiter."
+      "customWeb": "Eigene Hosts funktionieren in den nativen Apps. Der Web-Relay leitet nur OpenRouter, OpenAI, Anthropic und DeepSeek weiter.",
+      "connectTitle": "Modell verbinden",
+      "connectMessage": "Füge einen API-Schlüssel eines Anbieters hinzu, um nach Umsatz, Diagrammen und Auszahlungen zu fragen.",
+      "addKey": "API-Schlüssel hinzufügen",
+      "notConnected": "Nicht verbunden",
+      "composerHint": "Zum Fragen Schlüssel hinzufügen"
     },
     "clear": "Verlauf löschen",
     "clearMessage": "Dadurch werden alle auf diesem Gerät gespeicherten Fragen und Antworten entfernt.",
@@ -946,6 +976,10 @@
       "payout": "Warum ist das der nächste Auszahlungsbetrag, und wann kommt er?",
       "transaction": "Was ist mit diesem {type}?",
       "sale": "Was ist mit diesem Verkauf?"
+    },
+    "contextLabels": {
+      "sale": "Verkauf",
+      "payout": "Nächste Auszahlung"
     }
   },
   "onboarding": {
@@ -1046,6 +1080,151 @@
       "title": "Fragen ist vorerst aus",
       "body": "Fragen sendet deine Frage und die Diagrammergebnisse an den Modellanbieter, den du wählst. Der Schlüssel bleibt auf diesem Gerät. Schalte das ein, um ein Gespräch zu starten. Transaktionen, Umsatz und Diagramme bleiben unverändert.",
       "allow": "Fragen erlauben"
+    }
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "rowTitle": "Push-Benachrichtigungen",
+    "statusOff": "Aus",
+    "statusOn": "Auf diesem Gerät an",
+    "statusBlocked": "In den Geräteeinstellungen blockiert",
+    "statusUnsupported": "In diesem Browser nicht verfügbar",
+    "statusNew": {
+      "one": "An · {} neues Projekt zum Einrichten",
+      "other": "An · {} neue Projekte zum Einrichten"
+    },
+    "preview": {
+      "now": "jetzt",
+      "title": "🔵 Neues Abo · $9.99",
+      "body": "pro_monthly · 🇺🇸 Vereinigte Staaten · App Store",
+      "semantics": "Beispielbenachrichtigung: Neues Abo, 9,99 US-Dollar, aus dem App Store in den Vereinigten Staaten"
+    },
+    "headline": "Erfahre sofort, wenn du einen Verkauf machst",
+    "subhead": "Erhalte eine Benachrichtigung für jeden Kauf, jede Verlängerung und jede Rückerstattung in deinen RevenueCat-Projekten.",
+    "benefitInstantTitle": "Sofort im Moment",
+    "benefitInstantBody": "Verkäufe, Testphasen, Verlängerungen und Rückerstattungen kommen Sekunden, nachdem RevenueCat sie erfasst hat.",
+    "benefitSetupTitle": "Für dich eingerichtet",
+    "benefitSetupBody": "OpenRC fügt den Projekten, die du auswählst, einen Webhook hinzu. Du musst nichts kopieren oder einfügen.",
+    "benefitPrivateTitle": "Von Grund auf privat",
+    "benefitPrivateBody": "Ereignisse laufen durch OpenRCs Notifier, ohne gespeichert oder protokolliert zu werden.",
+    "blocked": "Benachrichtigungen sind für OpenRC in deinen Geräteeinstellungen ausgeschaltet. Schalte sie dort an und komm dann zurück.",
+    "openSettings": "Einstellungen öffnen",
+    "blockedWeb": "Benachrichtigungen sind für diese Website blockiert. Erlaube sie in den Website-Einstellungen deines Browsers und versuche es erneut.",
+    "unsupported": "Dieser Browser kann keine Benachrichtigungen empfangen. Füge OpenRC auf iPhone oder iPad über das Teilen-Menü in Safari zum Home-Bildschirm hinzu und öffne es von dort.",
+    "turnOn": "Benachrichtigungen einschalten",
+    "turnOnFailed": "Benachrichtigungen konnten nicht eingeschaltet werden. Prüfe deine Verbindung und versuche es erneut.",
+    "chooseTitle": "Welche Projekte?",
+    "chooseBody": "OpenRC fügt jedem gewählten Projekt einen Webhook für dieses Gerät hinzu. Du kannst das jederzeit ändern.",
+    "projects": "Projekte",
+    "selectedCount": "{selected} von {total} ausgewählt",
+    "selectAll": "Alle auswählen",
+    "selectNone": "Keine auswählen",
+    "turnOnFor": {
+      "one": "Für {} Projekt einschalten",
+      "other": "Für {} Projekte einschalten"
+    },
+    "someFailed": {
+      "one": "{} Projekt konnte nicht eingerichtet werden. Versuche es erneut.",
+      "other": "{} Projekte konnten nicht eingerichtet werden. Versuche es erneut."
+    },
+    "projectOn": "Benachrichtigt dieses Gerät",
+    "projectOff": "Aus",
+    "projectWorking": "Wird aktualisiert…",
+    "projectFailed": "RevenueCat nicht erreichbar",
+    "new": "Neu",
+    "noProjects": "Dieses RevenueCat-Konto hat keine Projekte.",
+    "loadFailed": "Deine Projekte konnten nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+    "doneTitle": "Alles bereit",
+    "doneBody": {
+      "one": "Dieses Gerät erhält jetzt eine Benachrichtigung für jeden Verkauf in {} Projekt.",
+      "other": "Dieses Gerät erhält jetzt eine Benachrichtigung für jeden Verkauf in {} Projekten."
+    },
+    "done": "Fertig",
+    "onTitle": "Benachrichtigungen sind an",
+    "onBody": "Benachrichtigt dieses Gerät für {connected} von {total} Projekten",
+    "checking": "Projekte werden geprüft…",
+    "options": "Optionen",
+    "sandbox": "Sandbox-Käufe",
+    "sandboxHint": "Auch bei Testkäufen benachrichtigen",
+    "sandboxFailed": "Nicht alle Projekte konnten aktualisiert werden. Versuche es erneut.",
+    "sendTest": "Testbenachrichtigung senden",
+    "sendAgain": "Erneut senden",
+    "sendTestHint": "Prüft den gesamten Weg von RevenueCat zu diesem Gerät",
+    "testSending": "Testbenachrichtigung wird gesendet…",
+    "testSent": "Test gesendet. Sie sollte gleich ankommen.",
+    "testFailed": "RevenueCat konnte OpenRCs Notifier nicht erreichen ({code}).",
+    "testUnreachable": "RevenueCat war nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.",
+    "notifyAbout": "Benachrichtigen bei",
+    "notifyAboutHint": "Für jedes Projekt, sofern du für eines nichts anderes wählst. Tippe auf ein Projekt, um es einzeln einzustellen.",
+    "presetAll": "Alles",
+    "presetSales": "Nur Verkäufe",
+    "presetNew": "Neue Kunden",
+    "groupSales": "Verkäufe",
+    "groupChurn": "Abwanderung und Probleme",
+    "groupOther": "Sonstiges",
+    "saving": "Wird gespeichert…",
+    "saved": "Für deine Projekte gespeichert",
+    "saveFailed": "Nicht alle Projekte konnten aktualisiert werden. Versuche es erneut.",
+    "projectCustom": {
+      "one": "Eigene Auswahl · {} Art",
+      "other": "Eigene Auswahl · {} Arten"
+    },
+    "kind": {
+      "new": "Neue Abos",
+      "trial": "Gestartete Testphasen",
+      "conversion": "Testphasen-Umwandlungen",
+      "renewal": "Verlängerungen",
+      "purchase": "Einmalkäufe",
+      "resubscribe": "Erneute Abos",
+      "cancel": "Kündigungen",
+      "refund": "Rückerstattungen",
+      "billing": "Abrechnungsprobleme",
+      "expire": "Abläufe",
+      "change": "Tarifwechsel"
+    },
+    "kindHint": {
+      "new": "Ab dem ersten Tag bezahlt",
+      "trial": "Jemand startet eine kostenlose Testphase",
+      "conversion": "Eine Testphase wird bezahlt",
+      "renewal": "Ein Abo verlängert sich",
+      "purchase": "Dauerhafte Freischaltungen, Verbrauchsgüter und Ähnliches",
+      "resubscribe": "Automatische Verlängerung wieder an",
+      "cancel": "Automatische Verlängerung aus, inklusive Testphasen",
+      "refund": "Erstattet oder eine Rückerstattung rückgängig gemacht",
+      "billing": "Eine Verlängerungszahlung ist fehlgeschlagen",
+      "expire": "Ein Abo ist beendet",
+      "change": "Höherstufungen, Herabstufungen, Pausen und Verlängerungen"
+    },
+    "projectSheet": {
+      "notify": "Dieses Gerät benachrichtigen",
+      "what": "Worüber dieses Projekt benachrichtigt",
+      "same": "Wie alle",
+      "custom": "Benutzerdefiniert",
+      "sameHint": {
+        "one": "Verwendet deine Auswahl für alle Projekte: {} Art.",
+        "other": "Verwendet deine Auswahl für alle Projekte: {} Arten."
+      },
+      "customHint": "Nur diese benachrichtigen für dieses Projekt.",
+      "save": "Speichern",
+      "saveFailed": "Dieses Projekt konnte nicht aktualisiert werden. Versuche es erneut."
+    },
+    "manual": "Manuell einrichten",
+    "manualHint": "Webhook-URL und Header selbst kopieren",
+    "turnOff": "Benachrichtigungen ausschalten",
+    "turnOffTitle": "Benachrichtigungen ausschalten?",
+    "turnOffBody": "OpenRC entfernt die Webhooks dieses Geräts aus deinen RevenueCat-Projekten. Du kannst sie jederzeit wieder einschalten.",
+    "manualSheet": {
+      "title": "Manuell einrichten",
+      "body": "Um den Webhook selbst hinzuzufügen, tu das in jedem Projekt, von dem du Benachrichtigungen möchtest. RevenueCat sendet jedes Ereignis an den OpenRC-Notifier, der es an dieses Gerät weiterleitet, ohne es zu speichern.",
+      "step1": "Öffne in RevenueCat die Integrationen deines Projekts, wähle Webhooks und füge einen neuen Webhook hinzu.",
+      "step2": "Füge diese URL und diesen Autorisierungs-Header dort ein.",
+      "step3": "Wähle Umgebung und zu sendende Ereignisse, speichere und nutze dann Testereignis senden. Eine Testbenachrichtigung kommt hier an.",
+      "webhookUrl": "Webhook-URL",
+      "authorizationHeader": "Autorisierungs-Header",
+      "copy": "Kopiere {label}",
+      "copied": "Kopiert",
+      "secretHint": "Wer diesen Header hat, kann Benachrichtigungen an deine Geräte senden. Füge ihn nur in RevenueCat ein.",
+      "openRevenueCat": "RevenueCat öffnen"
     }
   }
 }

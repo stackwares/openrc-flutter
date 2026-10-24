@@ -501,7 +501,21 @@
     "unknown": "不明",
     "weekly": "週額",
     "monthly": "月額",
-    "annual": "年額"
+    "annual": "年額",
+    "oneTime": "買い切り",
+    "introOffer": "イントロオファー",
+    "trialDays": {
+      "one": "{} 日間のトライアル",
+      "other": "{} 日間のトライアル"
+    },
+    "months": {
+      "one": "{} か月",
+      "other": "{} か月"
+    },
+    "days": {
+      "one": "{} 日",
+      "other": "{} 日"
+    }
   },
   "revenue": {
     "title": "売上",
@@ -577,9 +591,19 @@
       "splitUnavailableTitle": "ストア別の入金を表示できません",
       "splitUnavailableMessage": "RevenueCat からストア別の売上が返されなかったため、入金額を算出できません。",
       "estimateNote": "RevenueCat の受取額から、ストア手数料と推定税額を差し引いた推定値です。実際の入金額は、為替レート、源泉徴収、最低支払額によって異なる場合があります。",
-      "savedNote": "各入金は支払い後に保存され、その後は変わりません。RevenueCat は返金を購入月に計上しますが、ストアは後の支払いから差し引くため、合計がわずかに異なることがあります。"
+      "savedNote": "各入金は支払い後に保存され、その後は変わりません。RevenueCat は返金を購入月に計上しますが、ストアは後の支払いから差し引くため、合計がわずかに異なることがあります。",
+      "couldntLoadDetail": "この入金を読み込めませんでした",
+      "detailNote": "合計は、この収益期間に読み込まれた取引に基づき、設定がオンの場合はストア手数料を差し引いた後の金額です。保存済みの入金額と異なる場合があります。"
     },
-    "monthTransactions": "今月の取引"
+    "monthTransactions": "今月の取引",
+    "trialsBreakdown": "トライアルの内訳",
+    "trialCount": {
+      "one": "{} 件のトライアル",
+      "other": "{} 件のトライアル"
+    },
+    "trialStatus": "ステータス",
+    "autoRenewOn": "自動更新オン",
+    "topPlans": "上位のプラン"
   },
   "settings": {
     "title": "設定",
@@ -658,7 +682,8 @@
       "styleOpenAi": "OpenAI形式",
       "styleAnthropic": "Anthropic形式",
       "clearKey": "キーを削除"
-    }
+    },
+    "help": "ヘルプ"
   },
   "shell": {
     "tabs": {
@@ -901,7 +926,12 @@
       "save": "保存して開始",
       "title": "LLMを接続",
       "model": "モデル",
-      "customWeb": "カスタムホストはネイティブアプリで使えます。Webリレーは OpenRouter、OpenAI、Anthropic、DeepSeek のみ転送します。"
+      "customWeb": "カスタムホストはネイティブアプリで使えます。Webリレーは OpenRouter、OpenAI、Anthropic、DeepSeek のみ転送します。",
+      "connectTitle": "モデルを接続",
+      "connectMessage": "売上、グラフ、入金について質問するには、プロバイダーの API キーを追加してください。",
+      "addKey": "API キーを追加",
+      "notConnected": "未接続",
+      "composerHint": "キーを追加して質問"
     },
     "clear": "スレッドを消去",
     "clearMessage": "このデバイスに保存されたすべての質問と回答が削除されます。",
@@ -931,6 +961,10 @@
       "payout": "次の入金がこの金額になる理由と、入金日はいつ？",
       "transaction": "この{type}はどうなっていますか？",
       "sale": "この売上はどうなっていますか？"
+    },
+    "contextLabels": {
+      "sale": "売上",
+      "payout": "次の入金"
     }
   },
   "onboarding": {
@@ -1031,6 +1065,151 @@
       "title": "質問はいまオフです",
       "body": "質問は、質問文とグラフの結果を選んだモデル提供元に送ります。キーはこの端末に残ります。会話を始めるにはこれをオンにしてください。取引、売上、グラフはそのままです。",
       "allow": "質問を許可"
+    }
+  },
+  "notifications": {
+    "title": "通知",
+    "rowTitle": "プッシュ通知",
+    "statusOff": "オフ",
+    "statusOn": "このデバイスでオン",
+    "statusBlocked": "デバイスの設定でブロックされています",
+    "statusUnsupported": "このブラウザでは利用できません",
+    "statusNew": {
+      "one": "オン · 設定する新しいプロジェクト {} 件",
+      "other": "オン · 設定する新しいプロジェクト {} 件"
+    },
+    "preview": {
+      "now": "現在",
+      "title": "🔵 新規サブスクリプション · $9.99",
+      "body": "pro_monthly · 🇺🇸 アメリカ合衆国 · App Store",
+      "semantics": "通知の例：新規サブスクリプション、9.99ドル、アメリカ合衆国の App Store"
+    },
+    "headline": "売上が発生した瞬間にわかる",
+    "subhead": "購入、更新、返金のたびに、RevenueCat のすべてのプロジェクトから通知を受け取れます。",
+    "benefitInstantTitle": "リアルタイム",
+    "benefitInstantBody": "売上、トライアル、更新、返金は、RevenueCat が検知してから数秒で届きます。",
+    "benefitSetupTitle": "設定はおまかせ",
+    "benefitSetupBody": "OpenRC が選んだプロジェクトに Webhook を追加します。コピー＆ペーストは不要です。",
+    "benefitPrivateTitle": "プライバシー重視の設計",
+    "benefitPrivateBody": "イベントは OpenRC の通知サービスを通過するだけで、保存やログの記録はされません。",
+    "blocked": "デバイスの設定で OpenRC の通知がオフになっています。設定でオンにしてから、もう一度お試しください。",
+    "openSettings": "設定を開く",
+    "blockedWeb": "このサイトの通知がブロックされています。ブラウザのサイト設定で許可してから、もう一度お試しください。",
+    "unsupported": "このブラウザは通知を受信できません。iPhone または iPad では、Safari の共有メニューから OpenRC をホーム画面に追加し、そこから開いてください。",
+    "turnOn": "通知をオンにする",
+    "turnOnFailed": "通知をオンにできませんでした。接続を確認して再試行してください。",
+    "chooseTitle": "対象のプロジェクト",
+    "chooseBody": "OpenRC は、選んだ各プロジェクトにこのデバイス用の Webhook を追加します。いつでも変更できます。",
+    "projects": "プロジェクト",
+    "selectedCount": "{selected} / {total} 件を選択中",
+    "selectAll": "すべて選択",
+    "selectNone": "選択を解除",
+    "turnOnFor": {
+      "one": "{} 件のプロジェクトでオンにする",
+      "other": "{} 件のプロジェクトでオンにする"
+    },
+    "someFailed": {
+      "one": "{} 件のプロジェクトを設定できませんでした。再試行してください。",
+      "other": "{} 件のプロジェクトを設定できませんでした。再試行してください。"
+    },
+    "projectOn": "このデバイスに通知中",
+    "projectOff": "オフ",
+    "projectWorking": "更新中…",
+    "projectFailed": "RevenueCat に接続できませんでした",
+    "new": "新規",
+    "noProjects": "この RevenueCat アカウントにはプロジェクトがありません。",
+    "loadFailed": "プロジェクトを読み込めませんでした。接続を確認して再試行してください。",
+    "doneTitle": "設定が完了しました",
+    "doneBody": {
+      "one": "このデバイスには、{} 件のプロジェクトのすべての売上について通知が届くようになりました。",
+      "other": "このデバイスには、{} 件のプロジェクトのすべての売上について通知が届くようになりました。"
+    },
+    "done": "完了",
+    "onTitle": "通知はオンです",
+    "onBody": "{connected} / {total} 件のプロジェクトについて、このデバイスに通知しています",
+    "checking": "プロジェクトを確認中…",
+    "options": "オプション",
+    "sandbox": "サンドボックス購入",
+    "sandboxHint": "テスト購入も通知する",
+    "sandboxFailed": "すべてのプロジェクトを更新できませんでした。再試行してください。",
+    "sendTest": "テスト通知を送信",
+    "sendAgain": "もう一度送信",
+    "sendTestHint": "RevenueCat からこのデバイスまでの経路をすべて確認します",
+    "testSending": "テスト通知を送信中…",
+    "testSent": "テストを送信しました。まもなく届きます。",
+    "testFailed": "RevenueCat が OpenRC の通知サービスに接続できませんでした（{code}）。",
+    "testUnreachable": "RevenueCat に接続できませんでした。接続を確認して再試行してください。",
+    "notifyAbout": "通知する内容",
+    "notifyAboutHint": "個別に指定しない限り、すべてのプロジェクトに適用されます。プロジェクトをタップすると個別に設定できます。",
+    "presetAll": "すべて",
+    "presetSales": "売上のみ",
+    "presetNew": "新規顧客",
+    "groupSales": "売上",
+    "groupChurn": "解約と問題",
+    "groupOther": "その他",
+    "saving": "保存中…",
+    "saved": "プロジェクトに保存しました",
+    "saveFailed": "すべてのプロジェクトを更新できませんでした。再試行してください。",
+    "projectCustom": {
+      "one": "独自設定 · {} 種類",
+      "other": "独自設定 · {} 種類"
+    },
+    "kind": {
+      "new": "新規サブスクリプション",
+      "trial": "トライアル開始",
+      "conversion": "トライアルの有料移行",
+      "renewal": "更新",
+      "purchase": "買い切り購入",
+      "resubscribe": "再サブスクライブ",
+      "cancel": "解約",
+      "refund": "返金",
+      "billing": "請求の問題",
+      "expire": "期限切れ",
+      "change": "プラン変更"
+    },
+    "kindHint": {
+      "new": "初日から有料",
+      "trial": "無料トライアルの開始",
+      "conversion": "トライアルが有料に移行",
+      "renewal": "サブスクリプションの更新",
+      "purchase": "買い切り、消耗型アイテムなど",
+      "resubscribe": "自動更新が再びオンになった",
+      "cancel": "自動更新がオフになった（トライアルを含む）",
+      "refund": "返金、または返金の取り消し",
+      "billing": "更新の支払いに失敗",
+      "expire": "サブスクリプションの終了",
+      "change": "アップグレード、ダウングレード、一時停止、延長"
+    },
+    "projectSheet": {
+      "notify": "このデバイスに通知",
+      "what": "このプロジェクトの通知内容",
+      "same": "すべてと同じ",
+      "custom": "カスタム",
+      "sameHint": {
+        "one": "すべてのプロジェクトの設定（{} 種類）を使用します。",
+        "other": "すべてのプロジェクトの設定（{} 種類）を使用します。"
+      },
+      "customHint": "このプロジェクトでは、選択した種類のみ通知します。",
+      "save": "保存",
+      "saveFailed": "このプロジェクトを更新できませんでした。再試行してください。"
+    },
+    "manual": "手動で設定",
+    "manualHint": "Webhook の URL とヘッダーを自分でコピーする",
+    "turnOff": "通知をオフにする",
+    "turnOffTitle": "通知をオフにしますか？",
+    "turnOffBody": "OpenRC は、RevenueCat プロジェクトからこのデバイスの Webhook を削除します。いつでも再度オンにできます。",
+    "manualSheet": {
+      "title": "手動で設定",
+      "body": "自分で Webhook を追加するには、通知を受け取りたい各プロジェクトで次の操作を行います。RevenueCat は各イベントを OpenRC の通知サービスに送信し、そこから保存せずにこのデバイスへ転送します。",
+      "step1": "RevenueCat でプロジェクトの「インテグレーション」を開き、「Webhooks」を選んで新しい Webhook を追加します。",
+      "step2": "この URL と認証ヘッダーを貼り付けます。",
+      "step3": "送信する環境とイベントを選んで保存し、「テストイベントを送信」を使用します。テスト通知がここに届きます。",
+      "webhookUrl": "Webhook URL",
+      "authorizationHeader": "認証ヘッダー",
+      "copy": "{label} をコピー",
+      "copied": "コピーしました",
+      "secretHint": "このヘッダーを持つ人は誰でも、あなたのデバイスに通知を送信できます。RevenueCat にのみ貼り付けてください。",
+      "openRevenueCat": "RevenueCat を開く"
     }
   }
 }

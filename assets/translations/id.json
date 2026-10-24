@@ -501,7 +501,21 @@
     "unknown": "Tidak diketahui",
     "weekly": "Mingguan",
     "monthly": "Bulanan",
-    "annual": "Tahunan"
+    "annual": "Tahunan",
+    "oneTime": "Sekali bayar",
+    "introOffer": "Penawaran perkenalan",
+    "trialDays": {
+      "one": "Uji coba {} hari",
+      "other": "Uji coba {} hari"
+    },
+    "months": {
+      "one": "{} bulan",
+      "other": "{} bulan"
+    },
+    "days": {
+      "one": "{} hari",
+      "other": "{} hari"
+    }
   },
   "revenue": {
     "title": "Pendapatan",
@@ -577,9 +591,19 @@
       "splitUnavailableTitle": "Pencairan per toko tidak tersedia",
       "splitUnavailableMessage": "RevenueCat tidak mengembalikan pendapatan per toko, jadi pencairan tidak dapat dihitung.",
       "estimateNote": "Perkiraan dari penerimaan di RevenueCat, setelah biaya toko dan perkiraan pajak. Pembayaran sebenarnya bisa berbeda karena kurs, pemotongan pajak, dan batas minimum pembayaran.",
-      "savedNote": "Setiap pencairan disimpan setelah dibayarkan dan tidak berubah lagi. RevenueCat membebankan refund ke bulan pembelian, sedangkan toko memotongnya dari pembayaran berikutnya, jadi totalnya bisa sedikit berbeda."
+      "savedNote": "Setiap pencairan disimpan setelah dibayarkan dan tidak berubah lagi. RevenueCat membebankan refund ke bulan pembelian, sedangkan toko memotongnya dari pembayaran berikutnya, jadi totalnya bisa sedikit berbeda.",
+      "couldntLoadDetail": "Pencairan ini tidak dapat dimuat",
+      "detailNote": "Total berasal dari transaksi yang dimuat dalam periode penghasilan ini, setelah biaya toko bila pengaturan itu aktif. Angkanya bisa berbeda dari jumlah pencairan yang tersimpan."
     },
-    "monthTransactions": "Transaksi bulan ini"
+    "monthTransactions": "Transaksi bulan ini",
+    "trialsBreakdown": "Rincian uji coba",
+    "trialCount": {
+      "one": "{} uji coba",
+      "other": "{} uji coba"
+    },
+    "trialStatus": "Status",
+    "autoRenewOn": "Perpanjangan otomatis aktif",
+    "topPlans": "Paket teratas"
   },
   "settings": {
     "title": "Pengaturan",
@@ -658,7 +682,8 @@
       "styleOpenAi": "Gaya OpenAI",
       "styleAnthropic": "Gaya Anthropic",
       "clearKey": "Hapus kunci"
-    }
+    },
+    "help": "Bantuan"
   },
   "shell": {
     "tabs": {
@@ -901,7 +926,12 @@
       "save": "Simpan dan mulai",
       "title": "Hubungkan LLM Anda",
       "model": "Model",
-      "customWeb": "Host kustom berfungsi di aplikasi native. Relay web hanya meneruskan OpenRouter, OpenAI, Anthropic, dan DeepSeek."
+      "customWeb": "Host kustom berfungsi di aplikasi native. Relay web hanya meneruskan OpenRouter, OpenAI, Anthropic, dan DeepSeek.",
+      "connectTitle": "Hubungkan model",
+      "connectMessage": "Tambahkan kunci API penyedia untuk bertanya tentang pendapatan, grafik, dan pencairan.",
+      "addKey": "Tambahkan kunci API",
+      "notConnected": "Belum terhubung",
+      "composerHint": "Tambahkan kunci untuk bertanya"
     },
     "clear": "Hapus thread",
     "clearMessage": "Ini akan menghapus semua pertanyaan dan jawaban yang tersimpan di perangkat ini.",
@@ -931,6 +961,10 @@
       "payout": "Mengapa jumlah payout berikutnya seperti ini, dan kapan cair?",
       "transaction": "Ada apa dengan {type} ini?",
       "sale": "Ada apa dengan penjualan ini?"
+    },
+    "contextLabels": {
+      "sale": "Penjualan",
+      "payout": "Pencairan berikutnya"
     }
   },
   "onboarding": {
@@ -1031,6 +1065,151 @@
       "title": "Tanya sedang mati untuk sekarang",
       "body": "Tanya mengirim pertanyaan dan hasil grafik ke penyedia model yang Anda pilih. Kuncinya tetap di perangkat ini. Nyalakan ini untuk mulai percakapan. Transaksi, Pendapatan, dan Grafik tidak berubah.",
       "allow": "Izinkan Tanya"
+    }
+  },
+  "notifications": {
+    "title": "Notifikasi",
+    "rowTitle": "Notifikasi push",
+    "statusOff": "Nonaktif",
+    "statusOn": "Aktif untuk perangkat ini",
+    "statusBlocked": "Diblokir di pengaturan perangkat Anda",
+    "statusUnsupported": "Tidak tersedia di browser ini",
+    "statusNew": {
+      "one": "Aktif · {} proyek baru untuk disiapkan",
+      "other": "Aktif · {} proyek baru untuk disiapkan"
+    },
+    "preview": {
+      "now": "sekarang",
+      "title": "🔵 Langganan baru · $9.99",
+      "body": "pro_monthly · 🇺🇸 Amerika Serikat · App Store",
+      "semantics": "Contoh notifikasi: Langganan baru, 9,99 dolar, dari App Store di Amerika Serikat"
+    },
+    "headline": "Ketahui saat penjualan terjadi",
+    "subhead": "Dapatkan notifikasi untuk setiap pembelian, perpanjangan, dan pengembalian dana di proyek RevenueCat Anda.",
+    "benefitInstantTitle": "Begitu terjadi",
+    "benefitInstantBody": "Penjualan, uji coba, perpanjangan, dan pengembalian dana tiba dalam hitungan detik setelah RevenueCat melihatnya.",
+    "benefitSetupTitle": "Disiapkan untuk Anda",
+    "benefitSetupBody": "OpenRC menambahkan webhook ke proyek yang Anda pilih. Tidak ada yang perlu disalin atau ditempel.",
+    "benefitPrivateTitle": "Privat sejak awal",
+    "benefitPrivateBody": "Peristiwa melewati layanan notifikasi OpenRC tanpa disimpan atau dicatat.",
+    "blocked": "Notifikasi dinonaktifkan untuk OpenRC di pengaturan perangkat Anda. Aktifkan di sana, lalu kembali ke sini.",
+    "openSettings": "Buka Pengaturan",
+    "blockedWeb": "Notifikasi diblokir untuk situs ini. Izinkan di pengaturan situs browser Anda, lalu coba lagi.",
+    "unsupported": "Browser ini tidak dapat menerima notifikasi. Di iPhone atau iPad, tambahkan OpenRC ke Layar Utama dari menu Bagikan Safari, lalu buka dari sana.",
+    "turnOn": "Aktifkan notifikasi",
+    "turnOnFailed": "Notifikasi tidak dapat diaktifkan. Periksa koneksi Anda dan coba lagi.",
+    "chooseTitle": "Proyek mana?",
+    "chooseBody": "OpenRC menambahkan webhook untuk perangkat ini ke setiap proyek yang Anda pilih. Anda dapat mengubahnya kapan saja.",
+    "projects": "Proyek",
+    "selectedCount": "{selected} dari {total} dipilih",
+    "selectAll": "Pilih semua",
+    "selectNone": "Hapus semua pilihan",
+    "turnOnFor": {
+      "one": "Aktifkan untuk {} proyek",
+      "other": "Aktifkan untuk {} proyek"
+    },
+    "someFailed": {
+      "one": "{} proyek tidak dapat disiapkan. Coba lagi.",
+      "other": "{} proyek tidak dapat disiapkan. Coba lagi."
+    },
+    "projectOn": "Memberi tahu perangkat ini",
+    "projectOff": "Nonaktif",
+    "projectWorking": "Memperbarui…",
+    "projectFailed": "Tidak dapat menjangkau RevenueCat",
+    "new": "Baru",
+    "noProjects": "Akun RevenueCat ini tidak memiliki proyek.",
+    "loadFailed": "Proyek Anda tidak dapat dimuat. Periksa koneksi dan coba lagi.",
+    "doneTitle": "Semua sudah siap",
+    "doneBody": {
+      "one": "Perangkat ini sekarang menerima notifikasi untuk setiap penjualan di {} proyek.",
+      "other": "Perangkat ini sekarang menerima notifikasi untuk setiap penjualan di {} proyek."
+    },
+    "done": "Selesai",
+    "onTitle": "Notifikasi aktif",
+    "onBody": "Memberi tahu perangkat ini untuk {connected} dari {total} proyek",
+    "checking": "Memeriksa proyek Anda…",
+    "options": "Opsi",
+    "sandbox": "Pembelian Sandbox",
+    "sandboxHint": "Juga beri tahu untuk pembelian uji",
+    "sandboxFailed": "Tidak semua proyek dapat diperbarui. Coba lagi.",
+    "sendTest": "Kirim notifikasi uji",
+    "sendAgain": "Kirim lagi",
+    "sendTestHint": "Memeriksa seluruh jalur dari RevenueCat ke perangkat ini",
+    "testSending": "Mengirim notifikasi uji…",
+    "testSent": "Uji terkirim. Harusnya tiba sebentar lagi.",
+    "testFailed": "RevenueCat tidak dapat menjangkau layanan notifikasi OpenRC ({code}).",
+    "testUnreachable": "Tidak dapat menjangkau RevenueCat. Periksa koneksi Anda dan coba lagi.",
+    "notifyAbout": "Beri tahu saya tentang",
+    "notifyAboutHint": "Berlaku untuk setiap proyek, kecuali Anda menentukan lain untuk salah satunya. Ketuk proyek untuk memberinya pengaturan sendiri.",
+    "presetAll": "Semua",
+    "presetSales": "Hanya penjualan",
+    "presetNew": "Pelanggan baru",
+    "groupSales": "Penjualan",
+    "groupChurn": "Kehilangan pelanggan dan masalah",
+    "groupOther": "Lainnya",
+    "saving": "Menyimpan…",
+    "saved": "Tersimpan untuk proyek Anda",
+    "saveFailed": "Tidak semua proyek dapat diperbarui. Coba lagi.",
+    "projectCustom": {
+      "one": "Pilihan sendiri · {} jenis",
+      "other": "Pilihan sendiri · {} jenis"
+    },
+    "kind": {
+      "new": "Langganan baru",
+      "trial": "Uji coba dimulai",
+      "conversion": "Konversi uji coba",
+      "renewal": "Perpanjangan",
+      "purchase": "Pembelian sekali bayar",
+      "resubscribe": "Berlangganan kembali",
+      "cancel": "Pembatalan",
+      "refund": "Pengembalian dana",
+      "billing": "Masalah penagihan",
+      "expire": "Kedaluwarsa",
+      "change": "Perubahan paket"
+    },
+    "kindHint": {
+      "new": "Dibayar sejak hari pertama",
+      "trial": "Seseorang memulai uji coba gratis",
+      "conversion": "Uji coba berubah menjadi berbayar",
+      "renewal": "Langganan diperpanjang",
+      "purchase": "Akses seumur hidup, item sekali pakai, dan sejenisnya",
+      "resubscribe": "Perpanjangan otomatis diaktifkan kembali",
+      "cancel": "Perpanjangan otomatis dimatikan, termasuk uji coba",
+      "refund": "Dana dikembalikan, atau pengembalian dana dibatalkan",
+      "billing": "Pembayaran perpanjangan gagal",
+      "expire": "Langganan berakhir",
+      "change": "Peningkatan, penurunan, jeda, dan perpanjangan paket"
+    },
+    "projectSheet": {
+      "notify": "Beri tahu perangkat ini",
+      "what": "Hal yang diberitahukan proyek ini",
+      "same": "Sama seperti semua",
+      "custom": "Kustom",
+      "sameHint": {
+        "one": "Menggunakan pilihan Anda untuk semua proyek: {} jenis.",
+        "other": "Menggunakan pilihan Anda untuk semua proyek: {} jenis."
+      },
+      "customHint": "Hanya ini yang memberi tahu untuk proyek ini.",
+      "save": "Simpan",
+      "saveFailed": "Proyek ini tidak dapat diperbarui. Coba lagi."
+    },
+    "manual": "Siapkan secara manual",
+    "manualHint": "Salin sendiri URL webhook dan headernya",
+    "turnOff": "Nonaktifkan notifikasi",
+    "turnOffTitle": "Nonaktifkan notifikasi?",
+    "turnOffBody": "OpenRC menghapus webhook perangkat ini dari proyek RevenueCat Anda. Anda dapat mengaktifkannya lagi kapan saja.",
+    "manualSheet": {
+      "title": "Siapkan secara manual",
+      "body": "Untuk menambahkan webhook sendiri, lakukan ini di setiap proyek yang ingin Anda terima notifikasinya. RevenueCat mengirim setiap peristiwa ke layanan notifikasi OpenRC, yang meneruskannya ke perangkat ini tanpa menyimpannya.",
+      "step1": "Di RevenueCat, buka Integrasi proyek Anda, pilih Webhooks, lalu tambahkan webhook baru.",
+      "step2": "Tempel URL dan header otorisasi ini ke dalamnya.",
+      "step3": "Pilih lingkungan dan peristiwa yang akan dikirim, simpan, lalu gunakan Kirim peristiwa uji. Notifikasi uji akan tiba di sini.",
+      "webhookUrl": "URL webhook",
+      "authorizationHeader": "Header otorisasi",
+      "copy": "Salin {label}",
+      "copied": "Disalin",
+      "secretHint": "Siapa pun yang memiliki header ini dapat mengirim notifikasi ke perangkat Anda. Tempelkan hanya ke RevenueCat.",
+      "openRevenueCat": "Buka RevenueCat"
     }
   }
 }

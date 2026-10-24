@@ -502,7 +502,21 @@
     "unknown": "Desconocido",
     "weekly": "Semanal",
     "monthly": "Mensual",
-    "annual": "Anual"
+    "annual": "Anual",
+    "oneTime": "Pago único",
+    "introOffer": "Oferta de introducción",
+    "trialDays": {
+      "one": "Prueba de {} día",
+      "other": "Prueba de {} días"
+    },
+    "months": {
+      "one": "{} mes",
+      "other": "{} meses"
+    },
+    "days": {
+      "one": "{} día",
+      "other": "{} días"
+    }
   },
   "revenue": {
     "title": "Ingresos",
@@ -582,9 +596,19 @@
       "splitUnavailableTitle": "Los pagos por tienda no están disponibles",
       "splitUnavailableMessage": "RevenueCat no devolvió los ingresos por tienda, así que no se pueden calcular los pagos.",
       "estimateNote": "Estimado a partir de los ingresos netos de RevenueCat, tras las comisiones de la tienda y los impuestos estimados. Los pagos reales pueden variar por los tipos de cambio, las retenciones fiscales y los importes mínimos de pago.",
-      "savedNote": "Cada pago se guarda una vez abonado y ya no cambia. RevenueCat descuenta un reembolso del mes de la compra, mientras que las tiendas lo restan de un pago posterior, así que los totales pueden variar ligeramente."
+      "savedNote": "Cada pago se guarda una vez abonado y ya no cambia. RevenueCat descuenta un reembolso del mes de la compra, mientras que las tiendas lo restan de un pago posterior, así que los totales pueden variar ligeramente.",
+      "couldntLoadDetail": "No se pudo cargar este pago",
+      "detailNote": "Los totales proceden de las transacciones cargadas en este periodo de ingresos, después de las comisiones de la tienda cuando esa opción está activada. Pueden diferir de la cifra de pago guardada."
     },
-    "monthTransactions": "Transacciones de este mes"
+    "monthTransactions": "Transacciones de este mes",
+    "trialsBreakdown": "Desglose de pruebas",
+    "trialCount": {
+      "one": "{} prueba",
+      "other": "{} pruebas"
+    },
+    "trialStatus": "Estado",
+    "autoRenewOn": "Renovación automática activada",
+    "topPlans": "Planes principales"
   },
   "settings": {
     "title": "Ajustes",
@@ -664,7 +688,8 @@
       "styleOpenAi": "Estilo OpenAI",
       "styleAnthropic": "Estilo Anthropic",
       "clearKey": "Quitar clave"
-    }
+    },
+    "help": "Ayuda"
   },
   "shell": {
     "tabs": {
@@ -916,7 +941,12 @@
       "save": "Guardar y empezar",
       "title": "Conecta tu LLM",
       "model": "Modelo",
-      "customWeb": "Los hosts personalizados funcionan en las apps nativas. El relé web solo reenvía OpenRouter, OpenAI, Anthropic y DeepSeek."
+      "customWeb": "Los hosts personalizados funcionan en las apps nativas. El relé web solo reenvía OpenRouter, OpenAI, Anthropic y DeepSeek.",
+      "connectTitle": "Conecta un modelo",
+      "connectMessage": "Añade una clave API de un proveedor para preguntar por ingresos, gráficos y pagos.",
+      "addKey": "Añadir clave API",
+      "notConnected": "No conectado",
+      "composerHint": "Añade una clave para preguntar"
     },
     "clear": "Borrar hilo",
     "clearMessage": "Se eliminarán todas las preguntas y respuestas guardadas en este dispositivo.",
@@ -946,6 +976,10 @@
       "payout": "¿Por qué es este el importe del próximo pago y cuándo llega?",
       "transaction": "¿Qué ocurre con este {type}?",
       "sale": "¿Qué ocurre con esta venta?"
+    },
+    "contextLabels": {
+      "sale": "Venta",
+      "payout": "Próximo pago"
     }
   },
   "onboarding": {
@@ -1046,6 +1080,151 @@
       "title": "Preguntar está desactivado por ahora",
       "body": "Preguntar envía tu pregunta y los resultados de los gráficos al proveedor de modelo que elijas. La clave se queda en este dispositivo. Actívalo para empezar una conversación. Transacciones, Ingresos y Gráficos no cambian.",
       "allow": "Permitir Preguntar"
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "rowTitle": "Notificaciones push",
+    "statusOff": "Desactivadas",
+    "statusOn": "Activadas en este dispositivo",
+    "statusBlocked": "Bloqueadas en los ajustes de tu dispositivo",
+    "statusUnsupported": "No disponible en este navegador",
+    "statusNew": {
+      "one": "Activadas · {} proyecto nuevo por configurar",
+      "other": "Activadas · {} proyectos nuevos por configurar"
+    },
+    "preview": {
+      "now": "ahora",
+      "title": "🔵 Nueva suscripción · $9.99",
+      "body": "pro_monthly · 🇺🇸 Estados Unidos · App Store",
+      "semantics": "Notificación de ejemplo: Nueva suscripción, 9,99 dólares, desde App Store en Estados Unidos"
+    },
+    "headline": "Entérate en el momento en que haces una venta",
+    "subhead": "Recibe una notificación por cada compra, renovación y reembolso en tus proyectos de RevenueCat.",
+    "benefitInstantTitle": "Al instante",
+    "benefitInstantBody": "Las ventas, pruebas, renovaciones y reembolsos llegan segundos después de que RevenueCat los detecte.",
+    "benefitSetupTitle": "Ya está listo",
+    "benefitSetupBody": "OpenRC añade un webhook a los proyectos que elijas. No hay nada que copiar ni pegar.",
+    "benefitPrivateTitle": "Privado por diseño",
+    "benefitPrivateBody": "Los eventos pasan por el notificador de OpenRC sin guardarse ni registrarse.",
+    "blocked": "Las notificaciones están desactivadas para OpenRC en los ajustes de tu dispositivo. Actívalas allí y vuelve.",
+    "openSettings": "Abrir Ajustes",
+    "blockedWeb": "Las notificaciones están bloqueadas para este sitio. Permítelas en los ajustes del sitio de tu navegador e inténtalo de nuevo.",
+    "unsupported": "Este navegador no puede recibir notificaciones. En iPhone o iPad, añade OpenRC a la pantalla de inicio desde el menú Compartir de Safari y ábrela desde allí.",
+    "turnOn": "Activar notificaciones",
+    "turnOnFailed": "No se pudieron activar las notificaciones. Comprueba tu conexión e inténtalo de nuevo.",
+    "chooseTitle": "¿Qué proyectos?",
+    "chooseBody": "OpenRC añade un webhook para este dispositivo a cada proyecto que elijas. Puedes cambiarlo cuando quieras.",
+    "projects": "Proyectos",
+    "selectedCount": "{selected} de {total} seleccionados",
+    "selectAll": "Seleccionar todo",
+    "selectNone": "No seleccionar ninguno",
+    "turnOnFor": {
+      "one": "Activar para {} proyecto",
+      "other": "Activar para {} proyectos"
+    },
+    "someFailed": {
+      "one": "No se pudo configurar {} proyecto. Inténtalo de nuevo.",
+      "other": "No se pudieron configurar {} proyectos. Inténtalo de nuevo."
+    },
+    "projectOn": "Notificando a este dispositivo",
+    "projectOff": "Desactivado",
+    "projectWorking": "Actualizando…",
+    "projectFailed": "No se pudo contactar con RevenueCat",
+    "new": "Nuevo",
+    "noProjects": "Esta cuenta de RevenueCat no tiene proyectos.",
+    "loadFailed": "No se pudieron cargar tus proyectos. Comprueba tu conexión e inténtalo de nuevo.",
+    "doneTitle": "Todo listo",
+    "doneBody": {
+      "one": "Este dispositivo recibirá ahora una notificación por cada venta en {} proyecto.",
+      "other": "Este dispositivo recibirá ahora una notificación por cada venta en {} proyectos."
+    },
+    "done": "Hecho",
+    "onTitle": "Las notificaciones están activadas",
+    "onBody": "Se notifica a este dispositivo en {connected} de {total} proyectos",
+    "checking": "Comprobando tus proyectos…",
+    "options": "Opciones",
+    "sandbox": "Compras en Sandbox",
+    "sandboxHint": "Notificar también las compras de prueba",
+    "sandboxFailed": "No se pudieron actualizar todos los proyectos. Inténtalo de nuevo.",
+    "sendTest": "Enviar una notificación de prueba",
+    "sendAgain": "Enviar de nuevo",
+    "sendTestHint": "Comprueba todo el recorrido desde RevenueCat hasta este dispositivo",
+    "testSending": "Enviando una notificación de prueba…",
+    "testSent": "Prueba enviada. Debería llegar en un momento.",
+    "testFailed": "RevenueCat no pudo llegar al notificador de OpenRC ({code}).",
+    "testUnreachable": "No se pudo contactar con RevenueCat. Comprueba tu conexión e inténtalo de nuevo.",
+    "notifyAbout": "Notificarme sobre",
+    "notifyAboutHint": "Para todos los proyectos, salvo que elijas otra cosa para uno. Toca un proyecto para darle su propia configuración.",
+    "presetAll": "Todo",
+    "presetSales": "Solo ventas",
+    "presetNew": "Clientes nuevos",
+    "groupSales": "Ventas",
+    "groupChurn": "Bajas y problemas",
+    "groupOther": "Otros",
+    "saving": "Guardando…",
+    "saved": "Guardado para tus proyectos",
+    "saveFailed": "No se pudieron actualizar todos los proyectos. Inténtalo de nuevo.",
+    "projectCustom": {
+      "one": "Elección propia · {} tipo",
+      "other": "Elección propia · {} tipos"
+    },
+    "kind": {
+      "new": "Suscripciones nuevas",
+      "trial": "Pruebas iniciadas",
+      "conversion": "Conversiones de prueba",
+      "renewal": "Renovaciones",
+      "purchase": "Compras de pago único",
+      "resubscribe": "Reactivaciones",
+      "cancel": "Cancelaciones",
+      "refund": "Reembolsos",
+      "billing": "Problemas de facturación",
+      "expire": "Caducidades",
+      "change": "Cambios de plan"
+    },
+    "kindHint": {
+      "new": "Se paga desde el primer día",
+      "trial": "Alguien inicia una prueba gratuita",
+      "conversion": "Una prueba pasa a ser de pago",
+      "renewal": "Una suscripción se renueva",
+      "purchase": "Desbloqueos de por vida, consumibles y similares",
+      "resubscribe": "Se vuelve a activar la renovación automática",
+      "cancel": "Se desactiva la renovación automática, incluidas las pruebas",
+      "refund": "Reembolsado, o un reembolso revertido",
+      "billing": "Un pago de renovación ha fallado",
+      "expire": "Una suscripción ha terminado",
+      "change": "Mejoras, cambios a planes inferiores, pausas y ampliaciones"
+    },
+    "projectSheet": {
+      "notify": "Notificar a este dispositivo",
+      "what": "Sobre qué notifica este proyecto",
+      "same": "Igual que todos",
+      "custom": "Personalizado",
+      "sameHint": {
+        "one": "Usa tu elección para todos los proyectos: {} tipo.",
+        "other": "Usa tu elección para todos los proyectos: {} tipos."
+      },
+      "customHint": "Solo se notifican estos en este proyecto.",
+      "save": "Guardar",
+      "saveFailed": "No se pudo actualizar este proyecto. Inténtalo de nuevo."
+    },
+    "manual": "Configurar manualmente",
+    "manualHint": "Copia tú mismo la URL del webhook y la cabecera",
+    "turnOff": "Desactivar notificaciones",
+    "turnOffTitle": "¿Desactivar las notificaciones?",
+    "turnOffBody": "OpenRC elimina los webhooks de este dispositivo de tus proyectos de RevenueCat. Puedes volver a activarlos cuando quieras.",
+    "manualSheet": {
+      "title": "Configurar manualmente",
+      "body": "Para añadir el webhook tú mismo, hazlo en cada proyecto del que quieras recibir notificaciones. RevenueCat envía cada evento al notificador de OpenRC, que lo reenvía a este dispositivo sin guardarlo.",
+      "step1": "En RevenueCat, abre Integraciones de tu proyecto, elige Webhooks y añade un webhook nuevo.",
+      "step2": "Pega esta URL y esta cabecera de autorización.",
+      "step3": "Elige el entorno y los eventos que enviar, guarda y usa Enviar evento de prueba. Aquí llegará una notificación de prueba.",
+      "webhookUrl": "URL del webhook",
+      "authorizationHeader": "Cabecera de autorización",
+      "copy": "Copiar {label}",
+      "copied": "Copiado",
+      "secretHint": "Cualquiera con esta cabecera puede enviar notificaciones a tus dispositivos. Pégala solo en RevenueCat.",
+      "openRevenueCat": "Abrir RevenueCat"
     }
   }
 }
