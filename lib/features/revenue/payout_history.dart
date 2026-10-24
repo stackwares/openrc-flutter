@@ -1,5 +1,8 @@
+import 'package:openrc/core/utils/store_commission.dart';
 import 'package:openrc/core/utils/store_payday_schedule.dart';
+import 'package:openrc/features/transactions/transactions_common.dart';
 import 'package:openrc/models/rc_chart_response.dart';
+import 'package:openrc/models/rc_transaction.dart';
 
 /// A store that pays developers on its own schedule.
 enum PayoutStore {
@@ -34,6 +37,12 @@ class PayoutPeriod {
 
   /// Key for the payout's saved total.
   String get id => '${store.name}:${dayKey(earningsStart)}';
+
+  @override
+  bool operator ==(Object other) => other is PayoutPeriod && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 /// A paid payout and RevenueCat's proceeds for its days.
@@ -76,6 +85,25 @@ const payoutHistoryMonths = 12;
 
 /// Longest run of days asked for in one chart request, as on the Charts tab.
 const maxChartRequestDays = 366;
+
+/// Sales this store pays in [period]'s earnings window.
+List<RcTransaction> transactionsForPayout(
+  Iterable<RcTransaction> transactions,
+  PayoutPeriod period,
+) {
+  final platform = switch (period.store) {
+    PayoutStore.apple => StoreCommissionPlatform.apple,
+    PayoutStore.google => StoreCommissionPlatform.google,
+  };
+  return collectTransactionsInLocalInclusiveRange(
+    [
+      for (final tx in transactions)
+        if (classifyStore(tx.storeForCommission) == platform) tx,
+    ],
+    start: period.earningsStart,
+    end: period.earningsEnd,
+  );
+}
 
 /// `yyyy-MM-dd` for a calendar day; also the chart API's date format.
 String dayKey(DateTime d) =>
