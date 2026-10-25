@@ -52,8 +52,11 @@ and sign release builds with it (never commit the keystore or its passwords).
    `dart_defines/firebase.example.json`). It is gitignored. Without it,
    builds have no notifications.
 2. Upload an APNs authentication key under **Project settings → Cloud
-   Messaging**, and give the app ID `com.openrc.app` the **Push
-   Notifications** capability (Xcode's automatic signing can do this).
+   Messaging** (one team-scoped key covers iOS and macOS), and give the
+   app ID `com.openrc.app` the **Push Notifications** capability on each
+   Apple target that notifies (Xcode's automatic signing can do this;
+   the Mac target shares the iOS bundle ID, so no extra Firebase app
+   entry is needed).
 3. Deploy the notifier (`notifier/README.md`) with a service account key from
    the same project.
 4. For the web app, register a web app in the same Firebase project and

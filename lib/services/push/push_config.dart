@@ -41,17 +41,21 @@ abstract final class PushConfig {
   /// Firebase settings for this platform, or null when the build has none
   /// or the platform gets no notifications (Windows, Linux).
   ///
-  /// macOS waits too: its builds are signed ad hoc, and the push entitlement
-  /// (`com.apple.developer.aps-environment`) needs a team's provisioning
-  /// profile. Once they're signed with one, add the entitlement to both
-  /// `macos/Runner/*.entitlements` and macOS here.
+  /// macOS reuses the Apple app's key and id: Firebase has one Apple entry
+  /// per bundle id, and `com.openrc.app` covers the Mac app too. Its builds
+  /// need a team's provisioning profile for the push entitlement
+  /// (`com.apple.developer.aps-environment` in `macos/Runner/*.entitlements`)
+  /// to take effect; ad hoc builds compile but can't receive pushes.
   static FirebaseOptions? get firebaseOptions {
     if (AppConstants.demoMode) return null;
     final (apiKey, appId) = kIsWeb
         ? (vapidKey.isEmpty ? ('', '') : (_webApiKey, _webAppId))
         : switch (defaultTargetPlatform) {
             TargetPlatform.android => (_androidApiKey, _androidAppId),
-            TargetPlatform.iOS => (_appleApiKey, _appleAppId),
+            TargetPlatform.iOS || TargetPlatform.macOS => (
+              _appleApiKey,
+              _appleAppId,
+            ),
             _ => ('', ''),
           };
     if ([apiKey, appId, _projectId, _senderId].any((v) => v.isEmpty)) {
