@@ -33,11 +33,14 @@ bool get _touchFirst =>
     defaultTargetPlatform == TargetPlatform.iOS ||
     defaultTargetPlatform == TargetPlatform.android;
 
-const _suggestions = [
-  'agent.suggestions.today',
-  'agent.suggestions.mrr',
-  'agent.suggestions.countries',
-  'agent.suggestions.payout',
+/// Starter questions: the translation key and the emoji that reads as its
+/// subject. The emoji is decoration — asking sends the plain sentence, so the
+/// model never sees it.
+const _suggestions = <({String key, String emoji})>[
+  (key: 'agent.suggestions.today', emoji: '🗓️'),
+  (key: 'agent.suggestions.mrr', emoji: '📈'),
+  (key: 'agent.suggestions.countries', emoji: '🌍'),
+  (key: 'agent.suggestions.payout', emoji: '💸'),
 ];
 
 class AskScreen extends ConsumerStatefulWidget {
@@ -532,52 +535,58 @@ class _AskSetupView extends StatelessWidget {
   }
 }
 
-/// The OpenRC app icon with a subtle shadow and an AI sparkle corner badge.
+/// The OpenRC app icon — the cat hugging a database — with a subtle shadow
+/// and an AI sparkle corner badge. Ask's mascot in its empty states.
 class _AskHeroMark extends StatelessWidget {
-  const _AskHeroMark();
+  const _AskHeroMark({this.size = 76});
+
+  /// Side of the icon; the shadow, corner badge and badge icon scale with it.
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final background = Theme.of(context).scaffoldBackgroundColor;
+    final radius = size * 0.237;
+    final badge = size * 0.395;
     return SizedBox(
-      width: 88,
-      height: 84,
+      width: size + size * 0.158,
+      height: size + size * 0.105,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(radius),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(
                     alpha: context.isDark ? 0.5 : 0.14,
                   ),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  blurRadius: size * 0.263,
+                  offset: Offset(0, size * 0.105),
                 ),
               ],
             ),
-            child: const AppLogo(size: 76),
+            child: AppLogo(size: size),
           ),
           Positioned(
             right: 0,
             bottom: 0,
             child: ExcludeSemantics(
               child: Container(
-                width: 30,
-                height: 30,
+                width: badge,
+                height: badge,
                 decoration: BoxDecoration(
                   color: scheme.primary,
                   shape: BoxShape.circle,
-                  border: Border.all(color: background, width: 2.5),
+                  border: Border.all(color: background, width: size * 0.033),
                 ),
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.auto_awesome_rounded,
-                  size: 15,
+                  size: size * 0.197,
                   color: scheme.onPrimary,
                 ),
               ),
@@ -589,13 +598,11 @@ class _AskHeroMark extends StatelessWidget {
   }
 }
 
-/// First open when a key is connected: one sentence of what Ask is for and
-/// starter questions parked above the composer.
+/// First open when a key is connected: the mascot and one sentence of what
+/// Ask is for, centered in the space above the starter questions, which stay
+/// parked by the composer.
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({
-    required this.side,
-    required this.onAsk,
-  });
+  const _EmptyThread({required this.side, required this.onAsk});
 
   final double side;
   final ValueChanged<String> onAsk;
@@ -603,42 +610,56 @@ class _EmptyThread extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, AppSpace.md),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: math.max(
-              0,
-              constraints.maxHeight - AppSpace.lg - AppSpace.md,
+    final tt = context.textTheme;
+    return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, AppSpace.md),
+          sliver: SliverFillRemaining(
+            // Sizes the column to the space left on screen (and to the
+            // content when that doesn't fit), so the mascot can take the room
+            // above the suggestions and the page still scrolls with the
+            // keyboard up.
+            hasScrollBody: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Free space, split evenly around the mascot, so it sits in
+                // the middle of the room above the questions and the column
+                // never overflows when the window (or the keyboard) shrinks.
+                const Spacer(),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _AskHeroMark(size: 96).appCardEntrance(),
+                    const SizedBox(height: AppSpace.lg),
+                    Text(
+                      'agent.empty.title'.tr(),
+                      textAlign: TextAlign.center,
+                      style: tt.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      'agent.empty.subtitle'.tr(),
+                      textAlign: TextAlign.center,
+                      style: tt.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+                  ],
+                ),
+                const Spacer(),
+                _Suggestions(onAsk: onAsk),
+              ],
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'agent.empty.title'.tr(),
-                style: context.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.2,
-                ),
-              ).appCardEntrance(),
-              const SizedBox(height: AppSpace.xs),
-              Text(
-                'agent.empty.subtitle'.tr(),
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: AppSpace.lg),
-              _Suggestions(onAsk: onAsk),
-            ],
-          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -656,8 +677,9 @@ class _Suggestions extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs),
             child: _SuggestionRow(
-              label: _suggestions[i].tr(),
-              onTap: () => onAsk(_suggestions[i].tr()),
+              emoji: _suggestions[i].emoji,
+              label: _suggestions[i].key.tr(),
+              onTap: () => onAsk(_suggestions[i].key.tr()),
             ).appListItemEntrance(i + 1),
           ),
       ],
@@ -666,8 +688,13 @@ class _Suggestions extends StatelessWidget {
 }
 
 class _SuggestionRow extends StatelessWidget {
-  const _SuggestionRow({required this.label, required this.onTap});
+  const _SuggestionRow({
+    required this.emoji,
+    required this.label,
+    required this.onTap,
+  });
 
+  final String emoji;
   final String label;
   final VoidCallback onTap;
 
@@ -680,6 +707,18 @@ class _SuggestionRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
       child: Row(
         children: [
+          // Decoration: the sentence says what the question is, so screen
+          // readers skip the glyph instead of announcing its name.
+          ExcludeSemantics(
+            child: SizedBox(
+              width: 22,
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 17, height: 1),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpace.xs),
           Expanded(
             child: Text(
               label,
