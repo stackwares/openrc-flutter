@@ -535,15 +535,24 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 /// App name and version, for bug reports.
-class _AboutFooter extends StatelessWidget {
+class _AboutFooter extends StatefulWidget {
   const _AboutFooter();
+
+  @override
+  State<_AboutFooter> createState() => _AboutFooterState();
+}
+
+class _AboutFooterState extends State<_AboutFooter> {
+  // The platform-channel lookup runs once: rebuilding Settings (or anything
+  // above it) must not re-query the version and loop the FutureBuilder.
+  late final Future<PackageInfo> _info = PackageInfo.fromPlatform();
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final tt = context.textTheme;
     return FutureBuilder<PackageInfo>(
-      future: PackageInfo.fromPlatform(),
+      future: _info,
       builder: (context, snapshot) {
         final info = snapshot.data;
         return Column(
