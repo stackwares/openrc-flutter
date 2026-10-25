@@ -31,36 +31,45 @@ extension AppMotionWidget on Widget {
   /// Staggered fade + slight upward slide for list/grid rows.
   Widget appListItemEntrance(int index, {Key? key}) {
     final delay = AppMotion.staggerDelay(index);
-    return _MotionGate(
-      key: key,
-      effects: (child) => child
-          .animate(delay: delay)
-          .fadeIn(duration: AppMotion.duration, curve: AppMotion.curve)
-          .slide(
-            begin: const Offset(0, 0.04),
-            end: Offset.zero,
-            duration: AppMotion.duration,
-            curve: AppMotion.curve,
-          ),
-      child: this,
+    // One cached texture per row: the fade/slide below then blends a GPU
+    // layer instead of repainting the row's subtree every frame.
+    return RepaintBoundary(
+      child: _MotionGate(
+        key: key,
+        effects: (child) => child
+            .animate(delay: delay)
+            .fadeIn(duration: AppMotion.duration, curve: AppMotion.curve)
+            .slide(
+              begin: const Offset(0, 0.04),
+              end: Offset.zero,
+              duration: AppMotion.duration,
+              curve: AppMotion.curve,
+            ),
+        child: this,
+      ),
     );
   }
 
   /// Full-width card block: fade + subtle scale.
   Widget appCardEntrance({Duration delay = Duration.zero, Key? key}) {
-    return _MotionGate(
-      key: key,
-      effects: (child) => child
-          .animate(delay: delay)
-          .fadeIn(duration: AppMotion.duration, curve: AppMotion.curve)
-          .scaleXY(
-            begin: 0.98,
-            end: 1.0,
-            duration: AppMotion.duration,
-            curve: AppMotion.curve,
-            alignment: Alignment.center,
-          ),
-      child: this,
+    // One cached texture per card: the fade/scale below then blends a GPU
+    // layer instead of repainting the card's subtree (theme previews,
+    // swatches, avatars) every frame while a route pushes or a tab slides.
+    return RepaintBoundary(
+      child: _MotionGate(
+        key: key,
+        effects: (child) => child
+            .animate(delay: delay)
+            .fadeIn(duration: AppMotion.duration, curve: AppMotion.curve)
+            .scaleXY(
+              begin: 0.98,
+              end: 1.0,
+              duration: AppMotion.duration,
+              curve: AppMotion.curve,
+              alignment: Alignment.center,
+            ),
+        child: this,
+      ),
     );
   }
 

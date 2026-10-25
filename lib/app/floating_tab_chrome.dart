@@ -291,9 +291,15 @@ class _TabSwitchTransitionState extends State<TabSwitchTransition>
 
   @override
   Widget build(BuildContext context) {
+    // One cached texture for the whole tab: the switch glides it on the GPU
+    // instead of repainting every tab's subtree (shadows, gradients,
+    // markdown, charts) each frame.
     return FadeTransition(
       opacity: _fade,
-      child: SlideTransition(position: _slide, child: widget.child),
+      child: SlideTransition(
+        position: _slide,
+        child: RepaintBoundary(child: widget.child),
+      ),
     );
   }
 }
