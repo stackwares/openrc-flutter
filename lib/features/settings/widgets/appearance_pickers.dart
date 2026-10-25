@@ -6,6 +6,32 @@ import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/theme/app_theme.dart';
 import 'package:openrc/widgets/pressable_scale.dart';
 
+/// Preview schemes are full theme generations; cache them so opening
+/// Settings (and every rebuild while it is open) doesn't build them again.
+final _previewSchemeCache = <String, ColorScheme>{};
+
+ColorScheme _previewScheme(FlexScheme scheme, Brightness brightness) {
+  final key = '${scheme.name}:$brightness';
+  return _previewSchemeCache.putIfAbsent(
+    key,
+    () => (brightness == Brightness.dark
+            ? AppTheme.dark(scheme)
+            : AppTheme.light(scheme))
+        .colorScheme,
+  );
+}
+
+/// Swatch dots also come from generated scheme colors; cache those too.
+final _swatchColorCache = <String, FlexSchemeColor>{};
+
+FlexSchemeColor _swatchColors(FlexScheme scheme, Brightness brightness) {
+  final key = '${scheme.name}:$brightness';
+  return _swatchColorCache.putIfAbsent(
+    key,
+    () => scheme.colors(brightness),
+  );
+}
+
 /// System / Light / Dark as three miniature previews of the app.
 class ThemeModePicker extends StatelessWidget {
   const ThemeModePicker({
@@ -21,8 +47,8 @@ class ThemeModePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final light = AppTheme.light(scheme).colorScheme;
-    final dark = AppTheme.dark(scheme).colorScheme;
+    final light = _previewScheme(scheme, Brightness.light);
+    final dark = _previewScheme(scheme, Brightness.dark);
     Widget tile(ThemeMode m, String label, Widget preview) => Expanded(
       child: _ThemeModeTile(
         label: label,
@@ -316,7 +342,7 @@ class AccentSwatchRow extends StatelessWidget {
           children: [
             for (final s in options) ...[
               _Swatch(
-                color: s.colors(brightness).primary,
+                color: _swatchColors(s, brightness).primary,
                 name: s.data.name,
                 selected: s == selected,
                 onTap: () => onSelected(s),

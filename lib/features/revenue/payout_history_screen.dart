@@ -11,6 +11,7 @@ import 'package:openrc/features/revenue/payout_history_provider.dart';
 import 'package:openrc/features/revenue/widgets/payout_history_chart.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/side_panel.dart';
+import 'package:openrc/widgets/app_segmented_control.dart';
 import 'package:openrc/widgets/animated_number.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/app_state_message.dart';
@@ -175,25 +176,21 @@ class _PayoutHistoryScreenState extends ConsumerState<PayoutHistoryScreen> {
               if (stores.length > 1)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: SegmentedButton<_StoreFilter>(
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: _StoreFilter.all,
-                        label: Text('revenue.payouts.all'.tr()),
-                      ),
-                      ButtonSegment(
-                        value: _StoreFilter.apple,
-                        label: Text(PayoutStore.apple.displayLabel),
-                      ),
-                      ButtonSegment(
-                        value: _StoreFilter.google,
-                        label: Text(PayoutStore.google.displayLabel),
-                      ),
+                  child: AppSegmentedControl<_StoreFilter>(
+                    values: const [
+                      _StoreFilter.all,
+                      _StoreFilter.apple,
+                      _StoreFilter.google,
                     ],
-                    selected: {filter},
-                    onSelectionChanged: (s) =>
-                        setState(() => _filter = s.single),
+                    labels: {
+                      _StoreFilter.all: 'revenue.payouts.all'.tr(),
+                      _StoreFilter.apple: PayoutStore.apple.displayLabel,
+                      _StoreFilter.google: PayoutStore.google.displayLabel,
+                    },
+                    groupValue: filter,
+                    onValueChanged: (next) {
+                      if (next != null) setState(() => _filter = next);
+                    },
                   ),
                 ),
               Padding(

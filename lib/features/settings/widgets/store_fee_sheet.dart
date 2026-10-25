@@ -5,6 +5,7 @@ import 'package:openrc/core/utils/currency_format.dart';
 import 'package:openrc/features/settings/widgets/settings_rows.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/app_segmented_control.dart';
 import 'package:openrc/widgets/animated_reveal.dart';
 
 /// Example sale used to show what a fee means in money.
@@ -173,18 +174,21 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          SegmentedButton<_FeeChoice>(
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(value: _FeeChoice.fifteen, label: Text('15%')),
-              ButtonSegment(value: _FeeChoice.thirty, label: Text('30%')),
-              ButtonSegment(
-                value: _FeeChoice.custom,
-                label: Text('settings.custom'.tr()),
-              ),
+          AppSegmentedControl<_FeeChoice>(
+            values: const [
+              _FeeChoice.fifteen,
+              _FeeChoice.thirty,
+              _FeeChoice.custom,
             ],
-            selected: {_choice},
-            onSelectionChanged: (s) => _choose(s.single),
+            labels: {
+              _FeeChoice.fifteen: '15%',
+              _FeeChoice.thirty: '30%',
+              _FeeChoice.custom: 'settings.custom'.tr(),
+            },
+            groupValue: _choice,
+            onValueChanged: (choice) {
+              if (choice != null) _choose(choice);
+            },
           ),
           AnimatedReveal(
             visible: _choice == _FeeChoice.custom,

@@ -175,21 +175,6 @@ abstract class AppTheme {
           ),
         ),
       ),
-      segmentedButtonTheme: SegmentedButtonThemeData(
-        style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.selected)
-                ? selectedTint
-                : Colors.transparent,
-          ),
-          foregroundColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.selected)
-                ? scheme.primary
-                : scheme.onSurface,
-          ),
-          side: WidgetStatePropertyAll(BorderSide(color: scheme.outline)),
-        ),
-      ),
     );
   }
 

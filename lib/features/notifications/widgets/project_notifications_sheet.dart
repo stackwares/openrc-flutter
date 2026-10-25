@@ -11,6 +11,7 @@ import 'package:openrc/services/push/push_notifications.dart';
 import 'package:openrc/services/push/push_webhooks.dart';
 import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/widgets/app_segmented_control.dart';
 
 /// One project: whether it notifies this device, and what it notifies about.
 Future<void> showProjectNotificationsSheet(
@@ -161,25 +162,21 @@ class _ProjectNotificationsSheetState
                 style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 10),
-              SegmentedButton<bool>(
-                segments: [
-                  ButtonSegment(
-                    value: false,
-                    label: Text('notifications.projectSheet.same'.tr()),
-                  ),
-                  ButtonSegment(
-                    value: true,
-                    label: Text('notifications.projectSheet.custom'.tr()),
-                  ),
-                ],
-                selected: {custom != null},
-                showSelectedIcon: false,
-                onSelectionChanged: _saving
+              AppSegmentedControl<bool>(
+                values: const [false, true],
+                labels: {
+                  false: 'notifications.projectSheet.same'.tr(),
+                  true: 'notifications.projectSheet.custom'.tr(),
+                },
+                groupValue: custom != null,
+                onValueChanged: _saving
                     ? null
                     : (value) {
                         UtilitiesService.hapticSelection();
                         setState(() {
-                          _custom = value.first ? {...settings.kinds} : null;
+                          _custom = value == true
+                              ? {...settings.kinds}
+                              : null;
                         });
                       },
               ),
