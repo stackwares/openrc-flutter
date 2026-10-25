@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/models/agent_preset.dart';
 import 'package:openrc/services/agent/agent_settings_store.dart';
 import 'package:openrc/theme/app_tokens.dart';
+import 'package:openrc/widgets/app_segmented_control.dart';
 
 /// Custom LLM connection. The provider dropdown only prefills the base URL
 /// (and a suggested model / API style). Everything stays editable.
@@ -70,10 +71,18 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
 
   void _onTextChanged() => setState(() {});
 
-  /// Swaps the key field for a newly built one. Toggling `obscureText` alone
-  /// leaves Flutter web's hidden input stale (flutter/flutter#192102), and a
-  /// fresh field always paints the key in the new visibility.
+  /// Flips the key between dots and plain text.
+  ///
+  /// Native fields toggle in place: the element stays, so focus, the keyboard
+  /// and the selection survive and the value is simply repainted. Flutter
+  /// web's hidden input goes stale when `obscureText` changes in place and the
+  /// field keeps showing dots (flutter/flutter#192102), so the web build swaps
+  /// in a fresh field instead and puts the keyboard back on it.
   void _toggleKeyVisibility() {
+    if (!kIsWeb) {
+      setState(() => _obscure = !_obscure);
+      return;
+    }
     final focused = _keyFocus.hasFocus;
     setState(() => _obscure = !_obscure);
     if (!focused) return;
@@ -273,22 +282,18 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
           ),
         ),
         const SizedBox(height: AppSpace.sm),
-        SegmentedButton<AgentApiStyle>(
-          showSelectedIcon: false,
-          segments: [
-            ButtonSegment(
-              value: AgentApiStyle.openAi,
-              label: Text('settings.agent.styleOpenAi'.tr()),
-            ),
-            ButtonSegment(
-              value: AgentApiStyle.anthropic,
-              label: Text('settings.agent.styleAnthropic'.tr()),
-            ),
-          ],
-          selected: {_customStyle},
-          onSelectionChanged: _saving
+        AppSegmentedControl<AgentApiStyle>(
+          values: const [AgentApiStyle.openAi, AgentApiStyle.anthropic],
+          labels: {
+            AgentApiStyle.openAi: 'settings.agent.styleOpenAi'.tr(),
+            AgentApiStyle.anthropic: 'settings.agent.styleAnthropic'.tr(),
+          },
+          groupValue: _customStyle,
+          onValueChanged: _saving
               ? null
-              : (next) => setState(() => _customStyle = next.first),
+              : (next) {
+                  if (next != null) setState(() => _customStyle = next);
+                },
         ),
         if (_blockedOnWeb) ...[
           const SizedBox(height: AppSpace.sm),
@@ -317,7 +322,9 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
         ],
         const SizedBox(height: AppSpace.lg),
         TextField(
-          key: ValueKey<bool>(_obscure),
+          // Web only: a fresh field is the only way to drop the stale hidden
+          // input; see [_toggleKeyVisibility].
+          key: kIsWeb ? ValueKey<bool>(_obscure) : null,
           controller: _key,
           focusNode: _keyFocus,
           obscureText: _obscure,
@@ -331,8 +338,11 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
           },
           decoration: InputDecoration(
             labelText: 'settings.agent.apiKey'.tr(),
+            // A saved key is never read back into this field, so say so
+            // instead of showing dots that look like a value the eye should
+            // reveal.
             hintText: _hasSavedKey
-                ? '••••••••••••'
+                ? 'settings.agent.savedKey'.tr()
                 : _preset.keyPrefix.isEmpty
                 ? null
                 : '${_preset.keyPrefix}…',
@@ -350,15 +360,19 @@ class _AgentConnectionFormState extends ConsumerState<AgentConnectionForm> {
                   icon: const Icon(Icons.content_paste_rounded, size: 20),
                   onPressed: _saving ? null : _paste,
                 ),
-                IconButton(
-                  icon: Icon(
-                    _obscure
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    size: 20,
+                // Only once there is something to reveal: with an empty field
+                // the eye would flip an icon and show nothing, which reads as
+                // a broken button.
+                if (_key.text.isNotEmpty)
+                  IconButton(
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 20,
+                    ),
+                    onPressed: _saving ? null : _toggleKeyVisibility,
                   ),
-                  onPressed: _toggleKeyVisibility,
-                ),
               ],
             ),
           ),

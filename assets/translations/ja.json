@@ -796,6 +796,7 @@
         "custom": "カスタム"
       },
       "apiKey": "APIキー",
+      "savedKey": "このデバイスに保存済み",
       "invalidPrefix": "キーがこのプロバイダーの一般的なプレフィックスと一致しません。",
       "title": "質問",
       "provider": "プロバイダー",

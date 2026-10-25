@@ -802,6 +802,7 @@
         "custom": "Personnalisé"
       },
       "apiKey": "Clé API",
+      "savedKey": "Enregistrée sur cet appareil",
       "invalidPrefix": "La clé ne correspond pas au préfixe habituel de ce fournisseur.",
       "title": "Demander",
       "provider": "Fournisseur",

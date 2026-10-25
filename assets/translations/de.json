@@ -802,6 +802,7 @@
         "custom": "Eigener"
       },
       "apiKey": "API-Schlüssel",
+      "savedKey": "Auf diesem Gerät gespeichert",
       "invalidPrefix": "Der Schlüssel passt nicht zur üblichen Prefix dieses Anbieters.",
       "title": "Fragen",
       "provider": "Anbieter",

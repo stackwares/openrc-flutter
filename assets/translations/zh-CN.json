@@ -796,6 +796,7 @@
         "custom": "自定义"
       },
       "apiKey": "API 密钥",
+      "savedKey": "已保存在此设备上",
       "invalidPrefix": "密钥与该提供商的常见前缀不匹配。",
       "title": "提问",
       "provider": "提供商",

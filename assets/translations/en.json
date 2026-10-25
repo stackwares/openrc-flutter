@@ -948,6 +948,7 @@
       "title": "Ask",
       "provider": "Provider",
       "apiKey": "API key",
+      "savedKey": "Saved on this device",
       "invalidPrefix": "This key doesn’t match the selected provider’s usual prefix.",
       "recommended": "Recommended",
       "faster": "Faster / cheaper",

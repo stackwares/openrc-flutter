@@ -796,6 +796,7 @@
         "custom": "Kustom"
       },
       "apiKey": "Kunci API",
+      "savedKey": "Tersimpan di perangkat ini",
       "invalidPrefix": "Kunci tidak cocok dengan awalan umum penyedia ini.",
       "title": "Tanya",
       "provider": "Penyedia",

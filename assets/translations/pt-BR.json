@@ -802,6 +802,7 @@
         "custom": "Personalizado"
       },
       "apiKey": "Chave de API",
+      "savedKey": "Salva neste dispositivo",
       "invalidPrefix": "A chave não corresponde ao prefixo usual deste provedor.",
       "title": "Perguntar",
       "provider": "Provedor",
