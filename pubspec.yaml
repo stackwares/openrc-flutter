@@ -2,7 +2,7 @@ name: openrc
 description: "OpenRC: an open-source RevenueCat dashboard for iOS, iPadOS, Android, macOS and the web."
 publish_to: 'none'
 
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: ^3.11.4
