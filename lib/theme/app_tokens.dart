@@ -72,6 +72,12 @@ abstract final class AppBreakpoints {
   /// Dashboard side gutter.
   static const double dashboardGutter = 24;
 
+  /// Widest Transactions' and Revenue's content grows in [width]: the
+  /// dashboard on wide windows, a single column of cards otherwise.
+  static double dashboardTabMaxWidth(double width) => width >= dashboard
+      ? dashboardMaxWidth
+      : readableWidth + 2 * AppSpace.gutter;
+
   static WindowSize of(double width) => width >= expanded
       ? WindowSize.expanded
       : width >= medium

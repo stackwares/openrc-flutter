@@ -274,6 +274,7 @@ class _AskScreenState extends ConsumerState<AskScreen> {
               : !connected && settings != null
               ? 'agent.setup.notConnected'.tr()
               : settings?.displayName,
+          contentMaxWidth: (_) => AppBreakpoints.readableWidth,
           actions: [
             if (!askBlocked && connected && turns.isNotEmpty)
               HeaderIconButton(

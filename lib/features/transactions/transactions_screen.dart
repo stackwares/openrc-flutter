@@ -888,6 +888,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         subtitle: _daySubtitle(selectedKey),
         onTitleTap: () => _pickDay(selectedKey),
         titleTapTooltip: 'transactions.jumpToDay'.tr(),
+        contentMaxWidth: AppBreakpoints.dashboardTabMaxWidth,
         actions: [
           HeaderIconButton(
             icon: Icons.chevron_left_rounded,

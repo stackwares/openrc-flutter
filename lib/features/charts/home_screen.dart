@@ -18,6 +18,9 @@ import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/pressable_scale.dart';
 import 'package:openrc/widgets/shell_header.dart';
 
+/// Widest the cards grow (1200 plus their 16px gutters) before they center.
+const double _contentMaxWidth = 1232;
+
 /// Quick chart ranges shown as chips (all end today).
 enum _RangePreset { last7Days, last30Days, thisMonth }
 
@@ -96,6 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: ShellHeader(
         title: 'charts.title'.tr(),
         subtitle: rangeLabel,
+        contentMaxWidth: (_) => _contentMaxWidth,
         bottom: state.isLoading
             ? const PreferredSize(
                 preferredSize: Size.fromHeight(2),
@@ -214,7 +218,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             : width >= 600
             ? 3
             : 2;
-        final inset = AppBreakpoints.centeringInset(width, maxWidth: 1232);
+        final inset = AppBreakpoints.centeringInset(
+          width,
+          maxWidth: _contentMaxWidth,
+        );
         return CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [

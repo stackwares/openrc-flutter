@@ -122,6 +122,7 @@ class _RealtimeTransactionsScreenState
       appBar: ShellHeader(
         title: 'revenue.title'.tr(),
         subtitle: DateFormat.yMMMM().format(DateTime.now()),
+        contentMaxWidth: AppBreakpoints.dashboardTabMaxWidth,
         actions: [
           HeaderIconButton(
             icon: Icons.tune_rounded,

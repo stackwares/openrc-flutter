@@ -16,6 +16,7 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.onTitleTap,
     this.titleTapTooltip,
+    this.contentMaxWidth,
   });
 
   final String title;
@@ -29,6 +30,11 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final List<Widget> actions;
   final PreferredSizeWidget? bottom;
+
+  /// Widest the tab's content grows in a given width. Past it the content
+  /// centers, and the title and actions move in with it instead of sitting
+  /// at the window's edges.
+  final double Function(double width)? contentMaxWidth;
 
   static const double toolbarHeight = 68;
 
@@ -131,18 +137,32 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
         titleBlock = Tooltip(message: tooltip, child: titleBlock);
       }
     }
-    return AppBar(
+    final titleRow = Row(
+      children: [
+        Flexible(child: titleBlock),
+        if (leading != null) ...[const SizedBox(width: 8), leading!],
+      ],
+    );
+    AppBar bar({double inset = 0}) => AppBar(
       automaticallyImplyLeading: false,
       toolbarHeight: toolbarHeight,
-      titleSpacing: onTitleTap == null ? 20 : 20 - _titleTapInset,
-      title: Row(
-        children: [
-          Flexible(child: titleBlock),
-          if (leading != null) ...[const SizedBox(width: 8), leading!],
-        ],
-      ),
-      actions: [...actions, const SizedBox(width: 12)],
+      titleSpacing: inset + (onTitleTap == null ? 20 : 20 - _titleTapInset),
+      title: titleRow,
+      actions: [...actions, SizedBox(width: 12 + inset)],
       bottom: bottom,
+    );
+    final maxWidth = contentMaxWidth;
+    if (maxWidth == null) return bar();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return bar(
+          inset: AppBreakpoints.centeringInset(
+            width,
+            maxWidth: maxWidth(width),
+          ),
+        );
+      },
     );
   }
 

@@ -98,6 +98,9 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Fixed
 
+- On wide windows the tab headers (title, date picker, previous and next,
+  filters, refresh) line up with the cards below instead of sitting at the
+  window's edges.
 - Analytics events queued when the app is closed or backgrounded are now
   flushed, so the events that led to a crash are not lost.
 - Push notifications read the product names Settings gave them for projects
