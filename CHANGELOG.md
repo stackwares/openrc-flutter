@@ -8,6 +8,12 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Added
 
+- Auto-refresh: coming back to the app after five minutes or more reloads
+  Transactions, Revenue and Charts, and a sale's push while the app is open
+  now reloads Charts too, once per burst of webhooks. Charts refreshes
+  quietly, keeping its numbers on screen, and keeps them if the refresh
+  fails.
+
 - Optional analytics cover more of the app while staying anonymous: the build
   channel (`production`, `internal`, `development`) travels with every event so
   dashboards and funnels can be filtered by it, screens are reported across the

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:openrc/app/app_navigator.dart';
+import 'package:openrc/app/auto_refresh.dart';
 import 'package:openrc/app/floating_tab_chrome.dart';
 import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/core/animations/app_motion.dart';
@@ -141,7 +142,8 @@ class MainShell extends ConsumerStatefulWidget {
   ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<MainShell> {
+class _MainShellState extends ConsumerState<MainShell>
+    with WidgetsBindingObserver {
   static const _screens = [
     TransactionsScreen(),
     RealtimeTransactionsScreen(),
@@ -154,9 +156,14 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   late final List<StreamSubscription<Object>> _pushSubscriptions;
 
+  final _autoRefresh = AutoRefreshPolicy();
+
+  Timer? _pushRefreshTimer;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final onboarding = ref.read(onboardingPrefsProvider);
@@ -253,11 +260,37 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     for (final subscription in _pushSubscriptions) {
       subscription.cancel();
     }
     _pushDisplayTimer?.cancel();
+    _pushRefreshTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _autoRefresh.left();
+    } else if (state == AppLifecycleState.resumed && _autoRefresh.returned()) {
+      _refreshInBackground();
+    }
+  }
+
+  /// Reloads Transactions, Revenue and Charts; their rows and numbers stay
+  /// on screen until the new ones land.
+  void _refreshInBackground() {
+    _reloadTransactions();
+    ref.read(homeProvider.notifier).refreshQuietly();
+  }
+
+  void _schedulePushRefresh() {
+    _pushRefreshTimer?.cancel();
+    _pushRefreshTimer = Timer(AutoRefreshPolicy.pushSettle, () {
+      if (mounted) _refreshInBackground();
+    });
   }
 
   void _reloadTransactions() {
@@ -269,7 +302,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   /// A RevenueCat event arrived while the app is open: show it in the list.
   /// iOS and macOS show the banner themselves; Android doesn't.
   void _onPushWhileOpen(RemoteMessage message) {
-    _reloadTransactions();
+    _schedulePushRefresh();
     final title = message.notification?.title;
     if (defaultTargetPlatform != TargetPlatform.android || title == null) {
       return;

@@ -123,30 +123,14 @@ class HomeNotifier extends StateNotifier<HomeState> {
     final generation = ++_fetchGeneration;
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final api = _ref.read(rcApiServiceProvider);
-      final overviewResp = await api.overview();
-
-      // Several metrics read different series of the same chart (e.g.
-      // Subscriptions and Users are both `actives`): request each chart once.
-      final requests = <String, Future<RcChartResponse>>{};
-      for (final metric in OverviewMetricType.values) {
-        requests.putIfAbsent(
-          '${metric.chartName}|${metric.chartRevenueTypeParam ?? ''}',
-          () => _fetchChart(api, metric),
-        );
-      }
-      final responses = await Future.wait(requests.values);
-      final byKey = Map.fromIterables(requests.keys, responses);
-      final chartsMap = <OverviewMetricType, RcChartResponse>{
-        for (final metric in OverviewMetricType.values)
-          metric: byKey[
-              '${metric.chartName}|${metric.chartRevenueTypeParam ?? ''}']!,
-      };
-
+      final (overview, charts) = await _load();
       if (!_isCurrent(generation)) return;
       state = state.copyWith(
-        overview: overviewResp,
-        charts: chartsMap,
+        overview: overview,
+        charts: {
+          for (final MapEntry(:key, :value) in charts.entries)
+            key: value ?? const RcChartResponse(),
+        },
         isLoading: false,
       );
     } on DioException catch (e, st) {
@@ -173,7 +157,66 @@ class HomeNotifier extends StateNotifier<HomeState> {
     }
   }
 
-  Future<RcChartResponse> _fetchChart(
+  /// A refresh the user didn't ask for (back in the app, a sale arrived):
+  /// what's on screen stays, with no loading state, until new numbers land,
+  /// and stays if the refresh fails. Skipped before the first load and while
+  /// another load runs.
+  Future<void> refreshQuietly() async {
+    if (state.overview == null || state.isLoading) return;
+    final generation = ++_fetchGeneration;
+    try {
+      final (overview, charts) = await _load();
+      if (!_isCurrent(generation)) return;
+      final previous = state.charts;
+      state = state.copyWith(
+        overview: overview,
+        charts: {
+          for (final MapEntry(:key, :value) in charts.entries)
+            key: value ?? previous[key] ?? const RcChartResponse(),
+        },
+      );
+    } on DioException catch (e, st) {
+      if (!_isCurrent(generation)) return;
+      _handleAuthError(e);
+      _homeLog.warning(
+        'Background home refresh failed: ${e.type} '
+        'HTTP ${e.response?.statusCode} ${e.requestOptions.uri}',
+        e,
+        st,
+      );
+    } catch (e, st) {
+      _homeLog.warning('Background home refresh failed (unexpected)', e, st);
+    }
+  }
+
+  /// The overview and every metric's chart; a chart that failed is `null`.
+  Future<(RcOverviewResponse, Map<OverviewMetricType, RcChartResponse?>)>
+  _load() async {
+    final api = _ref.read(rcApiServiceProvider);
+    final overviewResp = await api.overview();
+
+    // Several metrics read different series of the same chart (e.g.
+    // Subscriptions and Users are both `actives`): request each chart once.
+    final requests = <String, Future<RcChartResponse?>>{};
+    for (final metric in OverviewMetricType.values) {
+      requests.putIfAbsent(
+        '${metric.chartName}|${metric.chartRevenueTypeParam ?? ''}',
+        () => _fetchChart(api, metric),
+      );
+    }
+    final responses = await Future.wait(requests.values);
+    final byKey = Map.fromIterables(requests.keys, responses);
+    return (
+      overviewResp,
+      {
+        for (final metric in OverviewMetricType.values)
+          metric:
+              byKey['${metric.chartName}|${metric.chartRevenueTypeParam ?? ''}'],
+      },
+    );
+  }
+
+  Future<RcChartResponse?> _fetchChart(
     RcApiService api,
     OverviewMetricType metric,
   ) async {
@@ -195,7 +238,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         e,
         st,
       );
-      return const RcChartResponse();
+      return null;
     }
   }
 
