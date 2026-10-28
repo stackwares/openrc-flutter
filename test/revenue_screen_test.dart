@@ -13,7 +13,7 @@ class _FixedTransactions extends TransactionsNotifier {
   int fetches = 0;
 
   @override
-  Future<void> fetchInitial() async {
+  Future<void> fetchInitial({String source = 'manual'}) async {
     fetches++;
   }
 }

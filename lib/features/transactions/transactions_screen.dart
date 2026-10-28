@@ -504,11 +504,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     state = state.copyWith(dailyTotals: _calculateDailyTotals(state.grouped));
   }
 
-  Future<void> fetchInitial() => fetchSelectedDay();
+  /// [source] says what triggered the load (see [Telemetry.dataLoadSources]).
+  Future<void> fetchInitial({String source = 'manual'}) =>
+      fetchSelectedDay(source: source);
 
   /// Full reload (pull-to-refresh): same as Kedi’s first fetch — small limit,
   /// `end_date` only, then pagination uses `start_from` alone.
-  Future<void> fetchSelectedDay() async {
+  Future<void> fetchSelectedDay({String source = 'manual'}) async {
     state = state.copyWith(
       isLoading: true,
       isLoadingMore: false,
@@ -555,9 +557,10 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       );
       Telemetry.dataLoaded(
         result: 'ok',
-        source: 'initial',
+        source: source,
         durationMs: DateTime.now().difference(started).inMilliseconds,
       );
+      Telemetry.firstDataLoaded();
       _syncWidgetData();
       _ensureAppIcons(raw);
       if (hasMorePages && !preloadBoundaryMet && gen == _backfillGeneration) {
@@ -568,7 +571,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       if (!mounted || gen != _backfillGeneration) return;
       Telemetry.dataLoaded(
         result: 'error',
-        source: 'initial',
+        source: source,
         durationMs: DateTime.now().difference(started).inMilliseconds,
       );
       _handleAuthError(e);
@@ -962,7 +965,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       return AppStateMessage.error(
         title: 'transactions.loadError'.tr(),
         message: state.error!,
-        onRetry: () => ref.read(transactionsProvider.notifier).fetchInitial(),
+        onRetry: () => ref
+            .read(transactionsProvider.notifier)
+            .fetchInitial(source: 'retry'),
       );
     }
 
@@ -1201,8 +1206,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         const SliverToBoxAdapter(child: TransactionRowsSkeleton(rows: 3)),
     ];
 
-    Future<void> refresh() =>
-        ref.read(transactionsProvider.notifier).fetchInitial();
+    Future<void> refresh() => ref
+        .read(transactionsProvider.notifier)
+        .fetchInitial(source: 'pull_to_refresh');
 
     Widget scrollView(List<Widget> slivers, {double inset = 0}) =>
         CustomScrollView(

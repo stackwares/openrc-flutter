@@ -16,7 +16,7 @@ class _Fixed extends TransactionsNotifier {
   }
 
   @override
-  Future<void> fetchInitial() async {}
+  Future<void> fetchInitial({String source = 'manual'}) async {}
 }
 
 void main() {

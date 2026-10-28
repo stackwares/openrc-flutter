@@ -232,7 +232,9 @@ class AgentToolExecutor {
       if (rows.length >= limit) break;
     }
     if (rows.isEmpty && allowRefetch && !state.isLoading) {
-      await _ref.read(transactionsProvider.notifier).fetchInitial();
+      await _ref
+          .read(transactionsProvider.notifier)
+          .fetchInitial(source: 'ask');
       return _getTransactions(args, allowRefetch: false);
     }
     return {
@@ -297,7 +299,9 @@ class AgentToolExecutor {
     }
     var tx = _findLoadedTransaction(id);
     if (tx == null && !_ref.read(transactionsProvider).isLoading) {
-      await _ref.read(transactionsProvider.notifier).fetchInitial();
+      await _ref
+          .read(transactionsProvider.notifier)
+          .fetchInitial(source: 'ask');
       tx = _findLoadedTransaction(id);
     }
     if (tx == null) {

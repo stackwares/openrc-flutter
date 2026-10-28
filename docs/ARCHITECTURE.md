@@ -194,7 +194,9 @@ When on, it records anonymous screen views (and, on the web, a `$pageview` per
 screen with a made-up path such as `/revenue`, which is what PostHog's web
 analytics counts), crashes from Flutter, the platform dispatcher and native
 code, and the events the funnels need: `onboarding_*`, `sign_in_started` /
-`sign_in_failed` / `signed_in`, `data_loaded`, `notifications_enabled`,
+`sign_in_2fa_challenge` / `sign_in_failed` / `signed_in`, `data_loaded`
+(every transactions load, with the `source` that triggered it),
+`first_value` (`kind: data_loaded`, once per install), `notifications_enabled`,
 `product_named`, `ask_message_sent`, `preference_changed`. Properties are
 categorical only; amounts, app names, product ids, emails and questions never
 go with them.

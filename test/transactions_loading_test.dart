@@ -80,7 +80,7 @@ class _Fixed extends TransactionsNotifier {
   }
 
   @override
-  Future<void> fetchInitial() async {}
+  Future<void> fetchInitial({String source = 'manual'}) async {}
 }
 
 Future<void> _settle() async {

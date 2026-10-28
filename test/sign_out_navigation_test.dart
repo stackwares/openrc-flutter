@@ -27,7 +27,7 @@ class _IdleTransactions extends TransactionsNotifier {
   }
 
   @override
-  Future<void> fetchInitial() async {}
+  Future<void> fetchInitial({String source = 'manual'}) async {}
 }
 
 class _IdleHome extends HomeNotifier {

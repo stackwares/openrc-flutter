@@ -172,13 +172,15 @@ class _MainShellState extends ConsumerState<MainShell>
           ref.read(mainShellTabIndexProvider.notifier).state =
               onboardingTabIndexForFocus(onboarding.focus);
         }
-        unawaited(ref.read(onboardingPrefsProvider.notifier).markFocusApplied());
+        unawaited(
+          ref.read(onboardingPrefsProvider.notifier).markFocusApplied(),
+        );
       }
       if (onboarding.pendingHomeArrived) {
         logOnboardingEvent(onboardingHomeArrivedEvent(), track: true);
         unawaited(ref.read(onboardingPrefsProvider.notifier).markHomeArrived());
       }
-      ref.read(transactionsProvider.notifier).fetchInitial();
+      ref.read(transactionsProvider.notifier).fetchInitial(source: 'launch');
       Telemetry.screen(
         _mainShellTabs[ref.read(mainShellTabIndexProvider)].telemetryName,
       );
@@ -275,27 +277,27 @@ class _MainShellState extends ConsumerState<MainShell>
         state == AppLifecycleState.paused) {
       _autoRefresh.left();
     } else if (state == AppLifecycleState.resumed && _autoRefresh.returned()) {
-      _refreshInBackground();
+      _refreshInBackground(source: 'resume');
     }
   }
 
   /// Reloads Transactions, Revenue and Charts; their rows and numbers stay
   /// on screen until the new ones land.
-  void _refreshInBackground() {
-    _reloadTransactions();
+  void _refreshInBackground({required String source}) {
+    _reloadTransactions(source: source);
     ref.read(homeProvider.notifier).refreshQuietly();
   }
 
   void _schedulePushRefresh() {
     _pushRefreshTimer?.cancel();
     _pushRefreshTimer = Timer(AutoRefreshPolicy.pushSettle, () {
-      if (mounted) _refreshInBackground();
+      if (mounted) _refreshInBackground(source: 'push');
     });
   }
 
-  void _reloadTransactions() {
+  void _reloadTransactions({required String source}) {
     if (!ref.read(transactionsProvider).isLoading) {
-      ref.read(transactionsProvider.notifier).fetchInitial();
+      ref.read(transactionsProvider.notifier).fetchInitial(source: source);
     }
   }
 
@@ -317,10 +319,7 @@ class _MainShellState extends ConsumerState<MainShell>
       actionLabel: id == null ? null : 'agent.askAbout'.tr(),
       onAction: id == null
           ? null
-          : () => openAskTab(
-              ref,
-              context: AskPrefills.sale(transactionId: id),
-            ),
+          : () => openAskTab(ref, context: AskPrefills.sale(transactionId: id)),
     );
   }
 
@@ -339,7 +338,9 @@ class _MainShellState extends ConsumerState<MainShell>
             ? null
             : AskPrefills.sale(transactionId: launch.transactionId),
       );
-      if (launch.transactionId != null) _reloadTransactions();
+      if (launch.transactionId != null) {
+        _reloadTransactions(source: 'notification');
+      }
       return;
     }
     if (launch.transactionId != null) {
@@ -356,7 +357,7 @@ class _MainShellState extends ConsumerState<MainShell>
       if (attempt > 0) await Future<void>.delayed(const Duration(seconds: 3));
       if (!mounted) return;
       if (!ref.read(transactionsProvider).isLoading) {
-        await notifier.fetchInitial();
+        await notifier.fetchInitial(source: 'notification');
       }
       if (!mounted || id == null) return;
       final transaction = _findTransaction(id);
@@ -400,7 +401,8 @@ class _MainShellState extends ConsumerState<MainShell>
           meta: _usesCommandKey,
           control: !_usesCommandKey,
           shift: true,
-        ): () => openAskAboutSelectedDay(ref),
+        ): () =>
+            openAskAboutSelectedDay(ref),
         withModifier(LogicalKeyboardKey.keyR): () => refreshShellTab(ref),
         withModifier(LogicalKeyboardKey.comma): () =>
             SettingsScreen.open(context),
@@ -418,7 +420,9 @@ class _MainShellState extends ConsumerState<MainShell>
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(mainShellTabIndexProvider);
     ref.listen<int>(mainShellTabIndexProvider, (previous, next) {
-      if (previous != next) Telemetry.screen(_mainShellTabs[next].telemetryName);
+      if (previous != next) {
+        Telemetry.screen(_mainShellTabs[next].telemetryName);
+      }
     });
     final windowSize = context.windowSize;
 
@@ -754,7 +758,9 @@ class _SidebarAccount extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        hasName ? name : (email ?? 'settings.revenueCatAccount'.tr()),
+                        hasName
+                            ? name
+                            : (email ?? 'settings.revenueCatAccount'.tr()),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(

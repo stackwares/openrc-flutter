@@ -75,7 +75,9 @@ class RcAuthService {
     required String password,
     String? otpCode,
   }) async {
-    Telemetry.signInStarted(method: otpCode == null ? 'password' : 'two_factor');
+    Telemetry.signInStarted(
+      method: otpCode == null ? 'password' : 'two_factor',
+    );
     try {
       final request = RcLoginRequest(
         email: email,
@@ -109,9 +111,18 @@ class RcAuthService {
     } on DioException catch (e) {
       final rcError = _api.parseError(e);
       if (rcError != null) {
-        _log.warning(
-          'Sign in error [${rcError.code}]: ${rcError.message}',
-        );
+        _log.warning('Sign in error [${rcError.code}]: ${rcError.message}');
+      }
+      if (rcError?.code == AppConstants.rcErrorOtpNeeded) {
+        // The password was accepted and RevenueCat wants a code: the 2FA
+        // step of the funnel, not a failure. Asked again after a code was
+        // sent means that code was not accepted.
+        if (otpCode == null) {
+          Telemetry.signInTwoFactorChallenged();
+        } else {
+          Telemetry.signInFailed(reason: 'invalid_code');
+        }
+        rethrow;
       }
       // Only the shape of the failure: RevenueCat's message can name the
       // account, and an email or an api key never leaves the device.

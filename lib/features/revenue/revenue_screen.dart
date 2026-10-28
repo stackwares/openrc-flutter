@@ -154,8 +154,9 @@ class _RealtimeTransactionsScreenState
             return AppStateMessage.error(
               title: 'revenue.couldntLoad'.tr(),
               message: state.error!,
-              onRetry: () =>
-                  ref.read(transactionsProvider.notifier).fetchInitial(),
+              onRetry: () => ref
+                  .read(transactionsProvider.notifier)
+                  .fetchInitial(source: 'retry'),
             );
           }
 
@@ -239,8 +240,9 @@ class _RealtimeTransactionsScreenState
             ),
           ];
 
-          Future<void> refresh() =>
-              ref.read(transactionsProvider.notifier).fetchInitial();
+          Future<void> refresh() => ref
+              .read(transactionsProvider.notifier)
+              .fetchInitial(source: 'pull_to_refresh');
           final bottom = mainShellFloatingTabBarScrollPadding(context);
 
           Widget column(List<Widget> children, {double inset = 0}) =>

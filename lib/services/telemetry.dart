@@ -85,7 +85,9 @@ abstract final class Telemetry {
   static void screen(String name) {
     final now = DateTime.now();
     final last = _lastScreenAt;
-    if (name == _lastScreen && last != null && now.difference(last) < const Duration(seconds: 1)) {
+    if (name == _lastScreen &&
+        last != null &&
+        now.difference(last) < const Duration(seconds: 1)) {
       return;
     }
     _lastScreen = name;
@@ -112,7 +114,25 @@ abstract final class Telemetry {
   static void signInFailed({required String reason}) =>
       event('sign_in_failed', {'reason': reason});
 
-  /// The first load after signing in finished, or failed.
+  /// Where a transactions load came from: `launch` (the dashboard opened),
+  /// `manual` (refresh button, shortcut or menu), `pull_to_refresh`,
+  /// `retry` (error screen), `resume` (back in the foreground), `push`
+  /// (a RevenueCat event arrived), `notification` (a tapped notification)
+  /// or `ask` (the Ask assistant needed fresher rows).
+  static const dataLoadSources = {
+    'launch',
+    'manual',
+    'pull_to_refresh',
+    'retry',
+    'resume',
+    'push',
+    'notification',
+    'ask',
+  };
+
+  /// A transactions load finished, or failed, with what triggered it. The
+  /// first successful load on this install is also the activation moment
+  /// (`first_value{kind: data_loaded}`, once per install).
   static void dataLoaded({
     required String result,
     required String source,
@@ -122,6 +142,15 @@ abstract final class Telemetry {
     'source': source,
     'duration_bucket': _bucket(durationMs),
   });
+
+  /// Activation: the person saw their own RevenueCat data for the first
+  /// time. Logged once per install by the shared client.
+  static void firstDataLoaded() =>
+      unawaited(AppAnalytics.logFirstValue('data_loaded'));
+
+  /// RevenueCat asked for a two-factor code after the password step, so the
+  /// sign-in funnel shows how many people meet (and pass) the 2FA screen.
+  static void signInTwoFactorChallenged() => event('sign_in_2fa_challenge');
 
   /// Turning notifications on ended in [result]: enabled, blocked or failed.
   static void notificationsEnabled({required String result}) =>
