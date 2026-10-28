@@ -149,7 +149,7 @@ describe("webhook", () => {
     expect(message.topic).toBe(TOPIC);
     expect(message.notification).toEqual({
       title: "🔵 New Subscription · $10.83",
-      body: "pro_monthly · €9.99 · 🇩🇪 DE · iOS",
+      body: "pro_monthly · 🇩🇪 DE · iOS",
     });
     // Only the store's transaction id, so a tap can open the transaction.
     expect(message.data).toEqual({
@@ -346,8 +346,8 @@ describe("display currency and fees", () => {
     await send("?currency=EUR&fees=15,30");
     // $10.83, less the App Store's 15%, at 0.9.
     expect(title(spy)).toBe("🔵 New Subscription · €8.28");
-    // Paid in euros, the currency shown: not repeated.
-    expect(body(spy)).toBe("pro_monthly · 🇩🇪 DE · iOS");
+    // The same proceeds in US dollars, since the title is in euros.
+    expect(body(spy)).toBe("pro_monthly · $9.21 · 🇩🇪 DE · iOS");
   });
 
   it("applies Google Play's fee to Play purchases, and none to others", async () => {
@@ -516,17 +516,28 @@ describe("notification copy", () => {
         country_code: "us",
         store: "PLAY_STORE",
         environment: "SANDBOX",
-        currency: "USD",
-        price_in_purchased_currency: 49.99,
       })?.body,
     ).toBe("pro_monthly → pro_yearly · 🇺🇸 US · 👾Android · Sandbox");
     expect(notificationFor({ type: "RENEWAL", store: "SOME_NEW_STORE", country_code: "XYZ" })?.body).toBe(
       "Some new store",
     );
     expect(notificationFor({ type: "RENEWAL" })?.body).toBe("RevenueCat event");
-    expect(notificationFor({ type: "RENEWAL", price: 5, currency: "NOPE", price_in_purchased_currency: 5 })).toEqual({
+    expect(notificationFor({ type: "RENEWAL", price: 5 })).toEqual({
       title: "🟢 Renewal · $5.00",
       body: "RevenueCat event",
+    });
+  });
+
+  it("repeats the proceeds in US dollars when the title uses another currency", () => {
+    const event = { type: "RENEWAL", product_id: "pro", price: 10.83 };
+    expect(notificationFor(event, parseDisplay(new URLSearchParams("currency=JPY")), 150)).toEqual({
+      title: "🟢 Renewal · ¥1,625",
+      body: "pro · $10.83",
+    });
+    // No rate, so the title itself falls back to US dollars and isn't repeated.
+    expect(notificationFor(event, parseDisplay(new URLSearchParams("currency=JPY")), null)).toEqual({
+      title: "🟢 Renewal · $10.83",
+      body: "pro",
     });
   });
 

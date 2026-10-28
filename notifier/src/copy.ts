@@ -18,8 +18,6 @@ export interface WebhookEvent {
   store?: unknown;
   country_code?: unknown;
   price?: unknown;
-  price_in_purchased_currency?: unknown;
-  currency?: unknown;
   is_trial_conversion?: unknown;
   cancel_reason?: unknown;
   purchased_at_ms?: unknown;
@@ -248,7 +246,8 @@ function unitLabel(count: number, unit: "month" | "day", language: Language): st
  * shouldn't notify. The title's
  * amount follows the device's [display]: after store fees when it subtracts
  * them, and in its currency at [rate] (one US dollar in it); without a rate
- * it stays in US dollars.
+ * it stays in US dollars. When the title is in another currency, the body
+ * repeats those same proceeds in US dollars.
  */
 export function notificationFor(
   event: WebhookEvent,
@@ -265,15 +264,12 @@ export function notificationFor(
   }
 
   const net = typeof event.price === "number" ? afterFees(event.price, event.store, display) : undefined;
-  const shown = rate !== null && display.currency !== "USD"
+  const inDisplayCurrency = rate !== null && display.currency !== "USD";
+  const shown = inDisplayCurrency
     ? money(net !== undefined ? net * rate : undefined, display.currency, language)
     : money(net, "USD", language);
-  const currency = text(event.currency)?.toUpperCase();
-  // What the customer paid, when it wasn't in the currency shown.
-  const shownCurrency = rate !== null ? display.currency : "USD";
-  const paid = currency && currency !== shownCurrency
-    ? money(event.price_in_purchased_currency, currency, language)
-    : undefined;
+  // The same proceeds, when the title isn't already in US dollars.
+  const usd = inDisplayCurrency ? money(net, "USD", language) : undefined;
 
   const product = text(event.product_id);
   const newProduct = text(event.new_product_id);
@@ -294,7 +290,7 @@ export function notificationFor(
   const body = [
     display.project,
     plan,
-    paid,
+    usd,
     country(event.country_code),
     store(event.store),
     event.environment === "SANDBOX" ? s.sandbox : undefined,

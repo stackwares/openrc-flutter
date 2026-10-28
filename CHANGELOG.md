@@ -6,6 +6,12 @@ All notable changes to OpenRC are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Push notifications that show an amount in your display currency also show
+  the same proceeds in US dollars. When the display currency is already US
+  dollars, the amount is not repeated.
+
 ### Added
 
 - Auto-refresh: coming back to the app after five minutes or more reloads

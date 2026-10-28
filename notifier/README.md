@@ -26,8 +26,10 @@ It is deliberately small and stateless:
   `src/copy.ts`); other events get `200` without a notification. RevenueCat's
   own filter can't do this, since a trial and a new subscription are the same
   RevenueCat event. RevenueCat's test event always gets through.
-  `&currency=EUR&fees=15,30&rate=0.92` shows the amount the way the app's
-  Settings do: in that currency and after App Store / Google Play fees. Rates
+  `&currency=EUR&fees=15,30&rate=0.92` shows the title amount the way the app's
+  Settings do: in that currency and after App Store / Google Play fees. When
+  that currency isn't US dollars, the body repeats the same proceeds in US
+  dollars; a title already in US dollars doesn't say the amount twice. Rates
   come from the same free source the app uses, cached in memory; when that's
   down it uses the last rates it fetched, then the app's saved `rate`, then
   US dollars. `&names=<id>%0A<name>%09…` (one entry per named product, tabs
