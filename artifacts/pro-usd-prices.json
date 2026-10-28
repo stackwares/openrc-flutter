@@ -1,0 +1,968 @@
+{
+  "rows": [
+    {
+      "app": "Baeble",
+      "project_id": "projd34832a2",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "baeble.pro.sub.weekly",
+      "google_product_id": "baeble.pro.sub.weekly:base",
+      "notes": ""
+    },
+    {
+      "app": "Baeble",
+      "project_id": "projd34832a2",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "baeble.pro.sub.annual",
+      "google_product_id": "baeble.pro.sub.annual:base",
+      "notes": ""
+    },
+    {
+      "app": "Baeble",
+      "project_id": "projd34832a2",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "baeble.pro.iap.lifetime",
+      "google_product_id": "lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Baeble",
+      "project_id": "projd34832a2",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "baeble.pro.sub.monthly",
+      "google_product_id": "baeble.pro.sub.monthly:base",
+      "notes": ""
+    },
+    {
+      "app": "Food Scanner",
+      "project_id": "proj11efda04",
+      "period": "$rc_weekly",
+      "apple_usd": "$5.99",
+      "google_usd": "$5.99",
+      "apple_product_id": "kaon.pro.sub.weekly",
+      "google_product_id": "nextran.pro.sub.weekly:base",
+      "notes": ""
+    },
+    {
+      "app": "Food Scanner",
+      "project_id": "proj11efda04",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "kaon.pro.sub.annual",
+      "google_product_id": "nextran.pro.sub.annual:nextran-pro-sub-annual-base",
+      "notes": ""
+    },
+    {
+      "app": "Food Scanner",
+      "project_id": "proj11efda04",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "kaon.pro.iap.lifetime",
+      "google_product_id": "nextran.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Food Scanner",
+      "project_id": "proj11efda04",
+      "period": "$rc_monthly",
+      "apple_usd": "$9.99",
+      "google_usd": "$9.99",
+      "apple_product_id": "kaon.pro.sub.monthly",
+      "google_product_id": "nextran.pro.sub.monthly:nextran-pro-sub-monthly-base",
+      "notes": ""
+    },
+    {
+      "app": "Liso",
+      "project_id": "proj66b76db7",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "liso.pro.sub.weekly",
+      "google_product_id": "liso.pro.sub.weekly:liso-pro-sub-weekly-base",
+      "notes": ""
+    },
+    {
+      "app": "Liso",
+      "project_id": "proj66b76db7",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "pro.sub.annual",
+      "google_product_id": "pro.sub.annual",
+      "notes": ""
+    },
+    {
+      "app": "Liso",
+      "project_id": "proj66b76db7",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "liso.pro.iap.lifetime",
+      "google_product_id": "liso.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Liso",
+      "project_id": "proj66b76db7",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "pro.sub.monthly",
+      "google_product_id": "pro.sub.monthly",
+      "notes": ""
+    },
+    {
+      "app": "Max Authenticator",
+      "project_id": "proj53ae49d4",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "maxauth.pro.sub.weekly",
+      "google_product_id": "maxauth.pro.sub.weekly:base",
+      "notes": ""
+    },
+    {
+      "app": "Max Authenticator",
+      "project_id": "proj53ae49d4",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "maxauth.pro.sub.annual",
+      "google_product_id": "maxauth.pro.sub.annual:base",
+      "notes": ""
+    },
+    {
+      "app": "Max Authenticator",
+      "project_id": "proj53ae49d4",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "maxauth.iap.pro.lifetime",
+      "google_product_id": "maxauth.iap.pro.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Max Authenticator",
+      "project_id": "proj53ae49d4",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "maxauth.pro.sub.monthly",
+      "google_product_id": "maxauth.pro.sub.monthly:base",
+      "notes": ""
+    },
+    {
+      "app": "NexBlog",
+      "project_id": "proj0e02ee90",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexblog.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBlog",
+      "project_id": "proj0e02ee90",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexblog.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBlog",
+      "project_id": "proj0e02ee90",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexblog.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBlog",
+      "project_id": "proj0e02ee90",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexblog.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBot",
+      "project_id": "proj8851cac2",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexbot.pro.sub.weekly",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBot",
+      "project_id": "proj8851cac2",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexbot.pro.sub.annual",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBot",
+      "project_id": "proj8851cac2",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexbot.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexBot",
+      "project_id": "proj8851cac2",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexbot.pro.sub.monthly",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexCap",
+      "project_id": "proj590feddc",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexcap.pro.sub.weekly:nexcap-pro-sub-weekly-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexCap",
+      "project_id": "proj590feddc",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexcap.pro.sub.annual:nexcap-pro-sub-annual-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexCap",
+      "project_id": "proj590feddc",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexcap.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexCap",
+      "project_id": "proj590feddc",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexcap.pro.sub.monthly:nexcap-pro-sub-monthly-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexEssay",
+      "project_id": "proj0c9f2d2c",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexessay.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexEssay",
+      "project_id": "proj0c9f2d2c",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexessay.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexEssay",
+      "project_id": "proj0c9f2d2c",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexessay.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexEssay",
+      "project_id": "proj0c9f2d2c",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexessay.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexGrammar",
+      "project_id": "proj27a9d871",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexgrammar.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexGrammar",
+      "project_id": "proj27a9d871",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexgrammar.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexGrammar",
+      "project_id": "proj27a9d871",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexgrammar.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexGrammar",
+      "project_id": "proj27a9d871",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexgrammar.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexLink",
+      "project_id": "projf83b2087",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "nexlinkbio.pro.sub.weekly",
+      "google_product_id": "nexlink.pro.sub.weekly:nexlink-pro-sub-weekly-base",
+      "notes": ""
+    },
+    {
+      "app": "NexLink",
+      "project_id": "projf83b2087",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "nexlinkbio.pro.sub.annual",
+      "google_product_id": "nexlink.pro.sub.annual:nexlink-pro-sub-annual-base",
+      "notes": ""
+    },
+    {
+      "app": "NexLink",
+      "project_id": "projf83b2087",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "nexlinkbio.pro.iap.lifetime",
+      "google_product_id": "nexlink.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "NexLink",
+      "project_id": "projf83b2087",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "nexlinkbio.pro.sub.monthly",
+      "google_product_id": "nexlink.pro.sub.monthly:base",
+      "notes": ""
+    },
+    {
+      "app": "NexMail",
+      "project_id": "proj89a7ac5c",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexmail.pro.sub.weekly:nexmail-pro-sub-weekly-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexMail",
+      "project_id": "proj89a7ac5c",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexmail.pro.sub.annual:nexmail-pro-sub-annual-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexMail",
+      "project_id": "proj89a7ac5c",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexmail.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexMail",
+      "project_id": "proj89a7ac5c",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexmail.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexPulse",
+      "project_id": "proj82607ada",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexpulse.pro.sub.weekly:nexpulse-pro-sub-weekly-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexPulse",
+      "project_id": "proj82607ada",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexpulse.pro.sub.annual:nexpulse-pro-sub-annual-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexPulse",
+      "project_id": "proj82607ada",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexpulse.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexPulse",
+      "project_id": "proj82607ada",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexpulse.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexResume",
+      "project_id": "proj0cfdb1f3",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexresume.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexResume",
+      "project_id": "proj0cfdb1f3",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexresume.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexResume",
+      "project_id": "proj0cfdb1f3",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexresume.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexResume",
+      "project_id": "proj0cfdb1f3",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexresume.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSales",
+      "project_id": "proje4fcf0e5",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsales.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSales",
+      "project_id": "proje4fcf0e5",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsales.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSales",
+      "project_id": "proje4fcf0e5",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsales.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSales",
+      "project_id": "proje4fcf0e5",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsales.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSnap",
+      "project_id": "proja31557e4",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "nexsnap.pro.sub.weekly",
+      "google_product_id": "nexsnap.pro.sub.weekly",
+      "notes": ""
+    },
+    {
+      "app": "NexSnap",
+      "project_id": "proja31557e4",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "nexsnap.pro.sub.annual",
+      "google_product_id": "nexsnap.pro.sub.annual",
+      "notes": ""
+    },
+    {
+      "app": "NexSnap",
+      "project_id": "proja31557e4",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "nexsnap.pro.iap.lifetime",
+      "google_product_id": "nexsnap.pro.iap.lifetime",
+      "notes": "Apple RC type non_renewing_subscription; asc iap pricing summary"
+    },
+    {
+      "app": "NexSnap",
+      "project_id": "proja31557e4",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "nexsnap.pro.sub.monthly",
+      "google_product_id": "nexsnap.pro.sub.monthly",
+      "notes": ""
+    },
+    {
+      "app": "NexStory",
+      "project_id": "proj8ba46432",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexstory.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexStory",
+      "project_id": "proj8ba46432",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexstory.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexStory",
+      "project_id": "proj8ba46432",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexstory.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexStory",
+      "project_id": "proj8ba46432",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexstory.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSummary",
+      "project_id": "projf7bb4526",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsummary.pro.sub.weekly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSummary",
+      "project_id": "projf7bb4526",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsummary.pro.sub.annual:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSummary",
+      "project_id": "projf7bb4526",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsummary.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "NexSummary",
+      "project_id": "projf7bb4526",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "nexsummary.pro.sub.monthly:base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "Orly",
+      "project_id": "projcb5060a5",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "manifest.pro.sub.weekly",
+      "google_product_id": "nexfriend.pro.sub.weekly:nexfriend-pro-sub-weekly-base",
+      "notes": ""
+    },
+    {
+      "app": "Orly",
+      "project_id": "projcb5060a5",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "manifest.pro.sub.annual",
+      "google_product_id": "nexfriend.pro.sub.annual:nexfriend-pro-sub-annual-base",
+      "notes": ""
+    },
+    {
+      "app": "Orly",
+      "project_id": "projcb5060a5",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "manifest.pro.iap.lifetime",
+      "google_product_id": "nexfriend.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Orly",
+      "project_id": "projcb5060a5",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "manifest.pro.sub.monthly",
+      "google_product_id": "nexfriend.pro.sub.monthly:base",
+      "notes": ""
+    },
+    {
+      "app": "Rae",
+      "project_id": "proj7b0c6c00",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "rae.pro.sub.weekly",
+      "google_product_id": "nextalk.pro.sub.weekly:nextalk-pro-sub-weekly-base",
+      "notes": ""
+    },
+    {
+      "app": "Rae",
+      "project_id": "proj7b0c6c00",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "rae.pro.sub.yearly",
+      "google_product_id": "nextalk.pro.sub.annual:nextalk-pro-sub-annual-base",
+      "notes": ""
+    },
+    {
+      "app": "Rae",
+      "project_id": "proj7b0c6c00",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "rae.pro.iap.lifetime",
+      "google_product_id": "nextalk.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Rae",
+      "project_id": "proj7b0c6c00",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "rae.pro.sub.monthly",
+      "google_product_id": "nextalk.pro.sub.monthly:base",
+      "notes": ""
+    },
+    {
+      "app": "Real Write",
+      "project_id": "proj697c1717",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "realwrite.pro.sub.weekly",
+      "google_product_id": "nexword.pro.sub.weekly:nexword-pro-sub-weekly-base",
+      "notes": ""
+    },
+    {
+      "app": "Real Write",
+      "project_id": "proj697c1717",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "realwrite.pro.sub.yearly",
+      "google_product_id": "nexword.pro.sub.annual:nexword-pro-sub-annual-base",
+      "notes": ""
+    },
+    {
+      "app": "Real Write",
+      "project_id": "proj697c1717",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "realwrite.pro.iap.lifetime",
+      "google_product_id": "nexword.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Real Write",
+      "project_id": "proj697c1717",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "realwrite.pro.sub.monthly",
+      "google_product_id": "nexword.pro.sub.monthly:base",
+      "notes": ""
+    },
+    {
+      "app": "Screen Recorder",
+      "project_id": "projc5c05b49",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "",
+      "apple_product_id": "screenrecorder.pro.sub.weekly",
+      "google_product_id": "",
+      "notes": "no Google product on package"
+    },
+    {
+      "app": "Screen Recorder",
+      "project_id": "projc5c05b49",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "",
+      "apple_product_id": "screenrecorder.pro.sub.annual",
+      "google_product_id": "",
+      "notes": "no Google product on package"
+    },
+    {
+      "app": "Screen Recorder",
+      "project_id": "projc5c05b49",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "",
+      "apple_product_id": "screenrecorder.pro.iap.lifetime",
+      "google_product_id": "",
+      "notes": "no Google product on package"
+    },
+    {
+      "app": "Screen Recorder",
+      "project_id": "projc5c05b49",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "",
+      "apple_product_id": "screenrecorder.pro.sub.monthly",
+      "google_product_id": "",
+      "notes": "no Google product on package"
+    },
+    {
+      "app": "Sikat AI",
+      "project_id": "proj55158d56",
+      "period": "$rc_weekly",
+      "apple_usd": "",
+      "google_usd": "$7.99",
+      "apple_product_id": "",
+      "google_product_id": "sikat.pro.sub.weekly:sikat-pro-sub-weekly-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "Sikat AI",
+      "project_id": "proj55158d56",
+      "period": "$rc_annual",
+      "apple_usd": "",
+      "google_usd": "$39.99",
+      "apple_product_id": "",
+      "google_product_id": "sikat.pro.sub.annual:sikat-pro-sub-annual-base1",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "Sikat AI",
+      "project_id": "proj55158d56",
+      "period": "$rc_lifetime",
+      "apple_usd": "",
+      "google_usd": "$79.99",
+      "apple_product_id": "",
+      "google_product_id": "sikat.pro.iap.lifetime",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "Sikat AI",
+      "project_id": "proj55158d56",
+      "period": "$rc_monthly",
+      "apple_usd": "",
+      "google_usd": "$19.99",
+      "apple_product_id": "",
+      "google_product_id": "sikat.pro.sub.monthly:sikat-pro-sub-monthly-base",
+      "notes": "no Apple product on package"
+    },
+    {
+      "app": "Stein AI",
+      "project_id": "proj09be816d",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "stein.pro.sub.weekly",
+      "google_product_id": "nexchat.pro.sub.weekly:nexchat-pro-sub-weekly-base",
+      "notes": ""
+    },
+    {
+      "app": "Stein AI",
+      "project_id": "proj09be816d",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "stein.pro.sub.annual",
+      "google_product_id": "nexchat.pro.sub.annual:nexchat-pro-sub-annual-base",
+      "notes": ""
+    },
+    {
+      "app": "Stein AI",
+      "project_id": "proj09be816d",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "stein.iap.pro.lifetime",
+      "google_product_id": "nexchat.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Stein AI",
+      "project_id": "proj09be816d",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "stein.pro.sub.monthly",
+      "google_product_id": "nexchat.pro.sub.monthly:nexchat-pro-sub-monthly-base",
+      "notes": ""
+    },
+    {
+      "app": "Visaz",
+      "project_id": "projaba45193",
+      "period": "$rc_weekly",
+      "apple_usd": "$7.99",
+      "google_usd": "$7.99",
+      "apple_product_id": "visaz.pro.sub.weekly",
+      "google_product_id": "visaz.pro.sub.weekly:base",
+      "notes": ""
+    },
+    {
+      "app": "Visaz",
+      "project_id": "projaba45193",
+      "period": "$rc_annual",
+      "apple_usd": "$39.99",
+      "google_usd": "$39.99",
+      "apple_product_id": "visaz.pro.sub.annual",
+      "google_product_id": "visaz.pro.sub.annual:base",
+      "notes": ""
+    },
+    {
+      "app": "Visaz",
+      "project_id": "projaba45193",
+      "period": "$rc_lifetime",
+      "apple_usd": "$79.99",
+      "google_usd": "$79.99",
+      "apple_product_id": "visaz.pro.iap.lifetime",
+      "google_product_id": "visaz.pro.iap.lifetime",
+      "notes": ""
+    },
+    {
+      "app": "Visaz",
+      "project_id": "projaba45193",
+      "period": "$rc_monthly",
+      "apple_usd": "$19.99",
+      "google_usd": "$19.99",
+      "apple_product_id": "visaz.pro.sub.monthly",
+      "google_product_id": "visaz.pro.sub.monthly:base",
+      "notes": ""
+    }
+  ],
+  "skipped": [
+    "NexSurf: `pro` offering has no packages",
+    "Translater: `pro` offering has no packages"
+  ]
+}

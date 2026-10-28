@@ -1,0 +1,97 @@
+app,project_id,period,apple_usd,google_usd,apple_product_id,google_product_id,notes
+Baeble,projd34832a2,$rc_weekly,$7.99,$7.99,baeble.pro.sub.weekly,baeble.pro.sub.weekly:base,
+Baeble,projd34832a2,$rc_annual,$39.99,$39.99,baeble.pro.sub.annual,baeble.pro.sub.annual:base,
+Baeble,projd34832a2,$rc_lifetime,$79.99,$79.99,baeble.pro.iap.lifetime,lifetime,
+Baeble,projd34832a2,$rc_monthly,$19.99,$19.99,baeble.pro.sub.monthly,baeble.pro.sub.monthly:base,
+Food Scanner,proj11efda04,$rc_weekly,$5.99,$5.99,kaon.pro.sub.weekly,nextran.pro.sub.weekly:base,
+Food Scanner,proj11efda04,$rc_annual,$39.99,$39.99,kaon.pro.sub.annual,nextran.pro.sub.annual:nextran-pro-sub-annual-base,
+Food Scanner,proj11efda04,$rc_lifetime,$79.99,$79.99,kaon.pro.iap.lifetime,nextran.pro.iap.lifetime,
+Food Scanner,proj11efda04,$rc_monthly,$9.99,$9.99,kaon.pro.sub.monthly,nextran.pro.sub.monthly:nextran-pro-sub-monthly-base,
+Liso,proj66b76db7,$rc_weekly,$7.99,$7.99,liso.pro.sub.weekly,liso.pro.sub.weekly:liso-pro-sub-weekly-base,
+Liso,proj66b76db7,$rc_annual,$39.99,$39.99,pro.sub.annual,pro.sub.annual,
+Liso,proj66b76db7,$rc_lifetime,$79.99,$79.99,liso.pro.iap.lifetime,liso.pro.iap.lifetime,
+Liso,proj66b76db7,$rc_monthly,$19.99,$19.99,pro.sub.monthly,pro.sub.monthly,
+Max Authenticator,proj53ae49d4,$rc_weekly,$7.99,$7.99,maxauth.pro.sub.weekly,maxauth.pro.sub.weekly:base,
+Max Authenticator,proj53ae49d4,$rc_annual,$39.99,$39.99,maxauth.pro.sub.annual,maxauth.pro.sub.annual:base,
+Max Authenticator,proj53ae49d4,$rc_lifetime,$79.99,$79.99,maxauth.iap.pro.lifetime,maxauth.iap.pro.lifetime,
+Max Authenticator,proj53ae49d4,$rc_monthly,$19.99,$19.99,maxauth.pro.sub.monthly,maxauth.pro.sub.monthly:base,
+NexBlog,proj0e02ee90,$rc_weekly,,$7.99,,nexblog.pro.sub.weekly:base,no Apple product on package
+NexBlog,proj0e02ee90,$rc_annual,,$39.99,,nexblog.pro.sub.annual:base,no Apple product on package
+NexBlog,proj0e02ee90,$rc_lifetime,,$79.99,,nexblog.pro.iap.lifetime,no Apple product on package
+NexBlog,proj0e02ee90,$rc_monthly,,$19.99,,nexblog.pro.sub.monthly:base,no Apple product on package
+NexBot,proj8851cac2,$rc_weekly,,$7.99,,nexbot.pro.sub.weekly,no Apple product on package
+NexBot,proj8851cac2,$rc_annual,,$39.99,,nexbot.pro.sub.annual,no Apple product on package
+NexBot,proj8851cac2,$rc_lifetime,,$79.99,,nexbot.pro.iap.lifetime,no Apple product on package
+NexBot,proj8851cac2,$rc_monthly,,$19.99,,nexbot.pro.sub.monthly,no Apple product on package
+NexCap,proj590feddc,$rc_weekly,,$7.99,,nexcap.pro.sub.weekly:nexcap-pro-sub-weekly-base,no Apple product on package
+NexCap,proj590feddc,$rc_annual,,$39.99,,nexcap.pro.sub.annual:nexcap-pro-sub-annual-base,no Apple product on package
+NexCap,proj590feddc,$rc_lifetime,,$79.99,,nexcap.pro.iap.lifetime,no Apple product on package
+NexCap,proj590feddc,$rc_monthly,,$19.99,,nexcap.pro.sub.monthly:nexcap-pro-sub-monthly-base,no Apple product on package
+NexEssay,proj0c9f2d2c,$rc_weekly,,$7.99,,nexessay.pro.sub.weekly:base,no Apple product on package
+NexEssay,proj0c9f2d2c,$rc_annual,,$39.99,,nexessay.pro.sub.annual:base,no Apple product on package
+NexEssay,proj0c9f2d2c,$rc_lifetime,,$79.99,,nexessay.pro.iap.lifetime,no Apple product on package
+NexEssay,proj0c9f2d2c,$rc_monthly,,$19.99,,nexessay.pro.sub.monthly:base,no Apple product on package
+NexGrammar,proj27a9d871,$rc_weekly,,$7.99,,nexgrammar.pro.sub.weekly:base,no Apple product on package
+NexGrammar,proj27a9d871,$rc_annual,,$39.99,,nexgrammar.pro.sub.annual:base,no Apple product on package
+NexGrammar,proj27a9d871,$rc_lifetime,,$79.99,,nexgrammar.pro.iap.lifetime,no Apple product on package
+NexGrammar,proj27a9d871,$rc_monthly,,$19.99,,nexgrammar.pro.sub.monthly:base,no Apple product on package
+NexLink,projf83b2087,$rc_weekly,$7.99,$7.99,nexlinkbio.pro.sub.weekly,nexlink.pro.sub.weekly:nexlink-pro-sub-weekly-base,
+NexLink,projf83b2087,$rc_annual,$39.99,$39.99,nexlinkbio.pro.sub.annual,nexlink.pro.sub.annual:nexlink-pro-sub-annual-base,
+NexLink,projf83b2087,$rc_lifetime,$79.99,$79.99,nexlinkbio.pro.iap.lifetime,nexlink.pro.iap.lifetime,
+NexLink,projf83b2087,$rc_monthly,$19.99,$19.99,nexlinkbio.pro.sub.monthly,nexlink.pro.sub.monthly:base,
+NexMail,proj89a7ac5c,$rc_weekly,,$7.99,,nexmail.pro.sub.weekly:nexmail-pro-sub-weekly-base,no Apple product on package
+NexMail,proj89a7ac5c,$rc_annual,,$39.99,,nexmail.pro.sub.annual:nexmail-pro-sub-annual-base,no Apple product on package
+NexMail,proj89a7ac5c,$rc_lifetime,,$79.99,,nexmail.pro.iap.lifetime,no Apple product on package
+NexMail,proj89a7ac5c,$rc_monthly,,$19.99,,nexmail.pro.sub.monthly:base,no Apple product on package
+NexPulse,proj82607ada,$rc_weekly,,$7.99,,nexpulse.pro.sub.weekly:nexpulse-pro-sub-weekly-base,no Apple product on package
+NexPulse,proj82607ada,$rc_annual,,$39.99,,nexpulse.pro.sub.annual:nexpulse-pro-sub-annual-base,no Apple product on package
+NexPulse,proj82607ada,$rc_lifetime,,$79.99,,nexpulse.pro.iap.lifetime,no Apple product on package
+NexPulse,proj82607ada,$rc_monthly,,$19.99,,nexpulse.pro.sub.monthly:base,no Apple product on package
+NexResume,proj0cfdb1f3,$rc_weekly,,$7.99,,nexresume.pro.sub.weekly:base,no Apple product on package
+NexResume,proj0cfdb1f3,$rc_annual,,$39.99,,nexresume.pro.sub.annual:base,no Apple product on package
+NexResume,proj0cfdb1f3,$rc_lifetime,,$79.99,,nexresume.pro.iap.lifetime,no Apple product on package
+NexResume,proj0cfdb1f3,$rc_monthly,,$19.99,,nexresume.pro.sub.monthly:base,no Apple product on package
+NexSales,proje4fcf0e5,$rc_weekly,,$7.99,,nexsales.pro.sub.weekly:base,no Apple product on package
+NexSales,proje4fcf0e5,$rc_annual,,$39.99,,nexsales.pro.sub.annual:base,no Apple product on package
+NexSales,proje4fcf0e5,$rc_lifetime,,$79.99,,nexsales.pro.iap.lifetime,no Apple product on package
+NexSales,proje4fcf0e5,$rc_monthly,,$19.99,,nexsales.pro.sub.monthly:base,no Apple product on package
+NexSnap,proja31557e4,$rc_weekly,$7.99,$7.99,nexsnap.pro.sub.weekly,nexsnap.pro.sub.weekly,
+NexSnap,proja31557e4,$rc_annual,$39.99,$39.99,nexsnap.pro.sub.annual,nexsnap.pro.sub.annual,
+NexSnap,proja31557e4,$rc_lifetime,$79.99,$79.99,nexsnap.pro.iap.lifetime,nexsnap.pro.iap.lifetime,Apple RC type non_renewing_subscription; asc iap pricing summary
+NexSnap,proja31557e4,$rc_monthly,$19.99,$19.99,nexsnap.pro.sub.monthly,nexsnap.pro.sub.monthly,
+NexStory,proj8ba46432,$rc_weekly,,$7.99,,nexstory.pro.sub.weekly:base,no Apple product on package
+NexStory,proj8ba46432,$rc_annual,,$39.99,,nexstory.pro.sub.annual:base,no Apple product on package
+NexStory,proj8ba46432,$rc_lifetime,,$79.99,,nexstory.pro.iap.lifetime,no Apple product on package
+NexStory,proj8ba46432,$rc_monthly,,$19.99,,nexstory.pro.sub.monthly:base,no Apple product on package
+NexSummary,projf7bb4526,$rc_weekly,,$7.99,,nexsummary.pro.sub.weekly:base,no Apple product on package
+NexSummary,projf7bb4526,$rc_annual,,$39.99,,nexsummary.pro.sub.annual:base,no Apple product on package
+NexSummary,projf7bb4526,$rc_lifetime,,$79.99,,nexsummary.pro.iap.lifetime,no Apple product on package
+NexSummary,projf7bb4526,$rc_monthly,,$19.99,,nexsummary.pro.sub.monthly:base,no Apple product on package
+Orly,projcb5060a5,$rc_weekly,$7.99,$7.99,manifest.pro.sub.weekly,nexfriend.pro.sub.weekly:nexfriend-pro-sub-weekly-base,
+Orly,projcb5060a5,$rc_annual,$39.99,$39.99,manifest.pro.sub.annual,nexfriend.pro.sub.annual:nexfriend-pro-sub-annual-base,
+Orly,projcb5060a5,$rc_lifetime,$79.99,$79.99,manifest.pro.iap.lifetime,nexfriend.pro.iap.lifetime,
+Orly,projcb5060a5,$rc_monthly,$19.99,$19.99,manifest.pro.sub.monthly,nexfriend.pro.sub.monthly:base,
+Rae,proj7b0c6c00,$rc_weekly,$7.99,$7.99,rae.pro.sub.weekly,nextalk.pro.sub.weekly:nextalk-pro-sub-weekly-base,
+Rae,proj7b0c6c00,$rc_annual,$39.99,$39.99,rae.pro.sub.yearly,nextalk.pro.sub.annual:nextalk-pro-sub-annual-base,
+Rae,proj7b0c6c00,$rc_lifetime,$79.99,$79.99,rae.pro.iap.lifetime,nextalk.pro.iap.lifetime,
+Rae,proj7b0c6c00,$rc_monthly,$19.99,$19.99,rae.pro.sub.monthly,nextalk.pro.sub.monthly:base,
+Real Write,proj697c1717,$rc_weekly,$7.99,$7.99,realwrite.pro.sub.weekly,nexword.pro.sub.weekly:nexword-pro-sub-weekly-base,
+Real Write,proj697c1717,$rc_annual,$39.99,$39.99,realwrite.pro.sub.yearly,nexword.pro.sub.annual:nexword-pro-sub-annual-base,
+Real Write,proj697c1717,$rc_lifetime,$79.99,$79.99,realwrite.pro.iap.lifetime,nexword.pro.iap.lifetime,
+Real Write,proj697c1717,$rc_monthly,$19.99,$19.99,realwrite.pro.sub.monthly,nexword.pro.sub.monthly:base,
+Screen Recorder,projc5c05b49,$rc_weekly,$7.99,,screenrecorder.pro.sub.weekly,,no Google product on package
+Screen Recorder,projc5c05b49,$rc_annual,$39.99,,screenrecorder.pro.sub.annual,,no Google product on package
+Screen Recorder,projc5c05b49,$rc_lifetime,$79.99,,screenrecorder.pro.iap.lifetime,,no Google product on package
+Screen Recorder,projc5c05b49,$rc_monthly,$19.99,,screenrecorder.pro.sub.monthly,,no Google product on package
+Sikat AI,proj55158d56,$rc_weekly,,$7.99,,sikat.pro.sub.weekly:sikat-pro-sub-weekly-base,no Apple product on package
+Sikat AI,proj55158d56,$rc_annual,,$39.99,,sikat.pro.sub.annual:sikat-pro-sub-annual-base1,no Apple product on package
+Sikat AI,proj55158d56,$rc_lifetime,,$79.99,,sikat.pro.iap.lifetime,no Apple product on package
+Sikat AI,proj55158d56,$rc_monthly,,$19.99,,sikat.pro.sub.monthly:sikat-pro-sub-monthly-base,no Apple product on package
+Stein AI,proj09be816d,$rc_weekly,$7.99,$7.99,stein.pro.sub.weekly,nexchat.pro.sub.weekly:nexchat-pro-sub-weekly-base,
+Stein AI,proj09be816d,$rc_annual,$39.99,$39.99,stein.pro.sub.annual,nexchat.pro.sub.annual:nexchat-pro-sub-annual-base,
+Stein AI,proj09be816d,$rc_lifetime,$79.99,$79.99,stein.iap.pro.lifetime,nexchat.pro.iap.lifetime,
+Stein AI,proj09be816d,$rc_monthly,$19.99,$19.99,stein.pro.sub.monthly,nexchat.pro.sub.monthly:nexchat-pro-sub-monthly-base,
+Visaz,projaba45193,$rc_weekly,$7.99,$7.99,visaz.pro.sub.weekly,visaz.pro.sub.weekly:base,
+Visaz,projaba45193,$rc_annual,$39.99,$39.99,visaz.pro.sub.annual,visaz.pro.sub.annual:base,
+Visaz,projaba45193,$rc_lifetime,$79.99,$79.99,visaz.pro.iap.lifetime,visaz.pro.iap.lifetime,
+Visaz,projaba45193,$rc_monthly,$19.99,$19.99,visaz.pro.sub.monthly,visaz.pro.sub.monthly:base,
