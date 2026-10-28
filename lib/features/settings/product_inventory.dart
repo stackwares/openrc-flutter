@@ -12,6 +12,7 @@ class ProductUsage {
     this.appId,
     required this.productId,
     required this.sales,
+    this.renews = true,
   });
 
   final String appKey;
@@ -23,6 +24,11 @@ class ProductUsage {
 
   /// Transactions in the loaded window that carry this product id.
   final int sales;
+
+  /// False when the loaded rows say this product does not renew and none of
+  /// them ever renewed: a non-renewing subscription, or a one-time purchase
+  /// of a term. Stays true when the rows say nothing either way.
+  final bool renews;
 
   String get key => '$appKey\u0000$productId';
 }
@@ -66,6 +72,11 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
   final appKeys = <String, String>{};
   final appLabels = <String, String>{};
   final appIds = <String, String>{};
+  // Whether some row renewed, and whether some row said it won't. A
+  // subscription that was later cancelled keeps its renewals, so it stays a
+  // recurring plan; only rows that never renew at all make a one-off term.
+  final renewed = <String>{};
+  final stoppedRenewing = <String>{};
 
   for (final tx in txs) {
     final productId = tx.productIdentifier?.trim();
@@ -82,6 +93,10 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
     if (appId != null && appId.isNotEmpty) {
       appIds.putIfAbsent(appKey, () => appId);
     }
+    // A refund says nothing about whether the product renews.
+    if (tx.wasRefunded == true) continue;
+    if (tx.isAutoRenewing == true || tx.isRenewal == true) renewed.add(key);
+    if (tx.isAutoRenewing == false) stoppedRenewing.add(key);
   }
 
   final products =
@@ -93,6 +108,8 @@ ProductInventory buildProductInventory(Iterable<RcTransaction> txs) {
             appId: appIds[appKeys[entry.key]],
             productId: productIds[entry.key]!,
             sales: entry.value,
+            renews: !(stoppedRenewing.contains(entry.key) &&
+                !renewed.contains(entry.key)),
           ),
       ]..sort((a, b) {
         final byApp = a.appLabel.toLowerCase().compareTo(

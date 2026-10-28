@@ -75,6 +75,7 @@ class RcAuthService {
     required String password,
     String? otpCode,
   }) async {
+    Telemetry.signInStarted(method: otpCode == null ? 'password' : 'two_factor');
     try {
       final request = RcLoginRequest(
         email: email,
@@ -112,6 +113,14 @@ class RcAuthService {
           'Sign in error [${rcError.code}]: ${rcError.message}',
         );
       }
+      // Only the shape of the failure: RevenueCat's message can name the
+      // account, and an email or an api key never leaves the device.
+      Telemetry.signInFailed(
+        reason: e.response == null ? 'network' : 'rejected',
+      );
+      rethrow;
+    } catch (_) {
+      Telemetry.signInFailed(reason: 'unexpected');
       rethrow;
     }
   }

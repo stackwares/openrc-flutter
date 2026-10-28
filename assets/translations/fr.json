@@ -414,8 +414,8 @@
     "ZMW": "kwacha zambien"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "Transaction",
     "appIcon": "Icône de l’application",
-    "iconHint": "Les icônes sont récupérées automatiquement depuis l’App Store ou Google Play. Saisissez l’URL d’une image pour utiliser une autre icône.",
-    "iconHintForApp": "Les icônes sont récupérées automatiquement depuis l’App Store ou Google Play. Saisissez l’URL d’une image pour utiliser une autre icône pour {appName}.",
+    "iconHint": "Les icônes sont récupérées automatiquement depuis Apple ou Google. Saisissez l’URL d’une image pour utiliser une autre icône.",
+    "iconHintForApp": "Les icônes sont récupérées automatiquement depuis Apple ou Google. Saisissez l’URL d’une image pour utiliser une autre icône pour {appName}.",
     "cancel": "Annuler",
     "clear": "Effacer",
     "save": "Enregistrer",
@@ -545,7 +545,7 @@
     "aiTitle": "Suggérer des noms",
     "suggestAi": "Suggérer avec l’IA",
     "useParser": "Noms intégrés",
-    "aiPrivacyBody": "Seuls les ID de produit sont envoyés. Aucun revenu ni donnée client.",
+    "aiPrivacyBody": "Seuls les ID de produit et la période qu’ils indiquent sont envoyés. Aucun revenu ni donnée client.",
     "parserNote": "Nomme la période à partir de l’ID du produit.",
     "aiNoKeyBody": "Connectez un modèle pour suggérer des noms avec l’IA, ou utilisez les noms intégrés.",
     "aiConsentBody": "L’IA est désactivée pour cette app. Autorisez l’utilisation des données d’IA dans Réglages, Confidentialité, ou utilisez les noms intégrés.",
@@ -568,6 +568,10 @@
     "clear": "Effacer",
     "clearTitle": "Effacer les noms de {app} ?",
     "clearBody": "Supprime tous les noms et offres de cette app sur cet appareil.",
+    "clearAll": "Effacer tous les noms",
+    "clearAllTitle": "Effacer tous les noms de produit ?",
+    "clearAllBody": "Supprime tous les noms et offres de toutes les apps sur cet appareil.",
+    "clearAllDone": "Tous les noms de produit effacés",
     "suggestTitle": "Suggérer des noms",
     "suggestSubtitle": {
       "one": "{} produit n’a pas encore de nom",
@@ -599,7 +603,7 @@
     "noFilterMatches": "Aucune transaction ne correspond à vos filtres sur cette période.",
     "noCategoryTransactions": "Aucune transaction dans cette catégorie pour la période chargée.",
     "nextPayouts": "Prochains versements",
-    "estimatedAfterFees": "Estimation après les frais des boutiques : {apple} (App Store) et {google} (Google Play)",
+    "estimatedAfterFees": "Estimation après les frais : {apple} (Apple) et {google} (Google)",
     "pays": "Versement le {date}",
     "paysAbout": "Versement vers le {date}",
     "scheduleUnavailable": "Calendrier indisponible",
@@ -643,7 +647,7 @@
     },
     "payouts": {
       "title": "Historique des versements",
-      "lastPaid": "Dernier versement : App Store le {apple}, Google Play le {google}",
+      "lastPaid": "Dernier versement : Apple le {apple}, Google le {google}",
       "paidInLast12Months": "Versé au cours des 12 derniers mois",
       "countSince": {
         "one": "{} versement depuis {month}",
@@ -659,7 +663,7 @@
       "couldntLoad": "Impossible de charger les versements",
       "refreshFailed": "Impossible de charger les derniers versements.",
       "emptyTitle": "Aucun versement pour l’instant",
-      "emptyMessage": "Aucun versement de l’App Store ou de Google Play au cours des 12 derniers mois.",
+      "emptyMessage": "Aucun versement d’Apple ou de Google au cours des 12 derniers mois.",
       "splitUnavailableTitle": "Versements par boutique indisponibles",
       "splitUnavailableMessage": "RevenueCat n’a pas renvoyé les revenus par boutique : les versements ne peuvent donc pas être calculés.",
       "estimateNote": "Estimation à partir des montants perçus dans RevenueCat, après les frais des boutiques et les taxes estimées. Les paiements réels peuvent varier selon les taux de change, les retenues fiscales et les seuils de paiement.",
@@ -755,11 +759,11 @@
     "productNames": "Noms des produits",
     "productNamesHint": "Nommez les produits du store avec vos mots",
     "feesAfter": "Les revenus sont affichés après vos frais de boutique",
-    "feesBefore": "Les revenus sont affichés avant les frais de l’App Store et de Google Play",
-    "appStoreFee": "Frais de l’App Store",
-    "googlePlayFee": "Frais de Google Play",
+    "feesBefore": "Les revenus sont affichés avant les frais d’Apple et de Google",
+    "appStoreFee": "Frais d’Apple",
+    "googlePlayFee": "Frais de Google",
     "storeFeeTitle": "Frais {store}",
-    "storeFeeBody": "La part que {company} conserve sur chaque vente {store}. La plupart des développeurs paient 15 % ou 30 %, selon leur programme.",
+    "storeFeeBody": "La part que {company} conserve sur chaque vente. La plupart des développeurs paient 15 % ou 30 %, selon leur programme.",
     "storeFeeExample": "Une vente de {sale} compte pour {counted}",
     "feeRangeError": "Saisissez des frais compris entre 0 et 100.",
     "feeLabel": "Frais",
@@ -1181,7 +1185,7 @@
       "currency": "Devise d’affichage",
       "more": "Plus",
       "fees": "Afficher le revenu après commissions des stores",
-      "feesHint": "Utilise 15 % pour l’App Store et Google Play. Ajustez les taux dans Réglages."
+      "feesHint": "Utilise 15 % pour Apple et Google. Ajustez les taux dans Réglages."
     },
     "aiConsent": {
       "title": "Utiliser Demander avec vos chiffres ?",
@@ -1220,8 +1224,8 @@
     "preview": {
       "now": "maintenant",
       "title": "🔵 Nouvel abonnement · $9.99",
-      "body": "pro_monthly · 🇺🇸 États-Unis · App Store",
-      "semantics": "Exemple de notification : nouvel abonnement, 9,99 dollars, depuis l’App Store aux États-Unis"
+      "body": "pro_monthly · 🇺🇸 États-Unis · Apple",
+      "semantics": "Exemple de notification : nouvel abonnement, 9,99 dollars, depuis Apple aux États-Unis"
     },
     "headline": "Sachez-le au moment où vous vendez",
     "subhead": "Recevez une notification pour chaque achat, renouvellement et remboursement dans tous vos projets RevenueCat.",

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:openrc/core/utils/api_error_message.dart';
+import 'package:openrc/widgets/screen_view.dart';
 import 'package:openrc/widgets/app_state_message.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -253,7 +254,10 @@ class TransactionDetailScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) =>
+      ScreenView(name: 'Transaction', child: _page(context, ref));
+
+  Widget _page(BuildContext context, WidgetRef ref) {
     final state = ref.watch(transactionDetailProvider(transaction));
 
     return Scaffold(

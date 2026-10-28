@@ -414,8 +414,8 @@
     "ZMW": "ザンビア・クワチャ"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "取引",
     "appIcon": "アプリアイコン",
-    "iconHint": "アイコンは App Store または Google Play から自動で取得されます。別のアイコンを使うには、画像のURLを入力してください。",
-    "iconHintForApp": "アイコンは App Store または Google Play から自動で取得されます。{appName} に別のアイコンを使うには、画像のURLを入力してください。",
+    "iconHint": "アイコンは Apple または Google から自動で取得されます。別のアイコンを使うには、画像のURLを入力してください。",
+    "iconHintForApp": "アイコンは Apple または Google から自動で取得されます。{appName} に別のアイコンを使うには、画像のURLを入力してください。",
     "cancel": "キャンセル",
     "clear": "クリア",
     "save": "保存",
@@ -544,7 +544,7 @@
     "aiTitle": "名前を提案",
     "suggestAi": "AI で提案",
     "useParser": "組み込みの名前",
-    "aiPrivacyBody": "送信するのは商品 ID のみ。収益や顧客データは含みません。",
+    "aiPrivacyBody": "送信するのは商品 ID とそこから読み取った期間のみ。収益や顧客データは含みません。",
     "parserNote": "商品 ID から期間を名前にします。",
     "aiNoKeyBody": "AI で名前を提案するにはモデルを接続してください。組み込みの名前も使えます。",
     "aiConsentBody": "このアプリでは AI がオフです。設定のプライバシーで AI データ利用を許可するか、組み込みの名前をお使いください。",
@@ -567,6 +567,10 @@
     "clear": "消去",
     "clearTitle": "{app} の名前を消去しますか？",
     "clearBody": "この端末でこのアプリのすべての名前とプランを削除します。",
+    "clearAll": "すべての名前を消去",
+    "clearAllTitle": "すべての商品名を消去しますか？",
+    "clearAllBody": "この端末のすべてのアプリから、すべての名前とプランを削除します。",
+    "clearAllDone": "すべての商品名を消去しました",
     "suggestTitle": "名前を提案",
     "suggestSubtitle": {
       "one": "名前のない商品が {} 件",
@@ -598,7 +602,7 @@
     "noFilterMatches": "この期間で条件に一致する取引はありません。",
     "noCategoryTransactions": "読み込まれた期間では、このカテゴリの取引はありません。",
     "nextPayouts": "次の入金",
-    "estimatedAfterFees": "ストア手数料を差し引いた推定額（App Store {apple}、Google Play {google}）",
+    "estimatedAfterFees": "ストア手数料を差し引いた推定額（Apple {apple}、Google {google}）",
     "pays": "{date} 入金",
     "paysAbout": "{date} 頃に入金",
     "scheduleUnavailable": "入金予定を表示できません",
@@ -639,7 +643,7 @@
     },
     "payouts": {
       "title": "入金履歴",
-      "lastPaid": "前回の入金：App Store {apple}、Google Play {google}",
+      "lastPaid": "前回の入金：Apple {apple}、Google {google}",
       "paidInLast12Months": "過去12か月の入金額",
       "countSince": {
         "other": "{month}以降 {} 件の入金"
@@ -654,7 +658,7 @@
       "couldntLoad": "入金を読み込めませんでした",
       "refreshFailed": "最新の入金を読み込めませんでした。",
       "emptyTitle": "入金はまだありません",
-      "emptyMessage": "過去12か月間に App Store または Google Play からの入金はありません。",
+      "emptyMessage": "過去12か月間に Apple または Google からの入金はありません。",
       "splitUnavailableTitle": "ストア別の入金を表示できません",
       "splitUnavailableMessage": "RevenueCat からストア別の売上が返されなかったため、入金額を算出できません。",
       "estimateNote": "RevenueCat の受取額から、ストア手数料と推定税額を差し引いた推定値です。実際の入金額は、為替レート、源泉徴収、最低支払額によって異なる場合があります。",
@@ -750,11 +754,11 @@
     "productNames": "商品名",
     "productNamesHint": "ストア商品に自分の言葉で名前を付ける",
     "feesAfter": "売上は、ストア手数料を差し引いた後の金額で表示されます",
-    "feesBefore": "売上は、App Store と Google Play の手数料を差し引く前の金額で表示されます",
-    "appStoreFee": "App Store の手数料",
-    "googlePlayFee": "Google Play の手数料",
+    "feesBefore": "売上は、Apple と Google の手数料を差し引く前の金額で表示されます",
+    "appStoreFee": "Apple の手数料",
+    "googlePlayFee": "Google の手数料",
     "storeFeeTitle": "{store} の手数料",
-    "storeFeeBody": "{store} の各販売から {company} が受け取る割合です。多くの開発者は、プログラムに応じて 15% または 30% を支払います。",
+    "storeFeeBody": "各販売から {company} が受け取る割合です。多くの開発者は、プログラムに応じて 15% または 30% を支払います。",
     "storeFeeExample": "{sale} の販売は {counted} として計算されます",
     "feeRangeError": "0〜100 の間で手数料を入力してください。",
     "feeLabel": "手数料",
@@ -1166,7 +1170,7 @@
       "currency": "表示通貨",
       "more": "その他",
       "fees": "ストア手数料後の売上を表示",
-      "feesHint": "App StoreとGoogle Playは15%です。率の微調整は設定で。"
+      "feesHint": "AppleとGoogleは15%です。率の微調整は設定で。"
     },
     "aiConsent": {
       "title": "数字に質問を使いますか？",
@@ -1205,8 +1209,8 @@
     "preview": {
       "now": "現在",
       "title": "🔵 新規サブスクリプション · $9.99",
-      "body": "pro_monthly · 🇺🇸 アメリカ合衆国 · App Store",
-      "semantics": "通知の例：新規サブスクリプション、9.99ドル、アメリカ合衆国の App Store"
+      "body": "pro_monthly · 🇺🇸 アメリカ合衆国 · Apple",
+      "semantics": "通知の例：新規サブスクリプション、9.99ドル、アメリカ合衆国の Apple"
     },
     "headline": "売上が発生した瞬間にわかる",
     "subhead": "購入、更新、返金のたびに、RevenueCat のすべてのプロジェクトから通知を受け取れます。",

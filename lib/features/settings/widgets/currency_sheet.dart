@@ -6,6 +6,7 @@ import 'package:openrc/core/utils/currency_format.dart';
 import 'package:openrc/services/display_currency_store.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/search_field_decoration.dart';
+import 'package:openrc/services/telemetry.dart';
 
 /// Picks the currency amounts are shown in.
 Future<void> showDisplayCurrencySheet(BuildContext context) {
@@ -103,6 +104,7 @@ class _DisplayCurrencySheetState extends ConsumerState<_DisplayCurrencySheet> {
                         await ref
                             .read(displayCurrencyProvider.notifier)
                             .setCurrency(o.code);
+                        Telemetry.preferenceChanged(setting: 'currency');
                         if (context.mounted) Navigator.of(context).pop();
                       },
                     );

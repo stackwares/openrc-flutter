@@ -114,6 +114,7 @@ async function webhook(
       ...copy,
       collapseId: id,
       transactionId,
+      imageUrl: display.icon,
     });
   } catch (error) {
     console.error(

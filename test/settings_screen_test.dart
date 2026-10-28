@@ -101,10 +101,10 @@ void main() {
 
   testWidgets('store fee rows appear when fees are subtracted', (tester) async {
     await pump(tester);
-    expect(find.text('App Store fee'), findsNothing);
+    expect(find.text('Apple fee'), findsNothing);
     await tester.tap(find.text('Subtract store fees'));
     await tester.pumpAndSettle();
-    expect(find.text('App Store fee'), findsOneWidget);
+    expect(find.text('Apple fee'), findsOneWidget);
     expect(find.text('A \$9.99 sale counts as \$8.49'), findsNWidgets(2));
   });
 
@@ -114,7 +114,7 @@ void main() {
     await pump(tester);
     await tester.tap(find.text('Subtract store fees'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('App Store fee'));
+    await tester.tap(find.text('Apple fee'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Custom'));

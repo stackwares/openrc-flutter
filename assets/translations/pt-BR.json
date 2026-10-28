@@ -414,8 +414,8 @@
     "ZMW": "cuacha zambiano"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "Transação",
     "appIcon": "Ícone do app",
-    "iconHint": "Os ícones são buscados automaticamente na App Store ou no Google Play. Insira a URL de uma imagem para usar outro ícone.",
-    "iconHintForApp": "Os ícones são buscados automaticamente na App Store ou no Google Play. Insira a URL de uma imagem para usar outro ícone para {appName}.",
+    "iconHint": "Os ícones são buscados automaticamente na Apple ou no Google. Insira a URL de uma imagem para usar outro ícone.",
+    "iconHintForApp": "Os ícones são buscados automaticamente na Apple ou no Google. Insira a URL de uma imagem para usar outro ícone para {appName}.",
     "cancel": "Cancelar",
     "clear": "Limpar",
     "save": "Salvar",
@@ -545,7 +545,7 @@
     "aiTitle": "Sugerir nomes",
     "suggestAi": "Sugerir com IA",
     "useParser": "Nomes integrados",
-    "aiPrivacyBody": "Apenas IDs de produto são enviados. Sem receita ou dados de clientes.",
+    "aiPrivacyBody": "Apenas IDs de produto e o período que indicam são enviados. Sem receita ou dados de clientes.",
     "parserNote": "Rotula o período a partir do ID do produto.",
     "aiNoKeyBody": "Conecte um modelo para sugerir nomes com IA ou use os nomes integrados.",
     "aiConsentBody": "A IA está desativada para este app. Permita o uso de dados de IA em Ajustes, Privacidade, ou use os nomes integrados.",
@@ -568,6 +568,10 @@
     "clear": "Limpar",
     "clearTitle": "Limpar os nomes de {app}?",
     "clearBody": "Remove todos os nomes e planos deste app neste dispositivo.",
+    "clearAll": "Limpar todos os nomes",
+    "clearAllTitle": "Limpar todos os nomes de produto?",
+    "clearAllBody": "Remove todos os nomes e planos de todos os apps neste dispositivo.",
+    "clearAllDone": "Todos os nomes de produto foram limpos",
     "suggestTitle": "Sugerir nomes",
     "suggestSubtitle": {
       "one": "{} produto ainda não tem nome",
@@ -599,7 +603,7 @@
     "noFilterMatches": "Nenhuma transação corresponde aos seus filtros neste período.",
     "noCategoryTransactions": "Nenhuma transação nesta categoria no período carregado.",
     "nextPayouts": "Próximos repasses",
-    "estimatedAfterFees": "Estimado após as taxas da loja de {apple} (App Store) e {google} (Google Play)",
+    "estimatedAfterFees": "Estimado após as taxas da loja de {apple} (Apple) e {google} (Google)",
     "pays": "Repasse em {date}",
     "paysAbout": "Repasse previsto para {date}",
     "scheduleUnavailable": "Cronograma indisponível",
@@ -643,7 +647,7 @@
     },
     "payouts": {
       "title": "Histórico de repasses",
-      "lastPaid": "Último repasse: App Store em {apple}, Google Play em {google}",
+      "lastPaid": "Último repasse: Apple em {apple}, Google em {google}",
       "paidInLast12Months": "Repassado nos últimos 12 meses",
       "countSince": {
         "one": "{} repasse desde {month}",
@@ -659,7 +663,7 @@
       "couldntLoad": "Não foi possível carregar os repasses",
       "refreshFailed": "Não foi possível carregar os repasses mais recentes.",
       "emptyTitle": "Nenhum repasse ainda",
-      "emptyMessage": "Nenhum repasse da App Store ou do Google Play nos últimos 12 meses.",
+      "emptyMessage": "Nenhum repasse da Apple ou do Google nos últimos 12 meses.",
       "splitUnavailableTitle": "Repasses por loja indisponíveis",
       "splitUnavailableMessage": "O RevenueCat não retornou a receita por loja, então não é possível calcular os repasses.",
       "estimateNote": "Estimado a partir do valor recebido no RevenueCat, após as taxas da loja e os impostos estimados. Os pagamentos reais podem variar por causa do câmbio, da retenção de impostos e dos valores mínimos de pagamento.",
@@ -755,11 +759,11 @@
     "productNames": "Nomes dos produtos",
     "productNamesHint": "Nomeie os produtos da loja do seu jeito",
     "feesAfter": "A receita é exibida após as taxas da loja",
-    "feesBefore": "A receita é exibida antes das taxas da App Store e do Google Play",
-    "appStoreFee": "Taxa da App Store",
-    "googlePlayFee": "Taxa do Google Play",
+    "feesBefore": "A receita é exibida antes das taxas da Apple e do Google",
+    "appStoreFee": "Taxa da Apple",
+    "googlePlayFee": "Taxa do Google",
     "storeFeeTitle": "Taxa da {store}",
-    "storeFeeBody": "A parte que {company} retém de cada venda na {store}. A maioria dos desenvolvedores paga 15% ou 30%, dependendo do programa.",
+    "storeFeeBody": "A parte que {company} retém de cada venda. A maioria dos desenvolvedores paga 15% ou 30%, dependendo do programa.",
     "storeFeeExample": "Uma venda de {sale} conta como {counted}",
     "feeRangeError": "Insira uma taxa entre 0 e 100.",
     "feeLabel": "Taxa",
@@ -1181,7 +1185,7 @@
       "currency": "Moeda de exibição",
       "more": "Mais",
       "fees": "Mostrar receita após taxas das lojas",
-      "feesHint": "Usa 15% para a App Store e o Google Play. Ajuste as taxas em Ajustes."
+      "feesHint": "Usa 15% para a Apple e o Google. Ajuste as taxas em Ajustes."
     },
     "aiConsent": {
       "title": "Usar Perguntar com os seus números?",
@@ -1220,8 +1224,8 @@
     "preview": {
       "now": "agora",
       "title": "🔵 Nova assinatura · $9.99",
-      "body": "pro_monthly · 🇺🇸 Estados Unidos · App Store",
-      "semantics": "Exemplo de notificação: Nova assinatura, 9,99 dólares, da App Store nos Estados Unidos"
+      "body": "pro_monthly · 🇺🇸 Estados Unidos · Apple",
+      "semantics": "Exemplo de notificação: Nova assinatura, 9,99 dólares, da Apple nos Estados Unidos"
     },
     "headline": "Saiba na hora em que faz uma venda",
     "subhead": "Receba uma notificação para cada compra, renovação e reembolso nos seus projetos do RevenueCat.",

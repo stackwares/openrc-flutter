@@ -414,8 +414,8 @@
     "ZMW": "赞比亚克瓦查"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "交易",
     "appIcon": "应用图标",
-    "iconHint": "图标会自动从 App Store 或 Google Play 获取。输入图片网址即可使用其他图标。",
-    "iconHintForApp": "图标会自动从 App Store 或 Google Play 获取。输入图片网址即可为 {appName} 使用其他图标。",
+    "iconHint": "图标会自动从 Apple 或 Google 获取。输入图片网址即可使用其他图标。",
+    "iconHintForApp": "图标会自动从 Apple 或 Google 获取。输入图片网址即可为 {appName} 使用其他图标。",
     "cancel": "取消",
     "clear": "清除",
     "save": "保存",
@@ -544,7 +544,7 @@
     "aiTitle": "建议名称",
     "suggestAi": "用 AI 建议",
     "useParser": "内置名称",
-    "aiPrivacyBody": "仅发送产品 ID，不含收入或客户数据。",
+    "aiPrivacyBody": "仅发送产品 ID 及其标明的周期，不含收入或客户数据。",
     "parserNote": "根据产品 ID 标注周期。",
     "aiNoKeyBody": "连接模型以使用 AI 建议名称，或使用内置名称。",
     "aiConsentBody": "此应用已关闭 AI。请在“设置 - 隐私”中允许 AI 数据使用，或使用内置名称。",
@@ -567,6 +567,10 @@
     "clear": "清除",
     "clearTitle": "清除 {app} 的名称？",
     "clearBody": "将删除此设备上该应用的所有名称和套餐。",
+    "clearAll": "清除所有名称",
+    "clearAllTitle": "清除所有产品名称？",
+    "clearAllBody": "将删除此设备上所有应用的全部名称和套餐。",
+    "clearAllDone": "已清除所有产品名称",
     "suggestTitle": "建议名称",
     "suggestSubtitle": {
       "one": "{} 个产品还没有名称",
@@ -598,7 +602,7 @@
     "noFilterMatches": "此时间范围内没有符合筛选条件的交易。",
     "noCategoryTransactions": "已加载的时间范围内，此类别没有交易。",
     "nextPayouts": "下次到账",
-    "estimatedAfterFees": "预计扣除 {apple}（App Store）和 {google}（Google Play）的手续费后",
+    "estimatedAfterFees": "预计扣除 Apple（{apple}）和 Google（{google}）的手续费后",
     "pays": "{date}到账",
     "paysAbout": "约 {date}到账",
     "scheduleUnavailable": "无法获取到账计划",
@@ -639,7 +643,7 @@
     },
     "payouts": {
       "title": "到账记录",
-      "lastPaid": "上次到账：App Store {apple}，Google Play {google}",
+      "lastPaid": "上次到账：Apple {apple}，Google {google}",
       "paidInLast12Months": "近 12 个月到账",
       "countSince": {
         "other": "自 {month}以来共 {} 笔到账"
@@ -654,7 +658,7 @@
       "couldntLoad": "无法加载到账记录",
       "refreshFailed": "无法加载最新到账记录。",
       "emptyTitle": "暂无到账",
-      "emptyMessage": "近 12 个月没有来自 App Store 或 Google Play 的到账。",
+      "emptyMessage": "近 12 个月没有来自 Apple 或 Google 的到账。",
       "splitUnavailableTitle": "无法按商店显示到账",
       "splitUnavailableMessage": "RevenueCat 未返回按商店划分的收入，因此无法计算到账金额。",
       "estimateNote": "根据 RevenueCat 的到账金额估算，已扣除商店手续费和预估税费。实际付款可能因汇率、预扣税和最低付款额而有所不同。",
@@ -750,11 +754,11 @@
     "productNames": "产品名称",
     "productNamesHint": "用自己的话命名商店产品",
     "feesAfter": "收入将显示为扣除商店手续费后的金额",
-    "feesBefore": "收入将显示为未扣除 App Store 和 Google Play 手续费前的金额",
-    "appStoreFee": "App Store 手续费",
-    "googlePlayFee": "Google Play 手续费",
+    "feesBefore": "收入将显示为未扣除 Apple 和 Google 手续费前的金额",
+    "appStoreFee": "Apple 手续费",
+    "googlePlayFee": "Google 手续费",
     "storeFeeTitle": "{store}手续费",
-    "storeFeeBody": "{company}从每笔{store}销售中收取的比例。大多数开发者按所参加的计划不同，支付 15% 或 30%。",
+    "storeFeeBody": "{company}从每笔销售中收取的比例。大多数开发者按所参加的计划不同，支付 15% 或 30%。",
     "storeFeeExample": "一笔 {sale} 的销售计为 {counted}",
     "feeRangeError": "请输入 0 到 100 之间的手续费。",
     "feeLabel": "手续费",
@@ -1166,7 +1170,7 @@
       "currency": "显示货币",
       "more": "更多",
       "fees": "显示扣除商店费用后的收入",
-      "feesHint": "App Store 和 Google Play 使用 15%。费率可在设置里微调。"
+      "feesHint": "Apple 和 Google 使用 15%。费率可在设置里微调。"
     },
     "aiConsent": {
       "title": "用提问来看你的数字？",
@@ -1205,8 +1209,8 @@
     "preview": {
       "now": "现在",
       "title": "🔵 新订阅 · $9.99",
-      "body": "pro_monthly · 🇺🇸 美国 · App Store",
-      "semantics": "示例通知：新订阅，9.99 美元，来自美国的 App Store"
+      "body": "pro_monthly · 🇺🇸 美国 · Apple",
+      "semantics": "示例通知：新订阅，9.99 美元，来自美国的 Apple"
     },
     "headline": "销售一发生就知道",
     "subhead": "每一次购买、续订和退款，都会通过你的 RevenueCat 项目收到通知。",

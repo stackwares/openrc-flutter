@@ -1,23 +1,26 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/utils/currency_format.dart';
 import 'package:openrc/features/onboarding/onboarding_steps.dart';
-import 'package:openrc/features/settings/widgets/appearance_pickers.dart';
-import 'package:openrc/features/settings/widgets/currency_sheet.dart';
-import 'package:openrc/services/commission_settings_store.dart';
-import 'package:openrc/services/display_currency_store.dart';
 import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/app_logo.dart';
-import 'package:openrc/widgets/pressable_scale.dart';
 
+/// Reading width of the wizard's column on phones and tablets.
 const kOnboardingColumnWidth = 520.0;
 
-const _kQuickCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+/// The same column in a wide window: a little wider, still one measure.
+const kOnboardingWideColumnWidth = 560.0;
+
+/// Tallest the wizard's band grows before it centers in the window.
+///
+/// Chrome, page and call to action share the band, so on a tall screen the
+/// button stays under the page it acts on instead of sinking to the bottom
+/// edge, a window's height away from it.
+const kOnboardingBandMaxHeight = 780.0;
 
 class OnboardingWelcomePage extends StatelessWidget {
   const OnboardingWelcomePage({super.key});
@@ -26,17 +29,18 @@ class OnboardingWelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final tt = context.textTheme;
+    // A short window (a phone in landscape) keeps the mark small, so the
+    // headline and the first chips are in view without scrolling.
+    final tight = MediaQuery.sizeOf(context).height < 700;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: AppSpace.lg),
-        const Center(child: AppLogo(size: 72)),
-        const SizedBox(height: AppSpace.xl),
+        SizedBox(height: tight ? AppSpace.xs : AppSpace.md),
+        Center(child: AppLogo(size: tight ? 56 : 72)),
+        SizedBox(height: tight ? AppSpace.md : AppSpace.xl),
         Text(
           'onboarding.welcome.title'.tr(),
           textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
           style: tt.headlineLarge?.copyWith(
             fontWeight: FontWeight.w800,
             letterSpacing: -0.8,
@@ -47,15 +51,13 @@ class OnboardingWelcomePage extends StatelessWidget {
         Text(
           'onboarding.welcome.subtitle'.tr(),
           textAlign: TextAlign.center,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
           style: tt.titleMedium?.copyWith(
             color: scheme.onSurfaceVariant,
             height: 1.35,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: AppSpace.xxl),
+        SizedBox(height: tight ? AppSpace.lg : AppSpace.xxl),
         Wrap(
           spacing: AppSpace.xs,
           runSpacing: AppSpace.xs,
@@ -391,187 +393,20 @@ class OnboardingShowcasePage extends StatelessWidget {
   }
 }
 
-class OnboardingAppearancePage extends ConsumerWidget {
-  const OnboardingAppearancePage({super.key});
+class OnboardingAiConsentPage extends StatelessWidget {
+  const OnboardingAiConsentPage({super.key});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
-    final scheme = ref.watch(colorSchemeProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _PageHeader(
-          icon: Icons.palette_rounded,
-          title: 'onboarding.appearance.title'.tr(),
-          subtitle: 'onboarding.appearance.subtitle'.tr(),
-        ),
-        ThemeModePicker(
-          mode: mode,
-          scheme: scheme,
-          onChanged: (next) {
-            UtilitiesService.hapticSelection();
-            ref.read(themeModeProvider.notifier).state = next;
-            ref.read(utilitiesServiceProvider).saveThemeMode(next);
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class OnboardingMoneyPage extends ConsumerWidget {
-  const OnboardingMoneyPage({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currency = ref.watch(displayCurrencyProvider);
-    final fees = ref.watch(commissionSettingsProvider);
-    final codes = [
-      if (!_kQuickCurrencies.contains(currency)) currency,
-      ..._kQuickCurrencies,
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _PageHeader(
-          icon: Icons.payments_rounded,
-          title: 'onboarding.money.title'.tr(),
-          subtitle: 'onboarding.money.subtitle'.tr(),
-        ),
-        Text(
-          'onboarding.money.currency'.tr(),
-          textAlign: TextAlign.center,
-          style: context.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSpace.sm),
-        Wrap(
-          spacing: AppSpace.xs,
-          runSpacing: AppSpace.xs,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final code in codes)
-              _CurrencyChip(
-                code: code,
-                selected: currency == code,
-                onTap: () {
-                  UtilitiesService.hapticSelection();
-                  ref.read(displayCurrencyProvider.notifier).setCurrency(code);
-                },
-              ),
-            _CurrencyChip(
-              code: 'onboarding.money.more'.tr(),
-              selected: false,
-              onTap: () => showDisplayCurrencySheet(context),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpace.xl),
-        AppCard(
-          onTap: () {
-            UtilitiesService.hapticSelection();
-            ref
-                .read(commissionSettingsProvider.notifier)
-                .setAdjustmentEnabled(!fees.adjustmentEnabled);
-          },
-          child: Row(
-            children: [
-              const _TileEmoji('🧾'),
-              const SizedBox(width: AppSpace.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'onboarding.money.fees'.tr(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'onboarding.money.feesHint'.tr(),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpace.sm),
-              Switch(
-                value: fees.adjustmentEnabled,
-                onChanged: (value) {
-                  UtilitiesService.hapticSelection();
-                  ref
-                      .read(commissionSettingsProvider.notifier)
-                      .setAdjustmentEnabled(value);
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CurrencyChip extends StatelessWidget {
-  const _CurrencyChip({
-    required this.code,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String code;
-  final bool selected;
-  final VoidCallback onTap;
+  /// Questions Ask already offers, so the ask shows what it buys instead of
+  /// only describing it.
+  static const _questions = [
+    'agent.suggestions.today',
+    'agent.suggestions.mrr',
+    'agent.suggestions.countries',
+  ];
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final option = lookupDisplayCurrencyOption(code);
-    return PressableScale(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: AppMotion.of(context, AppMotion.fast),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected
-                ? scheme.primary.withValues(alpha: 0.12)
-                : scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            border: Border.all(
-              color: selected ? scheme.primary : context.appColors.hairline,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Text(
-            option == null ? code : '${option.flagEmoji} $code',
-            style: context.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: selected ? scheme.primary : scheme.onSurface,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class OnboardingAiConsentPage extends StatelessWidget {
-  const OnboardingAiConsentPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -580,7 +415,68 @@ class OnboardingAiConsentPage extends StatelessWidget {
           title: 'onboarding.aiConsent.title'.tr(),
           subtitle: 'onboarding.aiConsent.body'.tr(),
         ),
+        IgnorePointer(
+          child: AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    'agent.askAbout'.tr(),
+                    style: context.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpace.sm),
+                Wrap(
+                  spacing: AppSpace.xs,
+                  runSpacing: AppSpace.xs,
+                  children: [
+                    for (final key in _questions)
+                      _QuestionChip(label: key.tr()),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+/// One question Ask could answer, drawn as the app draws a suggestion.
+class _QuestionChip extends StatelessWidget {
+  const _QuestionChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: context.appColors.hairline),
+      ),
+      child: Text(
+        label,
+        style: context.textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -590,6 +486,7 @@ class OnboardingHelpUsGrowPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -598,16 +495,42 @@ class OnboardingHelpUsGrowPage extends StatelessWidget {
           title: 'onboarding.helpUsGrow.title'.tr(),
           subtitle: 'onboarding.helpUsGrow.body'.tr(),
         ),
+        IgnorePointer(
+          child: AppCard(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < 5; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(
+                      Icons.star_rounded,
+                      size: 32,
+                      color: scheme.primary,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
 class OnboardingReadyPage extends StatelessWidget {
-  const OnboardingReadyPage({super.key});
+  const OnboardingReadyPage({super.key, this.role, this.focus});
+
+  /// What the two questions were answered with, so the last page repeats the
+  /// choices back instead of only announcing the end.
+  final String? role;
+  final String? focus;
 
   @override
   Widget build(BuildContext context) {
+    final roleLabel = onboardingRoleLabel(role);
+    final focusLabel = onboardingFocusLabel(focus);
+    final answers = [?roleLabel, ?focusLabel];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -616,6 +539,16 @@ class OnboardingReadyPage extends StatelessWidget {
           title: 'onboarding.ready.title'.tr(),
           subtitle: 'onboarding.ready.body'.tr(),
         ),
+        if (answers.isNotEmpty)
+          Wrap(
+            spacing: AppSpace.xs,
+            runSpacing: AppSpace.xs,
+            alignment: WrapAlignment.center,
+            children: [
+              for (final answer in answers)
+                _CapabilityChip(emoji: '✓', label: answer),
+            ],
+          ),
       ],
     );
   }
@@ -695,32 +628,36 @@ class OnboardingOptionCard extends StatelessWidget {
 }
 
 class _PageHeader extends StatelessWidget {
-  const _PageHeader({
-    required this.title,
-    this.subtitle,
-    this.icon,
-  });
+  const _PageHeader({required this.title, this.subtitle, this.icon});
 
   final String title;
   final String? subtitle;
   final IconData? icon;
 
+  /// Below this height the header tightens, as an Apple device in landscape or
+  /// a small desktop window has little to spare.
+  static const _tightHeight = 700.0;
+
   @override
   Widget build(BuildContext context) {
+    final tight = MediaQuery.sizeOf(context).height < _tightHeight;
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpace.xl, bottom: AppSpace.xl),
+      padding: EdgeInsets.only(
+        top: tight ? AppSpace.md : AppSpace.xl,
+        bottom: tight ? AppSpace.md : AppSpace.xl,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (icon != null) ...[
-            _HeroIcon(icon!),
-            const SizedBox(height: AppSpace.lg),
+            _HeroIcon(icon!, size: tight ? 56 : 76),
+            SizedBox(height: tight ? AppSpace.md : AppSpace.lg),
           ],
+          // No line limit: the page scrolls, and a long translation
+          // (`onboarding.role.title` in Hindi, say) would only get cut.
           Text(
             title,
             textAlign: TextAlign.center,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
             style: context.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
               letterSpacing: -0.4,
@@ -732,8 +669,6 @@ class _PageHeader extends StatelessWidget {
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              maxLines: 6,
-              overflow: TextOverflow.ellipsis,
               style: context.textTheme.bodyLarge?.copyWith(
                 color: context.colorScheme.onSurfaceVariant,
                 height: 1.4,
@@ -753,30 +688,28 @@ class _TileEmoji extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      emoji,
-      style: const TextStyle(fontSize: 22, height: 1.15),
-    );
+    return Text(emoji, style: const TextStyle(fontSize: 22, height: 1.15));
   }
 }
 
 class _HeroIcon extends StatelessWidget {
-  const _HeroIcon(this.icon);
+  const _HeroIcon(this.icon, {this.size = 76});
 
   final IconData icon;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      width: 76,
-      height: 76,
+      width: size,
+      height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, size: 38, color: scheme.primary),
+      child: Icon(icon, size: size / 2, color: scheme.primary),
     );
   }
 }
@@ -794,4 +727,21 @@ String onboardingFocusContinueLabel(String? focus) => switch (focus) {
   OnboardingAnswers.focusRevenue => 'onboarding.focus.continueRevenue'.tr(),
   OnboardingAnswers.focusCharts => 'onboarding.focus.continueCharts'.tr(),
   _ => 'onboarding.continue'.tr(),
+};
+
+/// What a role answer is called, or null when none was given.
+String? onboardingRoleLabel(String? role) => switch (role) {
+  OnboardingAnswers.roleIndie => 'onboarding.role.indie'.tr(),
+  OnboardingAnswers.roleStudio => 'onboarding.role.studio'.tr(),
+  OnboardingAnswers.roleAgency => 'onboarding.role.agency'.tr(),
+  OnboardingAnswers.roleFinance => 'onboarding.role.finance'.tr(),
+  _ => null,
+};
+
+/// What a focus answer is called, or null when none was given.
+String? onboardingFocusLabel(String? focus) => switch (focus) {
+  OnboardingAnswers.focusLiveSales => 'onboarding.focus.liveSales'.tr(),
+  OnboardingAnswers.focusRevenue => 'onboarding.focus.revenue'.tr(),
+  OnboardingAnswers.focusCharts => 'onboarding.focus.charts'.tr(),
+  _ => null,
 };

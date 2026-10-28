@@ -20,6 +20,8 @@ export interface Display {
   project?: string;
   /** The app's product names by store product id, when Settings gave any. */
   names: Record<string, string>;
+  /** The project's icon URL, when the app has one, shown in the push. */
+  icon?: string;
 }
 
 /** How many product names a webhook URL may carry, and how long each may be. */
@@ -56,6 +58,28 @@ export function parseNames(raw: string | null): Record<string, string> {
   return names;
 }
 
+/** Longest icon URL worth carrying; store artwork links are far shorter. */
+const MAX_ICON = 1024;
+
+/**
+ * `icon=https://…`: the project's icon, which the app takes from RevenueCat
+ * and puts in its webhook URL so a push can show it. Only an https URL with
+ * no spaces, quotes or control characters, so the notifier hands FCM an
+ * address of the store's or RevenueCat's making, never one of its own. Read
+ * and dropped with the request like the rest of the URL.
+ */
+export function parseIcon(raw: string | null): string | undefined {
+  const url = raw?.trim();
+  if (!url || url.length > MAX_ICON) return undefined;
+  if (!url.startsWith("https://") || /[\s"'<>\\]/.test(url)) return undefined;
+  try {
+    if (new URL(url).protocol !== "https:") return undefined;
+  } catch {
+    return undefined;
+  }
+  return url;
+}
+
 export function parseDisplay(params: URLSearchParams): Display {
   const code = params.get("currency")?.toUpperCase();
   const currency = code && /^[A-Z]{3}$/.test(code) ? code : "USD";
@@ -63,6 +87,7 @@ export function parseDisplay(params: URLSearchParams): Display {
   const fee = (n: number | undefined) => n !== undefined && Number.isFinite(n) && n >= 0 && n <= 100;
   const rate = Number(params.get("rate"));
   const project = params.get("project")?.replace(/\s+/g, " ").trim().slice(0, 60);
+  const icon = parseIcon(params.get("icon"));
   return {
     language: parseLanguage(params.get("lang")),
     currency,
@@ -70,6 +95,7 @@ export function parseDisplay(params: URLSearchParams): Display {
     savedRate: Number.isFinite(rate) && rate > 0 ? rate : null,
     names: parseNames(params.get("names")),
     ...(project ? { project } : {}),
+    ...(icon ? { icon } : {}),
   };
 }
 

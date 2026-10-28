@@ -540,6 +540,7 @@ class PushSettingsNotifier extends StateNotifier<PushSettings> {
             display: state.display,
             projectName: entry.value.projectName,
             names: state.names,
+            projectIcon: entry.value.projectIcon,
           );
         } catch (e) {
           _log.warning('Updating a webhook failed: $e');

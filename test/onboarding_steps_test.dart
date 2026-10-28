@@ -9,8 +9,6 @@ void main() {
     OnboardingStep.role,
     OnboardingStep.focus,
     OnboardingStep.showcase,
-    OnboardingStep.appearance,
-    OnboardingStep.money,
   ];
 
   test('step ids are unique and stable', () {
@@ -20,8 +18,6 @@ void main() {
       'role',
       'focus',
       'showcase',
-      'appearance',
-      'money',
       'ai_consent',
       'help_us_grow',
       'ready',
@@ -31,11 +27,7 @@ void main() {
   });
 
   test('Apple inserts only ai_consent', () {
-    const apple = [
-      ...shared,
-      OnboardingStep.aiConsent,
-      OnboardingStep.ready,
-    ];
+    const apple = [...shared, OnboardingStep.aiConsent, OnboardingStep.ready];
     expect(onboardingStepsFor(TargetPlatform.iOS, isWeb: false), apple);
     expect(onboardingStepsFor(TargetPlatform.macOS, isWeb: false), apple);
   });

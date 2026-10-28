@@ -414,8 +414,8 @@
     "ZMW": "Sambischer Kwacha"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "Transaktion",
     "appIcon": "App-Symbol",
-    "iconHint": "Symbole werden automatisch aus dem App Store oder von Google Play geladen. Gib eine Bild-URL ein, um ein anderes Symbol zu verwenden.",
-    "iconHintForApp": "Symbole werden automatisch aus dem App Store oder von Google Play geladen. Gib eine Bild-URL ein, um für {appName} ein anderes Symbol zu verwenden.",
+    "iconHint": "Symbole werden automatisch von Apple oder Google geladen. Gib eine Bild-URL ein, um ein anderes Symbol zu verwenden.",
+    "iconHintForApp": "Symbole werden automatisch von Apple oder Google geladen. Gib eine Bild-URL ein, um für {appName} ein anderes Symbol zu verwenden.",
     "cancel": "Abbrechen",
     "clear": "Leeren",
     "save": "Speichern",
@@ -545,7 +545,7 @@
     "aiTitle": "Namen vorschlagen",
     "suggestAi": "Mit KI vorschlagen",
     "useParser": "Eingebaute Namen",
-    "aiPrivacyBody": "Nur Produkt-IDs werden gesendet. Keine Umsätze oder Kundendaten.",
+    "aiPrivacyBody": "Nur Produkt-IDs und der darin genannte Abrechnungszeitraum werden gesendet. Keine Umsätze oder Kundendaten.",
     "parserNote": "Benennt den Zeitraum aus der Produkt-ID.",
     "aiNoKeyBody": "Verbinde ein Modell, um Namen mit KI vorzuschlagen, oder nutze eingebaute Namen.",
     "aiConsentBody": "KI ist für diese App ausgeschaltet. Erlaube die KI-Datennutzung unter Einstellungen, Datenschutz, oder nutze eingebaute Namen.",
@@ -568,6 +568,10 @@
     "clear": "Löschen",
     "clearTitle": "Namen für {app} löschen?",
     "clearBody": "Entfernt jeden Namen und Tarif für diese App auf diesem Gerät.",
+    "clearAll": "Alle Namen löschen",
+    "clearAllTitle": "Alle Produktnamen löschen?",
+    "clearAllBody": "Entfernt jeden Namen und Tarif für jede App auf diesem Gerät.",
+    "clearAllDone": "Alle Produktnamen gelöscht",
     "suggestTitle": "Namen vorschlagen",
     "suggestSubtitle": {
       "one": "{} Produkt hat noch keinen Namen",
@@ -599,7 +603,7 @@
     "noFilterMatches": "In diesem Zeitraum passt keine Transaktion zu deinen Filtern.",
     "noCategoryTransactions": "In dieser Kategorie gibt es im geladenen Zeitraum keine Transaktionen.",
     "nextPayouts": "Nächste Auszahlungen",
-    "estimatedAfterFees": "Geschätzt nach Store-Gebühren von {apple} (App Store) und {google} (Google Play)",
+    "estimatedAfterFees": "Geschätzt nach Store-Gebühren von {apple} (Apple) und {google} (Google)",
     "pays": "Auszahlung am {date}",
     "paysAbout": "Auszahlung etwa am {date}",
     "scheduleUnavailable": "Zeitplan nicht verfügbar",
@@ -643,7 +647,7 @@
     },
     "payouts": {
       "title": "Auszahlungsverlauf",
-      "lastPaid": "Zuletzt ausgezahlt: App Store am {apple}, Google Play am {google}",
+      "lastPaid": "Zuletzt ausgezahlt: Apple am {apple}, Google am {google}",
       "paidInLast12Months": "In den letzten 12 Monaten ausgezahlt",
       "countSince": {
         "one": "{} Auszahlung seit {month}",
@@ -659,7 +663,7 @@
       "couldntLoad": "Auszahlungen konnten nicht geladen werden",
       "refreshFailed": "Die neuesten Auszahlungen konnten nicht geladen werden.",
       "emptyTitle": "Noch keine Auszahlungen",
-      "emptyMessage": "Keine Auszahlungen von App Store oder Google Play in den letzten 12 Monaten.",
+      "emptyMessage": "Keine Auszahlungen von Apple oder Google in den letzten 12 Monaten.",
       "splitUnavailableTitle": "Auszahlungen nach Store nicht verfügbar",
       "splitUnavailableMessage": "RevenueCat hat den Umsatz nicht nach Store geliefert, daher lassen sich die Auszahlungen nicht berechnen.",
       "estimateNote": "Geschätzt aus den Erlösen in RevenueCat, nach Store-Gebühren und geschätzten Steuern. Tatsächliche Zahlungen können durch Wechselkurse, Quellensteuer und Mindestauszahlungsbeträge abweichen.",
@@ -755,11 +759,11 @@
     "productNames": "Produktnamen",
     "productNamesHint": "Store-Produkte mit eigenen Worten benennen",
     "feesAfter": "Umsatz wird nach deinen Store-Gebühren angezeigt",
-    "feesBefore": "Umsatz wird vor den Gebühren von App Store und Google Play angezeigt",
-    "appStoreFee": "App-Store-Gebühr",
-    "googlePlayFee": "Google-Play-Gebühr",
-    "storeFeeTitle": "Gebühr {store}",
-    "storeFeeBody": "Der Anteil, den {company} bei jedem Verkauf über {store} behält. Die meisten Entwickler zahlen je nach Programm 15 % oder 30 %.",
+    "feesBefore": "Umsatz wird vor den Gebühren von Apple und Google angezeigt",
+    "appStoreFee": "Apple-Gebühr",
+    "googlePlayFee": "Google-Gebühr",
+    "storeFeeTitle": "{store}-Gebühr",
+    "storeFeeBody": "Der Anteil, den {company} bei jedem Verkauf behält. Die meisten Entwickler zahlen je nach Programm 15 % oder 30 %.",
     "storeFeeExample": "Ein Verkauf für {sale} zählt als {counted}",
     "feeRangeError": "Gib eine Gebühr zwischen 0 und 100 ein.",
     "feeLabel": "Gebühr",
@@ -1181,7 +1185,7 @@
       "currency": "Anzeigewährung",
       "more": "Mehr",
       "fees": "Umsatz nach Store-Gebühren anzeigen",
-      "feesHint": "Verwendet 15 % für den App Store und Google Play. Die Sätze feinjustierst du in den Einstellungen."
+      "feesHint": "Verwendet 15 % für Apple und Google. Die Sätze feinjustierst du in den Einstellungen."
     },
     "aiConsent": {
       "title": "Fragen mit deinen Zahlen nutzen?",
@@ -1220,8 +1224,8 @@
     "preview": {
       "now": "jetzt",
       "title": "🔵 Neues Abo · $9.99",
-      "body": "pro_monthly · 🇺🇸 Vereinigte Staaten · App Store",
-      "semantics": "Beispielbenachrichtigung: Neues Abo, 9,99 US-Dollar, aus dem App Store in den Vereinigten Staaten"
+      "body": "pro_monthly · 🇺🇸 Vereinigte Staaten · Apple",
+      "semantics": "Beispielbenachrichtigung: Neues Abo, 9,99 US-Dollar, von Apple in den Vereinigten Staaten"
     },
     "headline": "Erfahre sofort, wenn du einen Verkauf machst",
     "subhead": "Erhalte eine Benachrichtigung für jeden Kauf, jede Verlängerung und jede Rückerstattung in deinen RevenueCat-Projekten.",

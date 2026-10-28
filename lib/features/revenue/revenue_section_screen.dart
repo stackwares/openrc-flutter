@@ -18,6 +18,7 @@ import 'package:openrc/widgets/animated_reveal.dart';
 import 'package:openrc/widgets/grouped_list.dart';
 import 'package:openrc/widgets/shell_header.dart';
 import 'package:openrc/widgets/side_panel.dart';
+import 'package:openrc/services/telemetry.dart';
 
 /// Lists transactions in the Revenue tab window for one [TransactionDaySectionFilter] category.
 class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
@@ -41,6 +42,12 @@ class RealtimeSectionTransactionsScreen extends ConsumerStatefulWidget {
 
 class _RealtimeSectionTransactionsScreenState
     extends ConsumerState<RealtimeSectionTransactionsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Telemetry.screen('Insights');
+  }
+
   Set<String>? _appIncludeFilter;
   Set<String>? _countryFilter;
   Set<TransactionPlatformFilter>? _platformFilter;

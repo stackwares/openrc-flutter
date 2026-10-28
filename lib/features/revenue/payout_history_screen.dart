@@ -20,6 +20,7 @@ import 'package:openrc/widgets/dual_currency_text.dart';
 import 'package:openrc/widgets/grouped_list.dart';
 import 'package:openrc/widgets/section_header.dart';
 import 'package:openrc/widgets/split_bar.dart';
+import 'package:openrc/services/telemetry.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 enum _StoreFilter { all, apple, google }
@@ -40,6 +41,7 @@ class _PayoutHistoryScreenState extends ConsumerState<PayoutHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    Telemetry.screen('Payout history');
     // After the first frame: loading updates a provider, not allowed mid-build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load();

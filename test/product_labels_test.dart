@@ -133,6 +133,34 @@ void main() {
       expect(second.state.displayName('app1', 'p1'), 'Pro');
     });
 
+    test(
+      'clearing every app forgets every name, and undo brings them back',
+      () async {
+        final notifier = ProductLabelsNotifier();
+        await notifier.ready;
+        await notifier.setName('app1', 'p1', 'Pro');
+        await notifier.setName('app2', 'p2', 'Max');
+
+        await notifier.clearAll();
+        expect(notifier.state.isEmpty, isTrue);
+        expect(notifier.state.displayName('app1', 'p1'), isNull);
+        expect(notifier.state.displayName('app2', 'p2'), isNull);
+        expect(notifier.canUndo, isTrue);
+
+        await notifier.undo();
+        expect(notifier.state.displayName('app1', 'p1'), 'Pro');
+        expect(notifier.state.displayName('app2', 'p2'), 'Max');
+      },
+    );
+
+    test('clearing every app is a no-op when nothing is named', () async {
+      final notifier = ProductLabelsNotifier();
+      await notifier.ready;
+      await notifier.clearAll();
+      expect(notifier.state.isEmpty, isTrue);
+      expect(notifier.canUndo, isFalse);
+    });
+
     test('clearing an app keeps the others', () async {
       final notifier = ProductLabelsNotifier();
       await notifier.ready;

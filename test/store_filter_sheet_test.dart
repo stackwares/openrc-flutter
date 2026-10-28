@@ -92,8 +92,8 @@ void main() {
   ) async {
     await _open(tester);
 
-    expect(find.text('App Store'), findsOneWidget);
-    expect(find.text('Google Play'), findsOneWidget);
+    expect(find.text('Apple'), findsOneWidget);
+    expect(find.text('Google'), findsOneWidget);
     expect(find.text('Web'), findsOneWidget);
     // Sandbox rows are never loaded, so a test-purchase filter is gone.
     expect(find.text('Test'), findsNothing);
@@ -120,7 +120,7 @@ void main() {
   ) async {
     final applied = await _open(tester);
 
-    await tester.tap(find.text('Google Play'));
+    await tester.tap(find.text('Google'));
     await tester.pumpAndSettle();
 
     _expectApplied(applied.last, null, null, {

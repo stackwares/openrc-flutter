@@ -36,6 +36,7 @@ import 'package:openrc/services/rc_account_projects_provider.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/models/rc_transaction_derived.dart';
 import 'package:openrc/services/rc_api_service.dart';
+import 'package:openrc/services/telemetry.dart';
 import 'package:openrc/services/rc_auth_service.dart';
 import 'package:openrc/features/transactions/transaction_detail_screen.dart';
 import 'package:openrc/features/transactions/widgets/transaction_item.dart';
@@ -519,6 +520,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     _backfillGeneration++;
     _runPagesInFlight = 0;
     final gen = _backfillGeneration;
+    final started = DateTime.now();
     try {
       final api = _ref.read(rcApiServiceProvider);
       final request = RcTransactionsRequest(
@@ -551,6 +553,11 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         realtimeLoadStep: realtimeDone ? kRealtimeLoadTarget : 1,
         realtimeLoadComplete: realtimeDone,
       );
+      Telemetry.dataLoaded(
+        result: 'ok',
+        source: 'initial',
+        durationMs: DateTime.now().difference(started).inMilliseconds,
+      );
       _syncWidgetData();
       _ensureAppIcons(raw);
       if (hasMorePages && !preloadBoundaryMet && gen == _backfillGeneration) {
@@ -559,6 +566,11 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       if (hasMorePages) unawaited(_loadDay(state.selectedDayKey));
     } on DioException catch (e) {
       if (!mounted || gen != _backfillGeneration) return;
+      Telemetry.dataLoaded(
+        result: 'error',
+        source: 'initial',
+        durationMs: DateTime.now().difference(started).inMilliseconds,
+      );
       _handleAuthError(e);
       state = state.copyWith(
         isLoading: false,

@@ -5,6 +5,7 @@ import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/core/l10n/app_locales.dart';
 import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
+import 'package:openrc/services/telemetry.dart';
 
 /// The Language row's value: the chosen language's own name, or "System".
 String languageLabel(String? stem) => stem == null
@@ -33,6 +34,7 @@ Future<void> _apply(BuildContext context, WidgetRef ref, String? stem) async {
       await l10n.deleteSaveLocale();
     } else {
       await l10n.setLocale(locale);
+      Telemetry.preferenceChanged(setting: 'language');
     }
   }
   navigator.pop();

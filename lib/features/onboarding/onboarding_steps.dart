@@ -1,14 +1,16 @@
 import 'package:flutter/foundation.dart';
 
 /// Stable snake_case ids for the first-launch wizard and its funnel.
+///
+/// Appearance and money used to have steps of their own; the theme, display
+/// currency and store fees now live only in Settings, so a first launch is
+/// five steps long, plus at most one store-specific ask.
 enum OnboardingStep {
   welcome,
   proof,
   role,
   focus,
   showcase,
-  appearance,
-  money,
   aiConsent,
   helpUsGrow,
   ready,
@@ -22,8 +24,6 @@ extension OnboardingStepX on OnboardingStep {
     OnboardingStep.role => 'role',
     OnboardingStep.focus => 'focus',
     OnboardingStep.showcase => 'showcase',
-    OnboardingStep.appearance => 'appearance',
-    OnboardingStep.money => 'money',
     OnboardingStep.aiConsent => 'ai_consent',
     OnboardingStep.helpUsGrow => 'help_us_grow',
     OnboardingStep.ready => 'ready',
@@ -78,8 +78,6 @@ List<OnboardingStep> onboardingStepsFor(
     OnboardingStep.role,
     OnboardingStep.focus,
     OnboardingStep.showcase,
-    OnboardingStep.appearance,
-    OnboardingStep.money,
     if (!isWeb &&
         (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS))
       OnboardingStep.aiConsent,

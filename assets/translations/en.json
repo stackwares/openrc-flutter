@@ -399,8 +399,8 @@
     "ZMW": "Zambian kwacha"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -408,8 +408,8 @@
   "detail": {
     "transaction": "Transaction",
     "appIcon": "App icon",
-    "iconHint": "Icons are fetched from the App Store or Google Play automatically. Enter an image URL to use a different icon.",
-    "iconHintForApp": "Icons are fetched from the App Store or Google Play automatically. Enter an image URL to use a different icon for {appName}.",
+    "iconHint": "Icons are fetched from Apple or Google automatically. Enter an image URL to use a different icon.",
+    "iconHintForApp": "Icons are fetched from Apple or Google automatically. Enter an image URL to use a different icon for {appName}.",
     "cancel": "Cancel",
     "clear": "Clear",
     "save": "Save",
@@ -550,7 +550,7 @@
     "aiTitle": "Suggest names",
     "suggestAi": "Suggest with AI",
     "useParser": "Built-in names",
-    "aiPrivacyBody": "Only product IDs are sent. No revenue or customer data.",
+    "aiPrivacyBody": "Only product IDs and the billing period they name are sent. No revenue or customer data.",
     "parserNote": "Labels the period from the product ID.",
     "aiNoKeyBody": "Connect a model to suggest names with AI, or use built-in names.",
     "aiConsentBody": "AI is turned off for this app. Allow AI data use under Settings, Privacy, or use built-in names.",
@@ -573,6 +573,10 @@
     "clear": "Clear",
     "clearTitle": "Clear names for {app}?",
     "clearBody": "This removes every name and plan for this app on this device.",
+    "clearAll": "Clear all names",
+    "clearAllTitle": "Clear every product name?",
+    "clearAllBody": "This removes every name and plan for every app on this device.",
+    "clearAllDone": "Cleared every product name",
     "suggestTitle": "Suggest Names",
     "suggestSubtitle": {
       "one": "{} product has no name yet",
@@ -604,7 +608,7 @@
     "noFilterMatches": "No transactions match your filters in this window.",
     "noCategoryTransactions": "No transactions in this category for the loaded window.",
     "nextPayouts": "Next payouts",
-    "estimatedAfterFees": "Estimated after store fees of {apple} (App Store) and {google} (Google Play)",
+    "estimatedAfterFees": "Estimated after store fees of {apple} (Apple) and {google} (Google)",
     "pays": "Pays {date}",
     "paysAbout": "Pays about {date}",
     "scheduleUnavailable": "Schedule unavailable",
@@ -656,7 +660,7 @@
     },
     "payouts": {
       "title": "Payout history",
-      "lastPaid": "Last paid: App Store {apple}, Google Play {google}",
+      "lastPaid": "Last paid: Apple {apple}, Google {google}",
       "paidInLast12Months": "Paid in the last 12 months",
       "countSince": {
         "one": "{} payout since {month}",
@@ -672,7 +676,7 @@
       "couldntLoad": "Couldn’t load payouts",
       "refreshFailed": "Couldn’t load the latest payouts.",
       "emptyTitle": "No payouts yet",
-      "emptyMessage": "No App Store or Google Play payouts in the last 12 months.",
+      "emptyMessage": "No Apple or Google payouts in the last 12 months.",
       "splitUnavailableTitle": "Payouts by store aren’t available",
       "splitUnavailableMessage": "RevenueCat didn’t return revenue by store, so payouts can’t be worked out.",
       "estimateNote": "Estimated from RevenueCat proceeds, after store fees and estimated taxes. Actual payments can differ with exchange rates, tax withholding and payment minimums.",
@@ -696,8 +700,8 @@
     "preview": {
       "now": "now",
       "title": "🔵 New subscription · $9.99",
-      "body": "pro_monthly · 🇺🇸 United States · App Store",
-      "semantics": "Example notification: New subscription, 9.99 dollars, from the App Store in the United States"
+      "body": "pro_monthly · 🇺🇸 United States · Apple",
+      "semantics": "Example notification: New subscription, 9.99 dollars, from Apple in the United States"
     },
     "headline": "Know the moment you make a sale",
     "subhead": "Get a notification for every purchase, renewal and refund across your RevenueCat projects.",
@@ -905,11 +909,11 @@
     "productNames": "Product names",
     "productNamesHint": "Name store products in your own words",
     "feesAfter": "Revenue is shown after your store fees",
-    "feesBefore": "Revenue is shown before App Store and Google Play fees",
-    "appStoreFee": "App Store fee",
-    "googlePlayFee": "Google Play fee",
+    "feesBefore": "Revenue is shown before Apple and Google fees",
+    "appStoreFee": "Apple fee",
+    "googlePlayFee": "Google fee",
     "storeFeeTitle": "{store} fee",
-    "storeFeeBody": "The share {company} keeps from each {store} sale. Most developers pay 15% or 30%, depending on their program.",
+    "storeFeeBody": "The share {company} keeps from each sale. Most developers pay 15% or 30%, depending on their program.",
     "storeFeeExample": "A {sale} sale counts as {counted}",
     "feeRangeError": "Enter a fee between 0 and 100.",
     "feeLabel": "Fee",
@@ -1114,7 +1118,7 @@
       "currency": "Display currency",
       "more": "More",
       "fees": "Show revenue after store fees",
-      "feesHint": "Uses 15% for the App Store and Google Play. Fine-tune the rates in Settings."
+      "feesHint": "Uses 15% for Apple and Google. Fine-tune the rates in Settings."
     },
     "aiConsent": {
       "title": "Use Ask with your numbers?",

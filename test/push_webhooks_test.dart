@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:openrc/models/rc_webhook.dart';
 import 'package:openrc/services/push/push_channel.dart';
 import 'package:openrc/services/push/push_config.dart';
+import 'package:openrc/services/push/push_display.dart';
 import 'package:openrc/services/push/push_kinds.dart';
 import 'package:openrc/services/push/push_names.dart';
 import 'package:openrc/services/push/push_notifications.dart';
@@ -308,6 +309,43 @@ void main() {
       expect(await webhooks.find('p1', secret), id);
     });
 
+    test('carries the project\'s icon for the notifier', () async {
+      final rc = FakeRevenueCat(projects: ['p1']);
+      final webhooks = PushWebhooks(rc.api());
+      final id = await webhooks.add(
+        'p1',
+        secret,
+        sandbox: false,
+        kinds: PushKind.all,
+        projectIcon: 'https://is1-ssl.mzstatic.com/image/thumb/App/512x512bb.png',
+      );
+      final hook = rc.webhooks['p1']!.single;
+      expect(
+        hook['url'],
+        endsWith(
+          '?icon=https%3A%2F%2Fis1-ssl.mzstatic.com%2Fimage%2Fthumb%2FApp%2F512x512bb.png',
+        ),
+      );
+      expect(await webhooks.find('p1', secret), id);
+    });
+
+    test('only carries icons a push can fetch', () {
+      expect(PushWebhooks.iconParam(null), isNull);
+      expect(PushWebhooks.iconParam('   '), isNull);
+      expect(PushWebhooks.iconParam('http://example.com/a.png'), isNull);
+      expect(PushWebhooks.iconParam('https://'), isNull);
+      expect(PushWebhooks.iconParam('javascript:alert(1)'), isNull);
+      expect(PushWebhooks.iconParam('https://example.com/a b.png'), isNull);
+      expect(
+        PushWebhooks.iconParam('https://example.com/${'a' * 1024}'),
+        isNull,
+      );
+      expect(
+        PushWebhooks.iconParam(' https://example.com/a.png '),
+        'https://example.com/a.png',
+      );
+    });
+
     test('the tag names a secret without giving it away', () {
       final tag = PushWebhooks.tagFor(secret);
       expect(tag, hasLength(6));
@@ -421,6 +459,29 @@ void main() {
       );
     });
 
+    test('connecting a project sends every setting the push reads', () async {
+      // A webhook written without these reads raw product ids and US dollars
+      // until something else refreshes it: connecting is the moment a device
+      // hands its settings to the notifier.
+      await container
+          .read(pushSettingsProvider.notifier)
+          .setNames(PushNames({'com.acme.pro': 'Pro'}));
+      await container
+          .read(pushSettingsProvider.notifier)
+          .setDisplay(
+            const PushDisplay(currency: 'EUR', language: 'de', rate: 0.92),
+          );
+
+      final notifier = await loaded();
+      expect(await notifier.apply({'p2'}), 0);
+
+      final url = rc.webhooks['p2']!.single['url'] as String;
+      expect(url, contains('names=com.acme.pro%0APro'));
+      expect(url, contains('lang=de'));
+      expect(url, contains('currency=EUR'));
+      expect(url, contains('project=Project+p2'));
+    });
+
     test('says when the project list can\'t load', () async {
       rc.offline = true;
       await loaded();
@@ -436,6 +497,21 @@ void main() {
 
       await loaded();
       expect(rc.webhooks['p2']!.single['url'], endsWith('?project=Project+p2'));
+    });
+
+    test('adds the project\'s icon to a webhook that has none', () async {
+      rc.icons['p2'] = 'https://is1-ssl.mzstatic.com/image/thumb/App/512x512bb.png';
+      final secret = container.read(pushSettingsProvider).secret!;
+      await PushWebhooks(
+        rc.api(),
+      ).add('p2', secret, sandbox: false, kinds: PushKind.all);
+      expect(rc.webhooks['p2']!.single['url'], isNot(contains('icon=')));
+
+      await loaded();
+      expect(
+        rc.webhooks['p2']!.single['url'],
+        contains('icon=https%3A%2F%2Fis1-ssl.mzstatic.com'),
+      );
     });
 
     test('reads existing webhooks as connected', () async {

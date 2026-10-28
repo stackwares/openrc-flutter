@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:openrc/app/app_navigator.dart';
 import 'package:openrc/app/mac_menu_bar.dart';
 import 'package:openrc/app/main_shell.dart';
@@ -44,6 +45,12 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The OS may stop the app from here; a crash report is only useful if the
+    // events that led to it left the device first.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      Telemetry.flush();
+    }
     // Rates that failed (e.g. launched offline) get another try on return.
     if (state == AppLifecycleState.resumed &&
         ref.read(usdExchangeRatesProvider).hasError) {
@@ -106,8 +113,15 @@ class _OpenRcAppState extends ConsumerState<OpenRcApp>
         onboardingCompleted: onboardingCompleted,
       ),
     );
-    if (!_hasTransparentTitleBar) return app;
-    return MacMenuBar(navigatorKey: appNavigatorKey, child: app);
+    // Session replay is captured here: the plugin's Flutter-side capturer
+    // needs this root, and the text/image/custom-paint masks that keep a
+    // replay anonymous only apply through it. Mounted after `Telemetry.start`
+    // (which awaits the setup) in `main`, as the plugin requires.
+    final captured = Telemetry.isAvailable
+        ? PostHogWidget(child: app)
+        : app;
+    if (!_hasTransparentTitleBar) return captured;
+    return MacMenuBar(navigatorKey: appNavigatorKey, child: captured);
   }
 }
 

@@ -43,7 +43,8 @@ class _PushSetupSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
     final tt = context.textTheme;
-    final secret = ref.watch(pushSettingsProvider).secret;
+    final settings = ref.watch(pushSettingsProvider);
+    final secret = settings.secret;
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -72,9 +73,17 @@ class _PushSetupSheet extends ConsumerWidget {
           _Step(number: 2, text: 'notifications.manualSheet.step2'.tr()),
           _CopyField(
             label: 'notifications.manualSheet.webhookUrl'.tr(),
+            // The URL this device would have written, settings and all, so a
+            // hand-added webhook reads like an automatic one.
             value: secret == null
                 ? PushConfig.webhookUrl
-                : PushWebhooks.urlFor(secret),
+                : PushWebhooks.urlFor(
+                    secret,
+                    settings.kinds,
+                    settings.display,
+                    null,
+                    settings.names,
+                  ),
           ),
           if (secret != null) ...[
             const SizedBox(height: 8),

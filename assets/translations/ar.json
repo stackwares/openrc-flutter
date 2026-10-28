@@ -414,8 +414,8 @@
     "ZMW": "كواشا زامبية"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "معاملة",
     "appIcon": "أيقونة التطبيق",
-    "iconHint": "تُجلب الأيقونات تلقائيًا من App Store أو Google Play. أدخل رابط صورة لاستخدام أيقونة مختلفة.",
-    "iconHintForApp": "تُجلب الأيقونات تلقائيًا من App Store أو Google Play. أدخل رابط صورة لاستخدام أيقونة مختلفة لتطبيق {appName}.",
+    "iconHint": "تُجلب الأيقونات تلقائيًا من Apple أو Google. أدخل رابط صورة لاستخدام أيقونة مختلفة.",
+    "iconHintForApp": "تُجلب الأيقونات تلقائيًا من Apple أو Google. أدخل رابط صورة لاستخدام أيقونة مختلفة لتطبيق {appName}.",
     "cancel": "إلغاء",
     "clear": "مسح",
     "save": "حفظ",
@@ -577,7 +577,7 @@
     "aiTitle": "اقتراح أسماء",
     "suggestAi": "اقتراح بالذكاء الاصطناعي",
     "useParser": "أسماء مدمجة",
-    "aiPrivacyBody": "تُرسل معرّفات المنتجات فقط. لا إيرادات أو بيانات عملاء.",
+    "aiPrivacyBody": "تُرسل معرّفات المنتجات والفترة التي تسمّيها فقط. لا إيرادات أو بيانات عملاء.",
     "parserNote": "يسمّي الفترة من معرّف المنتج.",
     "aiNoKeyBody": "اربط نموذجًا لاقتراح الأسماء بالذكاء الاصطناعي، أو استخدم الأسماء المدمجة.",
     "aiConsentBody": "الذكاء الاصطناعي متوقف لهذا التطبيق. اسمح باستخدام بيانات الذكاء الاصطناعي في الإعدادات، الخصوصية، أو استخدم الأسماء المدمجة.",
@@ -600,6 +600,10 @@
     "clear": "مسح",
     "clearTitle": "مسح أسماء {app}؟",
     "clearBody": "يزيل كل اسم وخطة لهذا التطبيق على هذا الجهاز.",
+    "clearAll": "مسح كل الأسماء",
+    "clearAllTitle": "مسح كل أسماء المنتجات؟",
+    "clearAllBody": "يزيل كل اسم وخطة لكل تطبيق على هذا الجهاز.",
+    "clearAllDone": "تم مسح كل أسماء المنتجات",
     "suggestTitle": "اقتراح أسماء",
     "suggestSubtitle": {
       "zero": "{} منتج بلا اسم بعد",
@@ -635,7 +639,7 @@
     "noFilterMatches": "لا توجد معاملات تطابق عوامل التصفية في هذه الفترة.",
     "noCategoryTransactions": "لا توجد معاملات في هذه الفئة للفترة المحمّلة.",
     "nextPayouts": "الدفعات القادمة",
-    "estimatedAfterFees": "تقديرية بعد رسوم المتجر: {apple} لـ App Store و{google} لـ Google Play",
+    "estimatedAfterFees": "تقديرية بعد رسوم المتجر: {apple} لـ Apple و{google} لـ Google",
     "pays": "تُدفع في {date}",
     "paysAbout": "تُدفع تقريبًا في {date}",
     "scheduleUnavailable": "الجدول غير متوفر",
@@ -691,7 +695,7 @@
     },
     "payouts": {
       "title": "سجل الدفعات",
-      "lastPaid": "آخر دفعة: App Store في {apple}، وGoogle Play في {google}",
+      "lastPaid": "آخر دفعة: Apple في {apple}، وGoogle في {google}",
       "paidInLast12Months": "المدفوع خلال آخر 12 شهرًا",
       "countSince": {
         "zero": "{} دفعة منذ {month}",
@@ -711,7 +715,7 @@
       "couldntLoad": "تعذّر تحميل الدفعات",
       "refreshFailed": "تعذّر تحميل أحدث الدفعات.",
       "emptyTitle": "لا دفعات بعد",
-      "emptyMessage": "لا دفعات من App Store أو Google Play خلال آخر 12 شهرًا.",
+      "emptyMessage": "لا دفعات من Apple أو Google خلال آخر 12 شهرًا.",
       "splitUnavailableTitle": "الدفعات حسب المتجر غير متاحة",
       "splitUnavailableMessage": "لم يُرجع RevenueCat الإيرادات حسب المتجر، لذا يتعذّر حساب الدفعات.",
       "estimateNote": "تقديرية بناءً على الحصيلة في RevenueCat بعد رسوم المتجر والضرائب التقديرية. قد تختلف المدفوعات الفعلية بسبب أسعار الصرف واقتطاع الضرائب والحد الأدنى للدفع.",
@@ -839,11 +843,11 @@
     "productNames": "أسماء المنتجات",
     "productNamesHint": "سمِّ منتجات المتجر بكلماتك",
     "feesAfter": "تُعرض الإيرادات بعد رسوم المتجر",
-    "feesBefore": "تُعرض الإيرادات قبل رسوم App Store وGoogle Play",
-    "appStoreFee": "رسوم App Store",
-    "googlePlayFee": "رسوم Google Play",
+    "feesBefore": "تُعرض الإيرادات قبل رسوم Apple وGoogle",
+    "appStoreFee": "رسوم Apple",
+    "googlePlayFee": "رسوم Google",
     "storeFeeTitle": "رسوم {store}",
-    "storeFeeBody": "النسبة التي تحتفظ بها {company} من كل عملية بيع في {store}. يدفع معظم المطورين 15% أو 30%، حسب برنامجهم.",
+    "storeFeeBody": "النسبة التي تحتفظ بها {company} من كل عملية بيع. يدفع معظم المطورين 15% أو 30%، حسب برنامجهم.",
     "storeFeeExample": "عملية بيع بقيمة {sale} تُحتسب كـ {counted}",
     "feeRangeError": "أدخل رسومًا بين 0 و100.",
     "feeLabel": "الرسوم",
@@ -1305,7 +1309,7 @@
       "currency": "عملة العرض",
       "more": "المزيد",
       "fees": "عرض الإيراد بعد رسوم المتاجر",
-      "feesHint": "يستخدم 15٪ لـ App Store وGoogle Play. اضبط النسب من الإعدادات."
+      "feesHint": "يستخدم 15٪ لـ Apple وGoogle. اضبط النسب من الإعدادات."
     },
     "aiConsent": {
       "title": "استخدام اسأل مع أرقامك؟",
@@ -1348,8 +1352,8 @@
     "preview": {
       "now": "الآن",
       "title": "🔵 اشتراك جديد · $9.99",
-      "body": "pro_monthly · 🇺🇸 الولايات المتحدة · App Store",
-      "semantics": "إشعار تجريبي: اشتراك جديد، 9.99 دولارًا، من App Store في الولايات المتحدة"
+      "body": "pro_monthly · 🇺🇸 الولايات المتحدة · Apple",
+      "semantics": "إشعار تجريبي: اشتراك جديد، 9.99 دولارًا، من Apple في الولايات المتحدة"
     },
     "headline": "اعرف لحظة إتمام أي عملية بيع",
     "subhead": "احصل على إشعار عند كل عملية شراء وتجديد واسترداد في مشاريع RevenueCat.",

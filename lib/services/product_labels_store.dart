@@ -14,7 +14,9 @@ final productLabelsProvider =
     StateNotifierProvider<ProductLabelsNotifier, ProductLabels>((ref) {
       return ProductLabelsNotifier(
         onChanged: (labels) => unawaited(
-          ref.read(pushSettingsProvider.notifier).setNames(PushNames.of(labels)),
+          ref
+              .read(pushSettingsProvider.notifier)
+              .setNames(PushNames.of(labels)),
         ),
       );
     });
@@ -214,6 +216,13 @@ class ProductLabelsNotifier extends StateNotifier<ProductLabels> {
     await ready;
     if (state.forApp(appKey).isEmpty) return;
     await _commit(state.withApp(appKey, const AppProductLabels()));
+  }
+
+  /// Forgets every label and plan in every app on this device.
+  Future<void> clearAll() async {
+    await ready;
+    if (state.isEmpty) return;
+    await _commit(const ProductLabels.empty());
   }
 
   /// The id of an existing plan named [name] (ignoring case), else a new

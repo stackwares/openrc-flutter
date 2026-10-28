@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -69,10 +71,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         );
       } else {
         logOnboardingEvent(
-          onboardingBeginEvent(
-            stepCount: _steps.length,
-            platform: _platform,
-          ),
+          onboardingBeginEvent(stepCount: _steps.length, platform: _platform),
           track: true,
         );
       }
@@ -131,16 +130,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     setState(() => _busy = true);
     if (_track) {
       final store = ref.read(onboardingPrefsProvider.notifier);
-      await store.markCompleted(
-        role: _role,
-        focus: _focus,
-        fromWizard: true,
-      );
+      await store.markCompleted(role: _role, focus: _focus, fromWizard: true);
       logOnboardingEvent(
-        onboardingCompleteEvent(
-          platform: _platform,
-          stepCount: _steps.length,
-        ),
+        onboardingCompleteEvent(platform: _platform, stepCount: _steps.length),
         track: true,
       );
     } else if (mounted && Navigator.of(context).canPop()) {
@@ -202,7 +194,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ref.read(onboardingPrefsProvider.notifier).setAiConsentGranted(false),
       );
       logOnboardingEvent(
-        onboardingAnswerEvent(step: OnboardingStep.aiConsent.id, answer: 'none'),
+        onboardingAnswerEvent(
+          step: OnboardingStep.aiConsent.id,
+          answer: 'none',
+        ),
         track: true,
       );
     }
@@ -263,6 +258,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     };
   }
 
+  /// Enter, on a Mac or the web, takes the step's call to action.
+  void _pressCta() => _onCta?.call();
+
   String? get _secondaryLabel => switch (_step) {
     OnboardingStep.aiConsent => 'onboarding.aiConsent.notNow'.tr(),
     OnboardingStep.helpUsGrow => 'onboarding.helpUsGrow.later'.tr(),
@@ -288,11 +286,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         onSelected: _selectFocus,
       ),
       OnboardingStep.showcase => const OnboardingShowcasePage(),
-      OnboardingStep.appearance => const OnboardingAppearancePage(),
-      OnboardingStep.money => const OnboardingMoneyPage(),
       OnboardingStep.aiConsent => const OnboardingAiConsentPage(),
       OnboardingStep.helpUsGrow => const OnboardingHelpUsGrowPage(),
-      OnboardingStep.ready => const OnboardingReadyPage(),
+      OnboardingStep.ready => OnboardingReadyPage(role: _role, focus: _focus),
     };
   }
 
@@ -306,92 +302,111 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         if (didPop) return;
         _back();
       },
-      child: Scaffold(
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.xs,
-                  AppSpace.xxs,
-                  AppSpace.sm,
-                  0,
-                ),
-                child: _Chrome(
-                  index: _index,
-                  total: _steps.length,
-                  showBack: _index > 0,
-                  showSkip: _index == 0,
-                  onBack: _back,
-                  onSkip: _skip,
-                ),
-              ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final side = AppBreakpoints.centeringInset(
-                      constraints.maxWidth,
-                      maxWidth: kOnboardingColumnWidth,
-                    );
-                    return AnimatedSwitcher(
-                      duration: reduce
-                          ? Duration.zero
-                          : AppMotion.duration,
-                      switchInCurve: AppMotion.curve,
-                      switchOutCurve: Curves.easeIn,
-                      child: KeyedSubtree(
-                        key: ValueKey(_step),
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          child: SingleChildScrollView(
-                            padding: EdgeInsets.fromLTRB(
-                              AppSpace.lg + side,
-                              AppSpace.md,
-                              AppSpace.lg + side,
-                              AppSpace.md,
-                            ),
-                            child: _Entrance(child: page),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              LayoutBuilder(
+      child: CallbackShortcuts(
+        // Enter takes the step's call to action, which is what a keyboard user
+        // on a Mac or the web expects of a wizard.
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.enter): _pressCta,
+          const SingleActivator(LogicalKeyboardKey.numpadEnter): _pressCta,
+        },
+        child: Focus(
+          autofocus: true,
+          child: Scaffold(
+            body: SafeArea(
+              bottom: false,
+              child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final side = AppBreakpoints.centeringInset(
+                  // The step chrome, the page and its call to action are one band:
+                  // in a wide window it stays a readable column instead of
+                  // stretching edge to edge, and it's capped in height and
+                  // centered, so a tall window doesn't strand the button at the
+                  // bottom, a screen away from what it acts on.
+                  final wide = constraints.maxWidth >= AppBreakpoints.expanded;
+                  final columnWidth = wide
+                      ? kOnboardingWideColumnWidth
+                      : kOnboardingColumnWidth;
+                  final bandWidth = math.min(
+                    columnWidth + AppSpace.lg * 2,
                     constraints.maxWidth,
-                    maxWidth: kOnboardingColumnWidth,
+                  );
+                  final bandHeight = math.min(
+                    constraints.maxHeight,
+                    kOnboardingBandMaxHeight,
                   );
                   final bottomInset = MediaQuery.paddingOf(context).bottom;
-                  return Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpace.lg + side,
-                      0,
-                      AppSpace.lg + side,
-                      bottomInset > 0 ? bottomInset : AppSpace.xs,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (_secondaryLabel != null) ...[
-                          TextButton(
-                            onPressed: _busy ? null : _onSecondary,
-                            child: Text(_secondaryLabel!),
-                          ),
-                        ],
-                        _PillButton(
-                          label: _ctaLabel,
-                          onPressed: _onCta,
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: bandWidth,
+                        maxHeight: bandHeight,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.lg,
                         ),
-                      ],
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: AppSpace.xxs),
+                              child: _Chrome(
+                                index: _index,
+                                total: _steps.length,
+                                showBack: _index > 0,
+                                onBack: _back,
+                                onSkip: _skip,
+                              ),
+                            ),
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration: reduce
+                                    ? Duration.zero
+                                    : AppMotion.duration,
+                                switchInCurve: AppMotion.curve,
+                                switchOutCurve: Curves.easeIn,
+                                child: KeyedSubtree(
+                                  key: ValueKey(_step),
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    child: SingleChildScrollView(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: AppSpace.md,
+                                      ),
+                                      child: _Entrance(child: page),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom: bottomInset > 0
+                                    ? bottomInset
+                                    : AppSpace.xs,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (_secondaryLabel != null) ...[
+                                    TextButton(
+                                      onPressed: _busy ? null : _onSecondary,
+                                      child: Text(_secondaryLabel!),
+                                    ),
+                                  ],
+                                  _PillButton(
+                                    label: _ctaLabel,
+                                    onPressed: _onCta,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -424,7 +439,6 @@ class _Chrome extends StatelessWidget {
     required this.index,
     required this.total,
     required this.showBack,
-    required this.showSkip,
     required this.onBack,
     required this.onSkip,
   });
@@ -432,7 +446,6 @@ class _Chrome extends StatelessWidget {
   final int index;
   final int total;
   final bool showBack;
-  final bool showSkip;
   final VoidCallback onBack;
   final VoidCallback onSkip;
 
@@ -445,25 +458,30 @@ class _Chrome extends StatelessWidget {
           height: 44,
           child: Row(
             children: [
-              SizedBox(
-                width: 48,
-                child: showBack
-                    ? IconButton(
-                        tooltip: 'onboarding.back'.tr(),
-                        onPressed: onBack,
-                        icon: const Icon(Icons.arrow_back_rounded),
-                      )
-                    : null,
+              // Equal flexible sides keep the counter centered however long
+              // a translation runs (`Überspringen`, `Saltar`), instead of
+              // squeezing it into a fixed slot.
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: showBack
+                      ? IconButton(
+                          tooltip: 'onboarding.back'.tr(),
+                          onPressed: onBack,
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        )
+                      : null,
+                ),
               ),
               Expanded(
+                flex: 2,
                 child: Text(
                   'onboarding.stepOf'.tr(
-                    namedArgs: {
-                      'current': '${index + 1}',
-                      'total': '$total',
-                    },
+                    namedArgs: {'current': '${index + 1}', 'total': '$total'},
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: context.textTheme.labelLarge?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
@@ -471,14 +489,21 @@ class _Chrome extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
-                width: 72,
-                child: showSkip
-                    ? TextButton(
-                        onPressed: onSkip,
-                        child: Text('onboarding.skip'.tr()),
-                      )
-                    : null,
+              // Skipping is offered on every step: the two questions have no
+              // answer-free way forward, and a disabled Continue with no Skip
+              // was a dead end.
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: onSkip,
+                    child: Text(
+                      'onboarding.skip'.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -516,19 +541,26 @@ class _PillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 52,
+    // A minimum, not a fixed height: at a large text scale (or in a language
+    // that spells the label out) the button grows instead of clipping it.
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           shape: const StadiumBorder(),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.lg,
+            vertical: AppSpace.sm,
+          ),
           textStyle: context.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         child: Text(
           label,
-          maxLines: 1,
+          textAlign: TextAlign.center,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
       ),

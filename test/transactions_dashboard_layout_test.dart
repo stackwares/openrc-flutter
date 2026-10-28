@@ -147,7 +147,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(CheckboxMenuButton),
-        matching: find.text('Google Play'),
+        matching: find.text('Google'),
       ),
     );
     await tester.pumpAndSettle();

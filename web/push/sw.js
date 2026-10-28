@@ -19,7 +19,9 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(notification.title || 'OpenRC', {
       body: notification.body || '',
-      icon: '/icons/Icon-192.png',
+      // The project's icon, when the notifier sent one, so a push reads as
+      // belonging to that project rather than to OpenRC at large.
+      icon: notification.image || '/icons/Icon-192.png',
       badge: '/icons/Icon-maskable-192.png',
       // A retried webhook replaces its notification instead of adding one.
       tag: data.event_id || payload.fcmMessageId || undefined,

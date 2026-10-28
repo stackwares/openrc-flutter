@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:openrc/features/ask/ask_providers.dart';
 import 'package:openrc/features/ask/ask_thread_store.dart';
 import 'package:openrc/models/agent_block.dart';
 import 'package:openrc/models/agent_block_payload.dart';
 import 'package:openrc/services/agent/agent_conversation_runner.dart';
 import 'package:openrc/services/agent/agent_llm_client.dart';
+import 'package:openrc/services/telemetry.dart';
 
 final askNotifierProvider =
     NotifierProvider<AskNotifier, List<AgentTurn>>(AskNotifier.new);
@@ -114,6 +116,11 @@ class AskNotifier extends Notifier<List<AgentTurn>> {
     );
     _runningTurnId = turn.id;
     state = [...state, turn];
+    // Whether the question was prefilled with a sale or a range; the question
+    // itself, and the numbers, never leave the device.
+    Telemetry.askMessageSent(
+      withContext: (ref.read(askPrefillProvider) ?? '').isNotEmpty,
+    );
 
     // False once the turn was stopped, the thread cleared or the provider
     // disposed: whatever comes back then belongs to nobody.

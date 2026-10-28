@@ -6,15 +6,19 @@
     "configurations": [
 
         {
+            // Push notifications and telemetry are always on: this file (local,
+            // gitignored) carries the Firebase and PostHog defines together.
             "name": "Debug",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "args": ["--dart-define-from-file=dart_defines/local.json"]
         },
         {
             "name": "Release",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release"
+            "flutterMode": "release",
+            "args": ["--dart-define-from-file=dart_defines/local.json"]
         },
         {
             // Start the relay first: cd relay && npm run dev

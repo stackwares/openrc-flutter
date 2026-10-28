@@ -46,7 +46,8 @@ class _FakeClient extends AgentLlmClient {
     final payload =
         jsonDecode(messages.last['content'] as String) as Map<String, dynamic>;
     payloads.add(payload);
-    final ids = (payload['products'] as List).cast<String>();
+    final products = (payload['products'] as List).cast<Map<String, dynamic>>();
+    final ids = [for (final product in products) product['id'] as String];
     calls.add(ids);
     return AgentLlmResponse(assistantText: answer(ids));
   }
@@ -75,6 +76,32 @@ class _FakeClient extends AgentLlmClient {
 }
 
 void main() {
+  test('built-in names read a non-renewing product as its term', () {
+    final out = ProductLabelSuggester.local(
+      ['com.acme.pro_yearly', 'com.acme.pro_monthly', 'com.acme.lifetime'],
+      nonRenewingIds: {'com.acme.pro_yearly', 'com.acme.pro_monthly'},
+    );
+    expect(out.map((s) => s.name), ['1 Year', '1 Month', 'Lifetime']);
+    expect(out.map((s) => s.plan), ['1 Year', '1 Month', 'Lifetime']);
+  });
+
+  test('built-in names keep the cadence when the product renews', () {
+    final out = ProductLabelSuggester.local([
+      'com.acme.pro_yearly',
+      'com.acme.pro_monthly',
+      'com.acme.pro_weekly',
+    ]);
+    expect(out.map((s) => s.name), ['Yearly', 'Monthly', 'Weekly']);
+  });
+
+  test('a non-renewing product keeps an explicit term from its id', () {
+    final out = ProductLabelSuggester.local(
+      ['com.acme.pro_1year'],
+      nonRenewingIds: {'com.acme.pro_1year'},
+    );
+    expect(out.single.name, '1 Year');
+  });
+
   test('model names win and carry a plan', () async {
     final h = _harness(
       answer: (_) => jsonEncode({
@@ -94,13 +121,119 @@ void main() {
     expect(out.single.fromAi, isTrue);
   });
 
-  test('only product ids leave the device', () async {
+  test('only ids and our own period mapping leave the device', () async {
     final h = _harness();
     await h.container
         .read(productLabelSuggesterProvider)
         .suggest(productIds: ['pro_monthly'], cancelToken: CancelToken());
     expect(h.client.payloads.single.keys, ['products']);
-    expect(h.client.payloads.single['products'], ['pro_monthly']);
+    expect(h.client.payloads.single['products'], [
+      {'id': 'pro_monthly', 'period': 'monthly'},
+    ]);
+  });
+
+  test('our mapping travels with each id, as the model reads it', () async {
+    final h = _harness();
+    await h.container
+        .read(productLabelSuggesterProvider)
+        .suggest(
+          productIds: [
+            'com.acme.pro_yearly',
+            'com.acme.pass_yearly',
+            'com.acme.x',
+          ],
+          nonRenewingIds: {'com.acme.pass_yearly'},
+          cancelToken: CancelToken(),
+        );
+    expect(h.client.payloads.single['products'], [
+      // A subscription keeps the cadence...
+      {'id': 'com.acme.pro_yearly', 'period': 'yearly'},
+      // ...a product that never renews is already its term...
+      {'id': 'com.acme.pass_yearly', 'period': '1 year'},
+      // ...and an id that says nothing sends no period at all.
+      {'id': 'com.acme.x'},
+    ]);
+  });
+
+  test(
+    'a period the model fills in names an id our parser cannot read',
+    () async {
+      final h = _harness(
+        answer: (ids) => jsonEncode({
+          'labels': [
+            // Our parser only knows the words in its own list, so "12mo" reads
+            // as no period at all; the model maps it.
+            {'id': 'com.acme.pro_12mo', 'period': 'yearly'},
+          ],
+        }),
+      );
+      final out = await h.container
+          .read(productLabelSuggesterProvider)
+          .suggest(
+            productIds: ['com.acme.pro_12mo'],
+            cancelToken: CancelToken(),
+          );
+      expect(out.single.name, 'Yearly');
+      expect(out.single.plan, 'Yearly');
+      expect(out.single.fromAi, isTrue);
+    },
+  );
+
+  test('the model cannot turn a fixed term into a cadence', () async {
+    final h = _harness(
+      answer: (_) => jsonEncode({
+        'labels': [
+          {'id': 'com.acme.pass_yearly', 'period': 'yearly'},
+        ],
+      }),
+    );
+    final out = await h.container
+        .read(productLabelSuggesterProvider)
+        .suggest(
+          productIds: ['com.acme.pass_yearly'],
+          nonRenewingIds: {'com.acme.pass_yearly'},
+          cancelToken: CancelToken(),
+        );
+    expect(out.single.name, '1 Year', reason: 'the product does not renew');
+    expect(out.single.plan, '1 Year');
+  });
+
+  test('a name from the model still wins over its period', () async {
+    final h = _harness(
+      answer: (_) => jsonEncode({
+        'labels': [
+          {
+            'id': 'com.acme.pro_12mo',
+            'name': 'Pro',
+            'plan': 'Pro',
+            'period': 'yearly',
+          },
+        ],
+      }),
+    );
+    final out = await h.container
+        .read(productLabelSuggesterProvider)
+        .suggest(productIds: ['com.acme.pro_12mo'], cancelToken: CancelToken());
+    expect(out.single.name, 'Pro');
+    expect(out.single.plan, 'Pro');
+  });
+
+  test('a missing plan falls back to our mapping, not to none', () async {
+    final h = _harness(
+      answer: (_) => jsonEncode({
+        'labels': [
+          {'id': 'com.acme.pro_monthly', 'name': 'Pro'},
+        ],
+      }),
+    );
+    final out = await h.container
+        .read(productLabelSuggesterProvider)
+        .suggest(
+          productIds: ['com.acme.pro_monthly'],
+          cancelToken: CancelToken(),
+        );
+    expect(out.single.name, 'Pro');
+    expect(out.single.plan, 'Monthly', reason: 'the plan groups by period');
   });
 
   test('ids are chunked and progress is reported', () async {
@@ -115,9 +248,50 @@ void main() {
           onProgress: (done, total) => progress.add((done, total)),
         );
 
-    expect(h.client.calls.map((c) => c.length), [40, 5]);
+    expect(h.client.calls.map((c) => c.length), [20, 20, 5]);
     expect(out, hasLength(45));
     expect(progress.last, (45, 45));
+  });
+
+  test('names reach the caller chunk by chunk, not all at the end', () async {
+    final h = _harness();
+    final batches = <List<String>>[];
+    final ids = [for (var i = 0; i < 45; i++) 'pro_monthly_$i'];
+    final out = await h.container
+        .read(productLabelSuggesterProvider)
+        .suggest(
+          productIds: ids,
+          cancelToken: CancelToken(),
+          onSuggestions: (batch) =>
+              batches.add([for (final s in batch) s.productId]),
+        );
+
+    // One hand-over per reply, in request order.
+    expect(batches.map((b) => b.length), [20, 20, 5]);
+    expect(batches.first.first, 'pro_monthly_0');
+    expect(
+      batches.expand((b) => b).toSet(),
+      out.map((s) => s.productId).toSet(),
+    );
+  });
+
+  test('a chunk with nothing usable hands over nothing', () async {
+    final h = _harness(
+      answer: (ids) => jsonEncode({
+        'labels': [
+          for (final id in ids) {'id': id, 'name': '  ', 'plan': ''},
+        ],
+      }),
+    );
+    var calls = 0;
+    await h.container
+        .read(productLabelSuggesterProvider)
+        .suggest(
+          productIds: ['pro_monthly'],
+          cancelToken: CancelToken(),
+          onSuggestions: (_) => calls++,
+        );
+    expect(calls, 0, reason: 'an empty batch is not a hand-over');
   });
 
   test('duplicate ids are asked once', () async {

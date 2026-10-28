@@ -12,6 +12,9 @@ class FakeRevenueCat implements HttpClientAdapter {
   /// Webhooks by project id, as stored (headers unmasked).
   final Map<String, List<Map<String, dynamic>>> webhooks;
 
+  /// Icon URLs by project id, as `/me/projects` reports them.
+  final icons = <String, String>{};
+
   /// "METHOD path" for every request.
   final requests = <String>[];
 
@@ -53,7 +56,12 @@ class FakeRevenueCat implements HttpClientAdapter {
     }
     if (method == 'GET' && path == '/me/projects') {
       return _json(200, [
-        for (final id in webhooks.keys) {'id': id, 'name': 'Project $id'},
+        for (final id in webhooks.keys)
+          {
+            'id': id,
+            'name': 'Project $id',
+            'icon_url': ?icons[id],
+          },
       ]);
     }
     final match = _webhookPath.firstMatch(path);

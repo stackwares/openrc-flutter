@@ -2,7 +2,7 @@ name: openrc
 description: "OpenRC: an open-source RevenueCat dashboard for iOS, iPadOS, Android, macOS and the web."
 publish_to: 'none'
 
-version: 1.0.2+3
+version: 1.0.4+6
 
 environment:
   sdk: ^3.11.4
@@ -26,6 +26,9 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_animate: ^4.5.2
   posthog_flutter: ^5.56.2
+  # Shared Stackwares product analytics (PostHog) used by Telemetry.
+  core_analytics_flutter:
+    path: ../core-flutter/packages/core_analytics_flutter
   easy_localization: ^3.0.8
   flutter_localizations:
     sdk: flutter

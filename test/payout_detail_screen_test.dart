@@ -70,7 +70,7 @@ void main() {
   ) async {
     await pumpDetail(tester);
 
-    expect(find.text('App Store'), findsWidgets);
+    expect(find.text('Apple'), findsWidgets);
     expect(
       find.text(
         'Earnings ${formatPaydayRange(_period.earningsStart, _period.earningsEnd)}',

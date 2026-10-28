@@ -127,6 +127,10 @@ on a click, focuses an open tab (which opens the transaction) or opens
    change. Names ride along as `?names=<id>%0A<name>%09…`, capped so the URL
    stays short, and are the one thing here that is the developer's own text:
    they sit in that device's webhook inside their RevenueCat project.
+   The project's icon (`RcProject.iconUrl`, RevenueCat's `icon_url`) travels
+   the same way as `?icon=<https url>` and becomes the push's picture on
+   Android and its icon in browsers; Apple shows the app's own icon, so
+   neither iOS nor macOS gets a picture.
    Copying the URL and header by hand (`push_setup_sheet.dart`) remains as a
    fallback.
 3. For each event, the notifier hashes the header to find the topic, writes
@@ -183,7 +187,36 @@ same code; home-screen widgets are skipped.
 
 ## Telemetry
 
-`lib/services/telemetry.dart` wraps PostHog. It does nothing unless the build
-has `POSTHOG_PROJECT_TOKEN`. When on, it records anonymous screen views, a
-handful of events (signed in, signed out) and uncaught errors, with no person
-profiles and no session replay. Users can switch it off in Settings.
+`lib/services/telemetry.dart` is OpenRC's vocabulary over the shared
+`core_analytics_flutter` package, which owns the PostHog client for every
+Stackwares app. It does nothing unless the build has `POSTHOG_PROJECT_TOKEN`.
+When on, it records anonymous screen views (and, on the web, a `$pageview` per
+screen with a made-up path such as `/revenue`, which is what PostHog's web
+analytics counts), crashes from Flutter, the platform dispatcher and native
+code, and the events the funnels need: `onboarding_*`, `sign_in_started` /
+`sign_in_failed` / `signed_in`, `data_loaded`, `notifications_enabled`,
+`product_named`, `ask_message_sent`, `preference_changed`. Properties are
+categorical only; amounts, app names, product ids, emails and questions never
+go with them.
+
+Two super properties identify a build rather than a person. `app` (`openrc`)
+separates this app from the rest of the portfolio inside one PostHog project,
+and `environment` (`production`, `internal`, `development`, from
+`--dart-define=POSTHOG_ENVIRONMENT`) separates channels, so every dashboard
+and funnel can be filtered to one. `app_version` and `app_build` come from the
+package.
+
+Session replay is on for the native apps and masked by the SDK before a frame
+leaves the device: `maskAllTexts` and `maskAllImages` are on, and
+`maskCustomPaint` masks every `CustomPaint` bound, so the charts (drawn with
+`fl_chart`, whose axis labels are not Text widgets) are covered too. A replay
+therefore shows layout, navigation and masked blocks, never a project name, a
+product, or an amount. Capture needs the plugin's root widget mounted around
+the app (`PostHogWidget`, in `app.dart`), after the SDK's setup has finished:
+without it the native SDK has no Flutter frames to record. Flutter web draws into a canvas, where replay needs
+`session_recording.canvasCapture` and a `PostHogMaskWidget` around the app;
+until that is wired the browser build sends no snapshots. No person profiles
+are created, `identify` is never called, and the queue is flushed when the app
+goes to the background. A fresh install in a debug build starts opted out, so
+a developer's own runs do not land in the same charts as shipped ones. Users
+can switch all of it off in Settings.

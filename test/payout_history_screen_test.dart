@@ -94,7 +94,7 @@ void main() {
       tester,
       PayoutHistoryState(amounts: _amounts(), hasLoaded: true),
     );
-    await tester.tap(find.text('Google Play').first);
+    await tester.tap(find.text('Google').first);
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.apple), findsNothing);
@@ -172,7 +172,7 @@ void main() {
         ),
       ),
     );
-    expect(find.textContaining('Last paid: App Store'), findsOneWidget);
+    expect(find.textContaining('Last paid: Apple'), findsOneWidget);
     await tester.tap(find.text('Payout history'));
     await tester.pumpAndSettle();
     expect(find.text('Paid in the last 12 months'), findsOneWidget);
@@ -220,7 +220,7 @@ void main() {
     // A route, not the wide window's side panel: the list is gone behind it.
     expect(find.byType(PayoutDetailScreen), findsOneWidget);
     expect(find.byType(PayoutHistoryScreen), findsNothing);
-    expect(find.text('App Store'), findsWidgets);
+    expect(find.text('Apple'), findsWidgets);
   });
 
   testWidgets('tapping a payout row opens its detail screen', (tester) async {
@@ -235,7 +235,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(PayoutDetailScreen), findsOneWidget);
-    expect(find.text('App Store'), findsWidgets);
+    expect(find.text('Apple'), findsWidgets);
     expect(
       find.textContaining('differ from the saved payout figure'),
       findsOneWidget,

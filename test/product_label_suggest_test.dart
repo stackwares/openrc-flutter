@@ -53,6 +53,70 @@ void main() {
     });
   });
 
+  group('periodLabelForRenewal', () {
+    test('a product that does not renew reads as its term', () {
+      expect(
+        periodLabelForRenewal(ProductPeriodLabel.yearly, renews: false),
+        ProductPeriodLabel.oneYear,
+      );
+      expect(
+        periodLabelForRenewal(ProductPeriodLabel.monthly, renews: false),
+        ProductPeriodLabel.oneMonth,
+      );
+      expect(
+        periodLabelForRenewal(ProductPeriodLabel.weekly, renews: false),
+        ProductPeriodLabel.oneWeek,
+      );
+    });
+
+    test('a renewing product keeps the cadence', () {
+      expect(
+        periodLabelForRenewal(ProductPeriodLabel.yearly, renews: true),
+        ProductPeriodLabel.yearly,
+      );
+      expect(
+        periodLabelForRenewal(ProductPeriodLabel.monthly, renews: true),
+        ProductPeriodLabel.monthly,
+      );
+    });
+
+    test('terms already counted and lifetime unlocks are unchanged', () {
+      for (final period in [
+        ProductPeriodLabel.oneYear,
+        ProductPeriodLabel.oneMonth,
+        ProductPeriodLabel.oneWeek,
+        ProductPeriodLabel.lifetime,
+      ]) {
+        expect(periodLabelForRenewal(period, renews: false), period);
+        expect(periodLabelForRenewal(period, renews: true), period);
+      }
+    });
+  });
+
+  group('period tokens', () {
+    test('the token the model is given reads back as the same period', () {
+      for (final period in ProductPeriodLabel.values) {
+        expect(
+          productPeriodLabelFromToken(productPeriodToken(period)),
+          period,
+          reason: productPeriodToken(period),
+        );
+      }
+    });
+
+    test('a model answer must be one of our tokens', () {
+      expect(productPeriodLabelFromToken('1 Year'), ProductPeriodLabel.oneYear);
+      expect(
+        productPeriodLabelFromToken('  Monthly '),
+        ProductPeriodLabel.monthly,
+      );
+      // Spans this app has no label for are ignored, not rounded to one.
+      expect(productPeriodLabelFromToken('quarterly'), isNull);
+      expect(productPeriodLabelFromToken('3 months'), isNull);
+      expect(productPeriodLabelFromToken('annual'), isNull);
+    });
+  });
+
   group('parseProductLabelSuggestions', () {
     const ids = {'pro_monthly', 'pro_yearly'};
 
@@ -74,6 +138,37 @@ void main() {
         ids,
       );
       expect(parsed.keys, ['pro_yearly']);
+    });
+
+    test('reads a corrected period, and a period-only answer', () {
+      final parsed = parseProductLabelSuggestions(
+        '{"labels":[{"id":"pro_yearly","period":"1 year"},'
+        '{"id":"pro_monthly","period":"monthly"}]}',
+        ids,
+      );
+      expect(parsed['pro_yearly']?.period, ProductPeriodLabel.oneYear);
+      expect(parsed['pro_yearly']?.name, isNull);
+      expect(parsed['pro_monthly']?.period, ProductPeriodLabel.monthly);
+    });
+
+    test('drops a period this app has no word for', () {
+      final parsed = parseProductLabelSuggestions(
+        '{"labels":[{"id":"pro_yearly","period":"quarterly"},'
+        '{"id":"pro_monthly","period":"monthly"}]}',
+        ids,
+      );
+      expect(parsed.keys, ['pro_monthly']);
+      expect(parsed['pro_monthly']?.period, ProductPeriodLabel.monthly);
+    });
+
+    test('keeps the period even when the name is unusable', () {
+      final parsed = parseProductLabelSuggestions(
+        '{"labels":[{"id":"pro_yearly","name":"  ","plan":"",'
+        '"period":"1 year"}]}',
+        ids,
+      );
+      expect(parsed['pro_yearly']?.name, isNull);
+      expect(parsed['pro_yearly']?.period, ProductPeriodLabel.oneYear);
     });
 
     test('cuts long names at a word boundary', () {

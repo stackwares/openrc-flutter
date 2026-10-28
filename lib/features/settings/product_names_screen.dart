@@ -21,6 +21,7 @@ import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/app_card.dart';
 import 'package:openrc/widgets/app_state_message.dart';
 import 'package:openrc/widgets/search_field_decoration.dart';
+import 'package:openrc/services/telemetry.dart';
 
 /// Names the store product ids seen in the loaded transactions, per app.
 ///
@@ -38,6 +39,9 @@ class ProductNamesScreen extends ConsumerStatefulWidget {
 
 enum _SuggestMode { ai, local, connect }
 
+/// Entries in the Product Names menu.
+enum _NamesMenuAction { clearAll }
+
 class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
   final _search = TextEditingController();
 
@@ -49,6 +53,12 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
   int _done = 0;
   int _total = 0;
   CancelToken? _cancel;
+
+  @override
+  void initState() {
+    super.initState();
+    Telemetry.screen('Product names');
+  }
 
   @override
   void dispose() {
@@ -67,13 +77,37 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
       appBar: AppBar(
         title: Text('products.title'.tr()),
         actions: [
-          IconButton(
-            tooltip: 'products.aiTitle'.tr(),
-            icon: const Icon(Icons.auto_awesome_rounded),
-            onPressed: inventory.isEmpty || _running
-                ? null
-                : () => _openSuggestions(inventory),
-          ),
+          // Per-app clearing lives on each app's header; this one spans every
+          // app, so it is a menu item rather than another icon.
+          if (!labels.isEmpty)
+            PopupMenuButton<_NamesMenuAction>(
+              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (action) => switch (action) {
+                _NamesMenuAction.clearAll => _clearAll(),
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: _NamesMenuAction.clearAll,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_sweep_outlined,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: AppSpace.sm),
+                      Text(
+                        'products.clearAll'.tr(),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: inventory.isEmpty
@@ -87,21 +121,116 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
               labels: labels,
               icons: icons,
               query: _query,
-              running: _running,
-              done: _done,
-              total: _total,
               suggestions: _suggestions,
               searchController: _search,
               onQueryChanged: (value) => setState(() => _query = value),
-              onStop: () => _cancel?.cancel(),
-              onDismissSuggestions: () => setState(_suggestions.clear),
-              onApplyAll: () => _applyAll(inventory),
               onEdit: _editProduct,
               onAccept: _applySuggestion,
               onDismissSuggestion: (usage) =>
                   setState(() => _suggestions.remove(usage.key)),
               onClearApp: _clearApp,
             ),
+      bottomNavigationBar: inventory.isEmpty
+          ? null
+          : _bottomBar(inventory, labels),
+    );
+  }
+
+  /// How many products a suggestion run would name.
+  int _unnamedCount(ProductInventory inventory, ProductLabels labels) =>
+      inventory.products
+          .where((p) => labels.displayName(p.appKey, p.productId) == null)
+          .length;
+
+  /// The screen's action area: ask for suggestions, follow a run, or apply
+  /// what it found.
+  ///
+  /// It sits at the bottom, next to the list it acts on and within thumb
+  /// reach, instead of behind a bare sparkle icon in the app bar.
+  Widget? _bottomBar(ProductInventory inventory, ProductLabels labels) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    if (_running) {
+      return _ActionBar(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'products.aiProgress'.tr(
+                      namedArgs: {'done': '$_done', 'total': '$_total'},
+                    ),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _total == 0 ? null : _done / _total,
+                      minHeight: 6,
+                      backgroundColor: scheme.surfaceContainerHighest,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpace.sm),
+            TextButton(
+              onPressed: () => _cancel?.cancel(),
+              child: Text('products.stop'.tr()),
+            ),
+          ],
+        ),
+      );
+    }
+    if (_suggestions.isNotEmpty) {
+      return _ActionBar(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome_rounded, size: 20),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  child: Text(
+                    'products.suggestionsReady'.plural(_suggestions.length),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.xs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => setState(_suggestions.clear),
+                  child: Text('products.dismiss'.tr()),
+                ),
+                const SizedBox(width: AppSpace.xs),
+                FilledButton(
+                  onPressed: () => _applyAll(inventory),
+                  child: Text('products.applyAll'.tr()),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+    if (_unnamedCount(inventory, labels) == 0) return null;
+    return _ActionBar(
+      child: FilledButton.icon(
+        onPressed: () => _openSuggestions(inventory),
+        icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+        label: Text('products.aiTitle'.tr()),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+      ),
     );
   }
 
@@ -131,6 +260,7 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
         planName: suggestion.plan,
       ),
     });
+    Telemetry.productNamed(source: 'ai');
     if (!mounted) return;
     setState(() => _suggestions.remove(usage.key));
     _snackApplied(1);
@@ -147,6 +277,7 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
     if (byApp.isEmpty) return;
     final count = _suggestions.length;
     await ref.read(productLabelsProvider.notifier).applyAll(byApp);
+    Telemetry.productNamed(source: 'ai');
     if (!mounted) return;
     setState(_suggestions.clear);
     _snackApplied(count);
@@ -179,6 +310,36 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
     );
     if (confirmed != true) return;
     await ref.read(productLabelsProvider.notifier).clearApp(appKey);
+  }
+
+  /// Forgets every name for every app, with one level of undo.
+  Future<void> _clearAll() async {
+    final confirmed = await showAdaptiveForm<bool>(
+      context: context,
+      title: 'products.clearAllTitle'.tr(),
+      content: (_) => Text('products.clearAllBody'.tr()),
+      actions: (dialogContext) => [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text('products.cancel'.tr()),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text('products.clear'.tr()),
+        ),
+      ],
+    );
+    if (confirmed != true || !mounted) return;
+    await ref.read(productLabelsProvider.notifier).clearAll();
+    if (!mounted) return;
+    UtilitiesService.hapticLight();
+    context.showSnackBar(
+      'products.clearAllDone'.tr(),
+      actionLabel: 'products.undo'.tr(),
+      onAction: () => ref.read(productLabelsProvider.notifier).undo(),
+      // Clearing right after a naming run must not queue behind its message.
+      replace: true,
+    );
   }
 
   Future<void> _openSuggestions(ProductInventory inventory) async {
@@ -227,43 +388,63 @@ class _ProductNamesScreenState extends ConsumerState<ProductNamesScreen> {
     if (targets.isEmpty) return;
 
     final ids = targets.map((t) => t.productId);
+    // Products the loaded rows say never renew read as their term ("1 Year")
+    // instead of a cadence ("Yearly").
+    final nonRenewing = {
+      for (final usage in targets)
+        if (!usage.renews) usage.productId,
+    };
+    final usageById = {for (final usage in targets) usage.productId: usage};
     setState(() {
       _running = true;
       _done = 0;
       _total = targets.length;
       _cancel = CancelToken();
+      // Each batch replaces its product's suggestion as it lands, so start
+      // from a clean slate rather than mixing in a previous run's names.
+      _suggestions.clear();
     });
-    try {
-      final suggestions = mode == _SuggestMode.ai
-          ? await ref
-                .read(productLabelSuggesterProvider)
-                .suggest(
-                  productIds: ids,
-                  cancelToken: _cancel!,
-                  onProgress: (done, total) {
-                    if (!mounted) return;
-                    setState(() {
-                      _done = done;
-                      _total = total;
-                    });
-                  },
-                )
-          : ProductLabelSuggester.local(ids);
+
+    /// Shows a batch of names on the rows and in the action bar right away.
+    void show(Iterable<ProductLabelSuggestion> batch) {
       if (!mounted) return;
-      final byId = {for (final s in suggestions) s.productId: s};
       final next = <String, ProductLabelSuggestion>{};
-      for (final usage in targets) {
-        final suggestion = byId[usage.productId];
-        if (suggestion == null) continue;
+      for (final suggestion in batch) {
+        final usage = usageById[suggestion.productId];
+        if (usage == null) continue;
         if (suggestion.name == null && suggestion.plan == null) continue;
         next[usage.key] = suggestion;
       }
-      setState(() {
-        _suggestions
-          ..clear()
-          ..addAll(next);
-      });
-      if (next.isEmpty) context.showSnackBar('products.aiNothing'.tr());
+      if (next.isEmpty) return;
+      setState(() => _suggestions.addAll(next));
+    }
+
+    try {
+      if (mode == _SuggestMode.ai) {
+        await ref
+            .read(productLabelSuggesterProvider)
+            .suggest(
+              productIds: ids,
+              nonRenewingIds: nonRenewing,
+              cancelToken: _cancel!,
+              // The built-in names arrive in one go; the model's land chunk
+              // by chunk, so the list fills in while it is still thinking.
+              onSuggestions: show,
+              onProgress: (done, total) {
+                if (!mounted) return;
+                setState(() {
+                  _done = done;
+                  _total = total;
+                });
+              },
+            );
+      } else {
+        show(ProductLabelSuggester.local(ids, nonRenewingIds: nonRenewing));
+      }
+      if (!mounted) return;
+      if (_suggestions.isEmpty) {
+        context.showSnackBar('products.aiNothing'.tr());
+      }
     } on AgentLlmException catch (e) {
       if (!mounted) return;
       if (e.messageKey != 'agent.errors.stopped') {
@@ -676,15 +857,9 @@ class _ProductNamesBody extends StatelessWidget {
     required this.labels,
     required this.icons,
     required this.query,
-    required this.running,
-    required this.done,
-    required this.total,
     required this.suggestions,
     required this.searchController,
     required this.onQueryChanged,
-    required this.onStop,
-    required this.onDismissSuggestions,
-    required this.onApplyAll,
     required this.onEdit,
     required this.onAccept,
     required this.onDismissSuggestion,
@@ -695,15 +870,12 @@ class _ProductNamesBody extends StatelessWidget {
   final ProductLabels labels;
   final Map<String, String> icons;
   final String query;
-  final bool running;
-  final int done;
-  final int total;
+
+  /// Suggestions not applied yet, keyed by [ProductUsage.key]; the action
+  /// bar owns applying and dismissing them.
   final Map<String, ProductLabelSuggestion> suggestions;
   final TextEditingController searchController;
   final ValueChanged<String> onQueryChanged;
-  final VoidCallback onStop;
-  final VoidCallback onDismissSuggestions;
-  final VoidCallback onApplyAll;
   final ValueChanged<ProductUsage> onEdit;
   final ValueChanged<ProductUsage> onAccept;
   final ValueChanged<ProductUsage> onDismissSuggestion;
@@ -784,30 +956,6 @@ class _ProductNamesBody extends StatelessWidget {
               ),
             ),
           ),
-          if (running)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpace.gutter,
-                AppSpace.sm,
-                AppSpace.gutter,
-                0,
-              ),
-              child: _ProgressCard(done: done, total: total, onStop: onStop),
-            ),
-          if (suggestions.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpace.gutter,
-                AppSpace.sm,
-                AppSpace.gutter,
-                0,
-              ),
-              child: _ApplyAllCard(
-                count: suggestions.length,
-                onDismiss: onDismissSuggestions,
-                onApply: onApplyAll,
-              ),
-            ),
           if (multi) ...[
             const SizedBox(height: AppSpace.xs),
             _AppTabBar(tabs: tabs, icons: icons),
@@ -836,99 +984,31 @@ class _ProductNamesBody extends StatelessWidget {
   }
 }
 
-/// The AI run's progress, with a way to stop it.
-class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({
-    required this.done,
-    required this.total,
-    required this.onStop,
-  });
+/// The bottom action area: the list's own width, a hairline above it, the
+/// device's safe area below.
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({required this.child});
 
-  final int done;
-  final int total;
-  final VoidCallback onStop;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'products.aiProgress'.tr(
-              namedArgs: {'done': '$done', 'total': '$total'},
-            ),
-            style: context.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpace.xs),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: total == 0 ? null : done / total,
-              minHeight: 6,
-              backgroundColor: scheme.surfaceContainerHighest,
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: onStop,
-              child: Text('products.stop'.tr()),
-            ),
-          ),
-        ],
-      ),
+    // Settings reads at 640: the bar follows the same measure as the pages
+    // that open it.
+    final inset = AppBreakpoints.centeringInset(
+      MediaQuery.sizeOf(context).width,
+      maxWidth: 640,
     );
-  }
-}
-
-/// Pending suggestions, with apply-everything in one tap.
-class _ApplyAllCard extends StatelessWidget {
-  const _ApplyAllCard({
-    required this.count,
-    required this.onDismiss,
-    required this.onApply,
-  });
-
-  final int count;
-  final VoidCallback onDismiss;
-  final VoidCallback onApply;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome_rounded, size: 20),
-              const SizedBox(width: AppSpace.sm),
-              Expanded(
-                child: Text(
-                  'products.suggestionsReady'.plural(count),
-                  style: context.textTheme.bodyMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.xs),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpace.xs,
-            children: [
-              TextButton(
-                onPressed: onDismiss,
-                child: Text('products.dismiss'.tr()),
-              ),
-              FilledButton(
-                onPressed: onApply,
-                child: Text('products.applyAll'.tr()),
-              ),
-            ],
-          ),
-        ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: context.appColors.hairline)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16 + inset, 10, 16 + inset, 12),
+          child: child,
+        ),
       ),
     );
   }

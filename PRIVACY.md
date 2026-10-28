@@ -102,10 +102,18 @@ the notifier.
 When enabled (and when the build includes a PostHog project token), the app may
 send to PostHog:
 
-- Screen or route names (for example Transactions, Revenue, Settings)
-- Anonymous product analytics events defined by the app
+- Screen or route names (for example Transactions, Revenue, Settings), and a
+  page view per screen in the web app
+- Anonymous product analytics events defined by the app, including which
+  build channel they came from (`production`, `internal`, `development`) and
+  which version of the app
 - Crash and error reports (Flutter, platform, and native exception metadata)
 - Application lifecycle events
+- Masked session replays on iPhone, iPad, Mac and Android: the app masks every
+  piece of text and every image before a frame is recorded, and masks chart
+  and other custom-drawn areas entirely, so a replay shows how screens and
+  navigation look, never a project name, a product name or an amount. The web
+  app sends no replays.
 
 We configure PostHog **not** to create person profiles and we do **not** call
 `identify` with your email or RevenueCat account. You can disable sharing in

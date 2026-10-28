@@ -20,6 +20,7 @@ import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
 import 'package:openrc/widgets/app_card.dart';
+import 'package:openrc/services/telemetry.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Where turning on stands: choosing projects, then the all-set step.
@@ -82,6 +83,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   _Save _kindsSave = _Save.idle;
 
   @override
+  void initState() {
+    super.initState();
+    Telemetry.screen('Notifications');
+  }
+
+  @override
   void dispose() {
     _kindsTimer?.cancel();
     final pending = _pendingKinds;
@@ -105,6 +112,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (kinds == null) return;
     setState(() => _kindsSave = _Save.saving);
     final ok = await ref.read(pushSettingsProvider.notifier).setKinds(kinds);
+    if (ok) Telemetry.notificationKindsChanged(count: kinds.length);
     if (!mounted) return;
     setState(() {
       if (identical(_pendingKinds, kinds)) _pendingKinds = null;
@@ -117,6 +125,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     UtilitiesService.hapticSelection();
     setState(() => _busy = true);
     final result = await ref.read(pushSettingsProvider.notifier).enable();
+    Telemetry.notificationsEnabled(result: result.name);
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -154,6 +163,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (confirmed != true || !mounted) return;
     setState(() => _busy = true);
     await ref.read(pushSettingsProvider.notifier).disable();
+    Telemetry.notificationsDisabled();
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -209,7 +219,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _toggleProject(String id, bool on) async {
     UtilitiesService.hapticSelection();
-    await ref.read(pushProjectsProvider.notifier).toggle(id, on);
+    final ok = await ref.read(pushProjectsProvider.notifier).toggle(id, on);
+    if (ok) Telemetry.notificationsProjectToggled(on: on);
   }
 
   @override

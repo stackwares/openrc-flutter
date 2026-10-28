@@ -163,10 +163,7 @@ class _StoreFeeSheetState extends State<_StoreFeeSheet> {
           const SizedBox(height: 8),
           Text(
             'settings.storeFeeBody'.tr(
-              namedArgs: {
-                'company': widget.company,
-                'store': widget.store,
-              },
+              namedArgs: {'company': widget.company},
             ),
             style: tt.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,

@@ -388,6 +388,51 @@ describe("display currency and fees", () => {
   });
 });
 
+describe("project icon", () => {
+  const ICON = "https://is1-ssl.mzstatic.com/image/thumb/App/512x512bb.png";
+
+  const send = (query: string, event: object = PURCHASE) =>
+    call(`/revenuecat/OWRekN${query}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SECRET}` },
+      body: JSON.stringify({ event }),
+    });
+
+  const sent = (spy: ReturnType<typeof mockGoogle>) => {
+    const [send0] = requestsTo(spy, "https://fcm.googleapis.com/");
+    return JSON.parse(String(send0[1]!.body)).message;
+  };
+
+  it("shows the project's icon wherever the picture is one we send", async () => {
+    const spy = mockGoogle();
+    await send(`?icon=${encodeURIComponent(ICON)}`);
+    const message = sent(spy);
+    expect(message.android.notification.image).toBe(ICON);
+    expect(message.webpush.notification.image).toBe(ICON);
+    // Apple always shows the app's own icon, so no picture is asked of it.
+    expect(message.apns.fcm_options).toBeUndefined();
+  });
+
+  it("sends no picture without an icon in the URL", async () => {
+    const spy = mockGoogle();
+    await send("");
+    const message = sent(spy);
+    expect(message.android.notification.tag).toBe(PURCHASE.id);
+    expect(message.android.notification.image).toBeUndefined();
+    expect(message.webpush.notification).toBeUndefined();
+  });
+
+  it("only takes https addresses without spaces", () => {
+    const parse = (icon: string) => parseDisplay(new URLSearchParams({ icon })).icon;
+    expect(parse(ICON)).toBe(ICON);
+    expect(parse("http://example.com/icon.png")).toBeUndefined();
+    expect(parse("https://example.com/a b.png")).toBeUndefined();
+    expect(parse("javascript:alert(1)")).toBeUndefined();
+    expect(parse(`https://example.com/${"a".repeat(1024)}`)).toBeUndefined();
+    expect(parseDisplay(new URLSearchParams()).icon).toBeUndefined();
+  });
+});
+
 describe("notification kinds", () => {
   const send = (query: string, event: object) =>
     call(`/revenuecat/OWRekN${query}`, {

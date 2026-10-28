@@ -414,8 +414,8 @@
     "ZMW": "kwacha zambiano"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "Transacción",
     "appIcon": "Icono de la app",
-    "iconHint": "Los iconos se obtienen automáticamente de App Store o Google Play. Introduce la URL de una imagen para usar otro icono.",
-    "iconHintForApp": "Los iconos se obtienen automáticamente de App Store o Google Play. Introduce la URL de una imagen para usar otro icono en {appName}.",
+    "iconHint": "Los iconos se obtienen automáticamente de Apple o Google. Introduce la URL de una imagen para usar otro icono.",
+    "iconHintForApp": "Los iconos se obtienen automáticamente de Apple o Google. Introduce la URL de una imagen para usar otro icono en {appName}.",
     "cancel": "Cancelar",
     "clear": "Borrar",
     "save": "Guardar",
@@ -545,7 +545,7 @@
     "aiTitle": "Sugerir nombres",
     "suggestAi": "Sugerir con IA",
     "useParser": "Nombres integrados",
-    "aiPrivacyBody": "Solo se envían ID de producto. Sin ingresos ni datos de clientes.",
+    "aiPrivacyBody": "Solo se envían los ID de producto y el período que indican. Sin ingresos ni datos de clientes.",
     "parserNote": "Etiqueta el período según el ID del producto.",
     "aiNoKeyBody": "Conecta un modelo para sugerir nombres con IA o usa los nombres integrados.",
     "aiConsentBody": "La IA está desactivada para esta app. Permite el uso de datos de IA en Ajustes, Privacidad, o usa los nombres integrados.",
@@ -568,6 +568,10 @@
     "clear": "Borrar",
     "clearTitle": "¿Borrar los nombres de {app}?",
     "clearBody": "Elimina cada nombre y plan de esta app en este dispositivo.",
+    "clearAll": "Borrar todos los nombres",
+    "clearAllTitle": "¿Borrar todos los nombres de producto?",
+    "clearAllBody": "Elimina cada nombre y plan de todas las apps en este dispositivo.",
+    "clearAllDone": "Se borraron todos los nombres de producto",
     "suggestTitle": "Sugerir nombres",
     "suggestSubtitle": {
       "one": "{} producto aún no tiene nombre",
@@ -599,7 +603,7 @@
     "noFilterMatches": "Ninguna transacción coincide con tus filtros en este periodo.",
     "noCategoryTransactions": "No hay transacciones en esta categoría en el periodo cargado.",
     "nextPayouts": "Próximos pagos",
-    "estimatedAfterFees": "Estimado tras las comisiones de {apple} (App Store) y {google} (Google Play)",
+    "estimatedAfterFees": "Estimado tras las comisiones de {apple} (Apple) y {google} (Google)",
     "pays": "Se paga el {date}",
     "paysAbout": "Se paga aproximadamente el {date}",
     "scheduleUnavailable": "Calendario no disponible",
@@ -643,7 +647,7 @@
     },
     "payouts": {
       "title": "Historial de pagos",
-      "lastPaid": "Último pago: App Store el {apple}, Google Play el {google}",
+      "lastPaid": "Último pago: Apple el {apple}, Google el {google}",
       "paidInLast12Months": "Pagado en los últimos 12 meses",
       "countSince": {
         "one": "{} pago desde {month}",
@@ -659,7 +663,7 @@
       "couldntLoad": "No se pudieron cargar los pagos",
       "refreshFailed": "No se pudieron cargar los pagos más recientes.",
       "emptyTitle": "Aún no hay pagos",
-      "emptyMessage": "No hay pagos de App Store ni de Google Play en los últimos 12 meses.",
+      "emptyMessage": "No hay pagos de Apple ni de Google en los últimos 12 meses.",
       "splitUnavailableTitle": "Los pagos por tienda no están disponibles",
       "splitUnavailableMessage": "RevenueCat no devolvió los ingresos por tienda, así que no se pueden calcular los pagos.",
       "estimateNote": "Estimado a partir de los ingresos netos de RevenueCat, tras las comisiones de la tienda y los impuestos estimados. Los pagos reales pueden variar por los tipos de cambio, las retenciones fiscales y los importes mínimos de pago.",
@@ -755,11 +759,11 @@
     "productNames": "Nombres de productos",
     "productNamesHint": "Nombra los productos de la tienda a tu manera",
     "feesAfter": "Los ingresos se muestran después de tus comisiones de la tienda",
-    "feesBefore": "Los ingresos se muestran antes de las comisiones de App Store y Google Play",
-    "appStoreFee": "Comisión de App Store",
-    "googlePlayFee": "Comisión de Google Play",
+    "feesBefore": "Los ingresos se muestran antes de las comisiones de Apple y Google",
+    "appStoreFee": "Comisión de Apple",
+    "googlePlayFee": "Comisión de Google",
     "storeFeeTitle": "Comisión de {store}",
-    "storeFeeBody": "La parte que {company} se queda de cada venta en {store}. La mayoría de desarrolladores pagan un 15 % o un 30 %, según su programa.",
+    "storeFeeBody": "La parte que {company} se queda de cada venta. La mayoría de desarrolladores pagan un 15 % o un 30 %, según su programa.",
     "storeFeeExample": "Una venta de {sale} cuenta como {counted}",
     "feeRangeError": "Introduce una comisión entre 0 y 100.",
     "feeLabel": "Comisión",
@@ -1181,7 +1185,7 @@
       "currency": "Moneda de visualización",
       "more": "Más",
       "fees": "Mostrar ingresos tras comisiones de las tiendas",
-      "feesHint": "Usa el 15 % para App Store y Google Play. Ajusta los porcentajes en Ajustes."
+      "feesHint": "Usa el 15 % para Apple y Google. Ajusta los porcentajes en Ajustes."
     },
     "aiConsent": {
       "title": "¿Usar Preguntar con tus números?",
@@ -1220,8 +1224,8 @@
     "preview": {
       "now": "ahora",
       "title": "🔵 Nueva suscripción · $9.99",
-      "body": "pro_monthly · 🇺🇸 Estados Unidos · App Store",
-      "semantics": "Notificación de ejemplo: Nueva suscripción, 9,99 dólares, desde App Store en Estados Unidos"
+      "body": "pro_monthly · 🇺🇸 Estados Unidos · Apple",
+      "semantics": "Notificación de ejemplo: Nueva suscripción, 9,99 dólares, desde Apple en Estados Unidos"
     },
     "headline": "Entérate en el momento en que haces una venta",
     "subhead": "Recibe una notificación por cada compra, renovación y reembolso en tus proyectos de RevenueCat.",

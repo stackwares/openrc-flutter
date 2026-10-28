@@ -47,27 +47,51 @@ class PushWebhooks {
   /// This device's webhook URL. The notifier ignores the tag, and only sends
   /// the [kinds] named in `notify` (every kind when it's left out). The
   /// [projectName] lets the notifier name the project in the notification,
-  /// and [names] the products it names in the app.
+  /// [names] the products it names in the app, and [projectIcon] the app's
+  /// picture, when it has one.
   static String urlFor(
     String secret, [
     Set<PushKind>? kinds,
     PushDisplay display = const PushDisplay(),
     String? projectName,
     PushNames names = const PushNames.empty(),
+    String? projectIcon,
   ]) {
     final base = '${PushConfig.webhookUrl}/${tagFor(secret)}';
     final notify = kinds == null ? null : PushKind.queryFor(kinds);
     final name = projectName?.trim();
+    final icon = iconParam(projectIcon);
     final query = {
       'notify': ?notify,
       ...display.query,
       ...names.query,
       if (name != null && name.isNotEmpty)
         'project': Uri.encodeQueryComponent(name),
+      if (icon != null) iconKey: Uri.encodeQueryComponent(icon),
     };
     if (query.isEmpty) return base;
     return '$base?${[for (final e in query.entries) '${e.key}=${e.value}'].join('&')}';
   }
+
+  /// The query parameter the notifier reads a picture from.
+  static const iconKey = 'icon';
+
+  /// Longest icon URL a webhook carries, matching what the notifier reads.
+  static const maxIconLength = 1024;
+
+  /// [iconUrl] when a push can show it, else null: only an https address
+  /// with no spaces, so the notifier never hands FCM a link it can't use (it
+  /// applies the same rule in `notifier/src/display.ts`).
+  static String? iconParam(String? iconUrl) {
+    final url = iconUrl?.trim();
+    if (url == null || url.isEmpty || url.length > maxIconLength) return null;
+    if (_iconWhitespace.hasMatch(url)) return null;
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return null;
+    return url;
+  }
+
+  static final _iconWhitespace = RegExp(r'[\s"\x27<>\\]');
 
   /// Matches whatever kinds the URL asks for, and webhooks from before URLs
   /// had tags, which shared the plain URL and had the tag only in their name.
@@ -85,9 +109,10 @@ class PushWebhooks {
     PushDisplay display = const PushDisplay(),
     String? projectName,
     PushNames names = const PushNames.empty(),
+    String? projectIcon,
   }) => RcWebhookInput(
     name: nameFor(secret),
-    url: urlFor(secret, kinds, display, projectName, names),
+    url: urlFor(secret, kinds, display, projectName, names, projectIcon),
     authorizationHeader: PushChannel.authorizationHeader(secret),
     environment: sandbox ? null : 'production',
     eventTypes: PushKind.eventTypesFor(kinds),
@@ -115,6 +140,7 @@ class PushWebhooks {
     PushDisplay display = const PushDisplay(),
     String? projectName,
     PushNames names = const PushNames.empty(),
+    String? projectIcon,
   }) async {
     final input = inputFor(
       secret,
@@ -123,6 +149,7 @@ class PushWebhooks {
       display: display,
       projectName: projectName,
       names: names,
+      projectIcon: projectIcon,
     );
     final existing = await find(projectId, secret);
     if (existing != null) {
@@ -143,6 +170,7 @@ class PushWebhooks {
     PushDisplay display = const PushDisplay(),
     String? projectName,
     PushNames names = const PushNames.empty(),
+    String? projectIcon,
   }) => _api.updateWebhook(
     projectId,
     webhookId,
@@ -153,6 +181,7 @@ class PushWebhooks {
       display: display,
       projectName: projectName,
       names: names,
+      projectIcon: projectIcon,
     ),
   );
 
@@ -251,13 +280,20 @@ class PushWebhooks {
   Future<Map<String, DeviceWebhook>> findAll(String secret) async {
     final found = <String, DeviceWebhook>{};
     final all = await projects();
-    final names = {
+    final byId = {
       for (final p in all)
-        if (p.id != null) p.id!: p.name,
+        if (p.id != null) p.id!: p,
     };
-    await forEachLimited(names.keys, (projectId) async {
+    await forEachLimited(byId.keys, (projectId) async {
       final id = await find(projectId, secret);
-      if (id != null) found[projectId] = DeviceWebhook(id, names[projectId]);
+      final project = byId[projectId];
+      if (id != null) {
+        found[projectId] = DeviceWebhook(
+          id,
+          project?.name,
+          project?.iconUrl,
+        );
+      }
     });
     return found;
   }
@@ -285,10 +321,13 @@ Future<void> forEachLimited<T>(
 
 /// This device's webhook in one RevenueCat project.
 class DeviceWebhook {
-  const DeviceWebhook(this.id, this.projectName);
+  const DeviceWebhook(this.id, this.projectName, [this.projectIcon]);
 
   final String id;
   final String? projectName;
+
+  /// The project's icon in RevenueCat, which its pushes show.
+  final String? projectIcon;
 }
 
 /// What a sweep across projects did.
@@ -426,6 +465,10 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
         for (final p in projects)
           if (p.id != null) p.id!: p.name?.trim(),
       };
+      final icons = {
+        for (final p in projects)
+          if (p.id != null) p.id!: p.iconUrl,
+      };
       await forEachLimited(state.projects.map((p) => p.id), (id) async {
         try {
           final webhook = await webhooks.webhookFor(id, secret);
@@ -434,18 +477,20 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
             id,
             (p) => PushProject(project: p.project, webhookId: webhookId),
           );
-          // Webhooks from before URLs named their project or carried product
-          // names pick them up here, so existing devices read right without
-          // changing a setting. Names the settings haven't loaded yet are
-          // left alone rather than removed.
+          // Webhooks from before URLs named their project, carried product
+          // names or showed the project's icon pick them up here, so existing
+          // devices read right without changing a setting. Names the settings
+          // haven't loaded yet are left alone rather than removed.
           final name = names[id];
+          final icon = icons[id];
           final query = Uri.tryParse(webhook?.url ?? '')?.queryParameters;
           final wanted = settings.names.encoded;
           final stale =
               (name != null &&
                   name.isNotEmpty &&
                   query?['project'] != name) ||
-              (wanted != null && query?[PushNames.key] != wanted);
+              (wanted != null && query?[PushNames.key] != wanted) ||
+              (query?[PushWebhooks.iconKey]) != PushWebhooks.iconParam(icon);
           if (webhookId != null && stale) {
             try {
               await webhooks.update(
@@ -457,6 +502,7 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
                 display: settings.display,
                 projectName: name,
                 names: settings.names,
+                projectIcon: icon,
               );
             } catch (e) {
               _log.warning('Refreshing a webhook failed: $e');
@@ -508,6 +554,12 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
             kinds: settings.kindsFor(id),
             display: settings.display,
             projectName: current.project.name,
+            // Every setting that changes what a notification reads: a param
+            // left out here is a push that falls back to the store's own
+            // product id, or to US dollars, until something else refreshes
+            // the webhook.
+            names: settings.names,
+            projectIcon: current.project.iconUrl,
           );
           _set(
             id,

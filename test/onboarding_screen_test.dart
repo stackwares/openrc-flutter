@@ -87,6 +87,26 @@ void main() {
     expect(prefs.getString(OnboardingPrefsNotifier.lastStepKey), isNull);
   });
 
+  testWidgets('Skip gets past a question step with no answer', (tester) async {
+    await pump(tester);
+    // Welcome and proof need no answer; role does.
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('What describes you best?'), findsOneWidget);
+    expect(cta(tester).onPressed, isNull);
+
+    // Not answering used to leave only Back: Continue is disabled and Skip
+    // was shown on the first step only.
+    expect(find.text('Skip'), findsOneWidget);
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool(OnboardingPrefsNotifier.completedKey), isTrue);
+  });
+
   testWidgets('first-launch records the welcome step', (tester) async {
     await pump(tester);
     final prefs = await SharedPreferences.getInstance();

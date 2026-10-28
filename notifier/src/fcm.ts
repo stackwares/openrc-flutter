@@ -22,6 +22,12 @@ export interface TopicMessage {
   collapseId?: string;
   /** The store's transaction id, for opening the transaction on tap. */
   transactionId?: string;
+  /**
+   * A public https picture (the project's icon), shown large in the push.
+   * Android and web only: Apple always shows the app's own icon, and a large
+   * one needs a Notification Service Extension the app doesn't ship.
+   */
+  imageUrl?: string;
 }
 
 /** The service account from the FCM_SERVICE_ACCOUNT secret, if usable. */
@@ -140,6 +146,13 @@ export async function setTopicSubscription(
 export async function sendToTopic(account: ServiceAccount, message: TopicMessage): Promise<void> {
   const token = await accessToken(account);
   const collapse = message.collapseId;
+  const image = message.imageUrl;
+  // Both optional: an empty notification object would still be a change in
+  // the payload, so it's only sent when it says something.
+  const android = {
+    ...(collapse ? { tag: collapse } : {}),
+    ...(image ? { image } : {}),
+  };
   const response = await fetch(
     `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(account.project_id)}/messages:send`,
     {
@@ -157,9 +170,12 @@ export async function sendToTopic(account: ServiceAccount, message: TopicMessage
           },
           android: {
             priority: "HIGH",
-            ...(collapse ? { notification: { tag: collapse } } : {}),
+            ...(Object.keys(android).length ? { notification: android } : {}),
           },
-          webpush: { headers: { Urgency: "high" } },
+          webpush: {
+            headers: { Urgency: "high" },
+            ...(image ? { notification: { image } } : {}),
+          },
           apns: {
             headers: {
               "apns-priority": "10",

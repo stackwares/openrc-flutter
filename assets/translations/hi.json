@@ -414,8 +414,8 @@
     "ZMW": "ज़ाम्बियाई क्वाचा"
   },
   "storeNames": {
-    "appStore": "App Store",
-    "googlePlay": "Google Play",
+    "appStore": "Apple",
+    "googlePlay": "Google",
     "stripe": "Stripe",
     "appleCompany": "Apple",
     "googleCompany": "Google"
@@ -423,8 +423,8 @@
   "detail": {
     "transaction": "लेनदेन",
     "appIcon": "ऐप आइकन",
-    "iconHint": "आइकन अपने-आप App Store या Google Play से लिए जाते हैं। अलग आइकन के लिए इमेज URL दर्ज करें।",
-    "iconHintForApp": "आइकन अपने-आप App Store या Google Play से लिए जाते हैं। {appName} के लिए अलग आइकन के लिए इमेज URL दर्ज करें।",
+    "iconHint": "आइकन अपने-आप Apple या Google से लिए जाते हैं। अलग आइकन के लिए इमेज URL दर्ज करें।",
+    "iconHintForApp": "आइकन अपने-आप Apple या Google से लिए जाते हैं। {appName} के लिए अलग आइकन के लिए इमेज URL दर्ज करें।",
     "cancel": "रद्द करें",
     "clear": "साफ़ करें",
     "save": "सहेजें",
@@ -545,7 +545,7 @@
     "aiTitle": "नाम सुझाएँ",
     "suggestAi": "AI से सुझाएँ",
     "useParser": "अंतर्निहित नाम",
-    "aiPrivacyBody": "केवल उत्पाद ID भेजे जाते हैं। कोई राजस्व या ग्राहक डेटा नहीं।",
+    "aiPrivacyBody": "केवल उत्पाद ID और उनसे पहचानी गई अवधि भेजी जाती है। कोई राजस्व या ग्राहक डेटा नहीं।",
     "parserNote": "उत्पाद ID से अवधि का नाम लेता है।",
     "aiNoKeyBody": "AI से नाम सुझाने के लिए मॉडल कनेक्ट करें, या अंतर्निहित नाम इस्तेमाल करें।",
     "aiConsentBody": "इस ऐप के लिए AI बंद है। सेटिंग्स, गोपनीयता में AI डेटा उपयोग की अनुमति दें, या अंतर्निहित नाम इस्तेमाल करें।",
@@ -568,6 +568,10 @@
     "clear": "साफ़ करें",
     "clearTitle": "{app} के नाम साफ़ करें?",
     "clearBody": "इस डिवाइस पर इस ऐप के सभी नाम और प्लान हटा देता है।",
+    "clearAll": "सभी नाम साफ़ करें",
+    "clearAllTitle": "सभी उत्पाद नाम साफ़ करें?",
+    "clearAllBody": "इस डिवाइस पर हर ऐप के सभी नाम और प्लान हटा देता है।",
+    "clearAllDone": "सभी उत्पाद नाम साफ़ कर दिए गए",
     "suggestTitle": "नाम सुझाएँ",
     "suggestSubtitle": {
       "one": "{} उत्पाद का नाम अभी नहीं है",
@@ -599,7 +603,7 @@
     "noFilterMatches": "इस अवधि में आपके फ़िल्टर से कोई लेनदेन मेल नहीं खाता।",
     "noCategoryTransactions": "लोड की गई अवधि में इस श्रेणी का कोई लेनदेन नहीं है।",
     "nextPayouts": "अगले भुगतान",
-    "estimatedAfterFees": "{apple} (App Store) और {google} (Google Play) के स्टोर शुल्क के बाद का अनुमान",
+    "estimatedAfterFees": "{apple} (Apple) और {google} (Google) के स्टोर शुल्क के बाद का अनुमान",
     "pays": "{date} को भुगतान",
     "paysAbout": "लगभग {date} को भुगतान",
     "scheduleUnavailable": "शेड्यूल उपलब्ध नहीं",
@@ -643,7 +647,7 @@
     },
     "payouts": {
       "title": "भुगतान इतिहास",
-      "lastPaid": "पिछला भुगतान: App Store {apple} को, Google Play {google} को",
+      "lastPaid": "पिछला भुगतान: Apple {apple} को, Google {google} को",
       "paidInLast12Months": "पिछले 12 महीनों में भुगतान",
       "countSince": {
         "one": "{month} से {} भुगतान",
@@ -659,7 +663,7 @@
       "couldntLoad": "भुगतान लोड नहीं हो सके",
       "refreshFailed": "नवीनतम भुगतान लोड नहीं हो सके।",
       "emptyTitle": "अभी तक कोई भुगतान नहीं",
-      "emptyMessage": "पिछले 12 महीनों में App Store या Google Play से कोई भुगतान नहीं हुआ।",
+      "emptyMessage": "पिछले 12 महीनों में Apple या Google से कोई भुगतान नहीं हुआ।",
       "splitUnavailableTitle": "स्टोर के हिसाब से भुगतान उपलब्ध नहीं हैं",
       "splitUnavailableMessage": "RevenueCat ने स्टोर के हिसाब से राजस्व नहीं भेजा, इसलिए भुगतान की गणना नहीं हो सकती।",
       "estimateNote": "RevenueCat की प्राप्त राशि से अनुमानित, स्टोर शुल्क और अनुमानित करों के बाद। विनिमय दरों, कर कटौती और न्यूनतम भुगतान सीमा के कारण वास्तविक भुगतान अलग हो सकते हैं।",
@@ -755,11 +759,11 @@
     "productNames": "उत्पाद नाम",
     "productNamesHint": "स्टोर उत्पादों को अपने शब्दों में नाम दें",
     "feesAfter": "राजस्व आपके स्टोर शुल्क के बाद दिखाया जाता है",
-    "feesBefore": "राजस्व App Store और Google Play शुल्क से पहले दिखाया जाता है",
-    "appStoreFee": "App Store शुल्क",
-    "googlePlayFee": "Google Play शुल्क",
+    "feesBefore": "राजस्व Apple और Google शुल्क से पहले दिखाया जाता है",
+    "appStoreFee": "Apple शुल्क",
+    "googlePlayFee": "Google शुल्क",
     "storeFeeTitle": "{store} शुल्क",
-    "storeFeeBody": "हर {store} बिक्री पर {company} का हिस्सा। ज़्यादातर डेवलपर अपने प्रोग्राम के अनुसार 15% या 30% देते हैं।",
+    "storeFeeBody": "हर बिक्री पर {company} का हिस्सा। ज़्यादातर डेवलपर अपने प्रोग्राम के अनुसार 15% या 30% देते हैं।",
     "storeFeeExample": "{sale} की बिक्री {counted} गिनी जाती है",
     "feeRangeError": "0 और 100 के बीच शुल्क दर्ज करें।",
     "feeLabel": "शुल्क",
@@ -1181,7 +1185,7 @@
       "currency": "दिखाने की मुद्रा",
       "more": "और",
       "fees": "स्टोर शुल्क के बाद आय दिखाएँ",
-      "feesHint": "App Store और Google Play के लिए 15% इस्तेमाल करता है। दरें सेटिंग्स में ठीक करें।"
+      "feesHint": "Apple और Google के लिए 15% इस्तेमाल करता है। दरें सेटिंग्स में ठीक करें।"
     },
     "aiConsent": {
       "title": "अपने आँकड़ों के साथ पूछें इस्तेमाल करें?",
@@ -1220,8 +1224,8 @@
     "preview": {
       "now": "अभी",
       "title": "🔵 नई सदस्यता · $9.99",
-      "body": "pro_monthly · 🇺🇸 संयुक्त राज्य अमेरिका · App Store",
-      "semantics": "उदाहरण सूचना: नई सदस्यता, 9.99 डॉलर, संयुक्त राज्य अमेरिका में App Store से"
+      "body": "pro_monthly · 🇺🇸 संयुक्त राज्य अमेरिका · Apple",
+      "semantics": "उदाहरण सूचना: नई सदस्यता, 9.99 डॉलर, संयुक्त राज्य अमेरिका में Apple से"
     },
     "headline": "बिक्री होते ही जानें",
     "subhead": "अपने RevenueCat प्रोजेक्ट में हर खरीद, नवीनीकरण और रिफ़ंड की सूचना पाएँ।",

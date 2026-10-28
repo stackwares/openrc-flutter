@@ -38,6 +38,13 @@ It is deliberately small and stateless:
   and dropped with the request like everything else here.
   `&project=<name>` puts the RevenueCat project's name first in the body; the
   app sends the name of the project whose webhook it is.
+  `&icon=<https url>` is that project's icon: the app takes it from
+  RevenueCat's `icon_url` and the push shows it as its picture on Android
+  (`image`) and as the notification's own icon in browsers, so a push reads
+  as that project's rather than OpenRC's at large. Apple always shows the
+  app's own icon, so iOS and macOS get none. Only https addresses without
+  spaces are kept, and the notifier hands FCM nothing else; like the rest of
+  the URL it's read and dropped with the request.
   Wrong or missing secrets get
   `401`. Events that aren't about a purchase (aliases, experiments, virtual
   currency, invoices) get `200` without a notification. A failed delivery

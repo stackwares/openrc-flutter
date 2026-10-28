@@ -32,9 +32,9 @@ export interface NotificationCopy {
 }
 
 const STORES: Record<string, string> = {
-  APP_STORE: "App Store",
-  MAC_APP_STORE: "Mac App Store",
-  PLAY_STORE: "Google Play",
+  APP_STORE: "Apple",
+  MAC_APP_STORE: "Apple",
+  PLAY_STORE: "Google",
   AMAZON: "Amazon",
   STRIPE: "Stripe",
   RC_BILLING: "Web Billing",
