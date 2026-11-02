@@ -147,10 +147,11 @@ class DemoData {
       'is_trial_period': trial,
       'product_identifier': '${app.bundleId.split('.').last}.${price.id}',
       'purchase_date': iso,
-      'expires_date': at
-          .add(Duration(days: price.id.contains('annual') ? 365 : 30))
-          .toUtc()
-          .toIso8601String(),
+      if (price.id != 'lifetime')
+        'expires_date': at
+            .add(Duration(days: price.id.contains('annual') ? 365 : 30))
+            .toUtc()
+            .toIso8601String(),
       'revenue': double.parse(revenue.toStringAsFixed(2)),
       'store': store,
       'store_transaction_identifier': '${rng.nextInt(1 << 31)}',

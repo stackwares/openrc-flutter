@@ -7,6 +7,7 @@ class DayRevenueStripDay {
     required this.dayKey,
     required this.date,
     required this.total,
+    this.projected = false,
   });
 
   /// `yyyy-MM-dd`.
@@ -14,11 +15,16 @@ class DayRevenueStripDay {
   final DateTime date;
 
   /// Net revenue for the day; null while that day isn't fully loaded yet.
+  /// For a [projected] day, the expected charges.
   final double? total;
+
+  /// A day that hasn't happened: drawn as an outline.
+  final bool projected;
 }
 
 /// Small bar chart of daily revenue (oldest → newest). The selected day is
-/// drawn in the accent color; tapping a bar selects that day.
+/// drawn in the accent color; tapping a bar selects that day. Days ahead
+/// ([DayRevenueStripDay.projected]) are outlines sized by expected charges.
 class DayRevenueStrip extends StatelessWidget {
   const DayRevenueStrip({
     super.key,
@@ -63,6 +69,13 @@ class DayRevenueStrip extends StatelessWidget {
                     ? 'transactions.stripDayNotLoaded'.tr(
                         namedArgs: {'date': longDate.format(d.date)},
                       )
+                    : d.projected
+                    ? 'transactions.stripDayExpected'.tr(
+                        namedArgs: {
+                          'date': longDate.format(d.date),
+                          'amount': formatAmount(d.total!),
+                        },
+                      )
                     : 'transactions.stripDayAmount'.tr(
                         namedArgs: {
                           'date': longDate.format(d.date),
@@ -106,6 +119,12 @@ class DayRevenueStrip extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: _barColor(context, d),
                                     borderRadius: BorderRadius.circular(4),
+                                    border: d.projected
+                                        ? Border.all(
+                                            color: _outlineColor(context, d),
+                                            width: 1.5,
+                                          )
+                                        : null,
                                   ),
                                 ),
                               ),
@@ -145,8 +164,19 @@ class DayRevenueStrip extends StatelessWidget {
 
   Color _barColor(BuildContext context, DayRevenueStripDay d) {
     final scheme = context.colorScheme;
+    if (d.projected) {
+      return d.dayKey == selectedDayKey
+          ? scheme.primary.withValues(alpha: 0.22)
+          : Colors.transparent;
+    }
     if (d.dayKey == selectedDayKey) return scheme.primary;
     if (d.total == null) return context.appColors.hairline;
     return scheme.onSurfaceVariant.withValues(alpha: 0.32);
+  }
+
+  Color _outlineColor(BuildContext context, DayRevenueStripDay d) {
+    final scheme = context.colorScheme;
+    if (d.dayKey == selectedDayKey) return scheme.primary;
+    return scheme.onSurfaceVariant.withValues(alpha: 0.45);
   }
 }

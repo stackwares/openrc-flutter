@@ -26,6 +26,10 @@ import 'package:openrc/features/transactions/widgets/transactions_filter_bar.dar
 import 'package:openrc/features/transactions/widgets/transactions_table.dart';
 import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
+import 'package:openrc/features/upcoming/upcoming_day_widgets.dart';
+import 'package:openrc/features/upcoming/upcoming_projection.dart';
+import 'package:openrc/features/upcoming/upcoming_provider.dart';
+import 'package:openrc/features/upcoming/upcoming_screen.dart';
 import 'package:openrc/services/auto_app_icons_store.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/display_currency_store.dart';
@@ -855,6 +859,41 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   /// Expandable "Scheduled" section (today only); collapsed by default.
   bool _futureTransactionsExpanded = false;
 
+  /// Expandable "Due later today" section; collapsed by default.
+  bool _dueTodayExpanded = false;
+
+  /// Projected events on [dayKey], narrowed by the tab's filters.
+  List<UpcomingEvent> _upcomingOn(String dayKey) {
+    final events = ref.watch(
+      upcomingEventsProvider(kUpcomingMaxHorizon.inDays),
+    );
+    return filterUpcomingEvents(
+      [
+        for (final e in events)
+          if (isoLocalDayKey(e.dueAt) == dayKey) e,
+      ],
+      apps: ref.watch(transactionsAppIncludeFilterProvider),
+      countryCodes: ref.watch(transactionsCountryFilterProvider),
+      platforms: ref.watch(transactionsPlatformFilterProvider),
+    );
+  }
+
+  /// What the filter sheet offers: the day's sales, or for a day ahead, the
+  /// subscriptions due on it.
+  List<RcTransaction> _filterSourceFor(TransactionsState state) {
+    final key = state.selectedDayKey;
+    if (key.compareTo(localTodayDayKey()) > 0) {
+      final events = ref.read(
+        upcomingEventsProvider(kUpcomingMaxHorizon.inDays),
+      );
+      return [
+        for (final e in events)
+          if (isoLocalDayKey(e.dueAt) == key) e.source,
+      ];
+    }
+    return state.dayView[key] ?? const [];
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(transactionsProvider);
@@ -864,7 +903,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final accountProjects =
         ref.watch(rcAccountProjectsProvider).asData?.value ?? const [];
     final selectedKey = state.selectedDayKey;
-    final dayTxs = state.dayView[selectedKey] ?? [];
+    ref.watch(upcomingEventsProvider(kUpcomingMaxHorizon.inDays));
+    final dayTxs = _filterSourceFor(state);
     final dayFilterSource = <String, List<RcTransaction>>{
       if (dayTxs.isNotEmpty) selectedKey: dayTxs,
     };
@@ -880,10 +920,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         (platformFilter != null && platformFilter.isNotEmpty) ||
         _sectionFilters.isNotEmpty;
 
-    final todayKey = localTodayDayKey();
     final prevKey = _previousCalendarDayKey(selectedKey);
     final nextKey = _nextCalendarDayKey(selectedKey);
-    final canGoNext = selectedKey.compareTo(todayKey) < 0 && nextKey != null;
+    final canGoNext =
+        nextKey != null && nextKey.compareTo(upcomingLastDayKey()) <= 0;
 
     return Scaffold(
       appBar: ShellHeader(
@@ -980,6 +1020,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
     final todayKey = localTodayDayKey();
     final viewingToday = selectedKey == todayKey;
+    final viewingFuture = selectedKey.compareTo(todayKey) > 0;
+    final dueToday = viewingToday
+        ? _upcomingOn(todayKey)
+        : const <UpcomingEvent>[];
 
     // Scheduled (future-dated) rows on today haven't happened yet: they have
     // their own section and stay out of the day's totals, tiles and bars.
@@ -1037,6 +1081,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       state: state,
       totalFor: (key) =>
           netRevenueSum(sectionFiltered(happened(key)), commission),
+      expectedFor: (key) => UpcomingSummary.of(
+        _upcomingOn(key),
+        commission: commission,
+      ).expectedUsd,
     );
 
     final bottomPadding = mainShellFloatingTabBarScrollPadding(context);
@@ -1048,31 +1096,54 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       );
     }
 
-    // The day at a glance: totals, counts, insights, scheduled rows.
-    final summarySlivers = <Widget>[
-      SliverToBoxAdapter(
-        child: AnimatedReveal(
-          visible: listFiltersActive || _sectionFilters.isNotEmpty,
-          child: ActiveFiltersRow(
-            appCount: appIncludeFilter?.length,
-            countryCodes: countryFilter,
-            platforms: platformFilter,
-            sectionFilters: _sectionFilters,
-            onOpenFilters: () => _showAppFilterSheet(context, state),
-            onClearApps: () =>
-                ref.read(transactionsAppIncludeFilterProvider.notifier).state =
-                    null,
-            onClearCountries: () =>
-                ref.read(transactionsCountryFilterProvider.notifier).state =
-                    null,
-            onClearPlatforms: () =>
-                ref.read(transactionsPlatformFilterProvider.notifier).state =
-                    null,
-            onRemoveSection: _toggleSectionFilter,
-            onClearAll: _clearTransactionFilters,
-          ),
+    final filtersRow = SliverToBoxAdapter(
+      child: AnimatedReveal(
+        visible: listFiltersActive || _sectionFilters.isNotEmpty,
+        child: ActiveFiltersRow(
+          appCount: appIncludeFilter?.length,
+          countryCodes: countryFilter,
+          platforms: platformFilter,
+          sectionFilters: _sectionFilters,
+          onOpenFilters: () => _showAppFilterSheet(context, state),
+          onClearApps: () =>
+              ref.read(transactionsAppIncludeFilterProvider.notifier).state =
+                  null,
+          onClearCountries: () =>
+              ref.read(transactionsCountryFilterProvider.notifier).state = null,
+          onClearPlatforms: () =>
+              ref.read(transactionsPlatformFilterProvider.notifier).state =
+                  null,
+          onRemoveSection: _toggleSectionFilter,
+          onClearAll: _clearTransactionFilters,
         ),
       ),
+    );
+
+    Widget heroStrip() => DayRevenueStrip(
+      days: stripDays,
+      selectedDayKey: selectedKey,
+      formatAmount: _formatAmountForSemantics,
+      onDaySelected: state.isLoading ? null : _goToDay,
+    );
+
+    final forecast = viewingToday && dayLoaded && dueToday.isNotEmpty
+        ? UpcomingTodayForecast(soFar: headerDaily, events: dueToday)
+        : null;
+
+    if (viewingFuture) {
+      return _buildFutureDay(
+        context,
+        dayKey: selectedKey,
+        events: _upcomingOn(selectedKey),
+        filtersRow: filtersRow,
+        strip: heroStrip(),
+        bottomPadding: bottomPadding,
+      );
+    }
+
+    // The day at a glance: totals, counts, insights, scheduled rows.
+    final summarySlivers = <Widget>[
+      filtersRow,
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         sliver: SliverToBoxAdapter(
@@ -1083,12 +1154,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             total: headerDaily,
             previousTotal: headerPrevTotal,
             loading: !dayLoaded,
-            strip: DayRevenueStrip(
-              days: stripDays,
-              selectedDayKey: selectedKey,
-              formatAmount: _formatAmountForSemantics,
-              onDaySelected: state.isLoading ? null : _goToDay,
-            ),
+            forecast: forecast,
+            strip: heroStrip(),
             onAsk: () =>
                 openAskTab(ref, context: AskPrefills.selectedDay(selectedKey)),
           ).appCardEntrance(),
@@ -1133,6 +1200,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 subscriberEarliestPurchaseInstant,
             onOpenTransaction: openTransaction,
           ).appCardEntrance(delay: const Duration(milliseconds: 120)),
+        ),
+      if (dueToday.isNotEmpty)
+        SliverToBoxAdapter(
+          child: UpcomingDueTodaySection(
+            events: dueToday,
+            expanded: _dueTodayExpanded,
+            onExpandedChanged: (v) => setState(() => _dueTodayExpanded = v),
+          ).appCardEntrance(delay: const Duration(milliseconds: 140)),
         ),
     ];
 
@@ -1245,12 +1320,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         total: headerDaily,
         previousTotal: headerPrevTotal,
         loading: !dayLoaded,
-        strip: DayRevenueStrip(
-          days: stripDays,
-          selectedDayKey: selectedKey,
-          formatAmount: _formatAmountForSemantics,
-          onDaySelected: state.isLoading ? null : _goToDay,
-        ),
+        forecast: forecast,
+        strip: heroStrip(),
         onAsk: () =>
             openAskTab(ref, context: AskPrefills.selectedDay(selectedKey)),
       );
@@ -1322,6 +1393,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               onOpenTransaction: openTransaction,
               margin: const EdgeInsets.only(top: AppSpace.sm),
             ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+          ),
+        if (dueToday.isNotEmpty)
+          SliverToBoxAdapter(
+            child: UpcomingDueTodaySection(
+              events: dueToday,
+              expanded: _dueTodayExpanded,
+              onExpandedChanged: (v) => setState(() => _dueTodayExpanded = v),
+              margin: const EdgeInsets.only(top: AppSpace.sm),
+            ).appCardEntrance(delay: const Duration(milliseconds: 120)),
           ),
         if (filtersHideResults)
           SliverToBoxAdapter(
@@ -1409,10 +1489,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
+  /// Seven days ending at the selected day. From today on, the strip also
+  /// shows the next day (a projection) so the days ahead are one tap away.
   List<DayRevenueStripDay> _stripDays({
     required String selectedKey,
     required TransactionsState state,
     required double Function(String dayKey) totalFor,
+    required double Function(String dayKey) expectedFor,
   }) {
     final DateTime selected;
     try {
@@ -1420,8 +1503,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     } catch (_) {
       return const [];
     }
+    final todayKey = localTodayDayKey();
+    final peek =
+        selectedKey.compareTo(todayKey) >= 0 &&
+        selectedKey.compareTo(upcomingLastDayKey()) < 0;
+    final end = peek ? 1 : 0;
     return [
-      for (var i = 6; i >= 0; i--)
+      for (var i = 6 - end; i >= -end; i--)
         () {
           final date = DateTime(
             selected.year,
@@ -1429,6 +1517,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             selected.day - i,
           );
           final key = isoLocalDayKey(date);
+          if (key.compareTo(todayKey) > 0) {
+            return DayRevenueStripDay(
+              dayKey: key,
+              date: date,
+              total: expectedFor(key),
+              projected: true,
+            );
+          }
           return DayRevenueStripDay(
             dayKey: key,
             date: date,
@@ -1436,6 +1532,119 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           );
         }(),
     ];
+  }
+
+  /// A day ahead: what's expected to renew, convert or lapse on it.
+  Widget _buildFutureDay(
+    BuildContext context, {
+    required String dayKey,
+    required List<UpcomingEvent> events,
+    required Widget filtersRow,
+    required Widget strip,
+    required double bottomPadding,
+  }) {
+    final commission = ref.watch(commissionSettingsProvider);
+    final summary = UpcomingSummary.of(events, commission: commission);
+    final upcoming = ref.watch(upcomingTransactionsProvider);
+    final counts = [
+      for (final (kind, n) in [
+        (UpcomingKind.renewal, summary.renewals),
+        (UpcomingKind.trialConversion, summary.trialConversions),
+        (UpcomingKind.trialEnding, summary.trialsEnding),
+        (UpcomingKind.expiring, summary.expiring),
+      ])
+        if (n > 0) 'upcoming.count.${kind.name}'.plural(n),
+    ];
+    final muted = context.textTheme.bodySmall?.copyWith(
+      color: context.colorScheme.onSurfaceVariant,
+    );
+
+    List<Widget> slivers({required bool wide}) {
+      final side = wide ? 0.0 : 16.0;
+      return [
+        filtersRow,
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(side, 8, side, 0),
+          sliver: SliverToBoxAdapter(
+            child: _DayHeroCard(
+              label: 'upcoming.expected'.tr(),
+              total: summary.expectedUsd,
+              previousTotal: null,
+              caption: counts.isEmpty
+                  ? (upcoming.isLoading
+                        ? 'upcoming.loadingLonger'.tr()
+                        : 'upcoming.nothingDueOnDay'.tr())
+                  : counts.join(' · '),
+              strip: strip,
+            ).appCardEntrance(),
+          ),
+        ),
+        if (events.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: SectionHeader(
+              title: 'upcoming.dueThisDay'.tr(),
+              count: '${events.length}',
+              padding: wide
+                  ? const EdgeInsets.fromLTRB(4, 24, 4, 10)
+                  : const EdgeInsets.fromLTRB(
+                      AppSpace.lg,
+                      AppSpace.lg,
+                      AppSpace.gutter,
+                      AppSpace.xs,
+                    ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: UpcomingDayList(
+              events: events,
+              margin: wide
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
+            ).appCardEntrance(delay: const Duration(milliseconds: 60)),
+          ),
+        ],
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 20, 28, 16),
+            child: Text(
+              'upcoming.note'.tr(),
+              textAlign: TextAlign.center,
+              style: muted,
+            ),
+          ),
+        ),
+      ];
+    }
+
+    Future<void> refresh() =>
+        ref.read(upcomingTransactionsProvider.notifier).load();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final wide = width >= AppBreakpoints.dashboard;
+        final inset = wide
+            ? AppBreakpoints.dashboardGutter +
+                  AppBreakpoints.centeringInset(
+                    width,
+                    maxWidth: AppBreakpoints.dashboardMaxWidth,
+                  )
+            : AppBreakpoints.centeringInset(width, maxWidth: _columnMaxWidth);
+        return RefreshIndicator(
+          onRefresh: refresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: inset),
+                sliver: SliverMainAxisGroup(slivers: slivers(wide: wide)),
+              ),
+              SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   String _formatAmountForSemantics(double usd) {
@@ -1452,6 +1661,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final picked = await showJumpToDaySheet(
       context,
       selectedDay: DateTime.parse(selectedKey),
+      lastDay: DateTime.parse(upcomingLastDayKey()),
     );
     if (picked == null || !mounted) return;
     _goToDay(isoLocalDayKey(picked));
@@ -1460,6 +1670,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _goToDay(String dayKey) {
     setState(() {
       _futureTransactionsExpanded = false;
+      _dueTodayExpanded = false;
     });
     ref.read(transactionsProvider.notifier).setSelectedDayKey(dayKey);
   }
@@ -1468,6 +1679,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     if (dayKey == localTodayDayKey()) return 'transactions.today'.tr();
     if (dayKey == _previousCalendarDayKey(localTodayDayKey())) {
       return 'transactions.yesterday'.tr();
+    }
+    if (dayKey == _nextCalendarDayKey(localTodayDayKey())) {
+      return 'upcoming.tomorrow'.tr();
     }
     try {
       final date = DateTime.parse(dayKey);
@@ -1491,7 +1705,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     BuildContext context,
     TransactionsState state,
   ) async {
-    final dayTxs = state.dayView[state.selectedDayKey] ?? [];
+    final dayTxs = _filterSourceFor(state);
     final filterSource = <String, List<RcTransaction>>{
       if (dayTxs.isNotEmpty) state.selectedDayKey: dayTxs,
     };
@@ -1519,13 +1733,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 }
 
-/// Moves the Transactions day back ([delta] < 0) or forward, never past
-/// today. For keyboard shortcuts; the header buttons follow the same rules.
+/// Moves the Transactions day back ([delta] < 0) or forward, never past the
+/// last projected day. For keyboard shortcuts; the header buttons follow the
+/// same rules.
 void stepTransactionsDay(WidgetRef ref, int delta) {
   final state = ref.read(transactionsProvider);
   if (state.isLoading) return;
   final key = state.selectedDayKey;
-  if (delta > 0 && key.compareTo(localTodayDayKey()) >= 0) return;
+  if (delta > 0 && key.compareTo(upcomingLastDayKey()) >= 0) return;
   final target = delta < 0
       ? _previousCalendarDayKey(key)
       : _nextCalendarDayKey(key);
@@ -1561,12 +1776,20 @@ class _DayHeroCard extends StatelessWidget {
     required this.total,
     required this.previousTotal,
     required this.strip,
-    required this.onAsk,
+    this.onAsk,
     this.loading = false,
+    this.forecast,
+    this.caption,
   });
 
   final String label;
   final double total;
+
+  /// Under the change line: where today should end up.
+  final Widget? forecast;
+
+  /// Replaces the change line (a day ahead has no "vs yesterday").
+  final String? caption;
 
   /// The day's older pages are still loading; its total isn't known yet.
   final bool loading;
@@ -1574,7 +1797,9 @@ class _DayHeroCard extends StatelessWidget {
   /// Null when the previous day isn't loaded yet.
   final double? previousTotal;
   final Widget strip;
-  final VoidCallback onAsk;
+
+  /// Shows the Ask chip; null for days ahead.
+  final VoidCallback? onAsk;
 
   /// Cross-fades when the change moves to a new value or direction.
   Widget _changeBadge(BuildContext context, double prev) {
@@ -1620,7 +1845,11 @@ class _DayHeroCard extends StatelessWidget {
                   ),
                 ),
               ),
-              AskContextChip(label: 'agent.askAboutDay'.tr(), onPressed: onAsk),
+              if (onAsk != null)
+                AskContextChip(
+                  label: 'agent.askAboutDay'.tr(),
+                  onPressed: onAsk!,
+                ),
             ],
           ),
           const SizedBox(height: 4),
@@ -1640,7 +1869,9 @@ class _DayHeroCard extends StatelessWidget {
               style: AppText.amount(context, size: 34),
             ),
           const SizedBox(height: 8),
-          if (loading)
+          if (caption != null)
+            Text(caption!, style: muted)
+          else if (loading)
             Text('transactions.loadingThisDay'.tr(), style: muted)
           else if (prev == null)
             Text('transactions.previousDayNotLoaded'.tr(), style: muted)
@@ -1660,6 +1891,7 @@ class _DayHeroCard extends StatelessWidget {
                 ),
               ],
             ),
+          ?forecast,
           const SizedBox(height: 16),
           strip,
         ],

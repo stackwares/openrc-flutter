@@ -686,6 +686,71 @@
     },
     "monthTransactions": "This month’s transactions"
   },
+  "upcoming": {
+    "title": "Upcoming",
+    "cardTitle": "Coming up",
+    "nextDays": {
+      "one": "Next {} day",
+      "other": "Next {} days"
+    },
+    "days": {
+      "one": "{} day",
+      "other": "{} days"
+    },
+    "expected": "Expected",
+    "atRisk": "At risk",
+    "afterFees": "After store fees",
+    "beforeFees": "Before store fees",
+    "kind": {
+      "renewal": "Renews",
+      "trialConversion": "Trial converts",
+      "trialEnding": "Trial ends",
+      "expiring": "Expires"
+    },
+    "filter": {
+      "renewal": "Renewals",
+      "trialConversion": "Trial conversions",
+      "trialEnding": "Trials ending",
+      "expiring": "Expiring"
+    },
+    "count": {
+      "renewal": {
+        "one": "{} renewal",
+        "other": "{} renewals"
+      },
+      "trialConversion": {
+        "one": "{} trial converting",
+        "other": "{} trials converting"
+      },
+      "trialEnding": {
+        "one": "{} trial ending",
+        "other": "{} trials ending"
+      },
+      "expiring": {
+        "one": "{} subscription expiring",
+        "other": "{} subscriptions expiring"
+      }
+    },
+    "unpriced": {
+      "one": "{} with no known price, not counted",
+      "other": "{} with no known price, not counted"
+    },
+    "tomorrow": "Tomorrow",
+    "noneTitle": "Nothing due",
+    "noneMessage": "No renewals, trial conversions or expiring subscriptions in this window.",
+    "noFilterMatches": "Nothing due matches these filters.",
+    "couldntLoad": "Couldn’t load upcoming renewals",
+    "loadingLonger": "Loading longer plans…",
+    "truncated": "Some plans bought months ago didn’t fully load, so a few longer-plan renewals may be missing.",
+    "note": "Estimated from each subscription’s latest transaction. Billing failures, refunds and price changes can’t be seen ahead of time, and stores can charge up to a day early.",
+    "open": "Open upcoming",
+    "onTrackFor": "On track for",
+    "stillDueToday": "still due today",
+    "dueLaterToday": "Due later today",
+    "dueThisDay": "Due this day",
+    "nothingDueOnDay": "Nothing is due on this day.",
+    "seeNext30": "See the next 30 days"
+  },
   "notifications": {
     "title": "Notifications",
     "rowTitle": "Push notifications",
@@ -1269,7 +1334,8 @@
       "product": "Product",
       "expires": "Expires",
       "type": "Type"
-    }
+    },
+    "stripDayExpected": "{date}: about {amount} expected"
   },
   "agent": {
     "setup": {

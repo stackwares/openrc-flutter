@@ -58,4 +58,39 @@ void main() {
     );
     expect(find.bySemanticsLabel('Fri, Oct 23: \$600.00'), findsOneWidget);
   });
+
+  testWidgets('days ahead read as expected amounts', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(extensions: const [AppColors.dark]),
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            child: DayRevenueStrip(
+              days: [
+                DayRevenueStripDay(
+                  dayKey: '2026-10-23',
+                  date: DateTime(2026, 10, 23),
+                  total: 100,
+                ),
+                DayRevenueStripDay(
+                  dayKey: '2026-10-24',
+                  date: DateTime(2026, 10, 24),
+                  total: 50,
+                  projected: true,
+                ),
+              ],
+              selectedDayKey: '2026-10-23',
+              formatAmount: (v) => '\$${v.toStringAsFixed(2)}',
+              onDaySelected: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      find.bySemanticsLabel('Sat, Oct 24: about \$50.00 expected'),
+      findsOneWidget,
+    );
+  });
 }

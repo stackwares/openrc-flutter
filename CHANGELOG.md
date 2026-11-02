@@ -18,6 +18,18 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Added
 
+- Upcoming: a "Coming up" card on the Revenue tab and a screen for the next
+  7 or 30 days, with renewals, trials about to convert, trials ending and
+  subscriptions set to expire, each day's expected charges, and the revenue
+  at risk. It's estimated on the device from each subscription's latest
+  transaction, looking back one plan length (weekly through annual), and
+  follows the Revenue tab's filters and store fee setting.
+
+- Transactions looks ahead too: today's card shows what the day is on track
+  for, a "Due later today" section lists the renewals and conversions still
+  to come, and the day strip, arrows, keyboard shortcuts and calendar step
+  into the next 30 days, each shown as a projected day with what's due.
+
 - Auto-refresh: coming back to the app after five minutes or more reloads
   Transactions, Revenue and Charts, and a sale's push while the app is open
   now reloads Charts too, once per burst of webhooks. Charts refreshes

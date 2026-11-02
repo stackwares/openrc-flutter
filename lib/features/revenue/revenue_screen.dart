@@ -19,6 +19,7 @@ import 'package:openrc/features/transactions/widgets/transactions_filter_bar.dar
 import 'package:openrc/features/transactions/widgets/transactions_table.dart';
 import 'package:openrc/features/transactions/transaction_detail_screen.dart';
 import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
+import 'package:openrc/features/upcoming/upcoming_screen.dart';
 import 'package:openrc/models/rc_transaction.dart';
 import 'package:openrc/services/commission_settings_store.dart';
 import 'package:openrc/services/rc_account_projects_provider.dart';
@@ -218,6 +219,9 @@ class _RealtimeTransactionsScreenState
               allLoadedTransactions: allLoadedTxs,
               loadedTransactionCount: allLoadedTxs.length,
             ).appCardEntrance(delay: const Duration(milliseconds: 100)),
+            const UpcomingRevenueCard().appCardEntrance(
+              delay: const Duration(milliseconds: 130),
+            ),
           ];
 
           // Where it came from: stores, apps, countries, products.
@@ -381,6 +385,14 @@ class _RealtimeTransactionsScreenState
                       ],
                     ),
                   ).appCardEntrance(),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.only(top: AppSpace.sm),
+                sliver: SliverToBoxAdapter(
+                  child: const UpcomingRevenueCard(
+                    margin: EdgeInsets.zero,
+                  ).appCardEntrance(delay: const Duration(milliseconds: 60)),
                 ),
               ),
               SliverPadding(

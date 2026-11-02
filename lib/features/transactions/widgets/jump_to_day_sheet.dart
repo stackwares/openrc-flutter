@@ -8,26 +8,38 @@ import 'package:openrc/theme/app_tokens.dart';
 import 'package:openrc/widgets/adaptive_modal.dart';
 
 /// Picks a day to open: quick picks for the usual jumps, and a calendar
-/// (tap the month for years) for any day from [firstDay] to today. Tapping
-/// a day opens it. Returns the picked local day, or null if dismissed.
+/// (tap the month for years) for any day from [firstDay] to [lastDay]
+/// (today by default). Tapping a day opens it. Returns the picked local day,
+/// or null if dismissed.
 Future<DateTime?> showJumpToDaySheet(
   BuildContext context, {
   required DateTime selectedDay,
   DateTime? firstDay,
+  DateTime? lastDay,
 }) {
   return showAdaptiveSheet<DateTime>(
     context: context,
     dialogMaxWidth: 420,
-    builder: (_) =>
-        _JumpToDaySheet(selectedDay: selectedDay, firstDay: firstDay),
+    builder: (_) => _JumpToDaySheet(
+      selectedDay: selectedDay,
+      firstDay: firstDay,
+      lastDay: lastDay,
+    ),
   );
 }
 
 class _JumpToDaySheet extends StatefulWidget {
-  const _JumpToDaySheet({required this.selectedDay, this.firstDay});
+  const _JumpToDaySheet({
+    required this.selectedDay,
+    this.firstDay,
+    this.lastDay,
+  });
 
   final DateTime selectedDay;
   final DateTime? firstDay;
+
+  /// Latest pickable day; days after today are projections.
+  final DateTime? lastDay;
 
   @override
   State<_JumpToDaySheet> createState() => _JumpToDaySheetState();
@@ -62,10 +74,18 @@ class _JumpToDaySheetState extends State<_JumpToDaySheet> {
       selected,
       today,
     ].reduce((a, b) => a.isBefore(b) ? a : b);
-    final initial = selected.isAfter(today) ? today : selected;
+    final last = widget.lastDay == null
+        ? today
+        : [
+            DateUtils.dateOnly(widget.lastDay!),
+            today,
+          ].reduce((a, b) => a.isAfter(b) ? a : b);
+    final initial = selected.isAfter(last) ? last : selected;
+    final tomorrow = DateUtils.addDaysToDate(today, 1);
     final monthBack = DateTime(today.year, today.month - 1);
     final quickPicks = [
       ('transactions.today'.tr(), today),
+      if (!tomorrow.isAfter(last)) ('upcoming.tomorrow'.tr(), tomorrow),
       ('transactions.yesterday'.tr(), DateUtils.addDaysToDate(today, -1)),
       ('transactions.weekAgo'.tr(), DateUtils.addDaysToDate(today, -7)),
       (
@@ -121,7 +141,7 @@ class _JumpToDaySheetState extends State<_JumpToDaySheet> {
           CalendarDatePicker(
             initialDate: initial,
             firstDate: first,
-            lastDate: today,
+            lastDate: last,
             currentDate: today,
             onDateChanged: _onDateChanged,
             onDisplayedMonthChanged: _onDisplayedMonthChanged,
