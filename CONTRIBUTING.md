@@ -32,7 +32,8 @@ at it with `--dart-define=OPENRC_RELAY_URL=http://127.0.0.1:8787`.
 A RevenueCat account with at least one project is enough to see real data.
 Builds from source send no telemetry and have no push notifications. To work
 on notifications, add your own Firebase project
-(`dart_defines/firebase.example.json`) and run the
+(`FIREBASE_*` in `dart_defines/openrc.debug.json`, created from
+`dart_defines/openrc.debug.example.json`) and run the
 [notifier](notifier/README.md). The iOS app has the Push Notifications
 capability, which free (personal) Apple teams can't sign; remove
 `aps-environment` from `ios/Runner/Runner.entitlements` locally if you use

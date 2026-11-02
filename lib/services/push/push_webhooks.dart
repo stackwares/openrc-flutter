@@ -44,11 +44,18 @@ class PushWebhooks {
     return 'OpenRC · $device · ${tagFor(secret)}';
   }
 
+  /// RevenueCat rejects a webhook URL longer than this.
+  static const maxUrlLength = 2048;
+
   /// This device's webhook URL. The notifier ignores the tag, and only sends
   /// the [kinds] named in `notify` (every kind when it's left out). The
   /// [projectName] lets the notifier name the project in the notification,
   /// [names] the products it names in the app, and [projectIcon] the app's
   /// picture, when it has one.
+  ///
+  /// Names and the icon are shortened or left off so the whole URL stays
+  /// within [maxUrlLength]. The kinds, currency and project name stay:
+  /// those are what the notification is filtered and worded by.
   static String urlFor(
     String secret, [
     Set<PushKind>? kinds,
@@ -60,17 +67,58 @@ class PushWebhooks {
     final base = '${PushConfig.webhookUrl}/${tagFor(secret)}';
     final notify = kinds == null ? null : PushKind.queryFor(kinds);
     final name = projectName?.trim();
-    final icon = iconParam(projectIcon);
-    final query = {
-      'notify': ?notify,
-      ...display.query,
-      ...names.query,
-      if (name != null && name.isNotEmpty)
-        'project': Uri.encodeQueryComponent(name),
-      if (icon != null) iconKey: Uri.encodeQueryComponent(icon),
-    };
-    if (query.isEmpty) return base;
-    return '$base?${[for (final e in query.entries) '${e.key}=${e.value}'].join('&')}';
+    final project = name == null || name.isEmpty
+        ? null
+        : Uri.encodeQueryComponent(name);
+    final iconRaw = iconParam(projectIcon);
+    final icon = iconRaw == null ? null : Uri.encodeQueryComponent(iconRaw);
+
+    String format({String? namesValue, String? iconValue, String? projectValue}) {
+      final query = <String, String>{
+        'notify': ?notify,
+        ...display.query,
+        PushNames.key: ?namesValue,
+        'project': ?projectValue,
+        iconKey: ?iconValue,
+      };
+      if (query.isEmpty) return base;
+      return '$base?${[for (final e in query.entries) '${e.key}=${e.value}'].join('&')}';
+    }
+
+    /// Characters left for the names value once the other parameters are in.
+    int namesRoom({String? iconValue, String? projectValue}) {
+      final head = format(iconValue: iconValue, projectValue: projectValue);
+      final separator = head.contains('?')
+          ? '&${PushNames.key}='.length
+          : '?${PushNames.key}='.length;
+      return maxUrlLength - head.length - separator;
+    }
+
+    // A project name long enough to break the limit on its own is left off.
+    final projectKept =
+        project != null && format(projectValue: project).length <= maxUrlLength
+        ? project
+        : null;
+    final withIcon =
+        icon != null &&
+        format(iconValue: icon, projectValue: projectKept).length <=
+            maxUrlLength;
+    // A picture that leaves room for no name at all is dropped, so the
+    // products the developer named still fit.
+    final roomWithIcon = withIcon
+        ? namesRoom(iconValue: icon, projectValue: projectKept)
+        : 0;
+    final iconKept =
+        withIcon && (names.isEmpty || names.encodedWithin(roomWithIcon) != null)
+        ? icon
+        : null;
+    return format(
+      namesValue: names.encodedWithin(
+        namesRoom(iconValue: iconKept, projectValue: projectKept),
+      ),
+      iconValue: iconKept,
+      projectValue: projectKept,
+    );
   }
 
   /// The query parameter the notifier reads a picture from.
@@ -484,13 +532,23 @@ class PushProjectsNotifier extends StateNotifier<PushProjectsState> {
           final name = names[id];
           final icon = icons[id];
           final query = Uri.tryParse(webhook?.url ?? '')?.queryParameters;
-          final wanted = settings.names.encoded;
+          // Compared to the URL we would write, including names cut to fit
+          // RevenueCat's length limit, so a full list isn't written back on
+          // every open.
+          final wanted = Uri.parse(
+            PushWebhooks.urlFor(
+              secret,
+              settings.kindsFor(id),
+              settings.display,
+              name,
+              settings.names,
+              icon,
+            ),
+          ).queryParameters;
           final stale =
-              (name != null &&
-                  name.isNotEmpty &&
-                  query?['project'] != name) ||
-              (wanted != null && query?[PushNames.key] != wanted) ||
-              (query?[PushWebhooks.iconKey]) != PushWebhooks.iconParam(icon);
+              query?['project'] != wanted['project'] ||
+              query?[PushNames.key] != wanted[PushNames.key] ||
+              query?[PushWebhooks.iconKey] != wanted[PushWebhooks.iconKey];
           if (webhookId != null && stale) {
             try {
               await webhooks.update(

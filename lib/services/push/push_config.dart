@@ -5,8 +5,8 @@ import 'package:openrc/core/constants/app_constants.dart';
 /// Build settings for push notifications.
 ///
 /// Notifications need a Firebase project for Cloud Messaging, passed with
-/// `--dart-define-from-file=dart_defines/firebase.json` (see
-/// `dart_defines/firebase.example.json`). Builds without it have no
+/// `--dart-define-from-file=dart_defines/openrc.<mode>.json` (see
+/// `dart_defines/openrc.debug.example.json`). Builds without it have no
 /// notifications, the way builds without a PostHog token send no telemetry.
 abstract final class PushConfig {
   static const _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');

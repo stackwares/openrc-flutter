@@ -27,9 +27,10 @@ class PushNames {
   /// Longest product id worth carrying, matching what the notifier reads.
   static const _maxId = 200;
 
-  /// The encoded entries stop here, so the webhook URL stays well inside
-  /// what RevenueCat and Cloudflare accept. Names past it fall back to the
-  /// product id, which is what notifications showed before.
+  /// Longest names parameter [encoded] builds on its own. The webhook URL
+  /// itself cannot pass 2048 characters, so [encodedWithin] cuts this further
+  /// when the icon and settings need the room. Names past the cut fall back
+  /// to the product id, which is what notifications showed before.
   static const _maxEncoded = 1800;
 
   /// Names by store product id.
@@ -70,8 +71,12 @@ class PushNames {
   bool sameAs(PushNames other) => mapEquals(_byId, other._byId);
 
   /// What the notifier reads, or null when nothing is named.
-  String? get encoded {
-    if (_byId.isEmpty) return null;
+  String? get encoded => encodedWithin(_maxEncoded);
+
+  /// [encoded], cut to whole entries that fit in [maxEncoded] characters.
+  /// Null when nothing fits, so a caller never writes a half entry.
+  String? encodedWithin(int maxEncoded) {
+    if (_byId.isEmpty || maxEncoded <= 0) return null;
     final ids = _byId.keys.toList()..sort();
     final parts = <String>[];
     var length = 0;
@@ -80,7 +85,7 @@ class PushNames {
       final entry = Uri.encodeQueryComponent('$id\n${_byId[id]}');
       // A tab between entries, encoded.
       final grew = entry.length + (parts.isEmpty ? 0 : 3);
-      if (length + grew > _maxEncoded) break;
+      if (length + grew > maxEncoded) break;
       length += grew;
       parts.add(entry);
     }

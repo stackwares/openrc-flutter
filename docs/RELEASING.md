@@ -48,9 +48,10 @@ and sign release builds with it (never commit the keystore or its passwords).
 
 1. In the Firebase project, register the Android app (`com.openrc.app`) and
    the Apple app (`com.openrc.app`) if App Distribution hasn't already, and
-   copy their API keys and app IDs into `dart_defines/firebase.json` (from
-   `dart_defines/firebase.example.json`). It is gitignored. Without it,
-   builds have no notifications.
+   copy their API keys and app IDs into `dart_defines/openrc.release.json`
+   (from `dart_defines/openrc.release.example.json`; also
+   `dart_defines/openrc.debug.json` for development). They are gitignored.
+   Without the `FIREBASE_*` values, builds have no notifications.
 2. Upload an APNs authentication key under **Project settings → Cloud
    Messaging** (one team-scoped key covers iOS and macOS), and give the
    app ID `com.openrc.app` the **Push Notifications** capability on each
@@ -62,12 +63,12 @@ and sign release builds with it (never commit the keystore or its passwords).
 4. For the web app, register a web app in the same Firebase project and
    generate a web push key under **Project settings → Cloud Messaging → Web
    Push certificates**, then add `FIREBASE_WEB_API_KEY`,
-   `FIREBASE_WEB_APP_ID` and `FIREBASE_VAPID_KEY` to `firebase.json`.
+   `FIREBASE_WEB_APP_ID` and `FIREBASE_VAPID_KEY` to both define files.
 
 ### Telemetry (optional)
 
-Create `dart_defines/posthog.json` from `dart_defines/posthog.example.json`
-with the OpenRC PostHog project token. It is gitignored. Without it, builds
+Set `POSTHOG_PROJECT_TOKEN` in `dart_defines/openrc.release.json` (and
+`openrc.debug.json`) with the OpenRC PostHog project token. Without it, builds
 send nothing.
 
 ### Web
@@ -82,14 +83,14 @@ send nothing.
 ## Each release
 
 Bump `version` in `pubspec.yaml` (for example `1.0.1+2`) and add the changes
-to `CHANGELOG.md` first. Release builds use production settings: never pass
-debug-only defines.
+to `CHANGELOG.md` first. Release builds pass exactly one define file,
+`dart_defines/openrc.release.json`, and no other `--dart-define` flags; never
+the debug file.
 
 ### Android
 
 ```bash
-flutter build apk --release --dart-define-from-file=dart_defines/posthog.json \
-  --dart-define-from-file=dart_defines/firebase.json
+flutter build apk --release --dart-define-from-file=dart_defines/openrc.release.json
 firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
   --app "$OPENRC_FIREBASE_ANDROID_APP_ID" \
   --groups testers \
@@ -99,8 +100,8 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 ### iPhone and iPad
 
 ```bash
-flutter build ipa --release --export-method ad-hoc --dart-define-from-file=dart_defines/posthog.json \
-  --dart-define-from-file=dart_defines/firebase.json
+flutter build ipa --release --export-method ad-hoc \
+  --dart-define-from-file=dart_defines/openrc.release.json
 firebase appdistribution:distribute build/ios/ipa/*.ipa \
   --app "$OPENRC_FIREBASE_IOS_APP_ID" \
   --groups testers \
@@ -112,8 +113,7 @@ firebase appdistribution:distribute build/ios/ipa/*.ipa \
 ```bash
 (cd relay && npm ci && npm run deploy)      # only when relay/ changed
 (cd notifier && npm ci && npm run deploy)   # only when notifier/ changed
-flutter build web --release --dart-define-from-file=dart_defines/posthog.json \
-  --dart-define-from-file=dart_defines/firebase.json
+flutter build web --release --dart-define-from-file=dart_defines/openrc.release.json
 npx wrangler pages deploy build/web --project-name openrc-app --branch main
 ```
 

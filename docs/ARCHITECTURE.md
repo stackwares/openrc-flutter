@@ -204,7 +204,7 @@ go with them.
 Two super properties identify a build rather than a person. `app` (`openrc`)
 separates this app from the rest of the portfolio inside one PostHog project,
 and `environment` (`production`, `internal`, `development`, from
-`--dart-define=POSTHOG_ENVIRONMENT`) separates channels, so every dashboard
+`POSTHOG_ENVIRONMENT` in the define file) separates channels, so every dashboard
 and funnel can be filtered to one. `app_version` and `app_build` come from the
 package.
 

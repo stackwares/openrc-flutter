@@ -120,8 +120,10 @@ flutter run -d chrome --dart-define=OPENRC_RELAY_URL=http://127.0.0.1:8787
 
 ### Configuration
 
-Everything is optional and set with `--dart-define` (or
-`--dart-define-from-file`):
+Everything is optional. Official builds set these in one gitignored define
+file per mode, passed with a single `--dart-define-from-file`:
+`dart_defines/openrc.debug.json` for development and
+`dart_defines/openrc.release.json` for published builds.
 
 | Define | What it does |
 |---|---|
@@ -131,8 +133,8 @@ Everything is optional and set with `--dart-define` (or
 | `FIREBASE_*` | Firebase project for push notifications (Cloud Messaging only). Notifications are off when empty. |
 | `OPENRC_NOTIFIER_URL` | Notifier that turns RevenueCat webhooks into pushes. Defaults to the official one; must send through the same Firebase project. |
 
-`dart_defines/posthog.example.json` and `dart_defines/firebase.example.json`
-show the file format. Shipping builds
+`dart_defines/openrc.debug.example.json` and
+`dart_defines/openrc.release.example.json` show the file format. Shipping builds
 to testers and the web is covered in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## How it works

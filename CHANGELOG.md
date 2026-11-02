@@ -8,6 +8,10 @@ All notable changes to OpenRC are listed here. The format follows
 
 ### Changed
 
+- Turning notifications on for a project no longer fails when that project
+  has many named products. As many product names as fit are kept, and the
+  app icon is included when there is room.
+
 - Push notifications that show an amount in your display currency also show
   the same proceeds in US dollars. When the display currency is already US
   dollars, the amount is not repeated.

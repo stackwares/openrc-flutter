@@ -14,8 +14,8 @@ final telemetryEnabledProvider = StateProvider<bool>(
 ///
 /// Thin OpenRC vocabulary over the shared `core_analytics_flutter` client, so
 /// every Stackwares app reports through one implementation. Builds send
-/// nothing unless they pass a project token
-/// (`--dart-define=POSTHOG_PROJECT_TOKEN=phc_...`), so a build from source is
+/// nothing unless they pass a project token (`POSTHOG_PROJECT_TOKEN` in
+/// `dart_defines/openrc.<mode>.json`), so a build from source is
 /// silent by default. Events never carry RevenueCat account details, app
 /// names, product names or amounts, and no person profiles are created.
 abstract final class Telemetry {
@@ -27,9 +27,10 @@ abstract final class Telemetry {
 
   /// `production`, `internal` or `development`: recorded on every event, so a
   /// dashboard or funnel can be filtered to one build channel. Official
-  /// builds pass `--dart-define=POSTHOG_ENVIRONMENT=production`; a build
-  /// without it reports `development`, and a release build without it reports
-  /// `production` rather than lying about being a dev build.
+  /// builds set `POSTHOG_ENVIRONMENT=production` in
+  /// `dart_defines/openrc.release.json`; a build without it reports
+  /// `development`, and a release build without it reports `production`
+  /// rather than lying about being a dev build.
   static String get environment {
     const configured = String.fromEnvironment(
       AnalyticsConfig.environmentEnvironmentKey,

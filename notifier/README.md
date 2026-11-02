@@ -99,7 +99,8 @@ npm test
 2. `npx wrangler login`, then
    `npx wrangler secret put FCM_SERVICE_ACCOUNT` and paste the key's JSON.
 3. `npm run deploy`.
-4. Build the app with `--dart-define=OPENRC_NOTIFIER_URL=https://<your-worker>.workers.dev`
-   and your Firebase defines (see the main README).
+4. Set `OPENRC_NOTIFIER_URL=https://<your-worker>.workers.dev` next to your
+   Firebase defines in `dart_defines/openrc.<mode>.json` and build with that
+   file (see the main README).
 
 Run `npm run types` after changing `wrangler.jsonc`.

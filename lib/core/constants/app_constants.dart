@@ -24,7 +24,7 @@ abstract class AppConstants {
   static String get rcApiInternalBaseUrl =>
       '$_rcApiOrigin/internal/v1/developers';
 
-  static const String supportEmail = 'support@revenuecat.com';
+  static const String supportEmail = 'openrc@stackwares.com';
 
   static const String prefAuthToken = 'rc_auth_token';
   static const String prefAuthTokenExpiresAt = 'rc_auth_token_expires_at';

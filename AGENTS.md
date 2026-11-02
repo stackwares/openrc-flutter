@@ -4,6 +4,19 @@ Instructions for AI coding agents working in this repository. Human
 contributors: see [CONTRIBUTING.md](CONTRIBUTING.md); the same conventions
 apply.
 
+## Models for translation and localization
+
+Translation and localization jobs (locale files, translated pages, store listing translations) run on one of
+these lower-cost models, including when a subagent does them:
+
+- `gpt 6 lune`
+- `claude sonnet/haiku`
+- `any composer model`
+- `any gemini flash`
+
+This limit applies only to translation and localization. All other work, including design, code, review,
+research and subagents for those tasks, may use any model, including the strongest one available.
+
 ## Keep changes focused
 
 - Make only the changes needed for the requested task.
@@ -93,10 +106,12 @@ their machine-readable output (`--json`, `--output json`) when you need to parse
 - Every `AnalyticsService` call mirrors to PostHog through
   `core_analytics_flutter`. All Stackwares apps report into one shared PostHog
   project, separated by the `app` super property (`openrc`).
-- **Environment:** every event carries an `environment` super property. Release
-  builds report `production`, everything else `development`; override it with
-  `--dart-define=POSTHOG_ENVIRONMENT=<label>`. Filter dashboards by that property
-  instead of creating a second project.
+- **Environment:** every event carries an `environment` super property, set
+  by `POSTHOG_ENVIRONMENT` in the define file (`development` in
+  `dart_defines/openrc.debug.json`, `production` in
+  `dart_defines/openrc.release.json`); without it release builds report
+  `production`, everything else `development`. Filter dashboards by that
+  property instead of creating a second project.
 - **Session replay** (mobile only) is on, fully masked (text, images and custom-painted content). Text and images stay
   masked by default: replays show layout and navigation, never user content.
   It needs all three: `sessionReplay: true` in `lib/main.dart`,
@@ -122,16 +137,32 @@ their machine-readable output (`--json`, `--output json`) when you need to parse
 Mirror the project's `.vscode/launch.json`: it is the source of truth for
 how each run mode is launched.
 
-- **Native (iOS, Android, macOS):** `flutter run --dart-define-from-file=dart_defines/local.json`.
-  Push notifications (Firebase) and telemetry (PostHog) are always on, in
-  debug and release alike: `dart_defines/local.json` carries both sets of
-  defines together. It is local and gitignored; copy
-  `dart_defines/local.example.json` to create it. Never commit it or print
-  the tokens. Publishing builds use the same file, so a release always ships
-  with both switched on.
-- **Web:** start the relay first (`cd relay && npm run dev`, with
+- **Dart defines:** every run and build passes exactly one
+  `--dart-define-from-file` and no other `--dart-define` flags (the only
+  exception is the web relay dev tool below). Both files carry the Firebase
+  (`FIREBASE_*`, `OPENRC_NOTIFIER_URL`) and PostHog defines together, so push
+  notifications and telemetry are always on, in debug and release alike:
+  - `dart_defines/openrc.debug.json`: development, with
+    `POSTHOG_ENVIRONMENT=development`.
+  - `dart_defines/openrc.release.json`: store values only, with
+    `POSTHOG_ENVIRONMENT=production`.
+- **Debug (native: iOS, Android, macOS):**
+  `flutter run --dart-define-from-file=dart_defines/openrc.debug.json`.
+- **Release on a local device:**
+  `flutter run --release --dart-define-from-file=dart_defines/openrc.release.json`.
+- **Store and published builds** (App Store, Google Play, App Distribution,
+  web) always use the release file, for example
+  `flutter build ipa|appbundle|macos|web --dart-define-from-file=dart_defines/openrc.release.json`
+  (see `docs/RELEASING.md`). Never ship the debug file.
+- Both files are local and gitignored; create them from
+  `dart_defines/openrc.debug.example.json` and
+  `dart_defines/openrc.release.example.json`. Never commit them or print the
+  tokens. If one is missing, copy the `.example.json` file and ask the user
+  for the values rather than inventing them.
+- **Web (local relay, dev tool):** start the relay first (`cd relay && npm run dev`, with
   `.dev.vars` copied from `.dev.vars.example`), then
-  `flutter run -d chrome --dart-define=OPENRC_RELAY_URL=http://127.0.0.1:8787`.
+  `flutter run -d chrome --dart-define-from-file=dart_defines/openrc.debug.json --dart-define=OPENRC_RELAY_URL=http://127.0.0.1:8787`
+  (the `Web (local relay)` launch config).
 - Running a release-mode app (`flutter run --release`) is still a Flutter
   build. Follow the rule above: only run `--release` when the user asks.
 - When the agent runs the app itself, pick the target device explicitly
@@ -139,8 +170,8 @@ how each run mode is launched.
   a second instance if one is already running.
 - When printing, suggesting, or providing a `flutter run` command to the
   user, omit device selection arguments (`-d` and `--device-id`), including
-  device placeholders, except `-d chrome` for the web. Preserve all Dart
-  defines.
+  device placeholders, except `-d chrome` for the web. Preserve the define
+  file.
 - After code changes, hot reload or hot restart the running app instead
   of relaunching it.
 

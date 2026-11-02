@@ -329,6 +329,59 @@ void main() {
       expect(await webhooks.find('p1', secret), id);
     });
 
+    test('stays inside RevenueCat\'s 2048-character webhook limit', () {
+      final names = PushNames({
+        for (var i = 0; i < 200; i++)
+          'com.acme.subscription.product.number.$i': 'Product $i',
+      });
+      final icon =
+          'https://is1-ssl.mzstatic.com/image/thumb/${'a' * 400}/512x512bb.png';
+      final url = PushWebhooks.urlFor(
+        secret,
+        {PushKind.trial, PushKind.newSubscription},
+        const PushDisplay(
+          currency: 'EUR',
+          language: 'de',
+          rate: 0.92,
+          appleFee: 15,
+          googleFee: 30,
+        ),
+        'My App',
+        names,
+        icon,
+      );
+      expect(url.length, lessThanOrEqualTo(PushWebhooks.maxUrlLength));
+      expect(url, contains('notify=new,trial'));
+      expect(url, contains('currency=EUR'));
+      expect(url, contains('project=My+App'));
+      expect(url, contains('icon='));
+      final carried = Uri.parse(url).queryParameters['names']!;
+      expect(carried.split('\t'), everyElement(contains('\n')));
+      expect(carried, isNot(endsWith('\t')));
+    });
+
+    test('drops an icon that would leave no room for a product name', () {
+      final names = PushNames({
+        for (var i = 0; i < 80; i++) 'com.acme.product.$i': 'Name $i',
+      });
+      // Slashes encode to three characters, so a legal icon URL alone is
+      // longer than RevenueCat allows once it is percent-encoded.
+      final icon = 'https://example.com/${'/' * 1000}';
+      expect(PushWebhooks.iconParam(icon), isNotNull);
+      final url = PushWebhooks.urlFor(
+        secret,
+        PushKind.all,
+        const PushDisplay(currency: 'JPY', language: 'ja', rate: 150),
+        'Project',
+        names,
+        icon,
+      );
+      expect(url.length, lessThanOrEqualTo(PushWebhooks.maxUrlLength));
+      expect(url, contains('currency=JPY'));
+      expect(url, contains('names='));
+      expect(url, isNot(contains('icon=')));
+    });
+
     test('only carries icons a push can fetch', () {
       expect(PushWebhooks.iconParam(null), isNull);
       expect(PushWebhooks.iconParam('   '), isNull);
