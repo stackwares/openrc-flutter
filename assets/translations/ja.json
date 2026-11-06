@@ -676,6 +676,64 @@
     "autoRenewOn": "自動更新オン",
     "topPlans": "上位のプラン"
   },
+  "upcoming": {
+    "title": "今後の予定",
+    "cardTitle": "まもなく",
+    "nextDays": {
+      "other": "今後 {} 日間"
+    },
+    "days": {
+      "other": "{} 日間"
+    },
+    "expected": "見込み",
+    "atRisk": "リスクあり",
+    "afterFees": "ストア手数料後",
+    "beforeFees": "ストア手数料前",
+    "kind": {
+      "renewal": "更新",
+      "trialConversion": "トライアル移行",
+      "trialEnding": "トライアル終了",
+      "expiring": "期限切れ"
+    },
+    "filter": {
+      "renewal": "更新",
+      "trialConversion": "トライアルの有料移行",
+      "trialEnding": "終了するトライアル",
+      "expiring": "期限切れ間近"
+    },
+    "count": {
+      "renewal": {
+        "other": "更新 {} 件"
+      },
+      "trialConversion": {
+        "other": "トライアル移行 {} 件"
+      },
+      "trialEnding": {
+        "other": "トライアル終了 {} 件"
+      },
+      "expiring": {
+        "other": "期限切れ間近のサブスクリプション {} 件"
+      }
+    },
+    "unpriced": {
+      "other": "価格不明の {} 件は集計対象外"
+    },
+    "tomorrow": "明日",
+    "noneTitle": "予定はありません",
+    "noneMessage": "この期間に更新、トライアルの有料移行、期限切れ間近のサブスクリプションはありません。",
+    "noFilterMatches": "これらのフィルターに一致する予定はありません。",
+    "couldntLoad": "今後の更新を読み込めませんでした",
+    "loadingLonger": "長期プランを読み込み中…",
+    "truncated": "数か月前に購入したプランの一部が完全に読み込まれなかったため、長期プランの更新が一部表示されない場合があります。",
+    "note": "各サブスクリプションの最新の取引から推定しています。請求の失敗、返金、価格変更は事前にはわからず、ストアは最大1日早く請求することがあります。",
+    "open": "今後の予定を開く",
+    "onTrackFor": "見込み額",
+    "stillDueToday": "今日の未入金分",
+    "dueLaterToday": "今日これから",
+    "dueThisDay": "この日の予定",
+    "nothingDueOnDay": "この日の予定はありません。",
+    "seeNext30": "今後30日間を見る"
+  },
   "webhooks": {
     "title": "Webhook",
     "rowHint": "このプロジェクトの Webhook を表示して削除します",
@@ -929,6 +987,7 @@
     "monthAgo": "1か月前",
     "stripDayNotLoaded": "{date}: まだ読み込まれていません",
     "stripDayAmount": "{date}: {amount}",
+    "stripDayExpected": "{date}: 約 {amount} の見込み",
     "realtimeWindowSubtitle": "今月 · 現地時間",
     "unknownApp": "不明なアプリ",
     "trials": "トライアル",

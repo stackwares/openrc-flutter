@@ -681,6 +681,71 @@
     "autoRenewOn": "Automatische Verlängerung an",
     "topPlans": "Top-Tarife"
   },
+  "upcoming": {
+    "title": "Anstehend",
+    "cardTitle": "Demnächst",
+    "nextDays": {
+      "one": "Nächster {} Tag",
+      "other": "Nächste {} Tage"
+    },
+    "days": {
+      "one": "{} Tag",
+      "other": "{} Tage"
+    },
+    "expected": "Erwartet",
+    "atRisk": "Gefährdet",
+    "afterFees": "Nach Store-Gebühren",
+    "beforeFees": "Vor Store-Gebühren",
+    "kind": {
+      "renewal": "Verlängerung",
+      "trialConversion": "Testphase wird umgewandelt",
+      "trialEnding": "Testphase endet",
+      "expiring": "Läuft ab"
+    },
+    "filter": {
+      "renewal": "Verlängerungen",
+      "trialConversion": "Testphasen-Umwandlungen",
+      "trialEnding": "Endende Testphasen",
+      "expiring": "Ablaufend"
+    },
+    "count": {
+      "renewal": {
+        "one": "{} Verlängerung",
+        "other": "{} Verlängerungen"
+      },
+      "trialConversion": {
+        "one": "{} Testphase wird umgewandelt",
+        "other": "{} Testphasen werden umgewandelt"
+      },
+      "trialEnding": {
+        "one": "{} Testphase endet",
+        "other": "{} Testphasen enden"
+      },
+      "expiring": {
+        "one": "{} Abo läuft ab",
+        "other": "{} Abos laufen ab"
+      }
+    },
+    "unpriced": {
+      "one": "{} ohne bekannten Preis, nicht mitgezählt",
+      "other": "{} ohne bekannten Preis, nicht mitgezählt"
+    },
+    "tomorrow": "Morgen",
+    "noneTitle": "Nichts fällig",
+    "noneMessage": "Keine Verlängerungen, Testphasen-Umwandlungen oder ablaufenden Abos in diesem Zeitraum.",
+    "noFilterMatches": "Keine fälligen Einträge für diese Filter.",
+    "couldntLoad": "Anstehende Verlängerungen konnten nicht geladen werden",
+    "loadingLonger": "Längere Laufzeiten werden geladen …",
+    "truncated": "Einige vor Monaten gekaufte Abos wurden nicht vollständig geladen, daher fehlen möglicherweise einige Verlängerungen längerer Laufzeiten.",
+    "note": "Geschätzt anhand der letzten Transaktion jedes Abos. Zahlungsausfälle, Rückerstattungen und Preisänderungen sind vorab nicht erkennbar, und Stores können bis zu einen Tag früher abbuchen.",
+    "open": "Anstehendes öffnen",
+    "onTrackFor": "Voraussichtlich",
+    "stillDueToday": "heute noch fällig",
+    "dueLaterToday": "Heute noch fällig",
+    "dueThisDay": "An diesem Tag fällig",
+    "nothingDueOnDay": "An diesem Tag ist nichts fällig.",
+    "seeNext30": "Nächste 30 Tage ansehen"
+  },
   "webhooks": {
     "title": "Webhooks",
     "rowHint": "Die Webhooks in diesem Projekt ansehen und löschen",
@@ -938,6 +1003,7 @@
     "monthAgo": "Vor einem Monat",
     "stripDayNotLoaded": "{date}: noch nicht geladen",
     "stripDayAmount": "{date}: {amount}",
+    "stripDayExpected": "{date}: etwa {amount} erwartet",
     "realtimeWindowSubtitle": "Dieser Monat · lokal",
     "unknownApp": "Unbekannte App",
     "trials": "Testphasen",

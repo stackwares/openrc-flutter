@@ -681,6 +681,71 @@
     "autoRenewOn": "Renouvellement auto activé",
     "topPlans": "Meilleures formules"
   },
+  "upcoming": {
+    "title": "À venir",
+    "cardTitle": "Prochainement",
+    "nextDays": {
+      "one": "{} jour suivant",
+      "other": "{} jours suivants"
+    },
+    "days": {
+      "one": "{} jour",
+      "other": "{} jours"
+    },
+    "expected": "Attendu",
+    "atRisk": "À risque",
+    "afterFees": "Après frais des boutiques",
+    "beforeFees": "Avant frais des boutiques",
+    "kind": {
+      "renewal": "Renouvellement",
+      "trialConversion": "Essai converti",
+      "trialEnding": "Fin d’essai",
+      "expiring": "Expiration"
+    },
+    "filter": {
+      "renewal": "Renouvellements",
+      "trialConversion": "Conversions d’essai",
+      "trialEnding": "Essais se terminant",
+      "expiring": "Expirations"
+    },
+    "count": {
+      "renewal": {
+        "one": "{} renouvellement",
+        "other": "{} renouvellements"
+      },
+      "trialConversion": {
+        "one": "{} essai converti",
+        "other": "{} essais convertis"
+      },
+      "trialEnding": {
+        "one": "{} essai se termine",
+        "other": "{} essais se terminent"
+      },
+      "expiring": {
+        "one": "{} abonnement expire",
+        "other": "{} abonnements expirent"
+      }
+    },
+    "unpriced": {
+      "one": "{} sans prix connu, non compté",
+      "other": "{} sans prix connu, non comptés"
+    },
+    "tomorrow": "Demain",
+    "noneTitle": "Rien à venir",
+    "noneMessage": "Aucun renouvellement, conversion d’essai ni abonnement arrivant à expiration sur cette période.",
+    "noFilterMatches": "Rien à venir ne correspond à ces filtres.",
+    "couldntLoad": "Impossible de charger les prochains renouvellements",
+    "loadingLonger": "Chargement des formules plus longues…",
+    "truncated": "Certaines formules achetées il y a plusieurs mois ne se sont pas entièrement chargées ; il peut manquer quelques renouvellements de formules longues.",
+    "note": "Estimation à partir de la dernière transaction de chaque abonnement. Les échecs de paiement, remboursements et changements de prix ne sont pas visibles à l’avance, et les boutiques peuvent prélever jusqu’à un jour plus tôt.",
+    "open": "Ouvrir À venir",
+    "onTrackFor": "En bonne voie pour",
+    "stillDueToday": "encore attendus aujourd’hui",
+    "dueLaterToday": "Attendu plus tard aujourd’hui",
+    "dueThisDay": "Attendu ce jour-là",
+    "nothingDueOnDay": "Rien n’est attendu ce jour-là.",
+    "seeNext30": "Voir les 30 prochains jours"
+  },
   "webhooks": {
     "title": "Webhooks",
     "rowHint": "Voir et supprimer les webhooks de ce projet",
@@ -938,6 +1003,7 @@
     "monthAgo": "Il y a un mois",
     "stripDayNotLoaded": "{date} : pas encore chargé",
     "stripDayAmount": "{date} : {amount}",
+    "stripDayExpected": "{date} : environ {amount} attendus",
     "realtimeWindowSubtitle": "Ce mois-ci · heure locale",
     "unknownApp": "Application inconnue",
     "trials": "Essais",

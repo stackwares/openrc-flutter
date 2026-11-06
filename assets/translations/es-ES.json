@@ -681,6 +681,71 @@
     "autoRenewOn": "Renovación automática activada",
     "topPlans": "Planes principales"
   },
+  "upcoming": {
+    "title": "Próximos",
+    "cardTitle": "Próximamente",
+    "nextDays": {
+      "one": "Próximo {} día",
+      "other": "Próximos {} días"
+    },
+    "days": {
+      "one": "{} día",
+      "other": "{} días"
+    },
+    "expected": "Previsto",
+    "atRisk": "En riesgo",
+    "afterFees": "Tras comisiones de la tienda",
+    "beforeFees": "Antes de comisiones de la tienda",
+    "kind": {
+      "renewal": "Se renueva",
+      "trialConversion": "La prueba se convierte",
+      "trialEnding": "Termina la prueba",
+      "expiring": "Vence"
+    },
+    "filter": {
+      "renewal": "Renovaciones",
+      "trialConversion": "Conversiones de prueba",
+      "trialEnding": "Pruebas que terminan",
+      "expiring": "Por vencer"
+    },
+    "count": {
+      "renewal": {
+        "one": "{} renovación",
+        "other": "{} renovaciones"
+      },
+      "trialConversion": {
+        "one": "{} prueba se convierte",
+        "other": "{} pruebas se convierten"
+      },
+      "trialEnding": {
+        "one": "{} prueba termina",
+        "other": "{} pruebas terminan"
+      },
+      "expiring": {
+        "one": "{} suscripción vence",
+        "other": "{} suscripciones vencen"
+      }
+    },
+    "unpriced": {
+      "one": "{} sin precio conocido, no contada",
+      "other": "{} sin precio conocido, no contadas"
+    },
+    "tomorrow": "Mañana",
+    "noneTitle": "Nada pendiente",
+    "noneMessage": "No hay renovaciones, conversiones de prueba ni suscripciones por vencer en este periodo.",
+    "noFilterMatches": "Nada pendiente coincide con estos filtros.",
+    "couldntLoad": "No se pudieron cargar las próximas renovaciones",
+    "loadingLonger": "Cargando planes más largos…",
+    "truncated": "Algunos planes comprados hace meses no se cargaron por completo, así que pueden faltar algunas renovaciones de planes largos.",
+    "note": "Estimado a partir de la última transacción de cada suscripción. Los fallos de cobro, los reembolsos y los cambios de precio no se pueden ver con antelación, y las tiendas pueden cobrar hasta un día antes.",
+    "open": "Abrir próximos",
+    "onTrackFor": "Se prevé",
+    "stillDueToday": "aún por cobrar hoy",
+    "dueLaterToday": "Por cobrar más tarde hoy",
+    "dueThisDay": "Por cobrar este día",
+    "nothingDueOnDay": "No hay nada pendiente este día.",
+    "seeNext30": "Ver los próximos 30 días"
+  },
   "webhooks": {
     "title": "Webhooks",
     "rowHint": "Ver los webhooks de este proyecto y eliminarlos",
@@ -938,6 +1003,7 @@
     "monthAgo": "Hace un mes",
     "stripDayNotLoaded": "{date}: aún no cargado",
     "stripDayAmount": "{date}: {amount}",
+    "stripDayExpected": "{date}: aprox. {amount} previstos",
     "realtimeWindowSubtitle": "Este mes · local",
     "unknownApp": "App desconocida",
     "trials": "Pruebas",

@@ -681,6 +681,71 @@
     "autoRenewOn": "Renovação automática ativada",
     "topPlans": "Principais planos"
   },
+  "upcoming": {
+    "title": "Próximos",
+    "cardTitle": "Em breve",
+    "nextDays": {
+      "one": "Próximo {} dia",
+      "other": "Próximos {} dias"
+    },
+    "days": {
+      "one": "{} dia",
+      "other": "{} dias"
+    },
+    "expected": "Esperado",
+    "atRisk": "Em risco",
+    "afterFees": "Após taxas da loja",
+    "beforeFees": "Antes das taxas da loja",
+    "kind": {
+      "renewal": "Renova",
+      "trialConversion": "Teste converte",
+      "trialEnding": "Teste termina",
+      "expiring": "Expira"
+    },
+    "filter": {
+      "renewal": "Renovações",
+      "trialConversion": "Conversões de teste",
+      "trialEnding": "Testes terminando",
+      "expiring": "Expirando"
+    },
+    "count": {
+      "renewal": {
+        "one": "{} renovação",
+        "other": "{} renovações"
+      },
+      "trialConversion": {
+        "one": "{} teste convertendo",
+        "other": "{} testes convertendo"
+      },
+      "trialEnding": {
+        "one": "{} teste terminando",
+        "other": "{} testes terminando"
+      },
+      "expiring": {
+        "one": "{} assinatura expirando",
+        "other": "{} assinaturas expirando"
+      }
+    },
+    "unpriced": {
+      "one": "{} sem preço conhecido, não contada",
+      "other": "{} sem preço conhecido, não contadas"
+    },
+    "tomorrow": "Amanhã",
+    "noneTitle": "Nada a vencer",
+    "noneMessage": "Nenhuma renovação, conversão de teste ou assinatura expirando neste período.",
+    "noFilterMatches": "Nada a vencer corresponde a estes filtros.",
+    "couldntLoad": "Não foi possível carregar as próximas renovações",
+    "loadingLonger": "Carregando planos mais longos…",
+    "truncated": "Alguns planos comprados há meses não foram totalmente carregados, então algumas renovações de planos longos podem estar faltando.",
+    "note": "Estimado a partir da transação mais recente de cada assinatura. Falhas de cobrança, reembolsos e mudanças de preço não podem ser vistos com antecedência, e as lojas podem cobrar até um dia antes.",
+    "open": "Abrir próximos",
+    "onTrackFor": "No ritmo para",
+    "stillDueToday": "ainda a receber hoje",
+    "dueLaterToday": "A receber mais tarde hoje",
+    "dueThisDay": "A receber neste dia",
+    "nothingDueOnDay": "Nada a receber neste dia.",
+    "seeNext30": "Ver os próximos 30 dias"
+  },
   "webhooks": {
     "title": "Webhooks",
     "rowHint": "Ver e excluir os webhooks deste projeto",
@@ -938,6 +1003,7 @@
     "monthAgo": "Um mês atrás",
     "stripDayNotLoaded": "{date}: ainda não carregado",
     "stripDayAmount": "{date}: {amount}",
+    "stripDayExpected": "{date}: cerca de {amount} esperados",
     "realtimeWindowSubtitle": "Este mês · local",
     "unknownApp": "App desconhecido",
     "trials": "Testes",

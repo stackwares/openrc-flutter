@@ -676,6 +676,64 @@
     "autoRenewOn": "已开启自动续订",
     "topPlans": "热门方案"
   },
+  "upcoming": {
+    "title": "即将到来",
+    "cardTitle": "近期",
+    "nextDays": {
+      "other": "未来 {} 天"
+    },
+    "days": {
+      "other": "{} 天"
+    },
+    "expected": "预计",
+    "atRisk": "有风险",
+    "afterFees": "扣除商店手续费后",
+    "beforeFees": "未扣除商店手续费",
+    "kind": {
+      "renewal": "续订",
+      "trialConversion": "试用转化",
+      "trialEnding": "试用结束",
+      "expiring": "到期"
+    },
+    "filter": {
+      "renewal": "续订",
+      "trialConversion": "试用转化",
+      "trialEnding": "即将结束的试用",
+      "expiring": "即将到期"
+    },
+    "count": {
+      "renewal": {
+        "other": "{} 笔续订"
+      },
+      "trialConversion": {
+        "other": "{} 个试用转化中"
+      },
+      "trialEnding": {
+        "other": "{} 个试用即将结束"
+      },
+      "expiring": {
+        "other": "{} 个订阅即将到期"
+      }
+    },
+    "unpriced": {
+      "other": "{} 个价格未知，未计入"
+    },
+    "tomorrow": "明天",
+    "noneTitle": "暂无到期项",
+    "noneMessage": "此时间段内没有续订、试用转化或即将到期的订阅。",
+    "noFilterMatches": "没有符合这些筛选条件的到期项。",
+    "couldntLoad": "无法加载即将到来的续订",
+    "loadingLonger": "正在加载较长周期的方案…",
+    "truncated": "部分数月前购买的方案未完全加载，因此可能缺少一些长周期方案的续订。",
+    "note": "根据每个订阅的最新交易估算。扣款失败、退款和价格变动无法提前预见，商店也可能提前最多一天扣款。",
+    "open": "打开即将到来",
+    "onTrackFor": "预计可达",
+    "stillDueToday": "今天仍待到账",
+    "dueLaterToday": "今天稍后到期",
+    "dueThisDay": "当天到期",
+    "nothingDueOnDay": "当天没有到期项。",
+    "seeNext30": "查看未来 30 天"
+  },
   "webhooks": {
     "title": "Webhook",
     "rowHint": "查看并删除此项目的 Webhook",
@@ -929,6 +987,7 @@
     "monthAgo": "一个月前",
     "stripDayNotLoaded": "{date}：尚未加载",
     "stripDayAmount": "{date}：{amount}",
+    "stripDayExpected": "{date}：预计约 {amount}",
     "realtimeWindowSubtitle": "本月 · 本地时间",
     "unknownApp": "未知应用",
     "trials": "试用",

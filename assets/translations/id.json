@@ -676,6 +676,64 @@
     "autoRenewOn": "Perpanjangan otomatis aktif",
     "topPlans": "Paket teratas"
   },
+  "upcoming": {
+    "title": "Mendatang",
+    "cardTitle": "Segera",
+    "nextDays": {
+      "other": "{} hari ke depan"
+    },
+    "days": {
+      "other": "{} hari"
+    },
+    "expected": "Diharapkan",
+    "atRisk": "Berisiko",
+    "afterFees": "Setelah biaya toko",
+    "beforeFees": "Sebelum biaya toko",
+    "kind": {
+      "renewal": "Diperpanjang",
+      "trialConversion": "Uji coba dikonversi",
+      "trialEnding": "Uji coba berakhir",
+      "expiring": "Kedaluwarsa"
+    },
+    "filter": {
+      "renewal": "Perpanjangan",
+      "trialConversion": "Konversi uji coba",
+      "trialEnding": "Uji coba berakhir",
+      "expiring": "Akan kedaluwarsa"
+    },
+    "count": {
+      "renewal": {
+        "other": "{} perpanjangan"
+      },
+      "trialConversion": {
+        "other": "{} uji coba dikonversi"
+      },
+      "trialEnding": {
+        "other": "{} uji coba berakhir"
+      },
+      "expiring": {
+        "other": "{} langganan kedaluwarsa"
+      }
+    },
+    "unpriced": {
+      "other": "{} tanpa harga yang diketahui, tidak dihitung"
+    },
+    "tomorrow": "Besok",
+    "noneTitle": "Tidak ada tagihan",
+    "noneMessage": "Tidak ada perpanjangan, konversi uji coba, atau langganan yang kedaluwarsa pada rentang ini.",
+    "noFilterMatches": "Tidak ada tagihan yang cocok dengan filter ini.",
+    "couldntLoad": "Tidak dapat memuat perpanjangan mendatang",
+    "loadingLonger": "Memuat paket yang lebih panjang…",
+    "truncated": "Beberapa paket yang dibeli berbulan-bulan lalu tidak termuat sepenuhnya, jadi beberapa perpanjangan paket panjang mungkin tidak muncul.",
+    "note": "Diperkirakan dari transaksi terbaru setiap langganan. Kegagalan penagihan, pengembalian dana, dan perubahan harga tidak dapat diketahui sebelumnya, dan toko dapat menagih hingga sehari lebih awal.",
+    "open": "Buka mendatang",
+    "onTrackFor": "Diperkirakan mencapai",
+    "stillDueToday": "masih jatuh tempo hari ini",
+    "dueLaterToday": "Jatuh tempo nanti hari ini",
+    "dueThisDay": "Jatuh tempo pada hari ini",
+    "nothingDueOnDay": "Tidak ada yang jatuh tempo pada hari ini.",
+    "seeNext30": "Lihat 30 hari ke depan"
+  },
   "webhooks": {
     "title": "Webhook",
     "rowHint": "Lihat dan hapus webhook di proyek ini",
@@ -929,6 +987,7 @@
     "monthAgo": "Sebulan lalu",
     "stripDayNotLoaded": "{date}: belum dimuat",
     "stripDayAmount": "{date}: {amount}",
+    "stripDayExpected": "{date}: sekitar {amount} diharapkan",
     "realtimeWindowSubtitle": "Bulan ini · lokal",
     "unknownApp": "Aplikasi tidak diketahui",
     "trials": "Uji coba",
