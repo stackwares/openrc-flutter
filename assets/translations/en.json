@@ -751,6 +751,30 @@
     "nothingDueOnDay": "Nothing is due on this day.",
     "seeNext30": "See the next 30 days"
   },
+  "search": {
+    "open": "Search",
+    "hint": "Transaction ID, customer, product…",
+    "clear": "Clear search",
+    "emptyTitle": "Search transactions and customers",
+    "emptyBody": "Type a store transaction ID, customer ID, product, project, store or country. Paste a customer ID to look them up on RevenueCat, including customers with no sales loaded here.",
+    "loadedCount": {
+      "zero": "No transactions loaded yet",
+      "one": "Searching {} loaded transaction",
+      "other": "Searching {} loaded transactions"
+    },
+    "matches": {
+      "one": "{} match",
+      "other": "{} matches"
+    },
+    "matchesCapped": "Showing {shown} of {total} matches",
+    "noMatches": "No loaded transactions match",
+    "scopeNote": "Only searches transactions already loaded in the app: the days opened on Home and the windows loaded for Upcoming. For an older sale, look up the customer instead.",
+    "lookUpCustomer": "Look up customer",
+    "inProject": "In",
+    "pickProject": "Choose project",
+    "customerNotFound": "No customer with this ID in {project}.",
+    "customer": "Customer"
+  },
   "notifications": {
     "title": "Notifications",
     "rowTitle": "Push notifications",

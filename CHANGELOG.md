@@ -30,6 +30,13 @@ All notable changes to OpenRC are listed here. The format follows
   to come, and the day strip, arrows, keyboard shortcuts and calendar step
   into the next 30 days, each shown as a projected day with what's due.
 
+- Search, from the magnifier on Home: find loaded transactions by store
+  transaction id (Apple's numeric ids and Google's `GPA.` order ids),
+  customer id, product id or the name Settings gave it, project, store or
+  country. Paste a customer id to look that customer up on RevenueCat, in
+  any project, and open their history and details, even when none of their
+  sales are loaded.
+
 - Auto-refresh: coming back to the app after five minutes or more reloads
   Transactions, Revenue and Charts, and a sale's push while the app is open
   now reloads Charts too, once per burst of webhooks. Charts refreshes

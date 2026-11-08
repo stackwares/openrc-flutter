@@ -231,7 +231,7 @@ class RcApiService {
     bool sandboxMode = false,
   }) async {
     final response = await _dio.get<Map<String, dynamic>>(
-      '/me/apps/$projectId/subscribers/$subscriberId',
+      '/me/apps/$projectId/subscribers/${Uri.encodeComponent(subscriberId)}',
       queryParameters: {'sandbox_mode': sandboxMode},
     );
     return RcTransactionDetailResponse.fromJson(requireBody(response));
@@ -243,7 +243,8 @@ class RcApiService {
     bool sandboxMode = false,
   }) async {
     final response = await _internal.get<Map<String, dynamic>>(
-      '/me/apps/$projectId/subscribers/$subscriberId/activity',
+      '/me/apps/$projectId/subscribers/'
+      '${Uri.encodeComponent(subscriberId)}/activity',
       queryParameters: {'sandbox_mode': sandboxMode},
     );
     return RcTransactionDetailActivityResponse.fromJson(requireBody(response));

@@ -133,6 +133,13 @@ class RcTransaction {
         if (wasRefunded != null) 'was_refunded': wasRefunded,
       };
 
+  /// A customer looked up by id: only the project and customer are known,
+  /// no sale.
+  bool get isCustomerOnly =>
+      purchaseDate == null &&
+      productIdentifier == null &&
+      storeTransactionIdentifier == null;
+
   /// Trial where the user turned off renewal or a cancellation was detected.
   bool get isCanceledTrial {
     if (type != RcTransactionType.trial) return false;

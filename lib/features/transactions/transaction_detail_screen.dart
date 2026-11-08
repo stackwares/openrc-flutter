@@ -362,6 +362,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       appId: appId,
       appName: tx.app?.name,
       customIconUrl: customIconUrl,
+      detail: detail,
     );
     final summaryDelay = nextSectionDelay();
 
@@ -433,8 +434,12 @@ class TransactionDetailScreen extends ConsumerWidget {
     String? appId,
     String? appName,
     String? customIconUrl,
+    RcTransactionDetailResponse? detail,
   }) {
     final type = tx.type;
+    // Opened from a customer lookup: no sale, just the customer.
+    final customerOnly = tx.isCustomerOnly;
+    final spent = detail?.dollarsSpent;
     final baseHeaderRevenueStyle = AppText.amount(context, size: 32);
     final headerRevenueStyle = tx.tileShowRefundRevenueStrikethrough
         ? baseHeaderRevenueStyle.copyWith(
@@ -517,11 +522,13 @@ class TransactionDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        [
-                          if (appTitle != null && appTitle.isNotEmpty)
-                            productTitle,
-                          ?tx.productIdentifier,
-                        ].join('  ·  '),
+                        customerOnly
+                            ? 'search.customer'.tr()
+                            : [
+                                if (appTitle != null && appTitle.isNotEmpty)
+                                  productTitle,
+                                ?tx.productIdentifier,
+                              ].join('  ·  '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: muted,
@@ -536,7 +543,15 @@ class TransactionDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: tx.tileDisplayRevenue != null
+                  child: customerOnly
+                      ? spent != null
+                            ? DualCurrencyExactText(
+                                amount: spent,
+                                applyBlendedCommission: true,
+                                style: baseHeaderRevenueStyle,
+                              )
+                            : const SizedBox.shrink()
+                      : tx.tileDisplayRevenue != null
                       ? DualCurrencyExactText(
                           amount: tx.tileDisplayRevenue!,
                           commissionStore: tx.storeForCommission,
@@ -544,10 +559,16 @@ class TransactionDetailScreen extends ConsumerWidget {
                         )
                       : const SizedBox.shrink(),
                 ),
-                const SizedBox(width: 12),
-                TransactionTypeBadge(transaction: tx),
+                if (!customerOnly) ...[
+                  const SizedBox(width: 12),
+                  TransactionTypeBadge(transaction: tx),
+                ],
               ],
             ),
+            if (customerOnly && spent != null) ...[
+              const SizedBox(height: 4),
+              Text('detail.totalSpent'.tr(), style: muted),
+            ],
             if (purchased != null) ...[
               const SizedBox(height: 4),
               Text(

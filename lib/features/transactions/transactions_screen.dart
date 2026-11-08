@@ -26,6 +26,7 @@ import 'package:openrc/features/transactions/widgets/transactions_filter_bar.dar
 import 'package:openrc/features/transactions/widgets/transactions_table.dart';
 import 'package:openrc/features/transactions/widgets/transactions_app_filter_sheet.dart';
 import 'package:openrc/features/transactions/widgets/transactions_loading_skeleton.dart';
+import 'package:openrc/features/search/search_screen.dart';
 import 'package:openrc/features/upcoming/upcoming_day_widgets.dart';
 import 'package:openrc/features/upcoming/upcoming_projection.dart';
 import 'package:openrc/features/upcoming/upcoming_provider.dart';
@@ -948,6 +949,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 : () => _goToDay(nextKey),
           ),
           const SizedBox(width: 6),
+          HeaderIconButton(
+            icon: Icons.search_rounded,
+            tooltip: 'search.open'.tr(),
+            onPressed: () => openSearch(context),
+          ),
           HeaderIconButton(
             icon: Icons.tune_rounded,
             tooltip: 'transactions.filterTransactions'.tr(),
