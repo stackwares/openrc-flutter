@@ -29,16 +29,27 @@ abstract final class PushNotifications {
   static bool _started = false;
   static bool _supported = true;
 
-  /// True once Firebase is up; Settings offers notifications only then.
-  static bool get isAvailable => _started;
+  /// Whether the current platform supports Firebase Cloud Messaging.
+  /// Windows and Linux have no FCM plugin, so push initialization and UI
+  /// are skipped there.
+  static bool get isPlatformSupported =>
+      kIsWeb ||
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+
+  /// True once Firebase is up on a supported platform; Settings offers
+  /// notifications only then.
+  static bool get isAvailable => isPlatformSupported && _started;
 
   /// False in browsers that can't receive pushes, such as Safari on iPhone
   /// outside a Home Screen app.
-  static bool get isSupported => _supported;
+  static bool get isSupported => isPlatformSupported && _supported;
 
   static Future<void> start() async {
+    if (!isPlatformSupported || _started) return;
     final options = PushConfig.firebaseOptions;
-    if (options == null || _started) return;
+    if (options == null) return;
     try {
       await Firebase.initializeApp(options: options);
       if (kIsWeb) {
@@ -60,16 +71,16 @@ abstract final class PushNotifications {
 
   /// Notifications that arrive while the app is open.
   static Stream<RemoteMessage> get onMessage =>
-      _started && !kIsWeb ? FirebaseMessaging.onMessage : const Stream.empty();
+      isAvailable && !kIsWeb ? FirebaseMessaging.onMessage : const Stream.empty();
 
   /// Notifications tapped while the app was in the background.
-  static Stream<RemoteMessage> get onMessageOpenedApp => _started && !kIsWeb
+  static Stream<RemoteMessage> get onMessageOpenedApp => isAvailable && !kIsWeb
       ? FirebaseMessaging.onMessageOpenedApp
       : const Stream.empty();
 
   /// The notification tapped to launch the app, if any.
   static Future<RemoteMessage?> initialMessage() async {
-    if (!_started || kIsWeb) return null;
+    if (!isAvailable || kIsWeb) return null;
     try {
       return await FirebaseMessaging.instance.getInitialMessage();
     } catch (e) {
@@ -205,7 +216,9 @@ class WebPushMessaging extends FirebasePushMessaging {
 
 /// Cloud Messaging for this build, or null when it has no notifications.
 final pushMessagingProvider = Provider<PushMessaging?>((ref) {
-  if (!PushNotifications.isAvailable || !PushNotifications.isSupported) {
+  if (!PushNotifications.isPlatformSupported ||
+      !PushNotifications.isAvailable ||
+      !PushNotifications.isSupported) {
     return null;
   }
   return kIsWeb ? WebPushMessaging() : FirebasePushMessaging();

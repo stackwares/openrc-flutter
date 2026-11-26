@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,10 +26,16 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
-  // Phones stay upright; tablets rotate and share the screen with other apps.
-  final view = WidgetsBinding.instance.platformDispatcher.views.first;
-  if (isPhoneSized(view.physicalSize / view.devicePixelRatio)) {
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Phones stay upright; tablets and desktop windows rotate or resize freely.
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android)) {
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    if (isPhoneSized(view.physicalSize / view.devicePixelRatio)) {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    }
   }
 
   final container = ProviderContainer();

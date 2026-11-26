@@ -40,7 +40,20 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
+  msix: ^3.16.12
+
+msix_config:
+  display_name: OpenRC
+  publisher_display_name: Stackwares
+  identity_name: 31714NemOry.OpenRC
+  publisher: CN=AA4F9964-5824-4DF0-9755-23327BFD5B6D
+  msix_version: 1.0.11.0
+  logo_path: assets/brand/openrc-mark.png
+  capabilities: internetClient
+  store: true
 
 flutter:
   config:

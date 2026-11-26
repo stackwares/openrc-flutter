@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_review/in_app_review.dart';
 import 'package:openrc/core/animations/app_motion.dart';
 import 'package:openrc/core/extensions/context_extensions.dart';
 import 'package:openrc/features/onboarding/onboarding_pages.dart';
 import 'package:openrc/features/onboarding/onboarding_steps.dart';
 import 'package:openrc/services/onboarding_analytics.dart';
 import 'package:openrc/services/onboarding_prefs_store.dart';
+import 'package:openrc/services/store_review_service.dart';
 import 'package:openrc/services/utilities_service.dart';
 import 'package:openrc/theme/app_tokens.dart';
 
@@ -212,12 +212,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       track: _track,
     );
-    try {
-      final review = InAppReview.instance;
-      if (await review.isAvailable()) {
-        await review.requestReview();
-      }
-    } catch (_) {}
+    await StoreReviewService.requestReview();
     if (!mounted) return;
     _advance();
   }

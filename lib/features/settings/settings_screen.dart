@@ -177,9 +177,11 @@ class SettingsScreen extends ConsumerWidget {
     final colorScheme = ref.watch(colorSchemeProvider);
     final telemetryEnabled = ref.watch(telemetryEnabledProvider);
     // A browser that can't get pushes still shows the row, to say why.
+    // Unsupported desktop platforms (Windows, Linux) hide the section entirely.
     final pushAvailable =
-        ref.watch(pushMessagingProvider) != null ||
-        (PushNotifications.isAvailable && !PushNotifications.isSupported);
+        PushNotifications.isPlatformSupported &&
+        (ref.watch(pushMessagingProvider) != null ||
+            (PushNotifications.isAvailable && !PushNotifications.isSupported));
     final language = ref.watch(appLanguageProvider);
     final scheme = context.colorScheme;
     final tt = context.textTheme;

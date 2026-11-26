@@ -86,10 +86,26 @@ class UtilitiesService {
     }
   }
 
-  static void hapticLight() => HapticFeedback.lightImpact();
-  static void hapticMedium() => HapticFeedback.mediumImpact();
-  static void hapticHeavy() => HapticFeedback.heavyImpact();
-  static void hapticSelection() => HapticFeedback.selectionClick();
+  static bool get _supportsHaptics =>
+      !kIsWeb &&
+      defaultTargetPlatform != TargetPlatform.windows &&
+      defaultTargetPlatform != TargetPlatform.linux;
+
+  static void hapticLight() {
+    if (_supportsHaptics) HapticFeedback.lightImpact();
+  }
+
+  static void hapticMedium() {
+    if (_supportsHaptics) HapticFeedback.mediumImpact();
+  }
+
+  static void hapticHeavy() {
+    if (_supportsHaptics) HapticFeedback.heavyImpact();
+  }
+
+  static void hapticSelection() {
+    if (_supportsHaptics) HapticFeedback.selectionClick();
+  }
 
   Future<void> copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));

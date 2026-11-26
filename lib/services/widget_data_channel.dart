@@ -14,8 +14,14 @@ class WidgetDataChannel {
 
   WidgetDataChannel._();
 
+  static bool get _isSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
   /// Clears all widget data from the native side.
   static Future<void> clearWidgetData() async {
+    if (!_isSupported) return;
     try {
       await _channel.invokeMethod('clearWidgetData');
     } on PlatformException catch (e) {
@@ -33,7 +39,7 @@ class WidgetDataChannel {
     String displayCurrency,
     Map<String, double> exchangeRates,
   ) async {
-    if (state.grouped.isEmpty) return;
+    if (!_isSupported || state.grouped.isEmpty) return;
 
     try {
       final payload = _sanitize(
